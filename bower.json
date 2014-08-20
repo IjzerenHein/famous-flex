@@ -1,0 +1,31 @@
+{
+  "name": "famous-flex",
+  "version": "0.0.1",
+  "homepage": "https://github.com/IjzerenHein/famous-flex",
+  "authors": [
+    "Hein Rutjes <hrutjes@gmail.com>"
+  ],
+  "description": "Flexible & plugable layout-controller for famo.us",
+  "keywords": [
+    "famo.us",
+    "famous",
+    "flex",
+    "famous-flex",
+    "layoutcontroller",
+    "flex-layoutcontroller"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "tests",
+    "examples",
+    "docs",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "requirejs": "~2.1.11",
+    "famous": "~0.2.0"
+  }
+}
