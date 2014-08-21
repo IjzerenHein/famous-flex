@@ -90,13 +90,17 @@ define(function(require, exports, module) {
         insertSpec: {
             opacity: undefined,
             size: undefined,
-            transform: undefined
+            transform: undefined,
+            origin: undefined,
+            align: undefined
         },
         removeTransition: {duration: 500, curve: Easing.outBack},
         removeSpec: {
             opacity: undefined,
             size: undefined,
-            transform: undefined
+            transform: undefined,
+            origin: undefined,
+            align: undefined
         },
         verbose: true
     };
@@ -475,6 +479,8 @@ define(function(require, exports, module) {
                 cur.size = _interpolate.call(this, start.size, final.size, t, cur.size);
                 cur.transform = _interpolate.call(this, start.transform, final.transform, t, cur.transform);
                 cur.opacity = _interpolate.call(this, start.opacity, final.opacity, t, cur.opacity);
+                cur.origin = _interpolate.call(this, start.origin, final.origin, t, cur.origin);
+                cur.align = _interpolate.call(this, start.align, final.align, t, cur.align);
                 if (layoutNode._removing && LayoutUtility.isEqualSpec(final, cur)) {
 
                     // Remove layout-node from the linked list

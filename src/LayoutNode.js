@@ -19,7 +19,6 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var Transform = require('famous/core/Transform');
     var LayoutUtility = require('./LayoutUtility');
 
     /**
@@ -53,6 +52,30 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.setTransform = function(transform) {
         this._final.transform = transform;
+        this._cleanup = false;
+        return this;
+    };
+
+    /**
+     * Set the align of the node.
+     *
+     * @param {Array.Number} align
+     * @return {LayoutNode} this
+     */
+    LayoutNode.prototype.setAlign = function(align) {
+        this._final.align = align;
+        this._cleanup = false;
+        return this;
+    };
+
+    /**
+     * Set the origin of the node.
+     *
+     * @param {Array.Number} origin
+     * @return {LayoutNode} this
+     */
+    LayoutNode.prototype.setOrigin = function(origin) {
+        this._final.origin = origin;
         this._cleanup = false;
         return this;
     };

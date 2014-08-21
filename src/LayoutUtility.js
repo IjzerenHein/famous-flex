@@ -75,8 +75,8 @@ define(function(require, exports, module) {
      */
     LayoutUtility.resolveSize = function(size, parentSize, defaultSize) {
         return [
-            _resolveSizeValue(size ? size[0] : (defaultSize ? defaultSize[0] : undefined), parentSize[0]),
-            _resolveSizeValue(size ? size[1] : (defaultSize ? defaultSize[1] : undefined), parentSize[1])
+            _resolveSizeValue((size && (size[0] !== undefined)) ? size[0] : (defaultSize ? defaultSize[0] : undefined), parentSize[0]),
+            _resolveSizeValue((size && (size[1] !== undefined)) ? size[1] : (defaultSize ? defaultSize[1] : undefined), parentSize[1])
         ];
     };
 
@@ -97,6 +97,12 @@ define(function(require, exports, module) {
         if (spec.transform !== undefined) {
             clone.transform = spec.transform.slice(0);
         }
+        if (spec.origin !== undefined) {
+            clone.origin = spec.origin.slice(0);
+        }
+        if (spec.align !== undefined) {
+            clone.align = spec.align.slice(0);
+        }
         return clone;
     };
 
@@ -110,6 +116,8 @@ define(function(require, exports, module) {
         delete spec.opacity;
         delete spec.size;
         delete spec.transform;
+        delete spec.origin;
+        delete spec.align;
         return spec;
     };
 
@@ -150,6 +158,12 @@ define(function(require, exports, module) {
             return false;
         }
         if (!_isEqualArray(spec1.transform, spec2.transform)) {
+            return false;
+        }
+        if (!_isEqualArray(spec1.origin, spec2.origin)) {
+            return false;
+        }
+        if (!_isEqualArray(spec1.align, spec2.align)) {
             return false;
         }
         return true;
