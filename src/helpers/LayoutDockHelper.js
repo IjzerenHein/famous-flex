@@ -18,19 +18,28 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var Transform = require('famous/core/Transform');
+    var LayoutUtility = require('famous-flex/LayoutUtility');
 
     /**
      * @class
      * @param {LayoutContext} context layout-context
      * @alias module:LayoutDockHelper
      */
-    function LayoutDockHelper(context) {
+    function LayoutDockHelper(context, margins) {
         this._context = context;
-        this._left = 0;
-        this._top = 0;
-        this._right = context.size[0];
-        this._bottom = context.size[1];
+        if (margins) {
+            margins = LayoutUtility.normalizeMargins(margins);
+            this._left = margins[3];
+            this._top = margins[0];
+            this._right = context.size[0] - margins[1];
+            this._bottom = context.size[1] - margins[2];
+        }
+        else {
+            this._left = 0;
+            this._top = 0;
+            this._right = context.size[0];
+            this._bottom = context.size[1];
+        }
     }
 
     /**
@@ -41,9 +50,12 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.top = function(node, height) {
-        node.setSize([this._right - this._left, height]);
-        node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTranslate(this._left, this._top, 0);
+        if (height instanceof Array) {
+            height = height[1];
+        }
+        this._context.setSize(node, [this._right - this._left, height]);
+        this._context.setOrigin(node, [0, 0]);
+        this._context.setTranslate(node, this._left, this._top, 0);
         this._top += height;
         return this;
     };
@@ -56,9 +68,12 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.left = function(node, width) {
-        node.setSize([width, this._bottom - this._top]);
-        node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTranslate(this._left, this._top, 0);
+        if (width instanceof Array) {
+            width = width[0];
+        }
+        this._context.setSize(node, [width, this._bottom - this._top]);
+        this._context.setOrigin(node, [0, 0]);
+        this._context.setTranslate(node, this._left, this._top, 0);
         this._left += width;
         return this;
     };
@@ -71,9 +86,12 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.bottom = function(node, height) {
-        node.setSize([this._right - this._left, height]);
-        node.setOrigin([0, 1]).setAlign([0, 1]);
-        node.setTranslate(this._left, -(this._context.size[1] - this._bottom), 0);
+        if (height instanceof Array) {
+            height = height[1];
+        }
+        this._context.setSize(node, [this._right - this._left, height]);
+        this._context.setOrigin(node, [0, 1]);
+        this._context.setTranslate(node, this._left, -(this._context.size[1] - this._bottom), 0);
         this._bottom -= height;
         return this;
     };
@@ -86,9 +104,12 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.right = function(node, width) {
-        node.setSize([width, this._bottom - this._top]);
-        node.setOrigin([1, 0]).setAlign([1, 0]);
-        node.setTranslate(-(this._context.size[0] - this._right), this._top, 0);
+        if (width instanceof Array) {
+            width = width[0];
+        }
+        this._context.setSize(node, [width, this._bottom - this._top]);
+        this._context.setOrigin(node, [1, 0]);
+        this._context.setTranslate(node, -(this._context.size[0] - this._right), this._top, 0);
         this._right -= width;
         return this;
     };
@@ -100,9 +121,8 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.fill = function(node) {
-        node.setSize([this._right - this._left, this._bottom - this._top]);
-        node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTranslate(this._left, this._top, 0);
+        this._context.setSize(node, [this._right - this._left, this._bottom - this._top]);
+        this._context.setTranslate(node, this._left, this._top, 0);
         return this;
     };
 
