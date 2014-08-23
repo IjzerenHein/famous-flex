@@ -62,5 +62,41 @@ define(function(require, exports, module) {
         // which provides the implementation.
     };
 
+    LayoutContext.prototype.setSize = function(node, size) {
+        if (node) {
+            node.setSize(size);
+        }
+    };
+    LayoutContext.prototype.setAlign = function(node, align) {
+        if (node) {
+            node.setAlign(align);
+        }
+    };
+    LayoutContext.prototype.setOrigin = function(node, origin) {
+        if (node) {
+            node.setOrigin(origin);
+        }
+    };
+    LayoutContext.prototype.setTranslate = function(node, x, y, z) {
+        if (node) {
+            node.setTranslate(x, y, z);
+        }
+    };
+    LayoutContext.prototype.setRotation = function(node, x, y, z) {
+        if (node) {
+            node.setRotation(x, y, z);
+        }
+    };
+    LayoutContext.prototype.setSkew = function(node, x, y, z) {
+        if (node) {
+            node.setSkew(x, y, z);
+        }
+    };
+    LayoutContext.prototype.setScale = function(node, x, y, z) {
+        if (node) {
+            node.setScale(x, y, z);
+        }
+    };
+
     module.exports = LayoutContext;
 });
