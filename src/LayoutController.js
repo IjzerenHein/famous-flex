@@ -52,6 +52,7 @@ define(function(require, exports, module) {
         this._firstLayoutNode = undefined; // linked list of layout-nodes
 
         // Layout-context
+        this._layoutOptions = {};
         this._layoutContext = new LayoutContext();
         this._layoutContext.nextNode = _getNextLayoutNode.bind(this);
         this._layoutContext.nodeById = _getLayoutNodeById.bind(this);
@@ -271,7 +272,7 @@ define(function(require, exports, module) {
      */
     LayoutController.prototype.setLayout = function(layout, options) {
         this._layout = layout;
-        this._layoutOptions = options;
+        this._layoutOptions = options || this._layoutOptions;
         this._isDirty = true;
         return this;
     };
@@ -293,7 +294,7 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setLayoutOptions = function(options) {
-        this._layoutOptions = options;
+        this._layoutOptions = options || {};
         this._isDirty = true;
         return this;
     };
