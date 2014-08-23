@@ -22,11 +22,11 @@ define(function(require, exports, module) {
     var EventHandler = require('famous/core/EventHandler');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
-    var Transitionable = require('famous/transitions/Transitionable');
     var Easing = require('famous/transitions/Easing');
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
     var LayoutUtility = require('./LayoutUtility');
+    var PhysicsEngine = require('famous/physics/PhysicsEngine');
 
     /**
      * @class
@@ -57,8 +57,18 @@ define(function(require, exports, module) {
         this._layoutContext.nodeById = _getLayoutNodeById.bind(this);
         this._layoutContext.nodeByArrayElement = _getCreateAndOrderLayoutNodes.bind(this);
 
-        // Animation
-        this._reflowTransitionable = new Transitionable(1);
+        // Physics
+        var mainPE = new PhysicsEngine();
+        this._physicsEngines = {
+            opacity: mainPE,
+            size: mainPE,
+            align: mainPE,
+            origin: mainPE,
+            rotate: mainPE,
+            skew: mainPE,
+            scale: mainPE,
+            translate: new PhysicsEngine()
+        };
 
         // Caching
         this._isDirty = true;
@@ -84,8 +94,6 @@ define(function(require, exports, module) {
     }
 
     LayoutController.DEFAULT_OPTIONS = {
-        reflowTransition: undefined, //{duration: 500, curve: Easing.outBack},
-        insertTransition: {duration: 500, curve: Easing.outBack},
         showOpacity: 1,
         insertSpec: {
             opacity: undefined,
@@ -94,7 +102,6 @@ define(function(require, exports, module) {
             origin: undefined,
             align: undefined
         },
-        removeTransition: {duration: 500, curve: Easing.outBack},
         removeSpec: {
             opacity: undefined,
             size: undefined,
@@ -193,7 +200,7 @@ define(function(require, exports, module) {
 
         // When a custom insert-spec was specified, store that in the layout-node
         if (insertSpec) {
-            var layoutNode = _createLayoutNode.call(this, renderable, insertSpec);
+            var layoutNode = new LayoutNode(this._physicsEngines, renderable, insertSpec);
             layoutNode._next = this._firstLayoutNode;
             this._firstLayoutNode = layoutNode;
         }
@@ -241,9 +248,9 @@ define(function(require, exports, module) {
         if (renderNode && removeSpec) {
             var layoutNode = this.getLayoutNode(renderNode);
             if (layoutNode) {
-                layoutNode._cleanup = true;
-                layoutNode._removing = true;
-                layoutNode._final = LayoutUtility.cloneSpec(removeSpec || this.options.removeSpec);
+                layoutNode._reset();
+                layoutNode._setFromSpec(removeSpec || this.options.removeSpec);
+                layoutNode._invalidated = false;
             }
         }
 
@@ -263,8 +270,8 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setLayout = function(layout, options) {
-        this._layoutContext.layout = layout;
-        this._layoutContext.options = options;
+        this._layout = layout;
+        this._layoutOptions = options;
         this._isDirty = true;
         return this;
     };
@@ -275,7 +282,7 @@ define(function(require, exports, module) {
      * @return {Function} Layout function
      */
     LayoutController.prototype.getLayout = function() {
-        return this._layoutContext.layout;
+        return this._layout;
     };
 
     /**
@@ -286,7 +293,7 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setLayoutOptions = function(options) {
-        this._layoutContext.options = options;
+        this._layoutOptions = options;
         this._isDirty = true;
         return this;
     };
@@ -301,10 +308,10 @@ define(function(require, exports, module) {
      */
     LayoutController.prototype.patchLayoutOptions = function(options) {
         for (var n in options) {
-            if (this._layoutContext.options === undefined) {
-                this._layoutContext.options = {};
+            if (this._layoutOptions === undefined) {
+                this._layoutOptions = {};
             }
-            this._layoutContext.options[n] = options[n];
+            this._layoutOptions[n] = options[n];
         }
         this._isDirty = true;
         return this;
@@ -316,7 +323,7 @@ define(function(require, exports, module) {
      * @return {Object} Layout options
      */
     LayoutController.prototype.getLayoutOptions = function() {
-        return this._layoutContext.options;
+        return this._layoutOptions;
     };
 
     /**
@@ -329,7 +336,7 @@ define(function(require, exports, module) {
     LayoutController.prototype.getLayoutNode = function(renderable) {
         var layoutNode = this._firstLayoutNode;
         while (layoutNode) {
-            if (layoutNode.renderNode === renderable) {
+            if (layoutNode._renderNode === renderable) {
                 return layoutNode;
             }
             layoutNode = layoutNode._next;
@@ -375,28 +382,6 @@ define(function(require, exports, module) {
         return this;
     };
 
-        /**
-     * Interpolate: If a linear function f(0) = a, f(1) = b, then return f(t)
-     */
-    function _interpolate(start, final, t, cache) {
-        if (final === undefined) {
-            return undefined;
-        }
-        start = (start === undefined) ? final : start;
-        if (final instanceof Array) {
-            if (!cache || (cache.length !== final.length)){
-                cache = new Array(final.length);
-            }
-            for (var i = 0; i < final.length; i++) {
-                cache[i] = ((1 - t) * start[i]) + (t * final[i]);
-            }
-            return cache;
-        }
-        else {
-            return ((1 - t) * start) + (t * final);
-        }
-    }
-
     /**
      * Log debug info to the console
      */
@@ -430,8 +415,6 @@ define(function(require, exports, module) {
         var size = context.size;
 
         // When the size or layout function has changed, reflow the layout
-        var reflow = false;
-        var layoutNode;
         if (size[0] !== this._contextSizeCache[0] || size[1] !== this._contextSizeCache[1] || this._isDirty) {
 
             // Update state
@@ -440,72 +423,35 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Reflow layout
-            _log.call(this, 'Reflowing layout... size: ', size);
+            //_log.call(this, 'Reflowing layout... size: ', size);
             _reflowLayout.call(this, size);
-            reflow = true;
-
-            // Restart re-flow transitionable
-            //if (this._nonfirstCommit) {
-                this._reflowTransitionable.reset(0, this._reflowTransitionable.velocity);
-                this._reflowTransitionable.set(1, this.options.reflowTransition);
-            /*}
-            else {
-                this._nonfirstCommit = true;
-            }*/
         }
 
-        // When a reflow has occurred, or the reflow-transitionable is still in effect,
-        // update the commit-output
-        if (reflow || this._reflowTransitionable.isActive()) {
-
-            // Update nodes layout
-            var result = [];
-            layoutNode = this._firstLayoutNode;
-            var prevLayoutNode;
-            var t = this._reflowTransitionable.get();
-            while (layoutNode) {
-                var cur = layoutNode._current;
-                var start = layoutNode._start;
-                var final = layoutNode._final;
-                cur.renderNode = layoutNode.renderNode;
-                if (!layoutNode._cleanup){
-                    delete layoutNode._removing;
-                }
-                if (layoutNode._cleanup && !layoutNode._removing) {
-                    layoutNode._removing = true;
-                    layoutNode._final = LayoutUtility.cloneSpec(this.options.removeSpec);
-                    final = layoutNode._final;
-                }
-                cur.size = _interpolate.call(this, start.size, final.size, t, cur.size);
-                cur.transform = _interpolate.call(this, start.transform, final.transform, t, cur.transform);
-                cur.opacity = _interpolate.call(this, start.opacity, final.opacity, t, cur.opacity);
-                cur.origin = _interpolate.call(this, start.origin, final.origin, t, cur.origin);
-                cur.align = _interpolate.call(this, start.align, final.align, t, cur.align);
-                if (layoutNode._removing && LayoutUtility.isEqualSpec(final, cur)) {
-
-                    // Remove layout-node from the linked list
-                    layoutNode = layoutNode._next;
-                    if (prevLayoutNode) {
-                        prevLayoutNode._next = layoutNode;
-                    }
-                    else {
-                        this._firstLayoutNode = layoutNode;
-                    }
+        // Update commit-output
+        var result = [];
+        var layoutNode = this._firstLayoutNode;
+        var prevLayoutNode;
+        while (layoutNode) {
+            var spec = layoutNode._buildSpec();
+            if (!spec) {
+                var destroyLayoutNode = layoutNode;
+                layoutNode = layoutNode._next;
+                if (prevLayoutNode) {
+                    prevLayoutNode._next = layoutNode;
                 }
                 else {
-
-                    result.push(cur);
-                    prevLayoutNode = layoutNode;
-                    layoutNode = layoutNode._next;
+                    this._firstLayoutNode = layoutNode;
                 }
+                destroyLayoutNode._destroy();
             }
-            this._commitOutput.target = result;
+            else {
+                spec.target = layoutNode._renderNode.render();
+                result.push(spec);
+                prevLayoutNode = layoutNode;
+                layoutNode = layoutNode._next;
+            }
         }
-
-        // Render all nodes
-        for (var i = 0; i < this._commitOutput.target.length; i++) {
-            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
-        }
+        this._commitOutput.target = result;
 
         // Return
         //if (size) transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
@@ -516,17 +462,28 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Create a fresh new layout-node
+     * Re-flows the layout based on the given size
      *
-     * @param {Object} renderNode
-     * @return {LayoutNode} new layout-node
+     * @param {Array.Number} size Size to calculate the layout for
      */
-    function _createLayoutNode(renderNode, insertSpec) {
-        var layoutNode = new LayoutNode();
-        layoutNode.renderNode = renderNode;
-        layoutNode._start = LayoutUtility.cloneSpec(insertSpec || this.options.insertSpec);
-        layoutNode._current = LayoutUtility.cloneSpec(insertSpec || this.options.insertSpec);
-        return layoutNode;
+    function _reflowLayout(size) {
+
+        // Reset all layout-nodes
+        var zeroArray2 = [0, 0];
+        var layoutNode = this._firstLayoutNode;
+        while (layoutNode) {
+            layoutNode._reset(size, this.options.showOpacity, zeroArray2, zeroArray2);
+            layoutNode = layoutNode._next;
+        }
+
+        // Prepare context
+        this._currentSequence = this._viewSequence;
+        this._prevLayoutNode = undefined;
+        this._currentLayoutNode = this._firstLayoutNode;
+        this._layoutContext.size = size;
+
+        // Layout objects
+        this._layout(this._layoutContext, this._layoutOptions);
     }
 
     /**
@@ -544,7 +501,7 @@ define(function(require, exports, module) {
 
         // Optimized path. If the next current layout-node matches the renderNode
         // return that immediately.
-        if (this._currentLayoutNode && (this._currentLayoutNode.renderNode === renderNode)) {
+        if (this._currentLayoutNode && (this._currentLayoutNode._renderNode === renderNode)) {
             this._prevLayoutNode = this._currentLayoutNode;
             this._currentLayoutNode = this._currentLayoutNode._next;
             return this._prevLayoutNode;
@@ -554,7 +511,7 @@ define(function(require, exports, module) {
         var layoutNode = this._currentLayoutNode;
         var prevLayoutNode = this._prevLayoutNode;
         while (layoutNode) {
-            if (layoutNode.renderNode === renderNode) {
+            if (layoutNode._renderNode === renderNode) {
 
                 // Remove from old position in linked-list
                 if (prevLayoutNode) {
@@ -577,7 +534,7 @@ define(function(require, exports, module) {
         }
 
         // No layout-node found, create new one
-        layoutNode = _createLayoutNode.call(this, renderNode);
+        layoutNode = new LayoutNode(this._physicsEngines, renderNode);
         layoutNode._next = this._currentLayoutNode;
         if (this._prevLayoutNode) {
             this._prevLayoutNode._next = layoutNode;
@@ -635,41 +592,6 @@ define(function(require, exports, module) {
 
         // Get the layout-node by its render-node
         return _getCreateAndOrderLayoutNodes.call(this, renderNode);
-    }
-
-    /**
-     * Re-flows the layout based on the given size
-     *
-     * @param {Array.Number} size Size to calculate the layout for
-     */
-    function _reflowLayout(size) {
-
-        // Mark all layout-nodes for removal
-        var layoutNode = this._firstLayoutNode;
-        while (layoutNode) {
-            layoutNode._cleanup = true;
-            if (!layoutNode._removing) {
-                LayoutUtility.clearSpec(layoutNode._final);
-                layoutNode._final.opacity = this.options.showOpacity;
-            }
-            layoutNode = layoutNode._next;
-        }
-
-        // Prepare context
-        this._currentSequence = this._viewSequence;
-        this._prevLayoutNode = undefined;
-        this._currentLayoutNode = this._firstLayoutNode;
-        this._layoutContext.size = size;
-
-        // Layout objects
-        this._layoutContext.layout(this._layoutContext, this._layoutContext.options);
-
-        // Update all layout nodes
-        layoutNode = this._firstLayoutNode;
-        while (layoutNode) {
-            layoutNode._start = LayoutUtility.cloneSpec(layoutNode._current);
-            layoutNode = layoutNode._next;
-        }
     }
 
     module.exports = LayoutController;

@@ -43,7 +43,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.top = function(node, height) {
         node.setSize([this._right - this._left, height]);
         node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTransform(Transform.translate(this._left, this._top, 0));
+        node.setTranslate(this._left, this._top, 0);
         this._top += height;
         return this;
     };
@@ -58,7 +58,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.left = function(node, width) {
         node.setSize([width, this._bottom - this._top]);
         node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTransform(Transform.translate(this._left, this._top, 0));
+        node.setTranslate(this._left, this._top, 0);
         this._left += width;
         return this;
     };
@@ -73,7 +73,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.bottom = function(node, height) {
         node.setSize([this._right - this._left, height]);
         node.setOrigin([0, 1]).setAlign([0, 1]);
-        node.setTransform(Transform.translate(this._left, -(this._context.size[1] - this._bottom), 0));
+        node.setTranslate(this._left, -(this._context.size[1] - this._bottom), 0);
         this._bottom -= height;
         return this;
     };
@@ -88,7 +88,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.right = function(node, width) {
         node.setSize([width, this._bottom - this._top]);
         node.setOrigin([1, 0]).setAlign([1, 0]);
-        node.setTransform(Transform.translate(-(this._context.size[0] - this._right), this._top, 0));
+        node.setTranslate(-(this._context.size[0] - this._right), this._top, 0);
         this._right -= width;
         return this;
     };
@@ -102,7 +102,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.fill = function(node) {
         node.setSize([this._right - this._left, this._bottom - this._top]);
         node.setOrigin([0, 0]).setAlign([0, 0]);
-        node.setTransform(Transform.translate(this._left, this._top, 0));
+        node.setTranslate(this._left, this._top, 0);
         return this;
     };
 
