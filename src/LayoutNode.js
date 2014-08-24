@@ -49,6 +49,7 @@ define(function(require, exports, module) {
         this._endstatereached = false;
         this._initial = true;
         this._spec = initialSpec ? LayoutUtility.cloneSpec(initialSpec) : {};
+        this._spec.renderNode = renderNode;
         if (initialSpec) {
             this._setFromSpec(initialSpec);
         }
