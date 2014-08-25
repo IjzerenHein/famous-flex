@@ -25,20 +25,21 @@ define(function(require, exports, module) {
      * @param {LayoutContext} context layout-context
      * @alias module:LayoutDockHelper
      */
-    function LayoutDockHelper(context, margins) {
-        this._context = context;
+    function LayoutDockHelper(size, nodes, margins) {
+        this._size = size;
+        this._nodes = nodes;
         if (margins) {
             margins = LayoutUtility.normalizeMargins(margins);
             this._left = margins[3];
             this._top = margins[0];
-            this._right = context.size[0] - margins[1];
-            this._bottom = context.size[1] - margins[2];
+            this._right = size[0] - margins[1];
+            this._bottom = size[1] - margins[2];
         }
         else {
             this._left = 0;
             this._top = 0;
-            this._right = context.size[0];
-            this._bottom = context.size[1];
+            this._right = size[0];
+            this._bottom = size[1];
         }
     }
 
@@ -50,12 +51,17 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.top = function(node, height) {
+        if (!height) {
+            return;
+        }
         if (height instanceof Array) {
             height = height[1];
         }
-        this._context.setSize(node, [this._right - this._left, height]);
-        this._context.setOrigin(node, [0, 0]);
-        this._context.setTranslate(node, this._left, this._top, 0);
+        this._nodes.set(node, {
+            size: [this._right - this._left, height],
+            origin: [0, 0],
+            translate: [this._left, this._top, 0]
+        });
         this._top += height;
         return this;
     };
@@ -68,12 +74,17 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.left = function(node, width) {
+        if (!width) {
+            return;
+        }
         if (width instanceof Array) {
             width = width[0];
         }
-        this._context.setSize(node, [width, this._bottom - this._top]);
-        this._context.setOrigin(node, [0, 0]);
-        this._context.setTranslate(node, this._left, this._top, 0);
+        this._nodes.set(node, {
+            size: [width, this._bottom - this._top],
+            origin: [0, 0],
+            translate: [this._left, this._top, 0]
+        });
         this._left += width;
         return this;
     };
@@ -86,12 +97,17 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.bottom = function(node, height) {
+        if (!height) {
+            return;
+        }
         if (height instanceof Array) {
             height = height[1];
         }
-        this._context.setSize(node, [this._right - this._left, height]);
-        this._context.setOrigin(node, [0, 1]);
-        this._context.setTranslate(node, this._left, -(this._context.size[1] - this._bottom), 0);
+        this._nodes.set(node, {
+            size: [this._right - this._left, height],
+            origin: [0, 1],
+            translate: [this._left, -(this._size[1] - this._bottom), 0]
+        });
         this._bottom -= height;
         return this;
     };
@@ -104,12 +120,17 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.right = function(node, width) {
+        if (!width) {
+            return;
+        }
         if (width instanceof Array) {
             width = width[0];
         }
-        this._context.setSize(node, [width, this._bottom - this._top]);
-        this._context.setOrigin(node, [1, 0]);
-        this._context.setTranslate(node, -(this._context.size[0] - this._right), this._top, 0);
+        this._nodes.set(node, {
+            size: [width, this._bottom - this._top],
+            origin: [1, 0],
+            translate: [-(this._size[0] - this._right), this._top, 0]
+        });
         this._right -= width;
         return this;
     };
@@ -121,8 +142,10 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.fill = function(node) {
-        this._context.setSize(node, [this._right - this._left, this._bottom - this._top]);
-        this._context.setTranslate(node, this._left, this._top, 0);
+        this._nodes.set(node, {
+            size: [this._right - this._left, this._bottom - this._top],
+            translate: [this._left, this._top, 0]
+        });
         return this;
     };
 

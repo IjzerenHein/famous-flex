@@ -20,6 +20,7 @@ define(function(require, exports, module) {
     // import dependencies
     var BaseLayoutController = require('./BaseLayoutController');
     var Transform = require('famous/core/Transform');
+    var LayoutNodesContext = require('./LayoutNodesContext');
 
     /**
      * @class
@@ -28,7 +29,13 @@ define(function(require, exports, module) {
      */
     function LayoutController(options) {
         BaseLayoutController.apply(this, arguments);
-        this._layoutContext = new Context(this);
+        this._layoutNodesContext = new LayoutNodesContext({
+            byId: _getSpecIdByNodeId.bind(this),
+            next: _getNextSpecId.bind(this),
+            byArrayElement: _getSpecIdByArrayElement.bind(this),
+            get: _getRenderNodeSpecById.bind(this),
+            set: _setSpecById.bind(this)
+        });
     }
     LayoutController.prototype = Object.create(BaseLayoutController.prototype);
     LayoutController.prototype.constructor = LayoutController;
@@ -44,10 +51,9 @@ define(function(require, exports, module) {
         this._specMap = {};
         this._specResult = [];
         this._currentSequence = this._viewSequence;
-        this._layoutContext.size = size;
 
         // Layout objects
-        this._layout(this._layoutContext, this._layoutOptions);
+        this._layout(size, this._layoutNodesContext, this._layoutOptions);
 
         // Return result
         return this._specResult;
@@ -135,6 +141,13 @@ define(function(require, exports, module) {
             return undefined;
         }
         var spec = this._specMap[specId];
+        if (!spec) {
+            // try lookup by node-id
+            spec = this._specMap[_getSpecIdByNodeId.call(this, specId)];
+            if (!spec) {
+                return undefined;
+            }
+        }
         if (!spec.init) {
             this._specResult.push(spec);
             spec.init = true;
@@ -142,64 +155,33 @@ define(function(require, exports, module) {
         return spec;
     }
 
-    /**
-     * Layout-context
-     */
-    function Context(layoutController) {
-        this._layoutController = layoutController;
-    }
-    Context.prototype.nodeById = function(nodeId) {
-        return _getSpecIdByNodeId.call(this._layoutController, nodeId);
-    };
-    Context.prototype.nextNode = function() {
-        return _getNextSpecId.call(this._layoutController);
-    };
-    Context.prototype.nodeByArrayElement = function(arrayElement) {
-        return _getSpecIdByArrayElement.call(this._layoutController, arrayElement);
-    };
-    Context.prototype.get = function(node) {
-        return _getRenderNodeSpecById.call(this._layoutController, node);
-    };
-    Context.prototype.setSize = function(node, size) {
-        var spec = _getSpecById.call(this._layoutController, node);
-        if (spec) {
-            spec.size = size;
+    function _setSpecById(node, set) {
+        var spec = _getSpecById.call(this, node);
+        if (!spec) {
+            return;
         }
-    };
-    Context.prototype.setOrigin = function(node, origin) {
-        var spec = _getSpecById.call(this._layoutController, node);
-        if (spec) {
-            spec.origin = origin;
+        if (set.size) {
+            spec.size = set.size;
         }
-    };
-    Context.prototype.setAlign = function(node, align) {
-        var spec = _getSpecById.call(this._layoutController, node);
-        if (spec) {
-            spec.align = align;
+        if (set.origin) {
+            spec.origin = set.origin;
         }
-    };
-    Context.prototype.setTranslate = function(node, x, y, z) {
-        var spec = _getSpecById.call(this._layoutController, node);
-        if (spec) {
+        if (set.align) {
+            spec.align = set.align;
+        }
+        if (set.translate) {
+            var xyz = set.translate;
             if (!spec.transform) {
-                spec.transform = Transform.translate(x, y, z);
+                spec.transform = Transform.translate(xyz[0], xyz[1], xyz[2]);
             }
             else {
-                spec.transform[12] = x;
-                spec.transform[13] = y;
-                spec.transform[14] = z;
+                spec.transform[12] = xyz[0];
+                spec.transform[13] = xyz[1];
+                spec.transform[14] = xyz[2];
             }
         }
-    };
-    Context.prototype.setSkew = function(node, x, y, z) {
-        // TODO
-    };
-    Context.prototype.setRotation = function(node, x, y, z) {
-        //return _setNodeRotation.call(node, size);
-    };
-    Context.prototype.setScale = function(node, x, y, z) {
-        //return _setNodeScale.call(node, size);
-    };
+        // todo skew, scale, rotate
+    }
 
     module.exports = LayoutController;
 });
