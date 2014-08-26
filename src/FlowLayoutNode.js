@@ -72,12 +72,19 @@ define(function(require, exports, module) {
         return (ar1[0] === ar2[0]) && (ar1[1] === ar2[1]) && (ar1[2] === ar2[2]);
     }
     function _setFromSpec(spec) {
-        var set = {
-            opacity: spec.opacity,
-            size: spec.size,
-            align: spec.align,
-            origin: spec.origin
-        };
+        var set = {};
+        if (spec.opacity !== undefined) {
+            set.opacity = spec.opacity;
+        }
+        if (spec.size !== undefined) {
+            set.size = spec.size;
+        }
+        if (spec.align !== undefined) {
+            set.align = spec.align;
+        }
+        if (spec.origin !== undefined) {
+            set.origin = spec.origin;
+        }
         if (spec.transform) {
             var transform = Transform.interpret(spec.transform);
             if (!_equalsXYZ(transform.translate, DEFAULT.translate)) {
@@ -93,17 +100,6 @@ define(function(require, exports, module) {
                 set.rotate = transform.rotate;
             }
         }
-
-        /*if ((spec.opacity !== undefined) && !this._properties.opacity) {
-            this._set({opacity: DEFAULT.opacity});
-        }
-        if ((spec.align !== undefined) && !this._properties.align) {
-            this._set({align: DEFAULT.align});
-        }
-        if ((spec.origin !== undefined) && !this._properties.align) {
-            this._set({align: DEFAULT.align});
-        }*/
-
         this._set(set);
         return set;
     }
@@ -112,18 +108,33 @@ define(function(require, exports, module) {
      * Reset the end-state. This function is called on all layout-nodes prior to
      * calling the layout-function. So that the layout-function starts with a clean slate.
      */
-    FlowLayoutNode.prototype._reset = function(spec) {
+    FlowLayoutNode.prototype._reset = function() {
         if (!this._invalidated) {
             return this;
         }
-        var specSet = spec ? _setFromSpec.call(this, spec) : undefined;
         for (var propName in this._properties) {
-            if (!specSet || (specSet[propName] === undefined)) {
-                this._properties[propName].endState.set(DEFAULT[propName]);
-            }
+            this._properties[propName].endState.set(DEFAULT[propName]);
         }
         this._invalidated = false;
         return this;
+    };
+
+    /**
+     * TODO
+     */
+    FlowLayoutNode.prototype._remove = function(removeSpec) {
+        if (this._isRemoving) {
+            return;
+        }
+        this._isRemoving = true;
+        for (var propName in this._properties) {
+            this._properties[propName].endState.set(this._properties[propName].particle.getPosition());
+        }
+        if (removeSpec) {
+            _setFromSpec.call(this, removeSpec);
+        }
+        this._isRemoving = true;
+        this._invalidated = false;
     };
 
     /**
@@ -242,6 +253,7 @@ define(function(require, exports, module) {
                 }
                 this._invalidated = true;
                 this._endstatereached = false;
+                this._isRemoving = false;
             }
         }
     };

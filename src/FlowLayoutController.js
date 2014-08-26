@@ -19,6 +19,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var BaseLayoutController = require('./BaseLayoutController');
+    var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
     var LayoutNode = require('./FlowLayoutNode');
     var LayoutNodesContext = require('./LayoutNodesContext');
@@ -32,6 +33,13 @@ define(function(require, exports, module) {
      */
     function FlowLayoutController(options) {
         BaseLayoutController.apply(this, arguments);
+
+        // Set options
+        this.options = Object.create(FlowLayoutController.DEFAULT_OPTIONS);
+        this._optionsManager = new OptionsManager(this.options);
+        if (options) {
+            this.setOptions(options);
+        }
 
         // Layout-context
         this._layoutContext = new LayoutNodesContext({
@@ -59,21 +67,31 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
-        /*showOpacity: 1,
+        showOpacity: 1,
         insertSpec: {
-            opacity: undefined,
+            opacity: 0,
             size: undefined,
             transform: undefined,
             origin: undefined,
             align: undefined
         },
         removeSpec: {
-            opacity: undefined,
+            opacity: 0,
             size: undefined,
             transform: undefined,
             origin: undefined,
             align: undefined
-        },*/
+        }
+    };
+
+    /**
+     * Patches the FlowLayoutController instance's options with the passed-in ones.
+     *
+     * @method setOptions
+     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+     */
+    FlowLayoutController.prototype.setOptions = function setOptions(options) {
+        return this._optionsManager.setOptions(options);
     };
 
     /**
@@ -124,7 +142,10 @@ define(function(require, exports, module) {
 
         // When a custom insert-spec was specified, store that in the layout-node
         if (insertSpec) {
-            var layoutNode = new LayoutNode(this._physicsEngines, renderable, insertSpec);
+            var layoutNode = new LayoutNode(this._physicsEngines, renderable, insertSpec || this.options.insertSpec);
+            if (this.options.showOpacity !== undefined) {
+               layoutNode._set({opacity: this.options.showOpacity});
+           }
             layoutNode._next = this._firstLayoutNode;
             this._firstLayoutNode = layoutNode;
         }
@@ -172,7 +193,7 @@ define(function(require, exports, module) {
         if (renderNode && removeSpec) {
             var layoutNode = _getLayoutNode.call(this, renderNode);
             if (layoutNode) {
-                layoutNode._reset(removeSpec || this.options.removeSpec);
+                layoutNode._remove(removeSpec || this.options.removeSpec);
             }
         }
 
@@ -234,6 +255,16 @@ define(function(require, exports, module) {
         // Layout objects
         this._layout(size, this._layoutContext, this._layoutOptions);
 
+        // Check whether any nodes are no longer rendered. In that case
+        // mark them as removing and set the removeSpec
+        layoutNode = this._firstLayoutNode;
+        while (layoutNode) {
+            if (!layoutNode._invalidated) {
+                layoutNode._remove(this.options.removeSpec);
+            }
+            layoutNode = layoutNode._next;
+        }
+
         // Return result function that is executed during every commit
         return _getCommitResult.bind(this);
     };
@@ -286,7 +317,10 @@ define(function(require, exports, module) {
         }
 
         // No layout-node found, create new one
-        layoutNode = new LayoutNode(this._physicsEngines, renderNode);
+        layoutNode = new LayoutNode(this._physicsEngines, renderNode, this.options.insertSpec);
+        if (this.options.showOpacity !== undefined) {
+            layoutNode._set({opacity: this.options.showOpacity});
+        }
         layoutNode._next = this._currentLayoutNode;
         if (this._prevLayoutNode) {
             this._prevLayoutNode._next = layoutNode;
