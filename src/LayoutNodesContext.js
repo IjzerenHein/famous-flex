@@ -64,7 +64,7 @@ define(function(require, exports, module) {
         // dummy implementation, override in constructor
     };
 
-    LayoutNodesContext.prototype.size = function(node, size) {
+    /*LayoutNodesContext.prototype.size = function(node, size) {
         this.set(node, {size: size});
     };
 
@@ -90,7 +90,7 @@ define(function(require, exports, module) {
 
     LayoutNodesContext.prototype.scale = function(node, x, y, z) {
         this.set(node, {scale: [x, y, z]});
-    };
+    };*/
 
     module.exports = LayoutNodesContext;
 });

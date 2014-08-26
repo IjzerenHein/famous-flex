@@ -20,8 +20,8 @@ define(function(require, exports, module) {
     // import dependencies
     var BaseLayoutController = require('./BaseLayoutController');
     var ViewSequence = require('famous/core/ViewSequence');
-    var LayoutNode = require('./LayoutNode');
-    var LayoutContext = require('./LayoutContext');
+    var LayoutNode = require('./FlowLayoutNode');
+    var LayoutNodesContext = require('./LayoutNodesContext');
     var LayoutUtility = require('./LayoutUtility');
     var PhysicsEngine = require('famous/physics/PhysicsEngine');
 
@@ -34,10 +34,13 @@ define(function(require, exports, module) {
         BaseLayoutController.apply(this, arguments);
 
         // Layout-context
-        this._layoutContext = new LayoutContext();
-        this._layoutContext.nextNode = _getNextLayoutNode.bind(this);
-        this._layoutContext.nodeById = _getLayoutNodeById.bind(this);
-        this._layoutContext.nodeByArrayElement = _getCreateAndOrderLayoutNodes.bind(this);
+        this._layoutContext = new LayoutNodesContext({
+            next: _getNextLayoutNode.bind(this),
+            byId: _getLayoutNodeById.bind(this),
+            byArrayElement: _getCreateAndOrderLayoutNodes.bind(this),
+            set: _setLayoutNode.bind(this),
+            getData: _getLayoutNodeData.bind(this)
+        });
 
         // Physics
         var mainPE = new PhysicsEngine();
@@ -56,7 +59,7 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
-        showOpacity: 1,
+        /*showOpacity: 1,
         insertSpec: {
             opacity: undefined,
             size: undefined,
@@ -70,8 +73,7 @@ define(function(require, exports, module) {
             transform: undefined,
             origin: undefined,
             align: undefined
-        },
-        verbose: true
+        },*/
     };
 
     /**
@@ -170,9 +172,7 @@ define(function(require, exports, module) {
         if (renderNode && removeSpec) {
             var layoutNode = _getLayoutNode.call(this, renderNode);
             if (layoutNode) {
-                layoutNode._reset();
-                layoutNode._setFromSpec(removeSpec || this.options.removeSpec);
-                layoutNode._invalidated = false;
+                layoutNode._reset(removeSpec || this.options.removeSpec);
             }
         }
 
@@ -230,10 +230,9 @@ define(function(require, exports, module) {
         this._currentSequence = this._viewSequence;
         this._prevLayoutNode = undefined;
         this._currentLayoutNode = this._firstLayoutNode;
-        this._layoutContext.size = size;
 
         // Layout objects
-        this._layout(this._layoutContext, this._layoutOptions);
+        this._layout(size, this._layoutContext, this._layoutOptions);
 
         // Return result function that is executed during every commit
         return _getCommitResult.bind(this);
@@ -248,7 +247,7 @@ define(function(require, exports, module) {
      * they can be accessed efficiently the next time the layout is reflowed.
      *
      * @param {Object} renderNode render-node for which to lookup the layout-node
-     * @return {LayoutNode} layout-node
+     * @return {FlowLayoutNode} layout-node
      */
     function _getCreateAndOrderLayoutNodes(renderNode) {
 
@@ -302,8 +301,7 @@ define(function(require, exports, module) {
     /**
      * Get the next layout-node
      *
-     * @param {LayoutNode} layoutNode
-     * @return {LayoutNode} next layout-node or undefined
+     * @return {FlowLayoutNode} next layout-node or undefined
      */
     function _getNextLayoutNode() {
 
@@ -325,7 +323,7 @@ define(function(require, exports, module) {
      * Get the layout-node by id.
      *
      * @param {String} nodeId id of the layout-node
-     * @return {LayoutNode} layout-node or undefined
+     * @return {FlowLayoutNode} layout-node or undefined
      */
     function _getLayoutNodeById(nodeId) {
 
@@ -347,6 +345,12 @@ define(function(require, exports, module) {
         return _getCreateAndOrderLayoutNodes.call(this, renderNode);
     }
 
+    /**
+     * Get the layout-node by its renderable.
+     *
+     * @param {Object} renderable renderable
+     * @return {FlowLayoutNode} layout-node or undefined
+     */
     function _getLayoutNode (renderable) {
         var layoutNode = this._firstLayoutNode;
         while (layoutNode) {
@@ -356,6 +360,39 @@ define(function(require, exports, module) {
             layoutNode = layoutNode._next;
         }
         return undefined;
+    }
+
+    /**
+     * Get the renderable associated with the given layout-node
+     *
+     * @param {Object|Srting} node node or node-id
+     * @return {Object} render-node or undefined
+     */
+    function _getLayoutNodeData (node) {
+        if (!node) {
+            return undefined;
+        }
+        return node._renderNode;
+    }
+
+    /**
+     * Set the content of a layout-node
+     *
+     * @param {FlowLayoutNode|String} node node or node-id
+     * @return {FlowLayoutController} this
+     */
+    function _setLayoutNode (node, set) {
+        if (!node) {
+            return this;
+        }
+        if (!(node instanceof LayoutNode) && ((node instanceof String) || (typeof node !== 'string'))) {
+            node = _getLayoutNodeById(node);
+            if (!node) {
+                return this;
+            }
+        }
+        node._set(set);
+        return this;
     }
 
     module.exports = FlowLayoutController;

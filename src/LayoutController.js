@@ -33,7 +33,7 @@ define(function(require, exports, module) {
             byId: _getSpecIdByNodeId.bind(this),
             next: _getNextSpecId.bind(this),
             byArrayElement: _getSpecIdByArrayElement.bind(this),
-            get: _getRenderNodeSpecById.bind(this),
+            getData: _getRenderNodeSpecById.bind(this),
             set: _setSpecById.bind(this)
         });
     }
