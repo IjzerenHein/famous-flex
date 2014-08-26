@@ -20,7 +20,6 @@ define(function(require, exports, module) {
     // import dependencies
     var Entity = require('famous/core/Entity');
     //var EventHandler = require('famous/core/EventHandler');
-    //var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
 
     /**
@@ -29,13 +28,6 @@ define(function(require, exports, module) {
      * @alias module:BaseLayoutController
      */
     function BaseLayoutController(options) {
-
-        // Options
-        //this.options = Object.create(BaseLayoutController.DEFAULT_OPTIONS);
-        //this.optionsManager = new OptionsManager(this.options);
-        //if (options) {
-        //    this.setOptions(options);
-        //}
 
         // Commit
         this.id = Entity.register(this);
@@ -69,18 +61,6 @@ define(function(require, exports, module) {
             this.setLayout(options.layout, options.layoutOptions);
         }
     }
-    //BaseLayoutController.DEFAULT_OPTIONS = {
-    //};
-
-    /**
-     * Patches the BaseLayoutController instance's options with the passed-in ones.
-     *
-     * @method setOptions
-     * @param {Options} options An object of configurable options for the BaseLayoutController instance.
-     */
-    /*BaseLayoutController.prototype.setOptions = function setOptions(options) {
-        return this.optionsManager.setOptions(options);
-    };*/
 
     /**
      * Sets the collection of renderables which are layed out according to
