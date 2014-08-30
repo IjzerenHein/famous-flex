@@ -44,6 +44,11 @@ issue.
 - Documentation
 
 
+## Todo
+
+- Update layouts according to code examples (itemSize, etc..)
+- PostProcessors
+
 ## Demo
 
 [View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/index.html)

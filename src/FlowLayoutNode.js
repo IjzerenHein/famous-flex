@@ -24,7 +24,7 @@ define(function(require, exports, module) {
     var Vector = require('famous/math/Vector');
     var Particle = require('famous/physics/bodies/Particle');
     var Spring = require('famous/physics/forces/Spring');
-    var LayoutUtility = require('./LayoutUtility');
+    var LayoutNode = require('./LayoutNode');
 
     /**
      * @class
@@ -33,8 +33,9 @@ define(function(require, exports, module) {
      * @param {Object} initialSpec Initial state
      * @alias module:FlowLayoutNode
      */
-    function FlowLayoutNode(physicsEngines, renderNode, initialSpec) {
-        this._renderNode = renderNode;
+    function FlowLayoutNode(renderNode, spec, physicsEngines) {
+        LayoutNode.apply(this, arguments);
+
         this._physicsEngines = physicsEngines;
         this._properties = {
             /*opacity: undefined,
@@ -46,15 +47,18 @@ define(function(require, exports, module) {
             rotate: undefined,
             scale: undefined*/
         };
-        //this._invalidated = false;
         //this._endstatereached = false;
         this._initial = true;
-        this._spec = initialSpec ? LayoutUtility.cloneSpec(initialSpec) : {};
-        this._spec.renderNode = renderNode;
-        if (initialSpec) {
-            _setFromSpec.call(this, initialSpec);
+        if (spec) {
+            _setFromSpec.call(this, spec);
         }
     }
+    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
+    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
+
+    /**
+     * Defaults
+     */
     var DEFAULT = {
         opacity: 1,
         size: [0, 0],
@@ -101,7 +105,7 @@ define(function(require, exports, module) {
                 set.rotate = transform.rotate;
             }
         }
-        this._set(set);
+        this.set(set);
         return set;
     }
 
@@ -109,32 +113,26 @@ define(function(require, exports, module) {
      * Reset the end-state. This function is called on all layout-nodes prior to
      * calling the layout-function. So that the layout-function starts with a clean slate.
      */
-    FlowLayoutNode.prototype._reset = function() {
-        if (!this._invalidated) {
-            return this;
+    FlowLayoutNode.prototype.reset = function() {
+        if (this._invalidated) {
+            for (var propName in this._properties) {
+                this._properties[propName].endState.set(DEFAULT[propName]);
+            }
+            this._invalidated = false;
         }
-        for (var propName in this._properties) {
-            this._properties[propName].endState.set(DEFAULT[propName]);
-        }
-        this._invalidated = false;
-        return this;
     };
 
     /**
-     * TODO
+     * Markes the node for removal.
      */
-    FlowLayoutNode.prototype._remove = function(removeSpec) {
-        if (this._isRemoving) {
-            return;
-        }
-        this._isRemoving = true;
+    FlowLayoutNode.prototype.remove = function(removeSpec) {
         for (var propName in this._properties) {
             this._properties[propName].endState.set(this._properties[propName].particle.getPosition());
         }
         if (removeSpec) {
             _setFromSpec.call(this, removeSpec);
         }
-        this._isRemoving = true;
+        this._removing = true;
         this._invalidated = false;
     };
 
@@ -142,7 +140,7 @@ define(function(require, exports, module) {
      * Destroys the layout-node by removing all the particles and
      * forces from the physics-engine.
      */
-    FlowLayoutNode.prototype._destroy = function() {
+    FlowLayoutNode.prototype.destroy = function() {
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.particle) {
@@ -161,7 +159,7 @@ define(function(require, exports, module) {
      */
     var ENERGY_RESTTOLERANCE = 1e-10;
     var VALUE_RESTTOLERANCE = 1e-6;
-    FlowLayoutNode.prototype._buildSpec = function() {
+    FlowLayoutNode.prototype.getSpec = function() {
 
         // Check whether the any property is still animating
         if (!this._endstatereached &&
@@ -193,7 +191,13 @@ define(function(require, exports, module) {
         else {
 
             // Animations have stopped
-            return !this._invalidated ? undefined : this._spec;
+            //return !this._invalidated ? undefined : this._spec;
+            if (this._invalidated) {
+                return this._spec;
+            }
+            else {
+                return undefined;
+            }
         }
 
         // Animations are still going, build new spec
@@ -226,7 +230,7 @@ define(function(require, exports, module) {
         rotate:     Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z,
         skew:       Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z
     };
-    FlowLayoutNode.prototype._set = function(set) {
+    FlowLayoutNode.prototype.set = function(set) {
         for (var propName in set) {
             var value = set[propName];
             if (value !== undefined) {
@@ -254,7 +258,7 @@ define(function(require, exports, module) {
                 }
                 this._invalidated = true;
                 this._endstatereached = false;
-                this._isRemoving = false;
+                this._removing = false;
             }
         }
     };

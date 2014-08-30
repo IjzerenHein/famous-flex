@@ -11,7 +11,7 @@
 /*global define, console*/
 
 /**
- * LayoutNodesContext is the interface for a layout-function to access
+ * LayoutContext is the interface for a layout-function to access
  * renderables in the data-source and set their size, position, tranformation, etc...
  * The renderables are not accessed directly but through opaque layout-nodes.
  *
@@ -21,9 +21,9 @@ define(function(require, exports, module) {
 
     /**
      * @class
-     * @alias module:LayoutNodesContext
+     * @alias module:LayoutContext
      */
-    function LayoutNodesContext(methods) {
+    function LayoutContext(methods) {
         for (var n in methods) {
             this[n] = methods[n];
         }
@@ -37,7 +37,7 @@ define(function(require, exports, module) {
      *
      * @return {Object} layout-node or undefined
      */
-    LayoutNodesContext.prototype.next = function() {
+    LayoutContext.prototype.next = function() {
         // dummy implementation, override in constructor
     };
 
@@ -87,7 +87,7 @@ define(function(require, exports, module) {
      * @param {String} nodeId id of the renderable
      * @return {Object} layout-node or undefined
      */
-    LayoutNodesContext.prototype.byId = function(nodeId) {
+    LayoutContext.prototype.byId = function(nodeId) {
         // dummy implementation, override in constructor
     };
 
@@ -99,7 +99,7 @@ define(function(require, exports, module) {
      * @param {Object} arrayElement opaque array-element
      * @return {Object} layout-node
      */
-    LayoutNodesContext.prototype.byArrayElement = function(arrayElement) {
+    LayoutContext.prototype.byArrayElement = function(arrayElement) {
         // dummy implementation, override in constructor
     };
 
@@ -135,9 +135,9 @@ define(function(require, exports, module) {
      * @param {Object|String} node layout-node or node-id
      * @param {Object} set properties: size, origin, align, translate, scale, rotate & skew
      */
-    LayoutNodesContext.prototype.set = function(node, set) {
+    LayoutContext.prototype.set = function(node, set) {
         // dummy implementation, override in constructor
     };
 
-    module.exports = LayoutNodesContext;
+    module.exports = LayoutContext;
 });

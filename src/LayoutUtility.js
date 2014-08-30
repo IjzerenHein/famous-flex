@@ -74,10 +74,12 @@ define(function(require, exports, module) {
      * @return {Array.Number} resolved size
      */
     LayoutUtility.resolveSize = function(size, parentSize, defaultSize) {
-        return [
-            _resolveSizeValue((size && (size[0] !== undefined)) ? size[0] : (defaultSize ? defaultSize[0] : undefined), parentSize[0]),
-            _resolveSizeValue((size && (size[1] !== undefined)) ? size[1] : (defaultSize ? defaultSize[1] : undefined), parentSize[1])
-        ];
+        if (size || defaultSize) {
+            return [
+                _resolveSizeValue((size && (size[0] !== undefined)) ? size[0] : (defaultSize ? defaultSize[0] : undefined), parentSize[0]),
+                _resolveSizeValue((size && (size[1] !== undefined)) ? size[1] : (defaultSize ? defaultSize[1] : undefined), parentSize[1])
+            ];
+        }
     };
 
     /**

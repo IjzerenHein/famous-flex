@@ -21,8 +21,8 @@ define(function(require, exports, module) {
     var BaseLayoutController = require('./BaseLayoutController');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
-    var LayoutNode = require('./FlowLayoutNode');
-    var LayoutNodesContext = require('./LayoutNodesContext');
+    var FlowLayoutNode = require('./FlowLayoutNode');
+    var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutUtility = require('./LayoutUtility');
     var PhysicsEngine = require('famous/physics/PhysicsEngine');
 
@@ -41,16 +41,7 @@ define(function(require, exports, module) {
             this.setOptions(options);
         }
 
-        // Layout-context
-        this._layoutContext = new LayoutNodesContext({
-            next: _getNextLayoutNode.bind(this),
-            byId: _getLayoutNodeById.bind(this),
-            byArrayElement: _getCreateAndOrderLayoutNodes.bind(this),
-            set: _setLayoutNode.bind(this),
-            getData: _getLayoutNodeData.bind(this)
-        });
-
-        // Physics
+        // Create physics engines
         var mainPE = new PhysicsEngine();
         this._physicsEngines = {
             opacity: mainPE,
@@ -62,6 +53,10 @@ define(function(require, exports, module) {
             scale: mainPE,
             translate: new PhysicsEngine()
         };
+
+        // Create the node-manager and pass it a factory function for creating
+        // FlowLayoutNode instances.
+        this._nodes = new LayoutNodeManager(_createLayoutNode.bind(this));
     }
     FlowLayoutController.prototype = Object.create(BaseLayoutController.prototype);
     FlowLayoutController.prototype.constructor = FlowLayoutController;
@@ -83,6 +78,17 @@ define(function(require, exports, module) {
             align: undefined
         }
     };
+
+    /**
+     * Creates a new layout-node for a render-node
+     */
+    function _createLayoutNode (renderNode, spec) {
+        var node = new FlowLayoutNode(renderNode, spec || this.options.insertSpec, this._physicsEngines);
+        if (this.options.showOpacity !== undefined) {
+            node.set({opacity: this.options.showOpacity});
+        }
+        return node;
+    }
 
     /**
      * Patches the FlowLayoutController instance's options with the passed-in ones.
@@ -142,12 +148,7 @@ define(function(require, exports, module) {
 
         // When a custom insert-spec was specified, store that in the layout-node
         if (insertSpec) {
-            var layoutNode = new LayoutNode(this._physicsEngines, renderable, insertSpec || this.options.insertSpec);
-            if (this.options.showOpacity !== undefined) {
-               layoutNode._set({opacity: this.options.showOpacity});
-           }
-            layoutNode._next = this._firstLayoutNode;
-            this._firstLayoutNode = layoutNode;
+            this._nodes.insertNode(_createLayoutNode.call(this, renderable, insertSpec));
         }
 
         // Force a reflow
@@ -191,9 +192,9 @@ define(function(require, exports, module) {
 
         // When a custom remove-spec was specified, store that in the layout-node
         if (renderNode && removeSpec) {
-            var layoutNode = _getLayoutNode.call(this, renderNode);
+            var layoutNode = this._nodes.getNodeByRenderNode(renderNode);
             if (layoutNode) {
-                layoutNode._remove(removeSpec || this.options.removeSpec);
+                layoutNode.remove(removeSpec || this.options.removeSpec);
             }
         }
 
@@ -205,34 +206,6 @@ define(function(require, exports, module) {
         return this;
     };
 
-    // Update commit-output
-    function _getCommitResult() {
-        var result = [];
-        var layoutNode = this._firstLayoutNode;
-        var prevLayoutNode;
-        while (layoutNode) {
-            var spec = layoutNode._buildSpec();
-            if (!spec) {
-                var destroyLayoutNode = layoutNode;
-                layoutNode = layoutNode._next;
-                if (prevLayoutNode) {
-                    prevLayoutNode._next = layoutNode;
-                }
-                else {
-                    this._firstLayoutNode = layoutNode;
-                }
-                destroyLayoutNode._destroy();
-            }
-            else {
-                spec.target = layoutNode._renderNode.render();
-                result.push(spec);
-                prevLayoutNode = layoutNode;
-                layoutNode = layoutNode._next;
-            }
-        }
-        return result;
-    }
-
     /**
      * Re-flows the layout based on the given size
      *
@@ -240,194 +213,25 @@ define(function(require, exports, module) {
      */
     FlowLayoutController.prototype._reflowLayout = function(size) {
 
-        // Reset all layout-nodes
-        var layoutNode = this._firstLayoutNode;
-        while (layoutNode) {
-            layoutNode._reset();
-            layoutNode = layoutNode._next;
-        }
-
-        // Prepare context
-        this._currentSequence = this._viewSequence;
-        this._prevLayoutNode = undefined;
-        this._currentLayoutNode = this._firstLayoutNode;
+        // Prepare for layout
+        var context = this._nodes.prepareForLayout(
+            this._viewSequence,     // first node to layout
+            this._nodesById         // so we can do fast id lookups
+        );
 
         // Layout objects
-        this._layout(size, this._layoutContext, this._layoutOptions);
+        this._layout(
+            size,                   // size to layout renderables into
+            context,                // context which the layout-function can use 
+            this._layoutOptions     // additional layout-options
+        );
 
-        // Check whether any nodes are no longer rendered. In that case
-        // mark them as removing and set the removeSpec
-        layoutNode = this._firstLayoutNode;
-        while (layoutNode) {
-            if (!layoutNode._invalidated) {
-                layoutNode._remove(this.options.removeSpec);
-            }
-            layoutNode = layoutNode._next;
-        }
+        // Mark non-invalidated nodes for removal
+        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
 
         // Return result function that is executed during every commit
-        return _getCommitResult.bind(this);
+        return this._nodes.buildSpecAndDestroyUnrenderedNodes.bind(this._nodes);
     };
-
-    /**
-     * Get the layout-node for a given render-node. When no layout-node exists
-     * a new one is created. This function is optimized to return almost
-     * immediately when the layout-function requests the layout-nodes in the
-     * same order. When the layout-nodes are requested in a new/difference
-     * order, then the layout-nodes are re-arragned in that new order so that
-     * they can be accessed efficiently the next time the layout is reflowed.
-     *
-     * @param {Object} renderNode render-node for which to lookup the layout-node
-     * @return {FlowLayoutNode} layout-node
-     */
-    function _getCreateAndOrderLayoutNodes(renderNode) {
-
-        // Optimized path. If the next current layout-node matches the renderNode
-        // return that immediately.
-        if (this._currentLayoutNode && (this._currentLayoutNode._renderNode === renderNode)) {
-            this._prevLayoutNode = this._currentLayoutNode;
-            this._currentLayoutNode = this._currentLayoutNode._next;
-            return this._prevLayoutNode;
-        }
-
-        // Look for a layout-node with this render-node
-        var layoutNode = this._currentLayoutNode;
-        var prevLayoutNode = this._prevLayoutNode;
-        while (layoutNode) {
-            if (layoutNode._renderNode === renderNode) {
-
-                // Remove from old position in linked-list
-                if (prevLayoutNode) {
-                    prevLayoutNode._next = layoutNode._next;
-                }
-
-                // Insert before current
-                layoutNode._next = this._currentLayoutNode;
-                if (this._prevLayoutNode) {
-                    this._prevLayoutNode._next = layoutNode;
-                }
-                else {
-                    this._firstLayoutNode = layoutNode;
-                }
-                this._prevLayoutNode = layoutNode;
-                return layoutNode;
-            }
-            prevLayoutNode = layoutNode;
-            layoutNode = layoutNode._next;
-        }
-
-        // No layout-node found, create new one
-        layoutNode = new LayoutNode(this._physicsEngines, renderNode, this.options.insertSpec);
-        if (this.options.showOpacity !== undefined) {
-            layoutNode._set({opacity: this.options.showOpacity});
-        }
-        layoutNode._next = this._currentLayoutNode;
-        if (this._prevLayoutNode) {
-            this._prevLayoutNode._next = layoutNode;
-        }
-        else {
-            this._firstLayoutNode = layoutNode;
-        }
-        this._prevLayoutNode = layoutNode;
-        return layoutNode;
-    }
-
-    /**
-     * Get the next layout-node
-     *
-     * @return {FlowLayoutNode} next layout-node or undefined
-     */
-    function _getNextLayoutNode() {
-
-        // Get the next node from the sequence
-        if (!this._currentSequence) {
-            return undefined;
-        }
-        var renderNode = this._currentSequence.get();
-        if (!renderNode) {
-            return undefined;
-        }
-        this._currentSequence = this._currentSequence.getNext();
-
-        // Get the layout-node by its render-node
-        return _getCreateAndOrderLayoutNodes.call(this, renderNode);
-    }
-
-    /**
-     * Get the layout-node by id.
-     *
-     * @param {String} nodeId id of the layout-node
-     * @return {FlowLayoutNode} layout-node or undefined
-     */
-    function _getLayoutNodeById(nodeId) {
-
-        // This function is only possible when the nodes were provided based on id
-        if (!this._nodesById) {
-            return undefined;
-        }
-        var renderNode = this._nodesById[nodeId];
-        if (!renderNode) {
-            return undefined;
-        }
-
-        // If the result was an array, return that instead
-        if (renderNode instanceof Array) {
-            return renderNode;
-        }
-
-        // Get the layout-node by its render-node
-        return _getCreateAndOrderLayoutNodes.call(this, renderNode);
-    }
-
-    /**
-     * Get the layout-node by its renderable.
-     *
-     * @param {Object} renderable renderable
-     * @return {FlowLayoutNode} layout-node or undefined
-     */
-    function _getLayoutNode (renderable) {
-        var layoutNode = this._firstLayoutNode;
-        while (layoutNode) {
-            if (layoutNode._renderNode === renderable) {
-                return layoutNode;
-            }
-            layoutNode = layoutNode._next;
-        }
-        return undefined;
-    }
-
-    /**
-     * Get the renderable associated with the given layout-node
-     *
-     * @param {Object|Srting} node node or node-id
-     * @return {Object} render-node or undefined
-     */
-    function _getLayoutNodeData (node) {
-        if (!node) {
-            return undefined;
-        }
-        return node._renderNode;
-    }
-
-    /**
-     * Set the content of a layout-node
-     *
-     * @param {FlowLayoutNode|String} node node or node-id
-     * @return {FlowLayoutController} this
-     */
-    function _setLayoutNode (node, set) {
-        if (!node) {
-            return this;
-        }
-        if (!(node instanceof LayoutNode) && ((node instanceof String) || (typeof node !== 'string'))) {
-            node = _getLayoutNodeById(node);
-            if (!node) {
-                return this;
-            }
-        }
-        node._set(set);
-        return this;
-    }
 
     module.exports = FlowLayoutController;
 });
