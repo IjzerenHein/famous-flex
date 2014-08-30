@@ -28,7 +28,7 @@
     "docs",
     "Gruntfile.js"
   ],
-  "dependencies": {
+  "devDependencies": {
     "requirejs": "~2.1.11",
     "famous": "~0.2.0"
   }
