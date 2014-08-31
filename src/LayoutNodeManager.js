@@ -33,11 +33,13 @@ define(function(require, exports, module) {
             next: _contextNextNode.bind(this),
             byId: _contextNodeById.bind(this),
             byArrayElement: _contextNodeByArrayElement.bind(this),
-            set: _contextSetNode.bind(this)
+            set: _contextSetNode.bind(this),
+            resolveSize: _contextResolveSize.bind(this)
         });
         //this._first = undefined;
         //this._currentSequence = undefined;
         //this._nodesById = undefined;
+        //this._trueSizeRequested = false;
     }
 
     /**
@@ -58,6 +60,7 @@ define(function(require, exports, module) {
         this._nodesById = nodesById;
         this._prev = undefined;
         this._current = this._first;
+        this._trueSizeRequested = false;
         return this._context;
     };
 
@@ -258,6 +261,47 @@ define(function(require, exports, module) {
         }
         return node.set(set);
     }
+
+    /**
+     * Get additional information about the size of the node
+     */
+    function _contextResolveSize(node, parentSize) {
+        if (!node) {
+            return undefined;
+        }
+        if (!(node instanceof LayoutNode) && ((node instanceof String) || (typeof node === 'string'))) {
+            node = _contextNodeById.call(this, node);
+            if (!node) {
+                return undefined;
+            }
+        }
+        var size = node._spec.renderNode.getSize(true);
+        if (!size) {
+            size = node._spec.renderNode.getSize(false);
+            if (!size) {
+                size = parentSize;
+            }
+            else {
+                var newSize = [size[0], size[1]];
+                if (size[0] === true) {
+                   newSize[0] = 0; // true cannot be resolved at this stage, try again next render-cycle
+                   this._trueSizeRequested = true;
+                }
+                else if (size[0] === undefined) {
+                    newSize[0] = parentSize[0];
+                }
+                if (size[1] === true) {
+                   newSize[1] = 0; // true cannot be resolved at this stage, try again next render-cycle
+                   this._trueSizeRequested = true;
+                }
+                else if (size[1] === undefined) {
+                    newSize[1] = parentSize[1];
+                }
+                size = newSize;
+            }
+        }
+        return size;
+    };
 
     module.exports = LayoutNodeManager;
 });

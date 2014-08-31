@@ -104,6 +104,18 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Get the layout-node based on an array element.
+     *
+     * See `byId` for an example.
+     *
+     * @param {Object} arrayElement opaque array-element
+     * @return {Object} layout-node
+     */
+    LayoutContext.prototype.getSizeInfo = function(node) {
+        // dummy implementation, override in constructor
+    };
+
+    /**
      * Set the size, origin, align, translation, scale, rotate & skew for a layout-node.
      * All properties with exception for `size` are optional.
      *

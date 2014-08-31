@@ -202,7 +202,7 @@ define(function(require, exports, module) {
 
         // Animations are still going, build new spec
         this._initial = false;
-        this._spec.opacity = this._properties.opacity ? this._properties.opacity.particle.getPosition1D() : undefined;
+        this._spec.opacity = this._properties.opacity ? Math.max(0,Math.min(1, this._properties.opacity.particle.getPosition1D())) : undefined;
         this._spec.size = this._properties.size ? this._properties.size.particle.getPosition() : undefined;
         this._spec.align = this._properties.align ? this._properties.align.particle.getPosition() : undefined;
         this._spec.origin = this._properties.origin ? this._properties.origin.particle.getPosition() : undefined;
@@ -212,6 +212,15 @@ define(function(require, exports, module) {
             scale: this._properties.scale ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
             rotate: this._properties.rotate ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
         });
+
+        console.log(JSON.stringify({
+            opacity: this._spec.opacity,
+            size: this._spec.size,
+            align: this._spec.align,
+            origin: this._spec.origin,
+            transform: this._spec.transform
+        }));
+
         return this._spec;
     };
 

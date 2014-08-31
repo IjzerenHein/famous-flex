@@ -18,13 +18,13 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var BaseLayoutController = require('./BaseLayoutController');
+    var LayoutController = require('./LayoutController');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
     var FlowLayoutNode = require('./FlowLayoutNode');
-    var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutUtility = require('./LayoutUtility');
     var PhysicsEngine = require('famous/physics/PhysicsEngine');
+    var Transform = require('famous/core/Transform');
 
     /**
      * @class
@@ -32,7 +32,7 @@ define(function(require, exports, module) {
      * @alias module:FlowLayoutController
      */
     function FlowLayoutController(options) {
-        BaseLayoutController.apply(this, arguments);
+        LayoutController.call(this, options, _createLayoutNode.bind(this));
 
         // Set options
         this.options = Object.create(FlowLayoutController.DEFAULT_OPTIONS);
@@ -53,12 +53,8 @@ define(function(require, exports, module) {
             scale: mainPE,
             translate: new PhysicsEngine()
         };
-
-        // Create the node-manager and pass it a factory function for creating
-        // FlowLayoutNode instances.
-        this._nodes = new LayoutNodeManager(_createLayoutNode.bind(this));
     }
-    FlowLayoutController.prototype = Object.create(BaseLayoutController.prototype);
+    FlowLayoutController.prototype = Object.create(LayoutController.prototype);
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
@@ -207,30 +203,62 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Re-flows the layout based on the given size
+     * Apply changes from this component to the corresponding document element.
+     * This includes changes to classes, styles, size, content, opacity, origin,
+     * and matrix transforms.
      *
-     * @param {Array.Number} size Size to calculate the layout for
+     * @private
+     * @method commit
+     * @param {Context} context commit context
      */
-    FlowLayoutController.prototype._reflowLayout = function(size) {
+    FlowLayoutController.prototype.commit = function commit(context) {
+        var transform = context.transform;
+        var origin = context.origin;
+        var size = context.size;
+        var opacity = context.opacity;
 
-        // Prepare for layout
-        var context = this._nodes.prepareForLayout(
-            this._viewSequence,     // first node to layout
-            this._nodesById         // so we can do fast id lookups
-        );
+        // When the size or layout function has changed, reflow the layout
+        if (size[0] !== this._contextSizeCache[0] || 
+            size[1] !== this._contextSizeCache[1] || 
+            this._isDirty ||
+            this._nodes._trueSizeRequested) {
 
-        // Layout objects
-        this._layout(
-            size,                   // size to layout renderables into
-            context,                // context which the layout-function can use 
-            this._layoutOptions     // additional layout-options
-        );
+            // Update state
+            this._contextSizeCache[0] = size[0];
+            this._contextSizeCache[1] = size[1];
+            this._isDirty = false;
 
-        // Mark non-invalidated nodes for removal
-        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+            // Prepare for layout
+            var context = this._nodes.prepareForLayout(
+                this._viewSequence,     // first node to layout
+                this._nodesById         // so we can do fast id lookups
+            );
 
-        // Return result function that is executed during every commit
-        return this._nodes.buildSpecAndDestroyUnrenderedNodes.bind(this._nodes);
+            // Layout objects
+            this._layout(
+                size,                   // size to layout renderables into
+                context,                // context which the layout-function can use 
+                this._layoutOptions     // additional layout-options
+            );
+
+            // Mark non-invalidated nodes for removal
+            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+        }
+
+        // Update output
+        this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+
+        // Render child-nodes every commit
+        for (var i = 0; i < this._commitOutput.target.length; i++) {
+            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
+        }
+
+        // Return
+        if (size) transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+        this._commitOutput.size = size;
+        this._commitOutput.opacity = opacity;
+        this._commitOutput.transform = transform;
+        return this._commitOutput;
     };
 
     module.exports = FlowLayoutController;

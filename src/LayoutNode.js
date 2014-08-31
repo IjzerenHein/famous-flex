@@ -103,12 +103,5 @@ define(function(require, exports, module) {
         this._removing = true;
     };
 
-    /**
-     * Marks the node for removal
-     */
-    LayoutNode.prototype.getRenderNodeSize = function() {
-        return this._spec.renderNode.getSize() || this._spec.renderNode.size;
-    };
-
     module.exports = LayoutNode;
 });

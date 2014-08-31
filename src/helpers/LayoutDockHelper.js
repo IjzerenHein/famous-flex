@@ -25,9 +25,9 @@ define(function(require, exports, module) {
      * @param {LayoutContext} context layout-context
      * @alias module:LayoutDockHelper
      */
-    function LayoutDockHelper(size, nodes, margins) {
+    function LayoutDockHelper(size, context, margins) {
         this._size = size;
-        this._nodes = nodes;
+        this._context = context;
         if (margins) {
             margins = LayoutUtility.normalizeMargins(margins);
             this._left = margins[3];
@@ -51,13 +51,14 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.top = function(node, height) {
-        if (!height) {
-            return;
-        }
         if (height instanceof Array) {
             height = height[1];
         }
-        this._nodes.set(node, {
+        if (height === undefined) {
+            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            height = size[1];
+        }
+        this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 0],
             translate: [this._left, this._top, 0]
@@ -74,13 +75,14 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.left = function(node, width) {
-        if (!width) {
-            return;
-        }
         if (width instanceof Array) {
             width = width[0];
         }
-        this._nodes.set(node, {
+        if (width === undefined) {
+            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            width = size[0];
+        }
+        this._context.set(node, {
             size: [width, this._bottom - this._top],
             origin: [0, 0],
             translate: [this._left, this._top, 0]
@@ -97,13 +99,14 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.bottom = function(node, height) {
-        if (!height) {
-            return;
-        }
         if (height instanceof Array) {
             height = height[1];
         }
-        this._nodes.set(node, {
+        if (height === undefined) {
+            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            height = size[1];
+        }
+        this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 1],
             translate: [this._left, -(this._size[1] - this._bottom), 0]
@@ -120,18 +123,23 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.right = function(node, width) {
-        if (!width) {
-            return;
-        }
         if (width instanceof Array) {
             width = width[0];
         }
-        this._nodes.set(node, {
-            size: [width, this._bottom - this._top],
-            origin: [1, 0],
-            translate: [-(this._size[0] - this._right), this._top, 0]
-        });
-        this._right -= width;
+        if (node) {
+            if (width === undefined) {
+                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+                width = size[0];
+            }
+            this._context.set(node, {
+                size: [width, this._bottom - this._top],
+                origin: [1, 0],
+                translate: [-(this._size[0] - this._right), this._top, 0]
+            });
+        }
+        if (width) {
+            this._right -= width;
+        }
         return this;
     };
 
@@ -142,7 +150,7 @@ define(function(require, exports, module) {
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.fill = function(node) {
-        this._nodes.set(node, {
+        this._context.set(node, {
             size: [this._right - this._left, this._bottom - this._top],
             translate: [this._left, this._top, 0]
         });
