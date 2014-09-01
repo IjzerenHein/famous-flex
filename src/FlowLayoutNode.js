@@ -12,8 +12,7 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * FlowLayoutNode is the interface for setting the size and transform in a layout-
- * function.
+ * Internal LayoutNode class used by `FlowLayoutController`.
  *
  * @module
  */
@@ -28,6 +27,7 @@ define(function(require, exports, module) {
 
     /**
      * @class
+     * @extends LayoutNode
      * @param {Object} renderNode Render-node which this layout-node represents
      * @param {Spec} spec Initial state
      * @param {Object} physicsEngines physics-engines to use

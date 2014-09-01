@@ -13,7 +13,6 @@
 /**
  * LayoutContext is the interface for a layout-function to access
  * renderables in the data-source and set their size, position, tranformation, etc...
- * The renderables are not accessed directly but through opaque layout-nodes.
  *
  * @module
  */
@@ -35,9 +34,10 @@ define(function(require, exports, module) {
      * Use this function to enumerate the contents of a data-source that is
      * either an Array or a ViewSequence.
      *
-     * Example:
+     * **Example:**
+     *
      * ```javascript
-     * function MyLayout(size, context, options) {
+     * function MyLayoutFunction(size, context, options) {
      *   var height = 0;
      *   var node = context.next(); // get first node
      *   while (node) {
@@ -61,29 +61,56 @@ define(function(require, exports, module) {
      * Get the layout-node for a renderable with a specific id. This function
      * should be used to access data-sources which are key-value collections.
      * When a data-source is an Array or a ViewSequence, use `next()`.
+     * In many cases it is not neccesary to use `get()`, instead you can pass
+     * the id of the renderable straight to the `set` function.
      *
-     * If the value of the datasource is an array, then that array is returned
-     * as is. To get the layout-node which corresponds to the array-element use
-     * `byArrayElement`.
+     * **Example:**
      *
      * ```javascript
      * var layoutController = new LayoutController({
-     *   layout: function (size, nodes) {
+     *   layout: function (size, context, options) {
+     *     var left = context.get('left');
+     *     context.set(left, { size: [100, size[1]] });
+     *
+     *     var right = context.get('right');
+     *     context.set(right, {
+     *       size: [100, size[1]],
+     *       translate: [size[1] - 100, 0, 0]
+     *     });
+     *
+     *     var middle = context.get('middle');
+     *     context.set(middle, {
+     *       size: [size[0] - 200, size[1]],
+     *       translate: [100, 0, 0]
+     *     });
+     *   },
+     *   dataSource: {
+     *     left: new Surface({content: 'left'}),
+     *     right: new Surface({content: 'right'}),
+     *     middle: new Surface({content: 'middle'})
+     *   }
+     * });
+     * ```
+     *
+     * **Arrays:**
+     *
+     * A value at a specific id in the datasource can also be an array. To access the
+     * layout-nodes in the array use `get()` to get the array and enumerate the
+     * elements in the array:
+     *
+     * ```javascript
+     * var layoutController = new LayoutController({
+     *   layout: function (size, context, options) {
      *     var left = 0;
      *
      *     // Position title
-     *     var title = nodes.get('title');
-     *     nodes.set(title, {
-     *       size: [100, size[1]],
-     *       translate: [left, 0, 0]
-     *     });
+     *     context.set('title', { size: [100, size[1]] });
      *     left += 100;
      *
-     *     // Position right-items (array)
-     *     var leftItems = nodes.get('leftItems');
+     *     // Position left-items (array)
+     *     var leftItems = context.get('leftItems');
      *     for (var i = 0; i < leftItems.length; i++) {
-     *       var leftItem = nodes.byArrayElement(leftItems[i]);
-     *       nodes.set(leftItem, {
+     *       context.set(leftItems[i], {
      *         size: [100, size[1]],
      *         translate: [left, 0, 0]
      *       });
@@ -92,7 +119,7 @@ define(function(require, exports, module) {
      *   },
      *   dataSource: {
      *     title: new Surface({content: 'title'}),
-     *     rightItems: [
+     *     leftItems: [
      *       new Surface({content: 'item1'}),
      *       new Surface({content: 'item2'})
      *     ]
@@ -100,7 +127,7 @@ define(function(require, exports, module) {
      * });
      * ```
      *
-     * @param {String} nodeId id of the renderable
+     * @param {String|RenderNode|Array.Elmement} nodeId object to resolve into a LayoutNode
      * @return {LayoutNode} layout-node or undefined
      */
     LayoutContext.prototype.get = function(nodeId) {
@@ -108,35 +135,13 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the layout-node based on an array element.
-     *
-     * See `get` for an example.
-     *
-     * @param {Object} arrayElement opaque array-element
-     * @return {Object} layout-node
-     */
-    LayoutContext.prototype.byArrayElement = function(arrayElement) {
-        // dummy implementation, override in constructor
-    };
-
-    /**
-     * Resolve the size of a layout-node by accessing the `getSize` function
-     * of the renderable.
-     *
-     * @param {Object|String} node layout-node or node-id
-     * @return {Array.Number.2} size of the node
-     */
-    LayoutContext.prototype.resolveSize = function(node) {
-        // dummy implementation, override in constructor
-    };
-
-    /**
      * Set the size, origin, align, translation, scale, rotate & skew for a layout-node.
-     * All properties with exception for `size` are optional.
+     *
+     * **Overview of all supported properties:**
      *
      * ```javascript
-     * function MyLayoutFunction(size, nodes, options) {
-     *   nodes.set('mynode', {
+     * function MyLayoutFunction(size, context, options) {
+     *   context.set('mynode', {
      *     size: [100, 20],
      *     origin: [0.5, 0.5],
      *     align: [0.5, 0.5],
@@ -148,21 +153,48 @@ define(function(require, exports, module) {
      * }
      * ```
      *
-     * When the data-source is a key-value collection, the id can be passed in
-     * directly to this function.
-     *
-     * ```javascript
-     * nodes.set('myname', {size: [100, 10]});
-     *
-     * equals
-     *
-     * nodes.set(nodes.byId('myname'), {size: [100, 10]});
-     * ```
-     *
-     * @param {Object|String} node layout-node or node-id
+     * @param {LayoutNode|String|Array.Eelement} node layout-node, node-id or array-element
      * @param {Object} set properties: size, origin, align, translate, scale, rotate & skew
      */
     LayoutContext.prototype.set = function(node, set) {
+        // dummy implementation, override in constructor
+    };
+
+    /**
+     * Resolve the size of a layout-node by accessing the `getSize` function
+     * of the renderable.
+     *
+     * **Example:**
+     *
+     * ```javascript
+     * var layoutController = new LayoutController({
+     *   layout: function (size, context, options) {
+     *     var centerSize = context.resolveSize('center');
+     *     context.set('center', {origin: [0.5, 0.5]});
+     *     context.set('centerRight', {
+     *       origin: [0.5, 0.5],
+     *       translate: [centerSize[0] / 2, 0, 0]
+     *     });
+     *   },
+     *   dataSource: {
+     *     center: new Surface({content: 'center'}),
+     *     centerRight: new Surface({content: 'centerRight'}),
+     *   }
+     * });
+     * ```
+     *
+     * **When the size of the renderable is calculated by the DOM (`true` size)**
+     *
+     * When the layout-function performs its layout for the first time, it is
+     * possible that the renderable has not yet been rendered and its size
+     * is unknown. In this case, the LayoutController will cause a second
+     * reflow of the layout the next render-cycle, ensuring that the renderables
+     * are layed out as expected.
+     *
+     * @param {LayoutNode|String|Array.Eelement} node layout-node, node-id or array-element
+     * @return {Size} size of the node
+     */
+    LayoutContext.prototype.resolveSize = function(node) {
         // dummy implementation, override in constructor
     };
 

@@ -39,7 +39,7 @@ define(function(require, exports, module) {
         this._createLayoutNodeFunction = createLayoutNodeFunction;
         this._context = new LayoutContext({
             next: _contextNextNode.bind(this),
-            get: _contextNodeById.bind(this),
+            get: _contextGetNode.bind(this),
             set: _contextSetNode.bind(this),
             resolveSize: _contextResolveSize.bind(this)
         });
@@ -233,7 +233,7 @@ define(function(require, exports, module) {
     /**
      * Get the layout-node by id.
      */
-     function _contextNodeById(nodeId) {
+     function _contextGetNode(nodeId) {
         if (!nodeId) {
             return undefined;
         }
@@ -264,33 +264,25 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Get the layout-node by array element.
+     * Set the node content
      */
     function _contextSetNode(node, set) {
+        node = _contextGetNode.call(this, node);
         if (!node) {
             return this;
         }
-        if (!(node instanceof LayoutNode) && ((node instanceof String) || (typeof node === 'string'))) {
-            node = _contextNodeById.call(this, node);
-            if (!node) {
-                return this;
-            }
+        else {
+            node.set(set);
         }
-        return node.set(set);
     }
 
     /**
      * Resolve the size of the layout-node from the renderable itsself
      */
     function _contextResolveSize(node, parentSize) {
+        node = _contextGetNode.call(this, node);
         if (!node) {
-            return undefined;
-        }
-        if (!(node instanceof LayoutNode) && ((node instanceof String) || (typeof node === 'string'))) {
-            node = _contextNodeById.call(this, node);
-            if (!node) {
-                return undefined;
-            }
+            return this;
         }
         var size = node._spec.renderNode.getSize(true);
         if (!size) {

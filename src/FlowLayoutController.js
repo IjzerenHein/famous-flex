@@ -12,7 +12,11 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * TODO
+ * FlowLayoutController transitions renderables smoothly from one
+ * layout to another. When the data-source or layout is changed,
+ * the renderables are transitioned from their old state (size,
+ * transform, origin, etc..) to the new state.
+ *
  * @module
  */
 define(function(require, exports, module) {
@@ -28,7 +32,11 @@ define(function(require, exports, module) {
 
     /**
      * @class
+     * @extends LayoutController
      * @param {Object} options Options.
+     * @param {Number} [options.showOpacity] Opacity to use when showing renderables (default: 1)
+     * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
+     * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
      * @alias module:FlowLayoutController
      */
     function FlowLayoutController(options) {
@@ -89,7 +97,6 @@ define(function(require, exports, module) {
     /**
      * Patches the FlowLayoutController instance's options with the passed-in ones.
      *
-     * @method setOptions
      * @param {Options} options An object of configurable options for the FlowLayoutController instance.
      */
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
@@ -97,14 +104,15 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Inserts a renderable into the data-source.
+     * Inserts a renderable into the data-source. If the renderable is visible
+     * then it is inserted using an animation.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
      * @param {Object} renderable Rendeable to add to the data-source
-     * @param {Object} [insertSpec] Spec (size, transform, etc..) to start with when inserting
+     * @param {Spec} [spec] Size, transform, etc.. to start with when inserting
      * @return {FlowLayoutController} this
      */
-    FlowLayoutController.prototype.insert = function(indexOrId, renderable, insertSpec) {
+    FlowLayoutController.prototype.insert = function(indexOrId, renderable, spec) {
 
         // Add the renderable in case of an id (String)
         if (indexOrId instanceof String) {
@@ -130,7 +138,8 @@ define(function(require, exports, module) {
 
             // Using insert in this way, only works when the data-source is an array
             if (!(this._dataSource instanceof Array)) {
-                return LayoutUtility.error('FlowLayoutController.insert(index) only works when the dataSource is an array');
+                LayoutUtility.error('FlowLayoutController.insert(index) only works when the dataSource is an array');
+                return this;
             }
 
             // Insert into array
@@ -143,8 +152,8 @@ define(function(require, exports, module) {
         }
 
         // When a custom insert-spec was specified, store that in the layout-node
-        if (insertSpec) {
-            this._nodes.insertNode(_createLayoutNode.call(this, renderable, insertSpec));
+        if (spec) {
+            this._nodes.insertNode(_createLayoutNode.call(this, renderable, spec));
         }
 
         // Force a reflow
@@ -155,13 +164,13 @@ define(function(require, exports, module) {
 
     /**
      * Removes a renderable from the data-source. If the renderable is visible
-     * then it will be removed using an animation (see removeSpec).
+     * then it will be removed using an animation.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
-     * @param {Object} [removeSpec] Spec (size, transform, etc..) to end with when removing
+     * @param {Spec} [spec] Size, transform, etc.. to end with when removing
      * @return {FlowLayoutController} this
      */
-    FlowLayoutController.prototype.remove = function(indexOrId, removeSpec) {
+    FlowLayoutController.prototype.remove = function(indexOrId, spec) {
 
         // Remove the renderable in case of an id (String)
         var renderNode;
@@ -179,7 +188,8 @@ define(function(require, exports, module) {
 
             // Using remove in this way, only works when the data-source is an array
             if (!(this._dataSource instanceof Array)) {
-                return LayoutUtility.error('FlowLayoutController.remove(index) only works when the dataSource is an array');
+                LayoutUtility.error('FlowLayoutController.remove(index) only works when the dataSource is an array');
+                return this;
             }
 
             // Remove from array
@@ -187,10 +197,10 @@ define(function(require, exports, module) {
         }
 
         // When a custom remove-spec was specified, store that in the layout-node
-        if (renderNode && removeSpec) {
+        if (renderNode && spec) {
             var layoutNode = this._nodes.getNodeByRenderNode(renderNode);
             if (layoutNode) {
-                layoutNode.remove(removeSpec || this.options.removeSpec);
+                layoutNode.remove(spec || this.options.removeSpec);
             }
         }
 

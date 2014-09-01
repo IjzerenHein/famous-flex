@@ -12,8 +12,7 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * FlowLayoutNode is the interface for setting the size and transform in a layout-
- * function.
+ * Internal LayoutNode class used by `LayoutController`.
  *
  * @module
  */

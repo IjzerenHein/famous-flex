@@ -11,8 +11,20 @@
 /*global define*/
 
 /**
- * LayoutDockHelper helps position nodes using docking principles.
+ * LayoutDockHelper helps positioning nodes using docking principles.
  *
+ * **Example:**
+ *
+ * ```javascript
+ * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
+ * 
+ * function HeaderFooterLayout(size, context, options) {
+ *   var dock = new LayoutDockHelper(size, context);
+ *   dock.top('header', options.headerHeight);
+ *   dock.bottom('footer', options.footerHeight);
+ *   dock.fill('content');
+ * };
+ * ```
  * @module
  */
 define(function(require, exports, module) {
@@ -22,7 +34,9 @@ define(function(require, exports, module) {
 
     /**
      * @class
+     * @param {Size} size Size within which to layout
      * @param {LayoutContext} context layout-context
+     * @param {Object} [margins] margins to start out with
      * @alias module:LayoutDockHelper
      */
     function LayoutDockHelper(size, context, margins) {
@@ -44,10 +58,10 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Dock the node to the top
+     * Dock the node to the top.
      *
-     * @param {LayoutNode} node layout-node to dock
-     * @param {Number} height height of the layout-node
+     * @param {LayoutNode|String} node layout-node to dock
+     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.top = function(node, height) {
@@ -70,8 +84,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the left
      *
-     * @param {LayoutNode} node layout-node to dock
-     * @param {Number} width width of the layout-node
+     * @param {LayoutNode|String} node layout-node to dock
+     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.left = function(node, width) {
@@ -94,8 +108,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the bottom
      *
-     * @param {LayoutNode} node layout-node to dock
-     * @param {Number} height height of the layout-node
+     * @param {LayoutNode|String} node layout-node to dock
+     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.bottom = function(node, height) {
@@ -116,10 +130,10 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Dock the node to the right
+     * Dock the node to the right.
      *
-     * @param {LayoutNode} node layout-node to dock
-     * @param {Number} width width of the layout-node
+     * @param {LayoutNode|String} node layout-node to dock
+     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.right = function(node, width) {
@@ -144,9 +158,9 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Fills the node to the content
+     * Fills the node to the remaining content.
      *
-     * @param {LayoutNode} node layout-node to fill
+     * @param {LayoutNode|String} node layout-node to dock
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.fill = function(node) {

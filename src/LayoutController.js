@@ -12,7 +12,13 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * TODO
+ * LayoutController lays out renderables accoring to a layout-
+ * function and a data-source.
+ *
+ * The LayoutController is the most basic and lightweight version
+ * of a controller/view laying out renderables according to a
+ * layout-function.
+ *
  * @module
  */
 define(function(require, exports, module) {
@@ -65,8 +71,10 @@ define(function(require, exports, module) {
      * Sets the collection of renderables which are layed out according to
      * the layout-function.
      *
-     * @method setDataSource
-     * @param {Array|Object|ViewSequence} dataSource Either an array of renderables or a Famous viewSequence.
+     * The data-source can be either an Array, ViewSequence or Object
+     * with key/value pairs.
+     *
+     * @param {Array|Object|ViewSequence} dataSource Array, ViewSequence or Object.
      * @return {LayoutController} this
      */
     LayoutController.prototype.setDataSource = function(dataSource) {
@@ -92,7 +100,7 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Set the new layout
+     * Set the new layout.
      *
      * @param {Function} layout Layout function
      * @param {Object} [options] Options to pass in to the layout-function
@@ -106,7 +114,7 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the current layout-function
+     * Get the current layout.
      *
      * @return {Function} Layout function
      */
@@ -116,7 +124,7 @@ define(function(require, exports, module) {
 
     /**
      * Set the options for the current layout. Use this function after
-     * `setLayout` to update the options for the layout-function.
+     * `setLayout` to update the all the options for the layout-function.
      *
      * @param {Object} [options] Options to pass in to the layout-function
      * @return {LayoutController} this
@@ -156,13 +164,30 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the spec based on the renderable that was provided
-     * in the data-source.
+     * Get the spec (size, transform, etc..) for the given renderable or
+     * Id.
      *
-     * @param {Object} node Render-node to look for
-     * @return {Object} spec or undefined
+     * @param {Renderable|String} node Renderabe or Id to look for
+     * @return {Spec} spec or undefined
      */
-    LayoutController.prototype.getSpecByNode = function(node) {
+    LayoutController.prototype.getSpec = function(node) {
+        if (!node) {
+            return undefined;
+        }
+        if ((node instanceof String) || (typeof node === 'string')) {
+            if (!this._nodesById) {
+               return undefined;
+            }
+            node = this._nodesById[node];
+            if (!node) {
+                return undefined;
+            }
+
+            // If the result was an array, return that instead
+            if (node instanceof Array) {
+                return node;
+            }
+        }
         for (var i = 0; i < this._commitOutput.target.length; i++) {
             var spec = this._commitOutput.target[i];
             if (spec.renderNode === node) {
@@ -173,32 +198,9 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the spec based on the id of the renderable that was provided
-     * in the data-source. If the content at the given id was an array, then
-     * that array is returned as is. You can use `getSpecByNode` on the elements
-     * of the array to obtain their specs
+     * Forces a reflow of the layout the next render cycle.
      *
-     * @param {String} nodeId Node-id to look for
-     * @return {Object|Array} spec, undefined or an array of nodes.
-     */
-    LayoutController.prototype.getSpecByNodeId = function(nodeId) {
-        if (!this._nodesById) {
-            return undefined;
-        }
-        var renderNode = this._nodesById[nodeId];
-        if (!renderNode) {
-            return undefined;
-        }
-        if (renderNode instanceof Array) {
-            return renderNode;
-        }
-        return this.getSpecByNode(renderNode);
-    };
-
-    /**
-     * Forces a reflow of the layout, the next render cycle.
-     *
-     * @return {BaseLayoutController} this
+     * @return {LayoutController} this
      */
     LayoutController.prototype.reflowLayout = function() {
         this._isDirty = true;

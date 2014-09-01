@@ -20,10 +20,9 @@ define(function(require, exports, module) {
 
     /**
      * @class
-     * @param {Object} options Options.
-     * @alias module:LayoutContext
+     * @alias module:LayoutUtility
      */
-    function LayoutUtility(options) {
+    function LayoutUtility() {
     }
 
     /**
@@ -45,48 +44,11 @@ define(function(require, exports, module) {
         }
     };
 
-    /* Helper function to resolve a size value (fixed, undefined, percentage?)
-     * into a fixed value using the parentSize. */
-    function _resolveSizeValue(value, parentValue) {
-        if ((value === undefined) || (value === true)){
-            return parentValue;
-        } else if (value instanceof String) {
-            // todo e.g. handle 50% ?
-            return parseInt(value);
-        }
-        else {
-            return value;
-        }
-    }
-
-    /**
-     * Resolves the gives size into a fixed size.  E.g., if the size is e.g.
-     * [50, undefined]), then the retured size would have a width of 50, and
-     * would try to resolve `undefined` using the `defaultSize` and `parentSize`.
-     * The size is resolved in the following order:
-     * - width/height as specified in `size`
-     * - width/height as specified in `defaultSize`
-     * - width/height as specified in `parentSize`
-     *
-     * @param {Array.Number} size size to resolve
-     * @param {Array.Number} parentSize parent-size
-     * @param {Array.Number} [defaultSize] default-size to use
-     * @return {Array.Number} resolved size
-     */
-    LayoutUtility.resolveSize = function(size, parentSize, defaultSize) {
-        if (size || defaultSize) {
-            return [
-                _resolveSizeValue((size && (size[0] !== undefined)) ? size[0] : (defaultSize ? defaultSize[0] : undefined), parentSize[0]),
-                _resolveSizeValue((size && (size[1] !== undefined)) ? size[1] : (defaultSize ? defaultSize[1] : undefined), parentSize[1])
-            ];
-        }
-    };
-
     /**
      * Makes a (shallow) copy of a spec.
      *
-     * @param {Object} spec Spec to clone
-     * @return {Object} cloned spec
+     * @param {Spec} spec Spec to clone
+     * @return {Spec} cloned spec
      */
     LayoutUtility.cloneSpec = function(spec) {
         var clone = {};
@@ -111,8 +73,8 @@ define(function(require, exports, module) {
     /**
      * Clears the contents of a spec.
      *
-     * @param {Object} spec Spec to clear
-     * @return {Object} spec
+     * @param {Spec} spec Spec to clear
+     * @return {Spec} spec
      */
     LayoutUtility.clearSpec = function(spec) {
         delete spec.opacity;
@@ -148,9 +110,9 @@ define(function(require, exports, module) {
     /**
      * Compares two specs for equality.
      *
-     * @param {Object} spec1 Spec to compare
-     * @param {Object} spec2 Spec to compare
-     * @return {Bool} true/false
+     * @param {Spec} spec1 Spec to compare
+     * @param {Spec} spec2 Spec to compare
+     * @return {Boolean} true/false
      */
     LayoutUtility.isEqualSpec = function(spec1, spec2) {
         if (spec1.opacity !== spec2.opacity) {
