@@ -30,18 +30,18 @@ issue.
 
 ### Index
 
-- [Getting started](#getting_started)
-- [LayoutController and FlowLayoutController](#layoutcontroller_and_flowlayoutcontroller)
-- [Standard layouts](#standard_layouts)
+- [Getting started](#getting-started)
+- [LayoutController and FlowLayoutController](#layoutcontroller-and-flowlayoutcontroller)
+- [Standard layouts](#standard-layouts)
 - [Datasource](#datasource)
 - [Layout function](#layout-function)
 - [Layout helpers](#layout-helpers)
-- [API reference](#api_reference)
+- [API reference](#api-reference)
 
 
 ## Demo
 
-[View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/index.html)
+[View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
 
 
 ## Getting started
