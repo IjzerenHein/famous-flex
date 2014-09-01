@@ -5,20 +5,16 @@ Flexible, animated and plugable layout-controller for famo.us, which:
 
 - Smoothly animates renderables between layouts (using physics)
 - Makes it easy to layout renderables (without having to create lots of modifiers)
-- Is shiped
+- Is shiped with various commonly used layouts
 - Allows you to easily create custom layouts and layout-helpers
+- Is very good at creating responsive designs
 
 Above anything, famous-flex is a concept in which renderables are seperated from how
 they are layed-out. This makes it possible to change layouts on the fly and animate
 the renderables from one layout to another. For instance, you can layout a collection
-of renderables as a grid, and instantly change that to a list-layout. When using the
-`FlowLayoutController' the renderables will smoothly transitions from the old state
-to the new state using physics and springs.
-
-Famous-flex comes in two flavors, the lightweight `LayoutController` and the animated
-`FlowLayoutController`. `FlowLayoutController` animates the renderables using physics
-whenever a reflow occurs, whereas `LayoutController` instantly updates the renderables
-when a reflow occurs.
+of renderables using a `GridLayout`, and change that into a `ListLayout`. When using
+`FlowLayoutController` the renderables will smoothly transition from the old state
+to the new state using physics, particles and springs.
 
 ###Roadmap
 
@@ -34,24 +30,19 @@ issue.
 
 ### Index
 
-- Getting started
-- LayoutController
-- FlowLayoutController
-- Layouts: GridLayout, ListLayout, CollectionLayout, NavbarLayout
-- Layout-functions
-- Layout-helpers
-- Data-source
-- Documentation
+- [Getting started](getting_started)
+- [LayoutController and FlowLayoutController](layoutcontroller_and_flowlayoutcontroller)
+- [Standard layouts](standard_layouts)
+- [Datasource](datasource)
+- [Layout function](layout-function)
+- [Layout helpers](layout-helpers)
+- [API reference](api_reference)
 
-
-## Todo
-
-- Update layouts according to code examples (itemSize, etc..)
-- PostProcessors
 
 ## Demo
 
 [View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/index.html)
+
 
 ## Getting started
 
@@ -96,38 +87,38 @@ var layoutController = new LayoutController({
 this.add(layoutController);
 ```
 
-## Layout-function
 
-A layout is represented as a `Function` with the following parameters:
+## LayoutController and FlowLayoutController
 
-```javascript
-/**
- * @param {Array.Number} size Size in which to layout the renderables
- * @param {LayoutNodesContext} nodes Context for getting renderables and setting layout
- * @param {Object} [options] additional options that were passed to the function
- */
-function LayoutFunction(size, nodes, options) {
-	// put your layout-logic here
-};
-```
-For optimial performance, the layout-controllers try to minimize the
-executing of the layout-function. The layout-function is only executed when:
+Layout-controllers are at the heart of famous-flex. They take a datasource
+containing renderables, a layout function as input and render them to the famo.us
+render-tree. Whenever the datasource or layout changes, the Layout-controller
+updates the renderables according to the whishes of the layout function.
 
-- A resize occurs
-- `setLayout` is called on the layout-controller
-- `setLayoutOptions` is called on the layout-controller
-- `patchLayoutOptions` is called on the layout-controller
-- `reflowLayout` is called on the layout-controller
-- `insert` or `remove` is called on `FlowLayoutController`
+`LayoutController` is the most basic and lightweight version of a Layout-controller
+and should be used when you don't need any smooth transitions.
 
-If you make changes to a data-soure, then you must explicitely
-call `reflowLayout` to ensure that the layout is updated.
+`FlowLayoutController` uses physics to animate renderables from one state to
+another. FlowLayoutController really demonstrates the power of famous-flex
+in that it can flow renderables from any layout to another. Physics, particles
+and springs are used to smoothly animate renderables in natural patterns.
 
-## Layout-helpers
 
-TODO
+## Standard layouts
 
-## DataSource
+Famous-flex is shipped with a selection of commonly used layouts. It is also very easy
+to [write your own layout functions](layout_function).
+
+|Layout|Description|
+|---|---|
+|[GridLayout](docs/layouts/GridLayout.md)|Grid-layout with fixed number of rows & columns.|
+|[ListLayout](docs/layouts/ListLayout.md)|Lays out renderables in a horizontal or vertical list.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|Lays out renderables with a specific width & height.|
+|[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Layout containing a top-header, bottom- footer and content.|
+|[NavBarLayout](docs/layouts/NavBarLayout.md)|Layout containing one or more left and right items and a title.|
+
+
+## Datasource
 
 The data-source contains the renderables that are to be layed-out.
 It can be one of three things:
@@ -167,10 +158,52 @@ var layoutController = new LayoutController({
 });
 ```
 
-## Documentation
 
-- [API Reference](docs/CollectionView.md)
-- [Options](docs/CollectionView.md#module_CollectionView)
+## Layout function
+
+A layout is represented as a `Function` with the following parameters:
+
+```javascript
+/**
+ * @param {Size} size Size in which to layout the renderables
+ * @param {LayoutContext} context Context for getting renderables and setting layout
+ * @param {Object} [options] additional options that were passed to the function
+ */
+function LayoutFunction(size, context, options) {
+	// put your layout-logic here
+};
+```
+For optimial performance, the layout-controller tries to minimize the
+execution of the layout-function. The layout-function is only executed when:
+
+- A resize occurs
+- `setLayout` is called on the layout-controller
+- `setLayoutOptions` is called on the layout-controller
+- `patchLayoutOptions` is called on the layout-controller
+- `reflowLayout` is called on the layout-controller
+- `insert` or `remove` is called on `FlowLayoutController`
+
+If you make changes to a data-soure, then you must explicitely
+call `reflowLayout` to ensure that the layout is updated.
+
+
+## Layout helpers
+
+Layout helpers are special classes that simplify writing layout functions.
+
+|Helper|Description|
+|---|---|
+|[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|Layout renderables using docking semantics.|
+
+
+## API reference
+
+|Class|Description|
+|---|---|
+|[LayoutController](docs/LayoutController.md)|Lays out renderables according to a layout function.|
+|[FlowLayoutController](docs/FlowLayoutController.md)|Lays out renderables and smoothly animates between layout states.|
+|[LayoutContext](docs/LayoutContext.md)|Context used when writing layout-functions.|
+|[LayoutUtility](docs/LayoutUtility.md)|View class which encapsulates a maps object.|
 
 ## Contribute
 

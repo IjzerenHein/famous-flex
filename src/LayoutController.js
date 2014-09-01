@@ -12,7 +12,7 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * LayoutController lays out renderables accoring to a layout-
+ * LayoutController lays out renderables according to a layout-
  * function and a data-source.
  *
  * The LayoutController is the most basic and lightweight version
