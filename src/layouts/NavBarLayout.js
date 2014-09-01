@@ -27,6 +27,8 @@
  * Example:
  *
  * ```javascript
+ * var NavBarLayout = require('famous-flex/layouts/NavBarLayout');
+ *
  * new LayoutController({
  *   layout: NavBarLayout,
  *   layoutOptions: {

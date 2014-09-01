@@ -26,6 +26,8 @@
  * Example:
  *
  * ```javascript
+ * var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+ *
  * new LayoutController({
  *   layout: CollectionLayout,
  *   layoutOptions: {

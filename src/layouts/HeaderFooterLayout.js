@@ -21,6 +21,8 @@
  * Example:
  *
  * ```javascript
+ * var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
+ *
  * new LayoutController({
  *   layout: HeaderFooterLayout,
  *   layoutOptions: {

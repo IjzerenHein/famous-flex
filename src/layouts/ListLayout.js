@@ -21,6 +21,8 @@
  * Example:
  *
  * ```javascript
+ * var ListLayout = require('famous-flex/layouts/ListLayout');
+ *
  * new LayoutController({
  *   layout: ListLayout,
  *   layoutOptions: {

@@ -58,7 +58,7 @@ If necessary, add to the requirejs paths config:
 require.config({
     paths: {
         ...
-        'famous-flex': 'bower_components/famous-flex',
+        'famous-flex': 'node_modules/famous-flex/src',
         ...
     }
 });
@@ -68,7 +68,7 @@ Example of laying out renderables using a CollectionLayout:
 
 ```javascript
 var LayoutController = require('famous-flex/LayoutController');
-var CollectionLayout = require('famous-flex-layouts/CollectionLayout');
+var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
 
 // create collection-layout
 var layoutController = new LayoutController({

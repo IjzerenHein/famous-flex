@@ -23,6 +23,8 @@
  * Example:
  *
  * ```javascript
+ * var GridLayout = require('famous-flex/layouts/GridLayout');
+ *
  * new LayoutController({
  *   layout: GridLayout,
  *   layoutOptions: {
