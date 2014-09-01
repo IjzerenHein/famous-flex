@@ -8,8 +8,8 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-/*eslint no-use-before-define:0 */
+/*global define, console*/
+/*eslint no-use-before-define:0, no-console:0 */
 
 /**
  * TODO
@@ -58,14 +58,14 @@ define(function(require, exports, module) {
             startY: 0,
             currentOffset: 0,
             newOffset: 0
-        }
+        };
         this.sync = new GenericSync(['scroll', 'touch'], {direction : this.options.direction});
         this._eventInput = new EventHandler();
         this._eventOutput = new EventHandler();
         this._eventInput.pipe(this.sync);
         this.sync.pipe(this._eventInput);
         EventHandler.setInputHandler(this, this._eventInput);
-        EventHandler.setOutputHandler(this, this._eventOutput);        
+        EventHandler.setOutputHandler(this, this._eventOutput);
         this._eventInput.on('start', _handleStart.bind(this));
         this._eventInput.on('update', _handleMove.bind(this));
         this._eventInput.on('end', _handleEnd.bind(this));
@@ -79,7 +79,7 @@ define(function(require, exports, module) {
 
         // Create node manager that manages result LayoutNode instances
         var fn = createNodeFn || function(renderNode) {
-            return new LayoutNode(renderNode)
+            return new LayoutNode(renderNode);
         };
         this._nodes = new LayoutNodeManager(fn);
 
@@ -109,8 +109,7 @@ define(function(require, exports, module) {
      * Sets the collection of renderables which are layed out according to
      * the layout-function.
      *
-     * @method setDataSource
-     * @param {Array|Object|ViewSequence} dataSource Either an array of renderables or a Famous viewSequence.
+     * @param {Array|Object|ViewSequence} sequence Either an array of renderables or a Famous viewSequence.
      * @return {ScrollView} this
      */
     ScrollView.prototype.sequenceFrom = function(sequence) {
@@ -225,7 +224,6 @@ define(function(require, exports, module) {
         return this.id;
     };
 
-
     function _handleStart(event) {
 
         this._scroll.startX = event.clientX;
@@ -248,7 +246,7 @@ define(function(require, exports, module) {
         var delta = -event.delta;
         console.log('scrollmove: ' + JSON.stringify({velocity: velocity, delta: delta}));
 
-        offsetY = this._scroll.startY - event.clientY;
+        var offsetY = this._scroll.startY - event.clientY;
 
         this._scroll.newOffset = offsetY;
 
@@ -307,8 +305,8 @@ define(function(require, exports, module) {
                 size: spec.size,
                 align: spec.align,
                 origin: spec.origin,
-                renderNode: spec.renderNode,
-            }
+                renderNode: spec.renderNode
+            };
             if (spec.transform) {
                 newSpec.transform = Transform.thenMove(spec.transform, [0, this._scroll.currentOffset, 0]);
             }
@@ -343,8 +341,8 @@ define(function(require, exports, module) {
         var opacity = context.opacity;
 
         // When the size or layout function has changed, reflow the layout
-        if (size[0] !== this._contextSizeCache[0] || 
-            size[1] !== this._contextSizeCache[1] || 
+        if (size[0] !== this._contextSizeCache[0] ||
+            size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
             this._nodes._trueSizeRequested ||
             _shouldReflowAfterOffsetChange.call(this)) {
@@ -355,14 +353,14 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Prepare for layout
-            var context = this._nodes.prepareForLayout(
+            var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence      // first node to layout
             );
 
             // Layout objects
             this._layout(
                 size,                   // size to layout renderables into
-                context,                // context which the layout-function can use 
+                layoutContext,          // context which the layout-function can use
                 this._layoutOptions     // additional layout-options
             );
 
@@ -386,7 +384,9 @@ define(function(require, exports, module) {
         }
 
         // Return
-        if (size) transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+        if (size) {
+            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+        }
         this._commitOutput.size = size;
         this._commitOutput.opacity = opacity;
         this._commitOutput.transform = transform;

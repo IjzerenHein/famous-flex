@@ -7,11 +7,17 @@
  * @copyright Famous Industries, Inc. 2014
  */
 
+/*global module*/
+
 var ContainerSurface = require('famous/surfaces/ContainerSurface');
 var EventHandler = require('famous/core/EventHandler');
 var Scrollview = require('./Scrollview');
 var Utility = require('famous/utilities/Utility');
 var OptionsManager = require('famous/core/OptionsManager');
+
+/**
+ * @module
+ */
 
 /**
  * A Container surface with a scrollview automatically added. The convenience of ScrollContainer lies in
@@ -28,7 +34,9 @@ function ScrollContainer(options) {
     this.options = Object.create(ScrollContainer.DEFAULT_OPTIONS);
     this._optionsManager = new OptionsManager(this.options);
 
-    if (options) this.setOptions(options);
+    if (options) {
+        this.setOptions(options);
+    }
 
     this.container = new ContainerSurface(this.options.container);
     this.scrollview = new Scrollview(this.options.scrollview);

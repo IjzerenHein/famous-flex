@@ -218,8 +218,8 @@ define(function(require, exports, module) {
         var opacity = context.opacity;
 
         // When the size or layout function has changed, reflow the layout
-        if (size[0] !== this._contextSizeCache[0] || 
-            size[1] !== this._contextSizeCache[1] || 
+        if (size[0] !== this._contextSizeCache[0] ||
+            size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
             this._nodes._trueSizeRequested) {
 
@@ -229,7 +229,7 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Prepare for layout
-            var context = this._nodes.prepareForLayout(
+            var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence,     // first node to layout
                 this._nodesById         // so we can do fast id lookups
             );
@@ -237,7 +237,7 @@ define(function(require, exports, module) {
             // Layout objects
             this._layout(
                 size,                   // size to layout renderables into
-                context,                // context which the layout-function can use 
+                layoutContext,          // context which the layout-function can use
                 this._layoutOptions     // additional layout-options
             );
 
@@ -254,7 +254,9 @@ define(function(require, exports, module) {
         }
 
         // Return
-        if (size) transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+        if (size) {
+            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+        }
         this._commitOutput.size = size;
         this._commitOutput.opacity = opacity;
         this._commitOutput.transform = transform;

@@ -35,7 +35,23 @@ define(function(require, exports, module) {
      * Use this function to enumerate the contents of a data-source that is
      * either an Array or a ViewSequence.
      *
-     * @return {Object} layout-node or undefined
+     * Example:
+     * ```javascript
+     * function MyLayout(size, context, options) {
+     *   var height = 0;
+     *   var node = context.next(); // get first node
+     *   while (node) {
+     *     context.set({
+     *       size: [size[0], 100],
+     *       transform: [0, height, 0]
+     *     });
+     *     height += 100;
+     *     node = context.next(); // get next node
+     *   }
+     * }
+     * ```
+     *
+     * @return {LayoutNode} layout-node or undefined
      */
     LayoutContext.prototype.next = function() {
         // dummy implementation, override in constructor
@@ -44,7 +60,7 @@ define(function(require, exports, module) {
     /**
      * Get the layout-node for a renderable with a specific id. This function
      * should be used to access data-sources which are key-value collections.
-     * When a data-source is an Array or a ViewSequence, use `next`.
+     * When a data-source is an Array or a ViewSequence, use `next()`.
      *
      * If the value of the datasource is an array, then that array is returned
      * as is. To get the layout-node which corresponds to the array-element use
@@ -56,7 +72,7 @@ define(function(require, exports, module) {
      *     var left = 0;
      *
      *     // Position title
-     *     var title = nodes.byId('title');
+     *     var title = nodes.get('title');
      *     nodes.set(title, {
      *       size: [100, size[1]],
      *       translate: [left, 0, 0]
@@ -64,7 +80,7 @@ define(function(require, exports, module) {
      *     left += 100;
      *
      *     // Position right-items (array)
-     *     var leftItems = nodes.byId('leftItems');
+     *     var leftItems = nodes.get('leftItems');
      *     for (var i = 0; i < leftItems.length; i++) {
      *       var leftItem = nodes.byArrayElement(leftItems[i]);
      *       nodes.set(leftItem, {
@@ -85,16 +101,16 @@ define(function(require, exports, module) {
      * ```
      *
      * @param {String} nodeId id of the renderable
-     * @return {Object} layout-node or undefined
+     * @return {LayoutNode} layout-node or undefined
      */
-    LayoutContext.prototype.byId = function(nodeId) {
+    LayoutContext.prototype.get = function(nodeId) {
         // dummy implementation, override in constructor
     };
 
     /**
      * Get the layout-node based on an array element.
      *
-     * See `byId` for an example.
+     * See `get` for an example.
      *
      * @param {Object} arrayElement opaque array-element
      * @return {Object} layout-node
@@ -104,14 +120,13 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the layout-node based on an array element.
+     * Resolve the size of a layout-node by accessing the `getSize` function
+     * of the renderable.
      *
-     * See `byId` for an example.
-     *
-     * @param {Object} arrayElement opaque array-element
-     * @return {Object} layout-node
+     * @param {Object|String} node layout-node or node-id
+     * @return {Array.Number.2} size of the node
      */
-    LayoutContext.prototype.getSizeInfo = function(node) {
+    LayoutContext.prototype.resolveSize = function(node) {
         // dummy implementation, override in constructor
     };
 

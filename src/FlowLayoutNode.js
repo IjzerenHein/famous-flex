@@ -28,9 +28,9 @@ define(function(require, exports, module) {
 
     /**
      * @class
-     * @param {Object} physicsEngines physics-engines to use
      * @param {Object} renderNode Render-node which this layout-node represents
-     * @param {Object} initialSpec Initial state
+     * @param {Spec} spec Initial state
+     * @param {Object} physicsEngines physics-engines to use
      * @alias module:FlowLayoutNode
      */
     function FlowLayoutNode(renderNode, spec, physicsEngines) {
@@ -212,14 +212,13 @@ define(function(require, exports, module) {
             scale: this._properties.scale ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
             rotate: this._properties.rotate ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
         });
-
-        console.log(JSON.stringify({
+        /*console.log(JSON.stringify({
             opacity: this._spec.opacity,
             size: this._spec.size,
             align: this._spec.align,
             origin: this._spec.origin,
             transform: this._spec.transform
-        }));
+        }));*/
 
         return this._spec;
     };

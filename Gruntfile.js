@@ -21,9 +21,12 @@ module.exports = function(grunt) {
           index: true
         },
         files: [
-            { src: 'src/LayoutNodesContext.js', dest: 'docs/LayoutNodesContext.md' },
+            { src: 'src/LayoutNodeManager.js', dest: 'docs/LayoutNodeManager.md' },
+            { src: 'src/LayoutContext.js', dest: 'docs/LayoutContext.md' },
             { src: 'src/LayoutController.js', dest: 'docs/LayoutController.md' },
+            { src: 'src/LayoutNode.js', dest: 'docs/LayoutNode.md' },
             { src: 'src/FlowLayoutController.js', dest: 'docs/LayoutController.md' },
+            { src: 'src/FlowLayoutNode.js', dest: 'docs/LayoutNode.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' }
         ]
