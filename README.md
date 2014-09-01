@@ -30,13 +30,13 @@ issue.
 
 ### Index
 
-- [Getting started](getting_started)
-- [LayoutController and FlowLayoutController](layoutcontroller_and_flowlayoutcontroller)
-- [Standard layouts](standard_layouts)
-- [Datasource](datasource)
-- [Layout function](layout-function)
-- [Layout helpers](layout-helpers)
-- [API reference](api_reference)
+- [Getting started](#getting_started)
+- [LayoutController and FlowLayoutController](#layoutcontroller_and_flowlayoutcontroller)
+- [Standard layouts](#standard_layouts)
+- [Datasource](#datasource)
+- [Layout function](#layout-function)
+- [Layout helpers](#layout-helpers)
+- [API reference](#api_reference)
 
 
 ## Demo
@@ -107,7 +107,7 @@ and springs are used to smoothly animate renderables in natural patterns.
 ## Standard layouts
 
 Famous-flex is shipped with a selection of commonly used layouts. It is also very easy
-to [write your own layout functions](layout_function).
+to [write your own layout functions](#layout_function).
 
 |Layout|Description|
 |---|---|
