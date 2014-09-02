@@ -245,11 +245,13 @@ define(function(require, exports, module) {
             );
 
             // Layout objects
-            this._layout(
-                size,                   // size to layout renderables into
-                layoutContext,          // context which the layout-function can use
-                this._layoutOptions     // additional layout-options
-            );
+            if (this._layout) {
+                this._layout(
+                    size,                   // size to layout renderables into
+                    layoutContext,          // context which the layout-function can use
+                    this._layoutOptions     // additional layout-options
+                );
+            }
 
             // Mark non-invalidated nodes for removal
             this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);

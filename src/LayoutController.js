@@ -251,11 +251,13 @@ define(function(require, exports, module) {
             );
 
             // Layout objects
-            this._layout(
-                size,                   // size to layout renderables into
-                layoutContext,          // context which the layout-function can use
-                this._layoutOptions     // additional layout-options
-            );
+            if (this._layout) {
+                this._layout(
+                    size,                   // size to layout renderables into
+                    layoutContext,          // context which the layout-function can use
+                    this._layoutOptions     // additional layout-options
+                );
+            }
 
             // Update output
             this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();

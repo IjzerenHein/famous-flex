@@ -57,7 +57,10 @@ define(function(require, exports, module) {
 
     // Layout function
     module.exports = function NavBarLayout(size, context, options) {
-        var dock = new LayoutDockHelper(size, context, options.margins);
+        var dock = new LayoutDockHelper(size, context, {
+            margins: options.margins,
+            translateZ: 1
+        });
 
         // Position background
         context.set('background', {size: size});

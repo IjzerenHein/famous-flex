@@ -17,7 +17,7 @@
  *
  * ```javascript
  * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
- * 
+ *
  * function HeaderFooterLayout(size, context, options) {
  *   var dock = new LayoutDockHelper(size, context);
  *   dock.top('header', options.headerHeight);
@@ -36,14 +36,18 @@ define(function(require, exports, module) {
      * @class
      * @param {Size} size Size within which to layout
      * @param {LayoutContext} context layout-context
-     * @param {Object} [margins] margins to start out with
+     * @param {Object} [options] additional options
+     * @param {Object} [options.margins] margins to start out with (default: 0px)
+     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
      * @alias module:LayoutDockHelper
      */
-    function LayoutDockHelper(size, context, margins) {
+    function LayoutDockHelper(size, context, options) {
         this._size = size;
         this._context = context;
-        if (margins) {
-            margins = LayoutUtility.normalizeMargins(margins);
+        this._options = options;
+        this._z = (options && options.translateZ) ? options.translateZ : 0;
+        if (options && options.margins) {
+            var margins = LayoutUtility.normalizeMargins(options.margins);
             this._left = margins[3];
             this._top = margins[0];
             this._right = size[0] - margins[1];
@@ -75,7 +79,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 0],
-            translate: [this._left, this._top, 0]
+            translate: [this._left, this._top, this._z]
         });
         this._top += height;
         return this;
@@ -99,7 +103,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [width, this._bottom - this._top],
             origin: [0, 0],
-            translate: [this._left, this._top, 0]
+            translate: [this._left, this._top, this._z]
         });
         this._left += width;
         return this;
@@ -123,7 +127,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 1],
-            translate: [this._left, -(this._size[1] - this._bottom), 0]
+            translate: [this._left, -(this._size[1] - this._bottom), this._z]
         });
         this._bottom -= height;
         return this;
@@ -148,7 +152,7 @@ define(function(require, exports, module) {
             this._context.set(node, {
                 size: [width, this._bottom - this._top],
                 origin: [1, 0],
-                translate: [-(this._size[0] - this._right), this._top, 0]
+                translate: [-(this._size[0] - this._right), this._top, this._z]
             });
         }
         if (width) {
@@ -166,7 +170,7 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.fill = function(node) {
         this._context.set(node, {
             size: [this._right - this._left, this._bottom - this._top],
-            translate: [this._left, this._top, 0]
+            translate: [this._left, this._top, this._z]
         });
         return this;
     };
