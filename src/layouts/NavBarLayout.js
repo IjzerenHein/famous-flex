@@ -56,14 +56,14 @@ define(function(require, exports, module) {
     var LayoutDockHelper = require('../helpers/LayoutDockHelper');
 
     // Layout function
-    module.exports = function NavBarLayout(size, context, options) {
-        var dock = new LayoutDockHelper(size, context, {
+    module.exports = function NavBarLayout(context, options) {
+        var dock = new LayoutDockHelper(context, {
             margins: options.margins,
             translateZ: 1
         });
 
         // Position background
-        context.set('background', {size: size});
+        context.set('background', {size: context.size});
 
         // Position right items
         var node;

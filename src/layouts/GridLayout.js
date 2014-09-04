@@ -17,7 +17,6 @@
  * |options|type|description|
  * |---|---|---|
  * |`cells`|Size|Number of cells: [columns, rows]|
- * |`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
  * |`[gutter]`|Size|Gutter-space between renderables|
  *
  * Example:
@@ -46,9 +45,10 @@ define(function(require, exports, module) {
     var Utility = require('famous/utilities/Utility');
 
     // Layout function
-    module.exports = function GridLayout(size, context, options) {
+    module.exports = function GridLayout(context, options) {
 
         // Do one-time stuff
+        var size = context.size;
         var gutter = options.gutter || [0, 0];
         var nodeSize = [
             ((size[0] - gutter[0]) / options.cells[0]) - gutter[0],
@@ -71,7 +71,7 @@ define(function(require, exports, module) {
         var row;
         var col;
         var node;
-        if (options.direction === Utility.Direction.Y) {
+        if (context.direction === Utility.Direction.Y) {
             for (col = 0; col < options.cells[0]; col++) {
                 for (row = 0; row < options.cells[1]; row++) {
                     node = context.next();

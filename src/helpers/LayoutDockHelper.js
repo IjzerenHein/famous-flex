@@ -34,14 +34,14 @@ define(function(require, exports, module) {
 
     /**
      * @class
-     * @param {Size} size Size within which to layout
      * @param {LayoutContext} context layout-context
      * @param {Object} [options] additional options
      * @param {Object} [options.margins] margins to start out with (default: 0px)
      * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
      * @alias module:LayoutDockHelper
      */
-    function LayoutDockHelper(size, context, options) {
+    function LayoutDockHelper(context, options) {
+        var size = context.size;
         this._size = size;
         this._context = context;
         this._options = options;

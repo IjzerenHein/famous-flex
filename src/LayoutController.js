@@ -53,10 +53,9 @@ define(function(require, exports, module) {
         this._layoutOptions = {};
 
         // Create node manager that manages result LayoutNode instances
-        var fn = createNodeFn || function(renderNode) {
+        this._nodes = new LayoutNodeManager(createNodeFn || function(renderNode) {
             return new LayoutNode(renderNode);
-        };
-        this._nodes = new LayoutNodeManager(fn);
+        });
 
         // Apply options
         if (options && options.dataSource) {
@@ -247,13 +246,14 @@ define(function(require, exports, module) {
             // Prepare for layout
             var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence,     // first node to layout
-                this._nodesById         // so we can do fast id lookups
+                this._nodesById, {      // so we can do fast id lookups
+                    size: size
+                }
             );
 
             // Layout objects
             if (this._layout) {
                 this._layout(
-                    size,                   // size to layout renderables into
                     layoutContext,          // context which the layout-function can use
                     this._layoutOptions     // additional layout-options
                 );

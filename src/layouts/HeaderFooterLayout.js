@@ -44,8 +44,8 @@ define(function(require, exports, module) {
     var LayoutDockHelper = require('../helpers/LayoutDockHelper');
 
     // Layout function
-    module.exports = function HeaderFooterLayout(size, context, options) {
-        var dock = new LayoutDockHelper(size, context);
+    module.exports = function HeaderFooterLayout(context, options) {
+        var dock = new LayoutDockHelper(context);
         dock.top('header', options.headerHeight);
         dock.bottom('footer', options.footerHeight);
         dock.fill('content');

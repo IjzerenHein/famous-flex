@@ -28,6 +28,10 @@ define(function(require, exports, module) {
         }
     }
 
+    // properties
+    // size
+    // direction
+
     /**
      * Get the layout-node for the next renderable in the data-source. When
      * the end of the data-source is reached, `undefined` is returned.

@@ -16,7 +16,6 @@
  * |options|type|description|
  * |---|---|---|
  * |`[itemSize]`|Number|Height or width in pixels of the list-item|
- * |`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
  *
  * Example:
  *
@@ -43,21 +42,24 @@ define(function(require, exports, module) {
     var Utility = require('famous/utilities/Utility');
 
     // Layout function
-    module.exports = function ListLayout(size, context, options) {
+    module.exports = function ListLayout(context, options) {
 
+        // Prepare
+        var size = context.size;
+        var reverse = context.reverse;
         var node = context.next();
         var itemSize;
         var nodeSize;
 
         // Layout from top to bottom
-        if ((options.direction === undefined) || (options.direction === Utility.Direction.Y)) {
+        if ((context.direction === undefined) || (context.direction === Utility.Direction.Y)) {
             itemSize = options.itemSize ? [size[0], options.itemSize] : undefined;
             var height = 0;
             while (node) {
                 nodeSize = itemSize || [size[0], context.resolveSize(node, size)[1]];
                 context.set(node, {
                     size: nodeSize,
-                    translate: [0, height, 0]
+                    translate: [0, reverse ? (size[1] - (height + nodeSize[1])) : height, 0]
                 });
                 height += nodeSize[1];
                 if (height > size[1]) {
@@ -75,7 +77,7 @@ define(function(require, exports, module) {
                 nodeSize = itemSize || [context.resolveSize(node, size)[0], size[1]];
                 context.set(node, {
                     size: nodeSize,
-                    translate: [width, 0, 0]
+                    translate: [reverse ? (size[0] - (width + nodeSize[0])) : width, 0, 0]
                 });
                 width += nodeSize[0];
                 if (width > size[0]) {

@@ -51,8 +51,8 @@ function ScrollContainer(options) {
 ScrollContainer.DEFAULT_OPTIONS = {
     container: {
         properties: {overflow : 'hidden'}
-    },
-    scrollview: {direction: Utility.Direction.X}
+    }
+    //scrollview: {direction: Utility.Direction.Y}
 };
 
 /**
@@ -68,11 +68,112 @@ ScrollContainer.prototype.setOptions = function setOptions(options) {
 /**
  * Sets the collection of renderables under the ScrollContainer instance scrollview's control.
  *
- * @method sequenceFrom
  * @param {Array|ViewSequence} sequence Either an array of renderables or a Famous ViewSequence.
  */
 ScrollContainer.prototype.sequenceFrom = function sequenceFrom() {
     return this.scrollview.sequenceFrom.apply(this.scrollview, arguments);
+};
+
+/**
+ * Set the new layout.
+ *
+ * @param {Function} layout Layout function
+ * @param {Object} [options] Options to pass in to the layout-function
+ * @return {ScrollContainer} this
+ */
+ScrollContainer.prototype.setLayout = function(layout, options) {
+    this.scrollview.setLayout(layout, options);
+    return this;
+};
+
+/**
+ * Get the current layout-function
+ *
+ * @return {Function} Layout function
+ */
+ScrollContainer.prototype.getLayout = function() {
+    return this.scrollview.getLayout();
+};
+
+/**
+ * Set the options for the current layout. Use this function after
+ * `setLayout` to update the options for the layout-function.
+ *
+ * @param {Object} [options] Options to pass in to the layout-function
+ * @return {ScrollContainer} this
+ */
+ScrollContainer.prototype.setLayoutOptions = function(options) {
+    this.scrollview.setLayoutOptions(options);
+    return this;
+};
+
+/**
+ * Patches the options for the current layout. Use this function to change
+ * just one or a couple of layout-options, instead to having to set all
+ * the options again.
+ *
+ * @param {Object} [options] Options to pass in to the layout-function
+ * @return {ScrollContainer} this
+ */
+ScrollContainer.prototype.patchLayoutOptions = function(options) {
+    this.scrollview.patchLayoutOptions(options);
+    return this;
+};
+
+/**
+ * Get the current layout options.
+ *
+ * @return {Object} Layout options
+ */
+ScrollContainer.prototype.getLayoutOptions = function() {
+    return this.scrollview.getLayoutOptions();
+};
+
+/**
+ * Get the spec based on the renderable that was provided
+ * in the data-source.
+ *
+ * @param {Object} node Render-node to look for
+ * @return {Object} spec or undefined
+ */
+ScrollContainer.prototype.getSpecByNode = function(node) {
+    return this.scrollview.getSpecByNode(node);
+};
+
+/**
+ * Forces a reflow of the layout, the next render cycle.
+ *
+ * @return {ScrollContainer} this
+ */
+ScrollContainer.prototype.reflowLayout = function() {
+    this.scrollview.reflowLayout();
+    return this;
+};
+
+/**
+ * Inserts a renderable into the data-source. If the renderable is visible
+ * then it is inserted using an animation.
+ *
+ * @param {Number|String} index Index within vireSeuqnce
+ * @param {Object} renderable Rendeable to add to the data-source
+ * @return {ScrollView} this
+ */
+ScrollContainer.prototype.insert = function(index, renderable) {
+    this.scrollview.insert.apply(this.scrollview, arguments);
+    return this;
+};
+
+/**
+ * Removes a renderable from the data-source. If the renderable is visible
+ * then it will be removed using an animation.
+ *
+ * @param {Number|String} index Index within dataSource array or id (String)
+ * @param {Spec} [spec] Size, transform, etc.. to end with when removing
+ * @return {ScrollView} this
+ */
+ScrollContainer.prototype.remove = function(index) {
+    this.scrollview.remove.apply(this.scrollview, arguments);
+    return this;
 };
 
 /**

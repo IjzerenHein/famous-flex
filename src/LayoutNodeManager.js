@@ -29,6 +29,7 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
+    var Utility = require('famous/utilities/Utility');
 
     /**
      * @class
@@ -57,7 +58,7 @@ define(function(require, exports, module) {
      * @param {Object} [nodesById] dictionary to use when looking up nodes by id
      * @return {LayoutContext} context which can be passed to the layout-function
      */
-    LayoutNodeManager.prototype.prepareForLayout = function(viewSequence, nodesById) {
+    LayoutNodeManager.prototype.prepareForLayout = function(viewSequence, nodesById, contextData) {
 
         // Reset all nodes
         var node = this._first;
@@ -72,6 +73,11 @@ define(function(require, exports, module) {
         this._prev = undefined;
         this._current = this._first;
         this._trueSizeRequested = false;
+
+        // Prepare content
+        this._context.size = contextData.size;
+        this._context.direction = contextData.direction || Utility.Direction.Y;
+        this._context.reverse = contextData.reverse;
         return this._context;
     };
 

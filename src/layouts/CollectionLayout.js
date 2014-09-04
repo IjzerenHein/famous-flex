@@ -17,7 +17,6 @@
  * |options|type|description|
  * |---|---|---|
  * |`itemSize`|Size|Size of an item to layout|
- * |`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
  * |`[gutter]`|Size|Gutter-space between renderables|
  * |`[justify]`|Bool|Justifies the renderables accross the width & height|
  * |`[justifyHorizontal]`|Bool|Justifies the renderables accross the width|
@@ -49,9 +48,10 @@ define(function(require, exports, module) {
     // import dependencies
     var Utility = require('famous/utilities/Utility');
 
-    module.exports = function CollectionLayout(size, context, options) {
+    module.exports = function CollectionLayout(context, options) {
 
         // Prepare
+        var size = context.size;
         var gutter = options.gutter || [0, 0];
         var left = gutter[0];
         var top = gutter[1];
@@ -78,7 +78,7 @@ define(function(require, exports, module) {
             });
 
             // Calculate next node
-            if ((options.direction === undefined) || (options.direction === Utility.Direction.Y)) {
+            if ((context.direction === undefined) || (context.direction === Utility.Direction.Y)) {
                 left += nodeWidth;
                 if ((left + nodeSize[0]) > size[0]) {
                     left = gutter[0];

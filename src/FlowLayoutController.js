@@ -22,6 +22,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var Utility = require('famous/utilities/Utility');
     var LayoutController = require('./LayoutController');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
@@ -66,6 +67,7 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
+        direction: Utility.Direction.Y,
         showOpacity: 1,
         insertSpec: {
             opacity: 0,
@@ -241,13 +243,15 @@ define(function(require, exports, module) {
             // Prepare for layout
             var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence,     // first node to layout
-                this._nodesById         // so we can do fast id lookups
+                this._nodesById, {      // so we can do fast id lookups
+                    size: size,
+                    direction: this.options.direction
+                }
             );
 
             // Layout objects
             if (this._layout) {
                 this._layout(
-                    size,                   // size to layout renderables into
                     layoutContext,          // context which the layout-function can use
                     this._layoutOptions     // additional layout-options
                 );
