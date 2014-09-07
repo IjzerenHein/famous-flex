@@ -181,7 +181,6 @@ execution of the layout-function. The layout-function is only executed when:
 - A resize occurs
 - `setLayout` is called on the layout-controller
 - `setLayoutOptions` is called on the layout-controller
-- `patchLayoutOptions` is called on the layout-controller
 - `reflowLayout` is called on the layout-controller
 - `insert` or `remove` is called on `FlowLayoutController`
 
