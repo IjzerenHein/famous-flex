@@ -18,7 +18,6 @@ layout-function.
   * [layoutController.setLayout(layout, [options])](#module_LayoutController#setLayout)
   * [layoutController.getLayout()](#module_LayoutController#getLayout)
   * [layoutController.setLayoutOptions([options])](#module_LayoutController#setLayoutOptions)
-  * [layoutController.patchLayoutOptions([options])](#module_LayoutController#patchLayoutOptions)
   * [layoutController.getLayoutOptions()](#module_LayoutController#getLayoutOptions)
   * [layoutController.setDirection(direction)](#module_LayoutController#setDirection)
   * [layoutController.getDirection()](#module_LayoutController#getDirection)
@@ -67,18 +66,7 @@ Get the current layout.
 <a name="module_LayoutController#setLayoutOptions"></a>
 ###layoutController.setLayoutOptions([options])
 Set the options for the current layout. Use this function after
-`setLayout` to update the all the options for the layout-function.
-
-**Params**
-
-- \[options\] `Object` - Options to pass in to the layout-function  
-
-**Returns**: `LayoutController` - this  
-<a name="module_LayoutController#patchLayoutOptions"></a>
-###layoutController.patchLayoutOptions([options])
-Patches the options for the current layout. Use this function to change
-just one or a couple of layout-options, instead to having to set all
-the options again.
+`setLayout` to update one or more options for the layout-function.
 
 **Params**
 
