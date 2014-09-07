@@ -108,7 +108,7 @@ and springs are used to smoothly animate renderables in natural patterns.
 ## Standard layouts
 
 Famous-flex is shipped with a selection of commonly used layouts. It is also very easy
-to [write your own layout functions](#layout_function).
+to [write your own layout functions](#layout-function).
 
 |Layout|Description|
 |---|---|
