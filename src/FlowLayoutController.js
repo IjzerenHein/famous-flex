@@ -17,12 +17,12 @@
  * the renderables are transitioned from their old state (size,
  * transform, origin, etc..) to the new state.
  *
+ * Inherited from: [LayoutController](./LayoutController.md)
  * @module
  */
 define(function(require, exports, module) {
 
     // import dependencies
-    var Utility = require('famous/utilities/Utility');
     var LayoutController = require('./LayoutController');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
@@ -67,7 +67,6 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
-        direction: Utility.Direction.Y,
         showOpacity: 1,
         insertSpec: {
             opacity: 0,
@@ -245,7 +244,7 @@ define(function(require, exports, module) {
                 this._viewSequence,     // first node to layout
                 this._nodesById, {      // so we can do fast id lookups
                     size: size,
-                    direction: this.options.direction
+                    direction: this._direction
                 }
             );
 
@@ -258,7 +257,7 @@ define(function(require, exports, module) {
             }
 
             // Mark non-invalidated nodes for removal
-            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec, this.options.showOpacity);
         }
 
         // Update output

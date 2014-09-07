@@ -56,7 +56,7 @@ define(function(require, exports, module) {
             startX: 0,
             startY: 0,
             currentOffset: 0,
-            newOffset: 0,
+            newOffset: 0
             //renderNode: undefined,
             //sequenceNode: undefined
         };
@@ -76,12 +76,11 @@ define(function(require, exports, module) {
 
         // Layout
         //this._layout = undefined;
+        this._direction = Utility.Direction.Y;
         this._layoutOptions = {};
 
         // Create node manager that manages result LayoutNode instances
-        this._nodes = new LayoutNodeManager(createNodeFn || function(renderNode) {
-            return new LayoutNode(renderNode);
-        });
+        this._nodes = new LayoutNodeManager(createNodeFn || _createLayoutNode);
 
         // Apply options
         if (options && options.sequence) {
@@ -92,7 +91,7 @@ define(function(require, exports, module) {
         }
     }
     ScrollView.DEFAULT_OPTIONS = {
-        direction: Utility.Direction.Y
+
     };
 
     /**
@@ -197,6 +196,29 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Set the direction of the layout. The default direction is Utility.Direction.Y.
+     *
+     * @param {Utility.Direction} direction Direction (e.g. Utility.Direction.X)
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.setDirection = function(direction) {
+        if (this._direction !== direction) {
+            this._direction = direction;
+            this._isDirty = true;
+        }
+        return this;
+    };
+
+    /**
+     * Get the direction (e.g. Utility.Direction.Y).
+     *
+     * @return {Utility.Direction} Direction in which the renderables are layed out
+     */
+    ScrollView.prototype.getDirection = function() {
+        return this._direction;
+    };
+
+    /**
      * Get the spec based on the renderable that was provided
      * in the sequence
      *
@@ -223,7 +245,7 @@ define(function(require, exports, module) {
         return this;
     };
 
-/**
+    /**
      * Inserts a renderable into the data-source. If the renderable is visible
      * then it is inserted using an animation.
      *
@@ -419,7 +441,8 @@ define(function(require, exports, module) {
 
         // Handle scroll up/left
         if (this._scroll.newOffset > 0) {
-            // TODO\
+            // TODO
+            console.log('todo');
 
         // Handle scroll down/right
         }

@@ -50,6 +50,7 @@ define(function(require, exports, module) {
 
         // Layout
         //this._layout = undefined;
+        //this._direction = undefined;
         this._layoutOptions = {};
 
         // Create node manager that manages result LayoutNode instances
@@ -163,6 +164,30 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Set the direction of the layout. When no direction is set, the default
+     * direction of the layout function is used.
+     *
+     * @param {Utility.Direction} direction Direction (e.g. Utility.Direction.X)
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.setDirection = function(direction) {
+        if (this._direction !== direction) {
+            this._direction = direction;
+            this._isDirty = true;
+        }
+        return this;
+    };
+
+    /**
+     * Get the direction (e.g. Utility.Direction.Y).
+     *
+     * @return {Utility.Direction} Direction or undefined
+     */
+    LayoutController.prototype.getDirection = function() {
+        return this._direction;
+    };
+
+    /**
      * Get the spec (size, transform, etc..) for the given renderable or
      * Id.
      *
@@ -247,7 +272,8 @@ define(function(require, exports, module) {
             var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence,     // first node to layout
                 this._nodesById, {      // so we can do fast id lookups
-                    size: size
+                    size: size,
+                    direction: this._direction
                 }
             );
 

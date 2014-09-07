@@ -18,8 +18,8 @@
  * ```javascript
  * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
  *
- * function HeaderFooterLayout(size, context, options) {
- *   var dock = new LayoutDockHelper(size, context);
+ * function HeaderFooterLayout(context, options) {
+ *   var dock = new LayoutDockHelper(context);
  *   dock.top('header', options.headerHeight);
  *   dock.bottom('footer', options.footerHeight);
  *   dock.fill('content');
@@ -64,7 +64,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the top.
      *
-     * @param {LayoutNode|String} node layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -88,7 +88,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the left
      *
-     * @param {LayoutNode|String} node layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -112,7 +112,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the bottom
      *
-     * @param {LayoutNode|String} node layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -136,7 +136,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the right.
      *
-     * @param {LayoutNode|String} node layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */

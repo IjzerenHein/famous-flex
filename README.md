@@ -26,6 +26,7 @@ issue.
 
 - Scrolling (Scrolling support using physics, same as Scrollview)
 - AutoLayout (Cassowary constraints)
+- Effects (Applies a post layout effect function)
 - Drag & drop (Drag & drop renderables in a layout)
 
 ### Index
@@ -165,11 +166,10 @@ A layout is represented as a `Function` with the following parameters:
 
 ```javascript
 /**
- * @param {Size} size Size in which to layout the renderables
  * @param {LayoutContext} context Context for getting renderables and setting layout
  * @param {Object} [options] additional options that were passed to the function
  */
-function LayoutFunction(size, context, options) {
+function LayoutFunction(context, options) {
 	// put your layout-logic here
 };
 ```

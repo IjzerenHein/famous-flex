@@ -41,12 +41,12 @@ define(function(require, exports, module) {
      * **Example:**
      *
      * ```javascript
-     * function MyLayoutFunction(size, context, options) {
+     * function MyLayoutFunction(context, options) {
      *   var height = 0;
      *   var node = context.next(); // get first node
      *   while (node) {
      *     context.set({
-     *       size: [size[0], 100],
+     *       size: [context.size[0], 100],
      *       transform: [0, height, 0]
      *     });
      *     height += 100;
@@ -72,7 +72,8 @@ define(function(require, exports, module) {
      *
      * ```javascript
      * var layoutController = new LayoutController({
-     *   layout: function (size, context, options) {
+     *   layout: function (context, options) {
+     *     var size = context.size;
      *     var left = context.get('left');
      *     context.set(left, { size: [100, size[1]] });
      *
@@ -104,7 +105,8 @@ define(function(require, exports, module) {
      *
      * ```javascript
      * var layoutController = new LayoutController({
-     *   layout: function (size, context, options) {
+     *   layout: function (context, options) {
+     *     var size = context.size;
      *     var left = 0;
      *
      *     // Position title
@@ -131,10 +133,10 @@ define(function(require, exports, module) {
      * });
      * ```
      *
-     * @param {String|RenderNode|Array.Elmement} nodeId object to resolve into a LayoutNode
+     * @param {String|Array.Elmement} node node-id or array-element
      * @return {LayoutNode} layout-node or undefined
      */
-    LayoutContext.prototype.get = function(nodeId) {
+    LayoutContext.prototype.get = function(node) {
         // dummy implementation, override in constructor
     };
 
@@ -144,7 +146,7 @@ define(function(require, exports, module) {
      * **Overview of all supported properties:**
      *
      * ```javascript
-     * function MyLayoutFunction(size, context, options) {
+     * function MyLayoutFunction(context, options) {
      *   context.set('mynode', {
      *     size: [100, 20],
      *     origin: [0.5, 0.5],
@@ -157,7 +159,7 @@ define(function(require, exports, module) {
      * }
      * ```
      *
-     * @param {LayoutNode|String|Array.Eelement} node layout-node, node-id or array-element
+     * @param {LayoutNode|String|Array.Element} node layout-node, node-id or array-element
      * @param {Object} set properties: size, origin, align, translate, scale, rotate & skew
      */
     LayoutContext.prototype.set = function(node, set) {
@@ -172,7 +174,7 @@ define(function(require, exports, module) {
      *
      * ```javascript
      * var layoutController = new LayoutController({
-     *   layout: function (size, context, options) {
+     *   layout: function (context, options) {
      *     var centerSize = context.resolveSize('center');
      *     context.set('center', {origin: [0.5, 0.5]});
      *     context.set('centerRight', {
@@ -195,7 +197,7 @@ define(function(require, exports, module) {
      * reflow of the layout the next render-cycle, ensuring that the renderables
      * are layed out as expected.
      *
-     * @param {LayoutNode|String|Array.Eelement} node layout-node, node-id or array-element
+     * @param {LayoutNode|String|Array.Element} node layout-node, node-id or array-element
      * @return {Size} size of the node
      */
     LayoutContext.prototype.resolveSize = function(node) {

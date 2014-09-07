@@ -9,6 +9,7 @@
  */
 
 /*global define*/
+/*eslint no-use-before-define:0 */
 
 /**
  * LayoutNodeManager is a private class used internally by the LayoutControllers and
@@ -29,7 +30,6 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
-    var Utility = require('famous/utilities/Utility');
 
     /**
      * @class
@@ -76,7 +76,7 @@ define(function(require, exports, module) {
 
         // Prepare content
         this._context.size = contextData.size;
-        this._context.direction = contextData.direction || Utility.Direction.Y;
+        this._context.direction = contextData.direction;
         this._context.reverse = contextData.reverse;
         return this._context;
     };
@@ -88,11 +88,17 @@ define(function(require, exports, module) {
      *
      * @param {Spec} [removeSpec] spec towards which the no longer layed-out nodes are animated
      */
-    LayoutNodeManager.prototype.removeNonInvalidatedNodes = function(removeSpec) {
+    LayoutNodeManager.prototype.removeNonInvalidatedNodes = function(removeSpec, showOpacity) {
         var node = this._first;
         while (node) {
             if (!node._invalidated && !node._removing) {
                 node.remove(removeSpec);
+            }
+            else if (node._removing && node._invalidated && showOpacity) {
+                node._removing = false;
+                node.set({
+                    opacity: showOpacity
+                });
             }
             node = node._next;
         }

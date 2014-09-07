@@ -266,7 +266,6 @@ define(function(require, exports, module) {
                 }
                 this._invalidated = true;
                 this._endstatereached = false;
-                this._removing = false;
             }
         }
     };
