@@ -16,7 +16,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 `FlowLayoutController` the renderables will smoothly transition from the old state
 to the new state using physics, particles and springs.
 
-###Roadmap
+### Roadmap
 
 Famous-flex is still in its infancy. I am commited in creating a first-class
 layout-solution for famo.us that is as performant, pluggable and awesome as
@@ -28,8 +28,7 @@ issue.
 - [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
 - [Layout literals](https://github.com/IjzerenHein/famous-flex/issues/4) (Declare layout as literals i.s.o. a function)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
-
-- Drag & drop (Drag & drop renderables in a layout)
+- [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
 
 ### Index
 
