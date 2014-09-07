@@ -29,6 +29,9 @@ layout-function.
 **Params**
 
 - options `Object` - Options.  
+  - \[layout\] `function` - Layout function to use.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object.  
+  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
 
 <a name="module_LayoutController#setDataSource"></a>
 ###layoutController.setDataSource(dataSource)

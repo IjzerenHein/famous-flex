@@ -23,6 +23,9 @@ Inherited from: [LayoutController](./LayoutController.md)
 **Params**
 
 - options `Object` - Options.  
+  - \[layout\] `function` - Layout function to use.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object.  
+  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
   - \[showOpacity\] `Number` - Opacity to use when showing renderables (default: 1)  
   - \[insertSpec\] `Spec` - Default spec to use when animating renderables into the scene (default: opacity=0)  
   - \[removeSpec\] `Spec` - Default spec to use when animating renderables out of the scene (default: opacity=0)  

@@ -35,6 +35,9 @@ define(function(require, exports, module) {
      * @class
      * @extends LayoutController
      * @param {Object} options Options.
+     * @param {Function} [options.layout] Layout function to use.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object.
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @param {Number} [options.showOpacity] Opacity to use when showing renderables (default: 1)
      * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
      * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)

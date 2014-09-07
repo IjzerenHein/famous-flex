@@ -34,6 +34,9 @@ define(function(require, exports, module) {
     /**
      * @class
      * @param {Object} options Options.
+     * @param {Function} [options.layout] Layout function to use.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object.
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @alias module:LayoutController
      */
     function LayoutController(options, createNodeFn) {
@@ -69,6 +72,9 @@ define(function(require, exports, module) {
         }
         if (options && (options.layout || options.layoutOptions)) {
             this.setLayout(options.layout, options.layoutOptions);
+        }
+        if (options && options.direction) {
+            this._direction = options.direction;
         }
     }
 
