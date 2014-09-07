@@ -102,9 +102,14 @@ define(function(require, exports, module) {
      * Patches the FlowLayoutController instance's options with the passed-in ones.
      *
      * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+     * @param {Number} [options.showOpacity] Opacity to use when showing renderables (default: 1)
+     * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
+     * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
+     * @return {FlowLayoutController} this
      */
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
-        return this._optionsManager.setOptions(options);
+        this._optionsManager.setOptions(options);
+        return this;
     };
 
     /**
