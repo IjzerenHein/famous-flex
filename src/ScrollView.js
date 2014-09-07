@@ -77,7 +77,11 @@ define(function(require, exports, module) {
         // Layout
         //this._layout = undefined;
         this._direction = Utility.Direction.Y;
-        this._layoutOptions = {};
+        this._layoutOptions = Object.create({});
+        this._layoutOptionsManager = new OptionsManager(this._layoutOptions);
+        this._layoutOptionsManager.on('change', function() {
+            this._isDirty = true;
+        }.bind(this));
 
         // Create node manager that manages result LayoutNode instances
         this._nodes = new LayoutNodeManager(createNodeFn || _createLayoutNode);
@@ -157,36 +161,13 @@ define(function(require, exports, module) {
 
     /**
      * Set the options for the current layout. Use this function after
-     * `setLayout` to update the options for the layout-function.
+     * `setLayout` to update one or more options for the layout-function.
      *
      * @param {Object} [options] Options to pass in to the layout-function
      * @return {ScrollView} this
      */
     ScrollView.prototype.setLayoutOptions = function(options) {
-        this._layoutOptions = options || {};
-        this._isDirty = true;
-        return this;
-    };
-
-    /**
-     * Patches the options for the current layout. Use this function to change
-     * just one or a couple of layout-options, instead to having to set all
-     * the options again.
-     *
-     * @param {Object} [options] Options to pass in to the layout-function
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.patchLayoutOptions = function(options) {
-        for (var n in options) {
-            if (this._layoutOptions === undefined) {
-                this._layoutOptions = {};
-            }
-            if (this._layoutOptions[n] !== options[n]) {
-                this._layoutOptions[n] = options[n];
-                this._isDirty = true;
-            }
-        }
-        this._isDirty = true;
+        this._layoutOptionsManager.setOptions(options);
         return this;
     };
 
