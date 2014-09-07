@@ -1,10 +1,10 @@
 {
   "name": "famous-flex",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
-    "url": "git://github.com/IjzerenHein/famous-flex.git"
+    "url": "https://github.com/IjzerenHein/famous-flex.git"
   },
   "authors": [
     "Hein Rutjes <hrutjes@gmail.com>"
