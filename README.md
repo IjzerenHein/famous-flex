@@ -24,10 +24,10 @@ can be. But to do this, I need your support and feedback. Let me know which of
 features below are most important to you, by leaving a comment in the corresponding
 issue.
 
-- [Scrolling](issues/1) (Scrolling support using physics, same as Scrollview)
-- [Effects](issues/2) (Apply after-effects on the renderables)
-- [Layout literals](issues/4) (Declare layout as literals i.s.o. a function)
-- [AutoLayout](issues/3) (Cassowary constraints)
+- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrolling support using physics, same as Scrollview)
+- [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
+- [Layout literals](https://github.com/IjzerenHein/famous-flex/issues/4) (Declare layout as literals i.s.o. a function)
+- [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
 
 - Drag & drop (Drag & drop renderables in a layout)
 
