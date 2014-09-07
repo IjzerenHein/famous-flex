@@ -128,6 +128,7 @@ define(function(require, exports, module) {
 
         // TODO - CHECK CURRENT NODE
         this._scroll.sequenceNode = this._viewSequence;
+        this._isDirty = true;
         return this;
     };
 
@@ -180,7 +181,10 @@ define(function(require, exports, module) {
             if (this._layoutOptions === undefined) {
                 this._layoutOptions = {};
             }
-            this._layoutOptions[n] = options[n];
+            if (this._layoutOptions[n] !== options[n]) {
+                this._layoutOptions[n] = options[n];
+                this._isDirty = true;
+            }
         }
         this._isDirty = true;
         return this;

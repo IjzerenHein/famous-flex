@@ -49,6 +49,7 @@ define(function(require, exports, module) {
         };
         //this._endstatereached = false;
         this._initial = true;
+        this._removing = false;
         if (spec) {
             _setFromSpec.call(this, spec);
         }
@@ -126,9 +127,18 @@ define(function(require, exports, module) {
      * Markes the node for removal.
      */
     FlowLayoutNode.prototype.remove = function(removeSpec) {
+
+        // Stop the particle from moving by setting the end-state
+        // to the current particle state
         for (var propName in this._properties) {
-            this._properties[propName].endState.set(this._properties[propName].particle.getPosition());
+            if (removeSpec && (removeSpec[propName] === undefined)) {
+                this._properties[propName].endState.set(
+                    this._properties[propName].particle.position.get()
+                );
+            }
         }
+
+        // Transition towards the new spec
         if (removeSpec) {
             _setFromSpec.call(this, removeSpec);
         }
