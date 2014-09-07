@@ -16,6 +16,8 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 `FlowLayoutController` the renderables will smoothly transition from the old state
 to the new state using physics, particles and springs.
 
+[View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
+
 ### Roadmap
 
 Famous-flex is still in its infancy. I am commited in creating a first-class
@@ -39,11 +41,6 @@ issue.
 - [Layout function](#layout-function)
 - [Layout helpers](#layout-helpers)
 - [API reference](#api-reference)
-
-
-## Demo
-
-[View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
 
 
 ## Getting started
