@@ -38,7 +38,11 @@ Patches the FlowLayoutController instance's options with the passed-in ones.
 **Params**
 
 - options `Options` - An object of configurable options for the FlowLayoutController instance.  
+  - \[showOpacity\] `Number` - Opacity to use when showing renderables (default: 1)  
+  - \[insertSpec\] `Spec` - Default spec to use when animating renderables into the scene (default: opacity=0)  
+  - \[removeSpec\] `Spec` - Default spec to use when animating renderables out of the scene (default: opacity=0)  
 
+**Returns**: `FlowLayoutController` - this  
 <a name="module_FlowLayoutController#insert"></a>
 ###flowLayoutController.insert(indexOrId, renderable, [spec])
 Inserts a renderable into the data-source. If the renderable is visible
