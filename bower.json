@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -27,7 +27,9 @@
     "tests",
     "examples",
     "docs",
-    "Gruntfile.js"
+    "Gruntfile.js",
+    "CONTRIBUTORS.md",
+    "package.json"
   ],
   "devDependencies": {
     "requirejs": "~2.1.11",

@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -37,5 +37,9 @@
     "grunt-eslint": "latest",
     "grunt-jscs": "latest",
     "grunt-jsdoc-to-markdown": "latest"
-  }
+  },
+  "files": [
+    "src",
+    "LICENSE"
+  ]
 }
