@@ -26,7 +26,7 @@ can be. But to do this, I need your support and feedback. Let me know which of
 features below are most important to you, by leaving a comment in the corresponding
 issue.
 
-- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrolling support using physics, same as Scrollview)
+- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrollview/container supporting layout-functions + smooth transitions)
 - [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
 - [Layout literals](https://github.com/IjzerenHein/famous-flex/issues/4) (Declare layout as literals i.s.o. a function)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
@@ -92,7 +92,7 @@ this.add(layoutController);
 Layout-controllers are at the heart of famous-flex. They take a datasource
 containing renderables, a layout function as input and render them to the famo.us
 render-tree. Whenever the datasource or layout changes, the Layout-controller
-updates the renderables according to the whishes of the layout function.
+updates the renderables according to the wishes of the layout function.
 
 `LayoutController` is the most basic and lightweight version of a Layout-controller
 and should be used when you don't need any smooth transitions.
@@ -164,13 +164,16 @@ A layout is represented as a `Function` with the following parameters:
 
 ```javascript
 /**
- * @param {LayoutContext} context Context for getting renderables and setting layout
+ * @param {LayoutContext} context Context used for enumerating renderables and setting the layout
  * @param {Object} [options] additional options that were passed to the function
  */
 function LayoutFunction(context, options) {
 	// put your layout-logic here
 };
 ```
+
+Please read the [LayoutContext documentation](docs/LayoutContext.md) further on how to write layout-functions.
+
 For optimial performance, the layout-controller tries to minimize the
 execution of the layout-function. The layout-function is only executed when:
 
@@ -180,7 +183,7 @@ execution of the layout-function. The layout-function is only executed when:
 - `reflowLayout` is called on the layout-controller
 - `insert` or `remove` is called on `FlowLayoutController`
 
-If you make changes to a data-soure, then you must explicitely
+If you make changes to a data-source, then you must explicitely
 call `reflowLayout` to ensure that the layout is updated.
 
 
@@ -199,8 +202,8 @@ Layout helpers are special classes that simplify writing layout functions.
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables according to a layout function.|
 |[FlowLayoutController](docs/FlowLayoutController.md)|Lays out renderables and smoothly animates between layout states.|
-|[LayoutContext](docs/LayoutContext.md)|Context used when writing layout-functions.|
-|[LayoutUtility](docs/LayoutUtility.md)|View class which encapsulates a maps object.|
+|[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
+|[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 
 ## Contribute
 
