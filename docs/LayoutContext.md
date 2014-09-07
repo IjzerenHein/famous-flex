@@ -9,7 +9,7 @@ renderables in the data-source and set their size, position, tranformation, etc.
 
 * [class: LayoutContext ⏏](#exp_module_LayoutContext)
   * [layoutContext.next()](#module_LayoutContext#next)
-  * [layoutContext.get(nodeId)](#module_LayoutContext#get)
+  * [layoutContext.get(node)](#module_LayoutContext#get)
   * [layoutContext.set(node, set)](#module_LayoutContext#set)
   * [layoutContext.resolveSize(node)](#module_LayoutContext#resolveSize)
 
@@ -23,12 +23,12 @@ either an Array or a ViewSequence.
 **Example:**
 
 ```javascript
-function MyLayoutFunction(size, context, options) {
+function MyLayoutFunction(context, options) {
   var height = 0;
   var node = context.next(); // get first node
   while (node) {
     context.set({
-      size: [size[0], 100],
+      size: [context.size[0], 100],
       transform: [0, height, 0]
     });
     height += 100;
@@ -39,7 +39,7 @@ function MyLayoutFunction(size, context, options) {
 
 **Returns**: `LayoutNode` - layout-node or undefined  
 <a name="module_LayoutContext#get"></a>
-###layoutContext.get(nodeId)
+###layoutContext.get(node)
 Get the layout-node for a renderable with a specific id. This function
 should be used to access data-sources which are key-value collections.
 When a data-source is an Array or a ViewSequence, use `next()`.
@@ -50,7 +50,8 @@ the id of the renderable straight to the `set` function.
 
 ```javascript
 var layoutController = new LayoutController({
-  layout: function (size, context, options) {
+  layout: function (context, options) {
+    var size = context.size;
     var left = context.get('left');
     context.set(left, { size: [100, size[1]] });
 
@@ -82,7 +83,8 @@ elements in the array:
 
 ```javascript
 var layoutController = new LayoutController({
-  layout: function (size, context, options) {
+  layout: function (context, options) {
+    var size = context.size;
     var left = 0;
 
     // Position title
@@ -111,7 +113,7 @@ var layoutController = new LayoutController({
 
 **Params**
 
-- nodeId `String` | `RenderNode` | `Array.Elmement` - object to resolve into a LayoutNode  
+- node `String` | `Array.Elmement` - node-id or array-element  
 
 **Returns**: `LayoutNode` - layout-node or undefined  
 <a name="module_LayoutContext#set"></a>
@@ -121,7 +123,7 @@ Set the size, origin, align, translation, scale, rotate & skew for a layout-node
 **Overview of all supported properties:**
 
 ```javascript
-function MyLayoutFunction(size, context, options) {
+function MyLayoutFunction(context, options) {
   context.set('mynode', {
     size: [100, 20],
     origin: [0.5, 0.5],
@@ -136,7 +138,7 @@ function MyLayoutFunction(size, context, options) {
 
 **Params**
 
-- node `LayoutNode` | `String` | `Array.Eelement` - layout-node, node-id or array-element  
+- node `LayoutNode` | `String` | `Array.Element` - layout-node, node-id or array-element  
 - set `Object` - properties: size, origin, align, translate, scale, rotate & skew  
 
 <a name="module_LayoutContext#resolveSize"></a>
@@ -148,7 +150,7 @@ of the renderable.
 
 ```javascript
 var layoutController = new LayoutController({
-  layout: function (size, context, options) {
+  layout: function (context, options) {
     var centerSize = context.resolveSize('center');
     context.set('center', {origin: [0.5, 0.5]});
     context.set('centerRight', {
@@ -173,6 +175,6 @@ are layed out as expected.
 
 **Params**
 
-- node `LayoutNode` | `String` | `Array.Eelement` - layout-node, node-id or array-element  
+- node `LayoutNode` | `String` | `Array.Element` - layout-node, node-id or array-element  
 
 **Returns**: `Size` - size of the node  

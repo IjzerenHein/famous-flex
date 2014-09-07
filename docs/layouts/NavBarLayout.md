@@ -16,6 +16,8 @@ When no item-width is specified, the width of the renderable itsself is used.
 Example:
 
 ```javascript
+var NavBarLayout = require('famous-flex/layouts/NavBarLayout');
+
 new LayoutController({
   layout: NavBarLayout,
   layoutOptions: {

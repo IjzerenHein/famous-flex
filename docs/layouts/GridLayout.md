@@ -6,12 +6,13 @@ columns and rows.
 |options|type|description|
 |---|---|---|
 |`cells`|Size|Number of cells: [columns, rows]|
-|`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
 |`[gutter]`|Size|Gutter-space between renderables|
 
 Example:
 
 ```javascript
+var GridLayout = require('famous-flex/layouts/GridLayout');
+
 new LayoutController({
   layout: GridLayout,
   layoutOptions: {

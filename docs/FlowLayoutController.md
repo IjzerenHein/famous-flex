@@ -5,6 +5,8 @@ layout to another. When the data-source or layout is changed,
 the renderables are transitioned from their old state (size,
 transform, origin, etc..) to the new state.
 
+Inherited from: [LayoutController](./LayoutController.md)
+
 <a name="exp_module_FlowLayoutController"></a>
 ##class: FlowLayoutController ⏏
 **Extends**: `LayoutController`  

@@ -5,11 +5,12 @@ Lays out a collection of renderables from top to bottom or left to right.
 |options|type|description|
 |---|---|---|
 |`[itemSize]`|Number|Height or width in pixels of the list-item|
-|`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
 
 Example:
 
 ```javascript
+var ListLayout = require('famous-flex/layouts/ListLayout');
+
 new LayoutController({
   layout: ListLayout,
   layoutOptions: {

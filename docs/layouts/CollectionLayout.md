@@ -6,7 +6,6 @@ continues at the left of the next line.
 |options|type|description|
 |---|---|---|
 |`itemSize`|Size|Size of an item to layout|
-|`[direction]`|Number|Direction into which to layout: 0 = X, 1 = Y (default)|
 |`[gutter]`|Size|Gutter-space between renderables|
 |`[justify]`|Bool|Justifies the renderables accross the width & height|
 |`[justifyHorizontal]`|Bool|Justifies the renderables accross the width|
@@ -15,6 +14,8 @@ continues at the left of the next line.
 Example:
 
 ```javascript
+var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+
 new LayoutController({
   layout: CollectionLayout,
   layoutOptions: {

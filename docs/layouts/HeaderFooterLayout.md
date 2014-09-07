@@ -10,6 +10,8 @@ Three part layout consiting of a top-header, bottom-footer and middle part.
 Example:
 
 ```javascript
+var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
+
 new LayoutController({
   layout: HeaderFooterLayout,
   layoutOptions: {

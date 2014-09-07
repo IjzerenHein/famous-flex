@@ -20,6 +20,8 @@ layout-function.
   * [layoutController.setLayoutOptions([options])](#module_LayoutController#setLayoutOptions)
   * [layoutController.patchLayoutOptions([options])](#module_LayoutController#patchLayoutOptions)
   * [layoutController.getLayoutOptions()](#module_LayoutController#getLayoutOptions)
+  * [layoutController.setDirection(direction)](#module_LayoutController#setDirection)
+  * [layoutController.getDirection()](#module_LayoutController#getDirection)
   * [layoutController.getSpec(node)](#module_LayoutController#getSpec)
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
 
@@ -88,6 +90,21 @@ the options again.
 Get the current layout options.
 
 **Returns**: `Object` - Layout options  
+<a name="module_LayoutController#setDirection"></a>
+###layoutController.setDirection(direction)
+Set the direction of the layout. When no direction is set, the default
+direction of the layout function is used.
+
+**Params**
+
+- direction `Utility.Direction` - Direction (e.g. Utility.Direction.X)  
+
+**Returns**: `LayoutController` - this  
+<a name="module_LayoutController#getDirection"></a>
+###layoutController.getDirection()
+Get the direction (e.g. Utility.Direction.Y).
+
+**Returns**: `Utility.Direction` - Direction or undefined  
 <a name="module_LayoutController#getSpec"></a>
 ###layoutController.getSpec(node)
 Get the spec (size, transform, etc..) for the given renderable or
