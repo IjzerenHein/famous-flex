@@ -173,7 +173,7 @@ var layoutController = new LayoutController({
 
 ## Layout function
 
-A layout is either represented as a [layout literal](#layout literals) or a `Function` with the following parameters:
+A layout is either represented as a [layout-literals](#layout literals) or a `Function` with the following parameters:
 
 ```javascript
 /**
@@ -193,7 +193,7 @@ It is easy to create your own layout functions. In order to do this read the [La
 Layout helpers are special classes that simplify writing layout functions.
 
 |Helper|Literal|Description|
-|---|---|
+|---|---|---|
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
