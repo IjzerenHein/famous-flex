@@ -173,7 +173,7 @@ var layoutController = new LayoutController({
 
 ## Layout function
 
-A layout is either represented as a [layout-literals](#layout literals) or a `Function` with the following parameters:
+A layout is either represented as a [layout literals](#layout-literals) or a `Function` with the following parameters:
 
 ```javascript
 /**
