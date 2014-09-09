@@ -5,7 +5,7 @@ Flexible, animated and plugable layout-controller for famo.us, which:
 
 - Smoothly animates renderables between layouts (using physics)
 - Makes it easy to layout renderables (without having to create lots of modifiers)
-- Is shiped with various commonly used layouts
+- Is shipped with various commonly used layouts
 - Allows you to easily create custom layouts and layout-helpers
 - Is very good at creating responsive designs
 
@@ -28,7 +28,6 @@ issue.
 
 - [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrollview/container supporting layout-functions + smooth transitions)
 - [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
-- [Layout literals](https://github.com/IjzerenHein/famous-flex/issues/4) (Declare layout as literals i.s.o. a function)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
 - [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
 
@@ -40,6 +39,7 @@ issue.
 - [Datasource](#datasource)
 - [Layout function](#layout-function)
 - [Layout helpers](#layout-helpers)
+- [Layout literals](#layout-literals)
 - [API reference](#api-reference)
 
 
@@ -66,11 +66,11 @@ require.config({
 Example of laying out renderables using a CollectionLayout:
 
 ```javascript
-var LayoutController = require('famous-flex/LayoutController');
+var FlowLayoutController = require('famous-flex/FlowLayoutController');
 var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
 
 // create collection-layout
-var layoutController = new LayoutController({
+var layoutController = new FlowLayoutController({
 	layout: CollectionLayout,
 	layoutOptions: {
 		itemSize: [100, 100],
@@ -91,7 +91,7 @@ this.add(layoutController);
 
 Layout-controllers are at the heart of famous-flex. They take a datasource
 containing renderables, a layout function as input and render them to the famo.us
-render-tree. Whenever the datasource or layout changes, the Layout-controller
+render-tree. Whenever the datasource is changed, the Layout-controller
 updates the renderables according to the wishes of the layout function.
 
 `LayoutController` is the most basic and lightweight version of a Layout-controller
@@ -101,6 +101,19 @@ and should be used when you don't need any smooth transitions.
 another. FlowLayoutController really demonstrates the power of famous-flex
 in that it can flow renderables from any layout to another. Physics, particles
 and springs are used to smoothly animate renderables in natural patterns.
+
+
+For optimal performance, the layout-controller tries to minimize the
+execution of the layout-function. The layout function is only executed when:
+- A resize occurs
+- `setLayout` is called on the layout-controller
+- `setLayoutOptions` is called on the layout-controller
+- `setDirection` is called on the layout-controller
+- `reflowLayout` is called on the layout-controller
+- `insert` or `remove` is called on `FlowLayoutController`
+
+NOTE: If you make changes to a data-source, then you must explicitely
+call `reflowLayout` to ensure that the layout is updated.
 
 
 ## Standard layouts
@@ -160,7 +173,7 @@ var layoutController = new LayoutController({
 
 ## Layout function
 
-A layout is represented as a `Function` with the following parameters:
+A layout is either represented as a [layout literal](#layout literals) or a `Function` with the following parameters:
 
 ```javascript
 /**
@@ -172,28 +185,44 @@ function LayoutFunction(context, options) {
 };
 ```
 
-Please read the [LayoutContext documentation](docs/LayoutContext.md) further on how to write layout-functions.
-
-For optimial performance, the layout-controller tries to minimize the
-execution of the layout-function. The layout-function is only executed when:
-
-- A resize occurs
-- `setLayout` is called on the layout-controller
-- `setLayoutOptions` is called on the layout-controller
-- `reflowLayout` is called on the layout-controller
-- `insert` or `remove` is called on `FlowLayoutController`
-
-If you make changes to a data-source, then you must explicitely
-call `reflowLayout` to ensure that the layout is updated.
+It is easy to create your own layout functions. In order to do this read the [LayoutContext documentation](docs/LayoutContext.md) which contains various examples.
 
 
 ## Layout helpers
 
 Layout helpers are special classes that simplify writing layout functions.
 
-|Helper|Description|
+|Helper|Literal|Description|
 |---|---|
-|[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|Layout renderables using docking semantics.|
+|[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
+
+
+## Layout literals
+
+Layout literals are objects which describe layouts through a definition rather
+than a function. The following example describes the use of a layout literal 
+using `dock` semantics:
+
+```javascript
+var layoutController = new LayoutController({
+	layout: {dock: [
+		['top', 'header', 50],
+		['bottom', 'footer', 50],
+		['fill', 'content']
+	]},
+	dataSource: {
+		header: new Surface({content: 'Header'}),
+		footer: new Surface({content: 'Footer'}),
+		content: new Surface({content: 'Content'})
+	}
+});
+```
+
+Layout literals are implemented through LayoutHelpers. To create your own
+layout literals, perform the following steps:
+- Create a LayoutHelper (see [LayoutDockHelper](src/helpers/LayoutDockHelper.js) for an example).
+- Implement the `parse` function on the LayoutHelper.
+- Register the helper using `LayoutUtility.registerHelper`.
 
 
 ## API reference

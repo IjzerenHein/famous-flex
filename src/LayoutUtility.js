@@ -24,6 +24,7 @@ define(function(require, exports, module) {
      */
     function LayoutUtility() {
     }
+    LayoutUtility.registeredHelpers = {};
 
     /**
      *  Normalizes the margins argument.
@@ -144,6 +145,15 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Helper function to call whenever a warning error has occurred.
+     *
+     * @param {String} message warning-message
+     */
+    LayoutUtility.warning = function(message) {
+        console.log('WARNING: ' + message);
+    };
+
+    /**
      * Helper function to log 1 or more arguments. All the arguments
      * are concatenated to produce a single string which is logged.
      *
@@ -161,6 +171,62 @@ define(function(require, exports, module) {
             }
         }
         console.log(message);
+    };
+
+    /**
+     * Registers a layout-helper so it can be used as a layout-literal for
+     * a layout-controller. The LayoutHelper instance must support the `parse`
+     * function, which is fed the layout-literal content.
+     *
+     * **Example:**
+     *
+     * ```javascript
+     * Layout.registerHelper('dock', LayoutDockHelper);
+     *
+     * var layoutController = new LayoutController({
+     *   layout: { dock: [,
+     *     ['top', 'header', 50],
+     *     ['bottom', 'footer', 50],
+     *     ['fill', 'content'],
+     *   ]},
+     *   dataSource: {
+     *     header: new Surface({content: 'Header'}),
+     *     footer: new Surface({content: 'Footer'}),
+     *     content: new Surface({content: 'Content'}),
+     *   }
+     * })
+     * ```
+     *
+     * @param {String} name name of the helper (e.g. 'dock')
+     * @param {Function} Helper Helper to register (e.g. LayoutDockHelper)
+     */
+    LayoutUtility.registerHelper = function(name, Helper) {
+        if (!Helper.prototype.parse) {
+            LayoutUtility.error('The layout-helper for name "' + name + '" is required to support the "parse" method');
+        }
+        if (this.registeredHelpers[name] !== undefined) {
+            LayoutUtility.warning('A layout-helper with the name "' + name + '" is already registered and will be overwritten');
+        }
+        this.registeredHelpers[name] = Helper;
+    };
+
+    /**
+     * Unregisters a layout-helper.
+     *
+     * @param {String} name name of the layout-helper
+     */
+    LayoutUtility.unregisterHelper = function(name) {
+        delete this.registeredHelpers[name];
+    };
+
+    /**
+     * Gets a registered layout-helper by its name.
+     *
+     * @param {String} name name of the layout-helper
+     * @return {Function} layout-helper or undefined
+     */
+    LayoutUtility.getRegisteredHelper = function(name) {
+        return this.registeredHelpers[name];
     };
 
     // Layout function

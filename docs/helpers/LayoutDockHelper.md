@@ -15,12 +15,30 @@ function HeaderFooterLayout(context, options) {
 };
 ```
 
+You can also use layout-literals to create layouts using docking semantics:
+
+```javascript
+var layoutController = new LayoutController({
+  layout: {dock: [
+    ['top', 'header', 40],
+    ['bottom', 'footer', 40],
+    ['fill', 'content']
+  ]},
+  dataSource: {
+    header: new Surface({content: 'header'}),
+    footer: new Surface({content: 'footer'}),
+    content: new Surface({content: 'content'}),
+  }
+});
+```
+
 <a name="exp_module_LayoutDockHelper"></a>
 ##class: LayoutDockHelper ⏏
 **Members**
 
 * [class: LayoutDockHelper ⏏](#exp_module_LayoutDockHelper)
   * [new LayoutDockHelper(context, [options])](#exp_new_module_LayoutDockHelper)
+  * [layoutDockHelper.parse(data)](#module_LayoutDockHelper#parse)
   * [layoutDockHelper.top([node], [height])](#module_LayoutDockHelper#top)
   * [layoutDockHelper.left([node], [width])](#module_LayoutDockHelper#left)
   * [layoutDockHelper.bottom([node], [height])](#module_LayoutDockHelper#bottom)
@@ -35,6 +53,26 @@ function HeaderFooterLayout(context, options) {
 - \[options\] `Object` - additional options  
   - \[margins\] `Object` - margins to start out with (default: 0px)  
   - \[translateZ\] `Number` - z-index to use when translating objects (default: 0)  
+
+<a name="module_LayoutDockHelper#parse"></a>
+###layoutDockHelper.parse(data)
+Parses the layout-rules based on a JSON data object.
+The object should be an array with the following syntax:
+`[[rule, node, value], [rule, node, value], ...]`
+
+**Example:**
+
+```JSON
+[
+  ['top': 'header', 50],
+  ['bottom': 'footer', 50],
+  ['fill', 'content']
+]
+```
+
+**Params**
+
+- data `Object` - JSON object  
 
 <a name="module_LayoutDockHelper#top"></a>
 ###layoutDockHelper.top([node], [height])

@@ -27,6 +27,7 @@ define(function(require, exports, module) {
     var Entity = require('famous/core/Entity');
     var ViewSequence = require('famous/core/ViewSequence');
     var OptionsManager = require('famous/core/OptionsManager');
+    var LayoutUtility = require('./LayoutUtility');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutNode = require('./LayoutNode');
     var Transform = require('famous/core/Transform');
@@ -53,11 +54,14 @@ define(function(require, exports, module) {
         //this._viewSequence = undefined;
 
         // Layout
-        //this._layout = undefined;
+        this._layout = {
+            //function: undefined,
+            //literal: undefined,
+            options: Object.create({})
+        };
         //this._direction = undefined;
-        this._layoutOptions = Object.create({});
-        this._layoutOptionsManager = new OptionsManager(this._layoutOptions);
-        this._layoutOptionsManager.on('change', function() {
+        this._layout.optionsManager = new OptionsManager(this._layout.options);
+        this._layout.optionsManager.on('change', function() {
             this._isDirty = true;
         }.bind(this));
 
@@ -114,14 +118,35 @@ define(function(require, exports, module) {
     /**
      * Set the new layout.
      *
-     * @param {Function} layout Layout function
+     * @param {Function|Object} layout Layout function or layout-literal
      * @param {Object} [options] Options to pass in to the layout-function
      * @return {LayoutController} this
      */
     LayoutController.prototype.setLayout = function(layout, options) {
-        this._layout = layout;
+
+        // Set new layout funtion
+        if (layout instanceof Function) {
+            this._layout.function = layout;
+            this._layout.literal = undefined;
+
+        // If the layout is an object, treat it as a layout-literal
+        } else if (layout instanceof Object) {
+            this._layout.literal = layout;
+            var helperName = Object.keys(layout)[0];
+            var Helper = LayoutUtility.getRegisteredHelper(helperName);
+            this._layout.function = Helper ? function(context, options) {
+                var helper = new Helper(context, options);
+                helper.parse(layout[helperName]);
+            } : undefined;
+        }
+        else {
+            this._layout.function = undefined;
+            this._layout.literal = undefined;
+        }
+
+        // Update options
         if (options) {
-            this._layoutOptionsManager.setOptions(options);
+            this.setLayoutOptions(options);
         }
         this._isDirty = true;
         return this;
@@ -130,10 +155,10 @@ define(function(require, exports, module) {
     /**
      * Get the current layout.
      *
-     * @return {Function} Layout function
+     * @return {Function|Object} Layout function or layout literal
      */
     LayoutController.prototype.getLayout = function() {
-        return this._layout;
+        return this._layout.literal || this._layout.function;
     };
 
     /**
@@ -144,7 +169,7 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setLayoutOptions = function(options) {
-        this._layoutOptionsManager.setOptions(options);
+        this._layout.optionsManager.setOptions(options);
         return this;
     };
 
@@ -154,7 +179,7 @@ define(function(require, exports, module) {
      * @return {Object} Layout options
      */
     LayoutController.prototype.getLayoutOptions = function() {
-        return this._layoutOptions;
+        return this._layout.options;
     };
 
     /**
@@ -255,7 +280,7 @@ define(function(require, exports, module) {
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
-            this._nodes._trueSizeRequested) {
+            this._nodes._trueSizeRequested){
 
             // Update state
             this._contextSizeCache[0] = size[0];
@@ -272,10 +297,10 @@ define(function(require, exports, module) {
             );
 
             // Layout objects
-            if (this._layout) {
-                this._layout(
+            if (this._layout.function) {
+                this._layout.function(
                     layoutContext,          // context which the layout-function can use
-                    this._layoutOptions     // additional layout-options
+                    this._layout.options    // additional layout-options
                 );
             }
 

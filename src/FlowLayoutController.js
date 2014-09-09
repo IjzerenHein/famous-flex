@@ -124,7 +124,7 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.insert = function(indexOrId, renderable, spec) {
 
         // Add the renderable in case of an id (String)
-        if (indexOrId instanceof String) {
+        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
 
             // Create data-source if neccesary
             if (this._dataSource === undefined) {
@@ -183,7 +183,7 @@ define(function(require, exports, module) {
 
         // Remove the renderable in case of an id (String)
         var renderNode;
-        if (indexOrId instanceof String) {
+        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
 
             // Find and remove renderable from data-source
             renderNode = this._nodesById[indexOrId];
@@ -257,10 +257,10 @@ define(function(require, exports, module) {
             );
 
             // Layout objects
-            if (this._layout) {
-                this._layout(
+            if (this._layout.function) {
+                this._layout.function(
                     layoutContext,          // context which the layout-function can use
-                    this._layoutOptions     // additional layout-options
+                    this._layout.options    // additional layout-options
                 );
             }
 

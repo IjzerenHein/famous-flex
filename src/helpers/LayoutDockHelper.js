@@ -25,6 +25,24 @@
  *   dock.fill('content');
  * };
  * ```
+ *
+ * You can also use layout-literals to create layouts using docking semantics:
+ *
+ * ```javascript
+ * var layoutController = new LayoutController({
+ *   layout: {dock: [
+ *     ['top', 'header', 40],
+ *     ['bottom', 'footer', 40],
+ *     ['fill', 'content']
+ *   ]},
+ *   dataSource: {
+ *     header: new Surface({content: 'header'}),
+ *     footer: new Surface({content: 'footer'}),
+ *     content: new Surface({content: 'content'}),
+ *   }
+ * });
+ * ```
+ *
  * @module
  */
 define(function(require, exports, module) {
@@ -60,6 +78,41 @@ define(function(require, exports, module) {
             this._bottom = size[1];
         }
     }
+
+    /**
+     * Parses the layout-rules based on a JSON data object.
+     * The object should be an array with the following syntax:
+     * `[[rule, node, value], [rule, node, value], ...]`
+     *
+     * **Example:**
+     *
+     * ```JSON
+     * [
+     *   ['top': 'header', 50],
+     *   ['bottom': 'footer', 50],
+     *   ['fill', 'content']
+     * ]
+     * ```
+     *
+     * @param {Object} data JSON object
+     */
+    LayoutDockHelper.prototype.parse = function(data) {
+        for (var i = 0; i < data.length; i++) {
+            var rule = data[i];
+            var value = (data.length >= 3) ? rule[2] : undefined;
+            if (rule[0] === 'top') {
+                this.top(rule[1], value);
+            } else if (rule[0] === 'left') {
+                this.left(rule[1], value);
+            } else if (rule[0] === 'right') {
+                this.right(rule[1], value);
+            } else if (rule[0] === 'bottom') {
+                this.bottom(rule[1], value);
+            } else if (rule[0] === 'fill') {
+                this.fill(rule[1]);
+            }
+        }
+    };
 
     /**
      * Dock the node to the top.
@@ -174,6 +227,9 @@ define(function(require, exports, module) {
         });
         return this;
     };
+
+    // Register the helper
+    LayoutUtility.registerHelper('dock', LayoutDockHelper);
 
     module.exports = LayoutDockHelper;
 });

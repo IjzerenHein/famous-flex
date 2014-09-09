@@ -57,7 +57,7 @@ Set the new layout.
 
 **Params**
 
-- layout `function` - Layout function  
+- layout `function` | `Object` - Layout function or layout-literal  
 - \[options\] `Object` - Options to pass in to the layout-function  
 
 **Returns**: `LayoutController` - this  
@@ -65,7 +65,7 @@ Set the new layout.
 ###layoutController.getLayout()
 Get the current layout.
 
-**Returns**: `function` - Layout function  
+**Returns**: `function` | `Object` - Layout function or layout literal  
 <a name="module_LayoutController#setLayoutOptions"></a>
 ###layoutController.setLayoutOptions([options])
 Set the options for the current layout. Use this function after
