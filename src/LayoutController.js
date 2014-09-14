@@ -24,6 +24,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var Utility = require('famous/utilities/Utility');
     var Entity = require('famous/core/Entity');
     var ViewSequence = require('famous/core/ViewSequence');
     var OptionsManager = require('famous/core/OptionsManager');
@@ -57,6 +58,7 @@ define(function(require, exports, module) {
         this._layout = {
             //function: undefined,
             //literal: undefined,
+            //capabilities: undefined,
             options: Object.create({})
         };
         //this._direction = undefined;
@@ -77,8 +79,11 @@ define(function(require, exports, module) {
         if (options && (options.layout || options.layoutOptions)) {
             this.setLayout(options.layout, options.layoutOptions);
         }
-        if (options && options.direction) {
-            this._direction = options.direction;
+        if (options && (options.direction !== undefined)) {
+            this.setDirection(options.direction);
+        }
+        else {
+            this.setDirection(undefined);
         }
     }
 
@@ -127,11 +132,13 @@ define(function(require, exports, module) {
         // Set new layout funtion
         if (layout instanceof Function) {
             this._layout.function = layout;
+            this._layout.capabilities = layout.Capabilities;
             this._layout.literal = undefined;
 
         // If the layout is an object, treat it as a layout-literal
         } else if (layout instanceof Object) {
             this._layout.literal = layout;
+            this._layout.capabilities = undefined; // todo - derive from literal somehow?
             var helperName = Object.keys(layout)[0];
             var Helper = LayoutUtility.getRegisteredHelper(helperName);
             this._layout.function = Helper ? function(context, options) {
@@ -141,6 +148,7 @@ define(function(require, exports, module) {
         }
         else {
             this._layout.function = undefined;
+            this._layout.capabilities = undefined;
             this._layout.literal = undefined;
         }
 
@@ -148,6 +156,9 @@ define(function(require, exports, module) {
         if (options) {
             this.setLayoutOptions(options);
         }
+
+        // Update direction
+        this.setDirection(this._configuredDirection);
         this._isDirty = true;
         return this;
     };
@@ -183,6 +194,35 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Calculates the actual in-use direction based on the given direction
+     * and supported capabilities of the layout-function.
+     */
+    function _getActualDirection(direction) {
+
+        // When the direction is configured in the capabilities, look it up there
+        if (this._layout.capabilities && this._layout.capabilities.direction) {
+
+            // Multiple directions are supported
+            if (Array.isArray(this._layout.capabilities.direction)) {
+                for (var i = 0; i < this._layout.capabilities.direction.length; i++) {
+                    if (this._layout.capabilities.direction[i] === direction) {
+                        return direction;
+                    }
+                }
+                return this._layout.capabilities.direction[0];
+            }
+
+            // Only one direction is supported, we must use that
+            else {
+                return this._layout.capabilities.direction;
+            }
+        }
+
+        // Use Y-direction as a fallback
+        return (direction === undefined) ? Utility.Direction.Y : direction;
+    }
+
+    /**
      * Set the direction of the layout. When no direction is set, the default
      * direction of the layout function is used.
      *
@@ -190,20 +230,51 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setDirection = function(direction) {
-        if (this._direction !== direction) {
-            this._direction = direction;
+        this._configuredDirection = direction;
+        var newDirection = _getActualDirection.call(this, direction);
+        if (newDirection !== this._direction) {
+            this._direction = newDirection;
             this._isDirty = true;
         }
-        return this;
     };
 
     /**
-     * Get the direction (e.g. Utility.Direction.Y).
+     * Get the direction (e.g. Utility.Direction.Y). By default, this function
+     * returns the direction that was configured by setting `setDirection`. When
+     * the direction has not been set, `undefined` is returned.
      *
+     * When no direction has been set, the first direction is used that is specified
+     * in the capabilities of the layout-function. To obtain the actual in-use direction,
+     * use `getDirection(true)`. This method returns the actual in-use direction and
+     * never returns undefined.
+     *
+     * @param {Boolean} [actual] Set to true to obtain the actual in-use direction
      * @return {Utility.Direction} Direction or undefined
      */
-    LayoutController.prototype.getDirection = function() {
-        return this._direction;
+    LayoutController.prototype.getDirection = function(actual) {
+        return actual ? this._direction : this._configuredDirection;
+    };
+
+    /**
+     * Moves to the next node in the viewSequence.
+     *
+     * @param {Number} [amount] Amount of nodes to move
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.scroll = function(amount) {
+        if (this._viewSequence) {
+            for (var i = 0; i < Math.abs(amount); i++) {
+                var viewSequence = (amount > 0) ? this._viewSequence.getNext() : this._viewSequence.getPrevious();
+                if (viewSequence) {
+                    this._viewSequence = viewSequence;
+                    this._isDirty = true;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        return this;
     };
 
     /**

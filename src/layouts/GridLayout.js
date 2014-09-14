@@ -44,8 +44,15 @@ define(function(require, exports, module) {
     // import dependencies
     var Utility = require('famous/utilities/Utility');
 
+    // Define capabilities of this layout function
+    var capabilities = {
+        sequence: true,
+        direction: [Utility.Direction.Y, Utility.Direction.X],
+        scrolling: true
+    };
+
     // Layout function
-    module.exports = function GridLayout(context, options) {
+    function GridLayout(context, options) {
 
         // Do one-time stuff
         var size = context.size;
@@ -93,5 +100,8 @@ define(function(require, exports, module) {
                 }
             }
         }
-    };
+    }
+
+    GridLayout.Capabilities = capabilities;
+    module.exports = GridLayout;
 });

@@ -26,6 +26,14 @@ define(function(require, exports, module) {
     }
     LayoutUtility.registeredHelpers = {};
 
+    var Capabilities = {
+        SEQUENCE: 1,
+        DIRECTION_X: 2,
+        DIRECTION_Y: 4,
+        SCROLLING: 8
+    };
+    LayoutUtility.Capabilities = Capabilities;
+
     /**
      *  Normalizes the margins argument.
      *

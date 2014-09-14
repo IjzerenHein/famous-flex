@@ -48,7 +48,14 @@ define(function(require, exports, module) {
     // import dependencies
     var Utility = require('famous/utilities/Utility');
 
-    module.exports = function CollectionLayout(context, options) {
+    // Define capabilities of this layout function
+    var capabilities = {
+        sequence: true,
+        direction: [Utility.Direction.Y, Utility.Direction.X],
+        scrolling: true
+    };
+
+    function CollectionLayout(context, options) {
 
         // Prepare
         var size = context.size;
@@ -62,8 +69,9 @@ define(function(require, exports, module) {
         var nodeHeight = (options.justify || options.verticalJustify)
             ? ((size[1] - gutter[1]) / Math.floor((size[1] - gutter[1]) / (nodeSize[1] + gutter[1])))
             : (nodeSize[1] + gutter[1]);
+        //var offset = context.scrollOffset || 0;
 
-        // Layout renderables
+        // Layout next renderables
         var node = context.next();
         while (node) {
 
@@ -100,5 +108,8 @@ define(function(require, exports, module) {
             }
             node = context.next();
         }
-    };
+    }
+
+    CollectionLayout.Capabilities = capabilities;
+    module.exports = CollectionLayout;
 });

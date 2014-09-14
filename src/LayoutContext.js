@@ -61,6 +61,10 @@ define(function(require, exports, module) {
         // dummy implementation, override in constructor
     };
 
+    LayoutContext.prototype.prev = function() {
+        // dummy implementation, override in constructor
+    };
+
     /**
      * Get the layout-node for a renderable with a specific id. This function
      * should be used to access data-sources which are key-value collections.

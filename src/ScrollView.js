@@ -18,17 +18,13 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var Entity = require('famous/core/Entity');
-    var OptionsManager = require('famous/core/OptionsManager');
-    var ViewSequence = require('famous/core/ViewSequence');
+    var FlowLayoutController = require('./FlowLayoutController');
+    var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Transform = require('famous/core/Transform');
-    var Utility = require('famous/utilities/Utility');
     var EventHandler = require('famous/core/EventHandler');
     var GenericSync = require('famous/inputs/GenericSync');
     var ScrollSync = require('famous/inputs/ScrollSync');
     var TouchSync = require('famous/inputs/TouchSync');
-    var LayoutNodeManager = require('./LayoutNodeManager');
-    var LayoutNode = require('./LayoutNode');
     GenericSync.register({scroll : ScrollSync, touch : TouchSync});
 
     /**
@@ -37,26 +33,14 @@ define(function(require, exports, module) {
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
-
-        // Set options
-        this.options = Object.create(ScrollView.DEFAULT_OPTIONS);
-        this._optionsManager = new OptionsManager(this.options);
-        if (options) {
-            this.setOptions(options);
-        }
-
-        // Commit
-        this.id = Entity.register(this);
-        this._isDirty = true;
-        this._contextSizeCache = [0, 0];
-        this._commitOutput = {};
+        FlowLayoutController.call(this, options);
 
         // Scrolling
         this._scroll = {
             startX: 0,
             startY: 0,
-            currentOffset: 0,
-            newOffset: 0
+            offset: 0,
+            moveOffset: 0
             //renderNode: undefined,
             //sequenceNode: undefined
         };
@@ -71,394 +55,186 @@ define(function(require, exports, module) {
         this._eventInput.on('update', _handleMove.bind(this));
         this._eventInput.on('end', _handleEnd.bind(this));
 
-        // Data-source
-        //this._viewSequence = undefined;
+        // Embed in container surface if neccesary
+        if (this.options.useContainer) {
+            this.container = new ContainerSurface({
+                properties: {overflow : 'hidden'}
+            });
 
-        // Layout
-        //this._layout = undefined;
-        this._direction = Utility.Direction.Y;
-        this._layoutOptions = Object.create({});
-        this._layoutOptionsManager = new OptionsManager(this._layoutOptions);
-        this._layoutOptionsManager.on('change', function() {
-            this._isDirty = true;
-        }.bind(this));
+            // Create container surface, which has one child, which just returns
+            // the entity-id of this scrollview. This causes the Commit function
+            // of this scrollview to be called
+            this.container.add({
+                render: function() {
+                    return this.id;
+                }.bind(this)
+            });
 
-        // Create node manager that manages result LayoutNode instances
-        this._nodes = new LayoutNodeManager(createNodeFn || _createLayoutNode);
-
-        // Apply options
-        if (options && options.sequence) {
-            this.sequenceFrom(options.sequence);
-        }
-        if (options && (options.layout || options.layoutOptions)) {
-            this.setLayout(options.layout, options.layoutOptions);
+            // Pipe events received in container to this scrollview
+            this.subscribe(this.container);
+            EventHandler.setInputHandler(this.container, this);
+            EventHandler.setOutputHandler(this.container, this);
         }
     }
-    ScrollView.DEFAULT_OPTIONS = {
-
-    };
+    ScrollView.prototype = Object.create(FlowLayoutController.prototype);
+    ScrollView.prototype.constructor = ScrollView;
 
     /**
-     * Creates a new layout-node for a render-node
+     * Called whenever the user starts moving the scroll-view, using either
+     * touch-gestures, mouse-drags or mouse-scroll.
      */
-    function _createLayoutNode (renderNode, spec) {
-        return new LayoutNode(renderNode, spec);
+    function _handleStart(event) {
+        this._scroll.moveStart = this._direction ? event.clientY : event.clientX;
+        console.log('moveStart: ' + this._scroll.moveStart);
+
+        // TODO
     }
 
     /**
-     * Patches the instance's options with the passed-in ones.
-     *
-     * @method setOptions
-     * @param {Options} options An object of configurable options for this instance.
+     * Called whenever the user is moving the scroll-view, using either
+     * touch-gestures, mouse-drags or mouse-scroll.
      */
-    ScrollView.prototype.setOptions = function setOptions(options) {
-        return this._optionsManager.setOptions(options);
-    };
-
-    /**
-     * Sets the collection of renderables which are layed out according to
-     * the layout-function.
-     *
-     * @param {Array|Object|ViewSequence} sequence Either an array of renderables or a Famous viewSequence.
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.sequenceFrom = function(sequence) {
-        if (sequence instanceof Array) {
-            this._viewSequence = new ViewSequence({array: sequence});
-        }
-        else {
-            this._viewSequence = sequence;
-        }
-
-        // TODO - CHECK CURRENT NODE
-        this._scroll.sequenceNode = this._viewSequence;
-        this._isDirty = true;
-        return this;
-    };
-
-    /**
-     * Set the new layout
-     *
-     * @param {Function} layout Layout function
-     * @param {Object} [options] Options to pass in to the layout-function
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.setLayout = function(layout, options) {
-        this._layout = layout;
-        this._layoutOptions = options || this._layoutOptions;
-        this._isDirty = true;
-        return this;
-    };
-
-    /**
-     * Get the current layout-function
-     *
-     * @return {Function} Layout function
-     */
-    ScrollView.prototype.getLayout = function() {
-        return this._layout;
-    };
-
-    /**
-     * Set the options for the current layout. Use this function after
-     * `setLayout` to update one or more options for the layout-function.
-     *
-     * @param {Object} [options] Options to pass in to the layout-function
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.setLayoutOptions = function(options) {
-        this._layoutOptionsManager.setOptions(options);
-        return this;
-    };
-
-    /**
-     * Get the current layout options.
-     *
-     * @return {Object} Layout options
-     */
-    ScrollView.prototype.getLayoutOptions = function() {
-        return this._layoutOptions;
-    };
-
-    /**
-     * Set the direction of the layout. The default direction is Utility.Direction.Y.
-     *
-     * @param {Utility.Direction} direction Direction (e.g. Utility.Direction.X)
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.setDirection = function(direction) {
-        if (this._direction !== direction) {
-            this._direction = direction;
+    function _handleMove(event) {
+        var moveOffset = (this._direction ? event.clientY : event.clientX) - this._scroll.moveStart;
+        if (moveOffset !== this._scroll.moveOffset) {
+            this._scroll.moveOffset = moveOffset;
+            //,console.log('move: ' + this._scroll.moveOffset);
             this._isDirty = true;
         }
-        return this;
-    };
+
+        // TODO
+    }
 
     /**
-     * Get the direction (e.g. Utility.Direction.Y).
-     *
-     * @return {Utility.Direction} Direction in which the renderables are layed out
+     * Called whenever the user has stopped moving the scroll-view, using either
+     * touch-gestures, mouse-drags or mouse-scroll.
      */
-    ScrollView.prototype.getDirection = function() {
-        return this._direction;
-    };
+    function _handleEnd(event) {
+        this._scroll.offset += this._scroll.moveOffset;
+        this._scroll.moveOffset = 0;
+        //console.log('moveEnd: ' + (this._scroll.moveOffset + this._scroll.offset));
+
+        // TODO
+    }
 
     /**
-     * Get the spec based on the renderable that was provided
-     * in the sequence
-     *
-     * @param {Object} node Render-node to look for
-     * @return {Object} spec or undefined
+     * Helper function that looks up a spec/index for a view-sequence node
+     * in the given specs-array.
      */
-    ScrollView.prototype.getSpecByNode = function(node) {
-        for (var i = 0; i < this._commitOutput.target.length; i++) {
-            var spec = this._commitOutput.target[i];
-            if (spec.renderNode === node) {
-                return spec;
+    function _lookupSpecByViewSequence(specs, viewSequence, getIndex, startIndex) {
+        // todo - use start-index
+        if (!viewSequence) {
+            return getIndex ? -1 : undefined;
+        }
+        var renderNode = viewSequence.get();
+        if (!renderNode) {
+            return getIndex ? -1 : undefined;
+        }
+        for (var i = 0; i < specs.length; i++) {
+            if (specs[i].renderNode === renderNode) {
+                return getIndex ? i : specs[i];
             }
         }
-        return undefined;
-    };
+        return getIndex ? -1 : undefined;
+    }
 
     /**
-     * Forces a reflow of the layout, the next render cycle.
+     * Normalizes the scroll-offset so that scroll-offset is as close
+     * to 0 as can be. This function modifies the scrollOffset and the
+     * viewSeuqnce so that the least possible view-sequence nodes
+     * need to be rendered.
      *
-     * @return {ScrollView} this
+     * I.e., when the scroll-offset is changed, e.g. by scrolling up
+     * or down, then renderables may end-up outside the visible range.
      */
-    ScrollView.prototype.reflowLayout = function() {
-        this._isDirty = true;
-        return this;
-    };
+    function _normalizeScrollOffset() {
 
-    /**
-     * Inserts a renderable into the data-source. If the renderable is visible
-     * then it is inserted using an animation.
-     *
-     * @param {Number|String} index Index within vireSeuqnce
-     * @param {Object} renderable Rendeable to add to the data-source
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.insert = function(index, renderable) {
-
-        // Todo
-        this._viewSequence.push(renderable);
-
-        // Force a reflow
-        this._isDirty = true;
-
-        return this;
-    };
-
-    /**
-     * Removes a renderable from the data-source. If the renderable is visible
-     * then it will be removed using an animation.
-     *
-     * @param {Number|String} index Index within dataSource array or id (String)
-     * @param {Spec} [spec] Size, transform, etc.. to end with when removing
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.remove = function(index) {
-
-        // Todo
-        var renderNode; //this._dataSource.splice(indexOrId, 1)[0];
-
-        // Force a reflow
-        if (renderNode) {
-            this._isDirty = true;
+        if (!this._viewSequence) {
+            return;
         }
 
-        return this;
-    };
+        // Prepare
+        var specs = this._commitOutput.target;
+        var offset = this._scroll.moveOffset + this._scroll.offset;
+        var startSpecIndex = _lookupSpecByViewSequence(specs, this._viewSequence, true);
+        var sequenceNode;
+        if (offset >= 0) {
+
+            // Move scroll-offset up as long as view-sequence nodes
+            // are not visible.
+            sequenceNode = this._viewSequence.getPrevious();
+            while (sequenceNode && sequenceNode.get()) {
+
+                // Get previous spec and check whether it can be normalized
+                var spec = _lookupSpecByViewSequence(specs, sequenceNode, false, startSpecIndex);
+                if (!spec || spec.trueSizeRequested) {
+                    return;
+                }
+
+                // Check whether previous node is still visible
+                var specOffset = spec.transform[12 + this._direction];
+                var specSize = spec.size[this._direction];
+                if ((specOffset + specSize) < 0) {
+                    return; // previous is not visible, stop normalize
+                }
+
+                // Normalize and make this the first visible node
+                this._viewSequence = sequenceNode;
+                this._scroll.offset -= specSize;
+                //console.log('normalized prev-node with size: ' + specSize);
+
+                // Move to previous node
+                sequenceNode = this._viewSequence.getPrevious();
+            }
+        }
+        else {
+
+            // Move scroll-offset down as long as view-sequence nodes
+            // are not visible.
+            var prevSequenceNode = this._viewSequence;
+            sequenceNode = prevSequenceNode.getNext();
+            while (sequenceNode && sequenceNode.get()) {
+
+                // Get previous spec and check whether it can be normalized
+                var prevSpec = _lookupSpecByViewSequence(specs, prevSequenceNode, false, startSpecIndex);
+                if (!prevSpec || prevSpec.trueSizeRequested) {
+                    return;
+                }
+
+                // Check whether previous node is still visible
+                var prevSpecOffset = prevSpec.transform[12 + this._direction];
+                var prevSpecSize = prevSpec.size[this._direction];
+                if ((prevSpecOffset + prevSpecSize) >= 0) {
+                    return; // yes it is visible, stop normalize
+                }
+
+                // Normalize and make this the first visible node
+                this._viewSequence = sequenceNode;
+                this._scroll.offset += prevSpecSize;
+                //console.log('normalized next-node with size: ' + prevSpecSize);
+
+                // Move to next node
+                prevSequenceNode = sequenceNode;
+                sequenceNode = this._viewSequence.getNext();
+            }
+        }
+    }
 
     /**
      * Generate a render spec from the contents of this component.
      *
      * @private
      * @method render
-     * @return {Object} Render spec for this component
+     * @return {number} Render spec for this component
      */
     ScrollView.prototype.render = function render() {
-        return this.id;
+        if (this.container) {
+            return this.container.render.apply(this.container, arguments);
+        }
+        else {
+            return this.id;
+        }
     };
-
-    function _handleStart(event) {
-        this._scroll.moveStart = (this.options.direction ? event.clientY : event.clientX) - this._scroll.currentOffset;
-
-        //var velocity = -event.velocity;
-        //var delta = -event.delta;
-        //console.log('scrollstart: ' + JSON.stringify({velocity: velocity, delta: delta}));
-        /*this._touchCount = event.count;
-        if (event.count === undefined) this._touchCount = 1;
-
-        _detachAgents.call(this);
-        this.setVelocity(0);
-        this._touchVelocity = 0;
-        this._earlyEnd = false;*/
-    }
-
-    function _handleMove(event) {
-        //var velocity = -event.velocity;
-        //var delta = -event.delta;
-        //console.log('scrollmove: ' + JSON.stringify({velocity: velocity, delta: delta}));
-
-        this._scroll.moveCurrent = this.options.direction ? event.clientY : event.clientX;
-        this._scroll.newOffset = this._scroll.moveCurrent - this._scroll.moveStart;
-
-        //console.log('handleMove: ')
-        /*var velocity = -event.velocity;
-        var delta = -event.delta;
-
-        if (this._onEdge && event.slip) {
-            if ((velocity < 0 && this._onEdge < 0) || (velocity > 0 && this._onEdge > 0)) {
-                if (!this._earlyEnd) {
-                    _handleEnd.call(this, event);
-                    this._earlyEnd = true;
-                }
-            }
-            else if (this._earlyEnd && (Math.abs(velocity) > Math.abs(this.getVelocity()))) {
-                _handleStart.call(this, event);
-            }
-        }
-        if (this._earlyEnd) return;
-        this._touchVelocity = velocity;
-
-        if (event.slip) this.setVelocity(velocity);
-        else this.setPosition(this.getPosition() + delta);*/
-    }
-
-    function _handleEnd(event) {
-        //var velocity = -event.velocity;
-        //var delta = -event.delta;
-        //console.log('scrollend: ' + JSON.stringify({velocity: velocity, delta: delta}));
-        /*this._touchCount = event.count || 0;
-        if (!this._touchCount) {
-            _detachAgents.call(this);
-            if (this._onEdge) _setSpring.call(this, this._edgeSpringPosition, SpringStates.EDGE);
-            _attachAgents.call(this);
-            var velocity = -event.velocity;
-            var speedLimit = this.options.speedLimit;
-            if (event.slip) speedLimit *= this.options.edgeGrip;
-            if (velocity < -speedLimit) velocity = -speedLimit;
-            else if (velocity > speedLimit) velocity = speedLimit;
-            this.setVelocity(velocity);
-            this._touchVelocity = undefined;
-            this._needsPaginationCheck = true;
-        }*/
-    }
-
-    /*
-     * Adjust the output from the layout function so that it
-     * is vertically/horizontally shifted according to the
-     * current scroll offset.
-     */
-    function _adjustSpecsForScrollOffset(specs) {
-        if (!this._scroll.currentOffset) {
-            return specs;
-        }
-        var result = [];
-        for (var i = 0; i < specs.length; i++) {
-            var spec = specs[i];
-            var newSpec = {
-                opacity: spec.opacity,
-                size: spec.size,
-                align: spec.align,
-                origin: spec.origin,
-                renderNode: spec.renderNode
-            };
-            if (spec.transform) {
-                newSpec.transform = Transform.thenMove(spec.transform, [0, this._scroll.currentOffset, 0]);
-            }
-            else {
-                newSpec.transform = Transform.translate(0, this._scroll.currentOffset, 0);
-            }
-            result.push(newSpec);
-        }
-        return result;
-    }
-
-    /**
-     * Calculates the scroll offset and length for each spec after
-     * each layout function execution.
-     */
-    function _calcScrollInfoForSpecs(specs, direction) {
-        for (var i = 0; i < specs.length; i++) {
-            var spec = specs[i];
-            var specTransform = spec.transform || [0, 0, 0];
-            if (direction === Utility.Direction.X){
-                spec.scrollOffset = specTransform[12];
-                spec.scrollLength = spec.size[0];
-            }
-            else {
-                spec.scrollOffset = specTransform[13];
-                spec.scrollLength = spec.size[1];
-            }
-        }
-    }
-
-    /**
-     * Helper function that gets the first visible spec
-     * from a ordered spec-array, starting at offset and
-     * using a specific direction (X/Y).
-     */
-    function _getFirstVisibleSpec(specs, offset, direction) {
-        for (var i = 0; i < specs.length; i++) {
-            var spec = specs[i];
-            if (((spec.scrollOffset + spec.scrollLength) >= offset) ||
-                (i === (specs.length - 1))){
-                return spec;
-            }
-        }
-    }
-
-    function _shouldReflowAfterOffsetChange() {
-
-        // When the offset hasn'changed, excellent return immediately
-        if (this._scroll.newOffset === this._scroll.currentOffset) {
-            return false;
-        }
-        console.log(this._scroll.currentOffset);
-
-        // Offset has changed, check whether the first visible node
-        // has changed.
-        if (!this._layout || !this._layoutResult.length) {
-            return false; // nothing to layout
-        }
-
-        // Handle scroll up/left
-        if (this._scroll.newOffset > 0) {
-            // TODO
-            console.log('todo');
-
-        // Handle scroll down/right
-        }
-        else if (this._scroll.newOffset < 0){
-
-            // Get the first visible spec
-            var firstVisibleSpec = _getFirstVisibleSpec(
-                this._layoutResult,
-                -this._scroll.newOffset,
-                this.options.direction
-            );
-            if (firstVisibleSpec.renderNode === this._scroll.renderNode) {
-                return false;
-            }
-
-            // Store the current render node
-            this._scroll.renderNode = firstVisibleSpec.renderNode;
-
-            // Find the corresponding sequence-node
-            while (this._scroll.sequenceNode.get() !== this._scroll.renderNode) {
-                this._scroll.sequenceNode = this._scroll.sequenceNode.getNext();
-            }
-
-            // Adjust scroll offset
-            this._scroll.newOffset += firstVisibleSpec.scrollOffset;
-            this._scroll.moveStart -= firstVisibleSpec.scrollOffset;
-
-            // Reflow-layout
-            return true;
-        }
-    }
 
     /**
      * Apply changes from this component to the corresponding document element.
@@ -476,8 +252,7 @@ define(function(require, exports, module) {
         var opacity = context.opacity;
 
         // When the size or layout function has changed, reflow the layout
-        if (_shouldReflowAfterOffsetChange.call(this) ||
-            size[0] !== this._contextSizeCache[0] ||
+        if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
             this._nodes._trueSizeRequested) {
@@ -488,37 +263,32 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Prepare for layout
+            var offset = this._scroll.moveOffset + this._scroll.offset;
             var layoutContext = this._nodes.prepareForLayout(
-                this._scroll.sequenceNode,  // first visible node
-                undefined, {
-                    size: size
+                this._viewSequence,     // first node to layout
+                this._nodesById, {      // so we can do fast id lookups
+                    size: size,
+                    direction: this._direction,
+                    scrollOffset: offset
                 }
             );
+            //console.log('total: ' + offset + ', offset: ' + this._scroll.offset + ', move: ' + this._scroll.moveOffset);
 
             // Layout objects
-            if (this._layout) {
-                this._layout(
+            if (this._layout.function) {
+                this._layout.function(
                     layoutContext,          // context which the layout-function can use
-                    this._layoutOptions     // additional layout-options
+                    this._layout.options    // additional layout-options
                 );
             }
 
-            // Update output
-            this._layoutResult = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-
-            // Update offset and length for all results
-            _calcScrollInfoForSpecs.call(this, this._layoutResult, this.options.direction);
-
-            // Adjust for current scroll offset
-            this._scroll.currentOffset = this._scroll.newOffset;
-            this._commitOutput.target = _adjustSpecsForScrollOffset.call(this, this._layoutResult);
-
-        // Then scroll-offset has changed without requiring a reflow of the layout
-        // just adjust the output-spec for the scroll offset
-        } else if (this._scroll.newOffset !== this._scroll.currentOffset) {
-            this._scroll.currentOffset = this._scroll.newOffset;
-            this._commitOutput.target = _adjustSpecsForScrollOffset.call(this, this._layoutResult);
+            // Mark non-invalidated nodes for removal
+            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec, this.options.showOpacity);
         }
+
+        // Update output
+        this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+        _normalizeScrollOffset.call(this);
 
         // Render child-nodes every commit
         for (var i = 0; i < this._commitOutput.target.length; i++) {

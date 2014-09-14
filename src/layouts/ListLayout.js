@@ -41,50 +41,53 @@ define(function(require, exports, module) {
     // import dependencies
     var Utility = require('famous/utilities/Utility');
 
+    // Define capabilities of this layout function
+    var capabilities = {
+        sequence: true,
+        direction: [Utility.Direction.Y, Utility.Direction.X],
+        scrolling: true
+    };
+
     // Layout function
-    module.exports = function ListLayout(context, options) {
+    function ListLayout(context, options) {
 
         // Prepare
         var size = context.size;
-        var reverse = context.reverse;
-        var node = context.next();
-        var itemSize;
+        var direction = context.direction;
+        var offset = context.scrollOffset;
+        var node;
         var nodeSize;
 
-        // Layout from top to bottom
-        if ((context.direction === undefined) || (context.direction === Utility.Direction.Y)) {
-            itemSize = options.itemSize ? [size[0], options.itemSize] : undefined;
-            var height = 0;
-            while (node) {
-                nodeSize = itemSize || [size[0], context.resolveSize(node, size)[1]];
-                context.set(node, {
-                    size: nodeSize,
-                    translate: [0, reverse ? (size[1] - (height + nodeSize[1])) : height, 0]
-                });
-                height += nodeSize[1];
-                if (height > size[1]) {
-                    return;
-                }
-                node = context.next();
+        // Process all next nodes
+        while (offset < size[direction]) {
+            node = context.next();
+            if (!node) {
+                break;
             }
+            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+            context.set(node, {
+                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
+                translate: direction ? [0, offset, 0] : [offset, 0, 0]
+            });
+            offset += nodeSize;
         }
 
-        // Layout from left to right
-        else {
-            itemSize = options.itemSize ? [options.itemSize, size[1]] : undefined;
-            var width = 0;
-            while (node) {
-                nodeSize = itemSize || [context.resolveSize(node, size)[0], size[1]];
-                context.set(node, {
-                    size: nodeSize,
-                    translate: [reverse ? (size[0] - (width + nodeSize[0])) : width, 0, 0]
-                });
-                width += nodeSize[0];
-                if (width > size[0]) {
-                    return;
-                }
-                node = context.next();
+        // Process previous nodes
+        offset = context.scrollOffset;
+        while (offset > 0) {
+            node = context.prev();
+            if (!node) {
+                break;
             }
+            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+            context.set(node, {
+                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
+                translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0]
+            });
+            offset -= nodeSize;
         }
-    };
+    }
+
+    ListLayout.Capabilities = capabilities;
+    module.exports = ListLayout;
 });

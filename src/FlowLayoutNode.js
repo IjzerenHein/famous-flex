@@ -121,6 +121,7 @@ define(function(require, exports, module) {
             }
             this._invalidated = false;
         }
+        this._spec.trueSizeRequested = false;
     };
 
     /**

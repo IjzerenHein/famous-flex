@@ -48,6 +48,7 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.reset = function() {
         this._invalidated = false;
+        this._spec.trueSizeRequested = false;
     };
 
     /**
