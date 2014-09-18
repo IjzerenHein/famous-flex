@@ -19,7 +19,6 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var Utility = require('famous/utilities/Utility');
     var Transform = require('famous/core/Transform');
     var Vector = require('famous/math/Vector');
     var Particle = require('famous/physics/bodies/Particle');
@@ -130,20 +129,29 @@ define(function(require, exports, module) {
      */
     FlowLayoutNode.prototype.remove = function(removeSpec) {
 
-        // Stop the particle from moving by setting the end-state
-        // to the current particle state
-        for (var propName in this._properties) {
-            if (removeSpec && (removeSpec[propName] === undefined)) {
-                this._properties[propName].endState.set(
-                    this._properties[propName].particle.position.get()
-                );
-            }
-        }
-
-        // Transition towards the new spec
+        // Transition to the remove-spec state
         if (removeSpec) {
+
+            // Stop the particle from moving by setting the end-state
+            // to the current particle state
+            for (var propName in this._properties) {
+                if (removeSpec[propName] === undefined) {
+                    this._properties[propName].endState.set(
+                        this._properties[propName].particle.position.get()
+                    );
+                }
+            }
+
+            // Set end-state
             _setFromSpec.call(this, removeSpec);
         }
+        else {
+
+            // No end-state specified, remove immediately
+            this._endstatereached = true;
+        }
+
+        // Mark for removal
         this._removing = true;
         this._invalidated = false;
     };
@@ -286,6 +294,7 @@ define(function(require, exports, module) {
                     prop.endState.set(value);
                 }
                 this._invalidated = true;
+                this._removing = false;
                 this._endstatereached = false;
             }
         }

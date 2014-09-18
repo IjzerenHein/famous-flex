@@ -70,32 +70,27 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
-        showOpacity: 1,
-        insertSpec: {
-            opacity: 0,
+        /*insertSpec: {
+            opacity: undefined,
             size: undefined,
             transform: undefined,
             origin: undefined,
             align: undefined
         },
         removeSpec: {
-            opacity: 0,
+            opacity: undefined,
             size: undefined,
             transform: undefined,
             origin: undefined,
             align: undefined
-        }
+        }*/
     };
 
     /**
      * Creates a new layout-node for a render-node
      */
     function _createLayoutNode (renderNode, spec) {
-        var node = new FlowLayoutNode(renderNode, spec || this.options.insertSpec, this._physicsEngines);
-        if (this.options.showOpacity !== undefined) {
-            node.set({opacity: this.options.showOpacity});
-        }
-        return node;
+        return new FlowLayoutNode(renderNode, spec || this.options.insertSpec, this._physicsEngines);
     }
 
     /**
@@ -265,7 +260,7 @@ define(function(require, exports, module) {
             }
 
             // Mark non-invalidated nodes for removal
-            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec, this.options.showOpacity);
+            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
         }
 
         // Update output

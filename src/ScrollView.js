@@ -472,7 +472,7 @@ define(function(require, exports, module) {
         }
 
         // Mark non-invalidated nodes for removal
-        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec, this.options.showOpacity);
+        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
 
         // Calculate the spec-output
         this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._direction);

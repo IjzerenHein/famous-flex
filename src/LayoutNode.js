@@ -58,6 +58,7 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.set = function(set) {
         this._invalidated = true;
+        this._removing = false;
         var spec = this._spec;
         if (set.size) {
             spec.size = set.size;

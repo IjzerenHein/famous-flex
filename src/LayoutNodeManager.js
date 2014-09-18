@@ -100,17 +100,11 @@ define(function(require, exports, module) {
      *
      * @param {Spec} [removeSpec] spec towards which the no longer layed-out nodes are animated
      */
-    LayoutNodeManager.prototype.removeNonInvalidatedNodes = function(removeSpec, showOpacity) {
+    LayoutNodeManager.prototype.removeNonInvalidatedNodes = function(removeSpec) {
         var node = this._first;
         while (node) {
             if (!node._invalidated && !node._removing) {
                 node.remove(removeSpec);
-            }
-            else if (node._removing && node._invalidated && showOpacity) {
-                node._removing = false;
-                node.set({
-                    opacity: showOpacity
-                });
             }
             node = node._next;
         }
