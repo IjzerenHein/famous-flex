@@ -19,6 +19,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var Utility = require('famous/utilities/Utility');
     var Transform = require('famous/core/Transform');
     var Vector = require('famous/math/Vector');
     var Particle = require('famous/physics/bodies/Particle');
@@ -170,7 +171,7 @@ define(function(require, exports, module) {
      */
     var ENERGY_RESTTOLERANCE = 1e-10;
     var VALUE_RESTTOLERANCE = 1e-6;
-    FlowLayoutNode.prototype.getSpec = function() {
+    FlowLayoutNode.prototype.getSpec = function(lockDirection) {
 
         // Check whether the any property is still animating
         if (!this._endstatereached &&
@@ -223,6 +224,15 @@ define(function(require, exports, module) {
             scale: this._properties.scale ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
             rotate: this._properties.rotate ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
         });
+
+        // For scrolling views, lock the x/y position to the end-state.
+        // This ensures that the layout-nodes instantly update their x/y position
+        // whenever the view is scrolled, as opposed to updating smoothly using
+        // a spring, which makes it feel laggy when scrolling.
+        if (this._properties.translate && (lockDirection !== undefined)) {
+            this._spec.transform[12 + lockDirection] = this._properties.translate.endState.get()[lockDirection];
+        }
+
         /*console.log(JSON.stringify({
             opacity: this._spec.opacity,
             size: this._spec.size,

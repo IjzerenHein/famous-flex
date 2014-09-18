@@ -123,11 +123,11 @@ define(function(require, exports, module) {
      *
      * @return {Array.Spec} array of Specs
      */
-    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function() {
+    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function(lockDirection) {
         var result = [];
         var node = this._first;
         while (node) {
-            var spec = node.getSpec();
+            var spec = node.getSpec(lockDirection);
             if (!spec) {
 
                 // Remove node from linked-list
@@ -190,6 +190,25 @@ define(function(require, exports, module) {
         }
         this._first = node;
         _checkIntegrity.call(this);
+    };
+
+    /**
+     * Checks whether the end of was reached when using next/prev
+     * to enumerate the nodes.
+     *
+     * @param {Boolean} prev prev or next direction
+     */
+    LayoutNodeManager.prototype.endReached = function(prev) {
+        if (prev) {
+            if (!this._contextState.prevSequence) {
+                return true;
+            }
+            var prevSequence = this._contextState.prevSequence.getPrevious();
+            return !prevSequence || prevSequence.get();
+        }
+        else {
+            return !this._contextState.nextSequence || !this._contextState.nextSequence.get();
+        }
     };
 
     function _checkIntegrity() {
