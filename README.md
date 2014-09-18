@@ -86,22 +86,47 @@ var layoutController = new FlowLayoutController({
 this.add(layoutController);
 ```
 
+And when you change the layout, `FlowLayoutController` will smoothly animate
+the renderables to the their new position, size, etc... It doesn't matter 
+whether you change a single layout-option or change the whole layout from 
+a CollectionLayout to a ListLayout,  `FlowLayoutController` simply calculates
+the new end-state and transitions the renderables from the previous state 
+to the new state.
+
+```javascript
+
+// Change the item-size on the existing collection-layout
+layoutController.setLayoutOptions({
+	itemSize: [200, 200]
+});
+
+// Or just completely change the layout function and direction
+layoutController.setLayout(ListLayout, itemSize: [300]);
+layoutController.setDirection(Utility.Direction.X);
+
+// Change the order of the renderables in the array datasource
+var dataSource = layoutController.getDataSource();
+var swap = dataSource[0];
+dataSource[0] = dataSource[1];
+dataSource[1] = swap;
+layoutController.setDataSource(dataSource);
+```
+
 
 ## LayoutController and FlowLayoutController
 
 Layout-controllers are at the heart of famous-flex. They take a datasource
 containing renderables, a layout function as input and render them to the famo.us
-render-tree. Whenever the datasource is changed, the Layout-controller
-updates the renderables according to the wishes of the layout function.
+render-tree.
 
-`LayoutController` is the most basic and lightweight version of a Layout-controller
-and should be used when you don't need any smooth transitions.
+`LayoutController` is the most basic and lightweight version of a layout-controller.
+It updates the size, transform, etc.. of a renderable instantly after the layout
+has changed.
 
 `FlowLayoutController` uses physics to animate renderables from one state to
 another. FlowLayoutController really demonstrates the power of famous-flex
-in that it can flow renderables from any layout to another. Physics, particles
+in that it can flow renderables from any layout to another layout. Physics, particles
 and springs are used to smoothly animate renderables in natural patterns.
-
 
 For optimal performance, the layout-controller tries to minimize the
 execution of the layout-function. The layout function is only executed when:
@@ -109,11 +134,9 @@ execution of the layout-function. The layout function is only executed when:
 - `setLayout` is called on the layout-controller
 - `setLayoutOptions` is called on the layout-controller
 - `setDirection` is called on the layout-controller
+- `setDataSource` is called on the layout-controller
 - `reflowLayout` is called on the layout-controller
 - `insert` or `remove` is called on `FlowLayoutController`
-
-NOTE: If you make changes to a data-source, then you must explicitely
-call `reflowLayout` to ensure that the layout is updated.
 
 
 ## Standard layouts
@@ -173,7 +196,8 @@ var layoutController = new LayoutController({
 
 ## Layout function
 
-A layout is either represented as a [layout literals](#layout-literals) or a `Function` with the following parameters:
+A layout is either represented as a `Function` with the following parameters, or a 
+[layout literal](#layout-literals).
 
 ```javascript
 /**
@@ -181,7 +205,7 @@ A layout is either represented as a [layout literals](#layout-literals) or a `Fu
  * @param {Object} [options] additional options that were passed to the function
  */
 function LayoutFunction(context, options) {
-	// put your layout-logic here
+	// put your layout-logic here, see LayoutContext for details
 };
 ```
 
