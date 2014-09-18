@@ -89,7 +89,6 @@ define(function(require, exports, module) {
         // Prepare content
         this._context.size = contextData.size;
         this._context.direction = contextData.direction;
-        this._context.reverse = contextData.reverse;
         this._context.scrollOffset = contextData.scrollOffset || 0;
         return this._context;
     };
@@ -204,10 +203,10 @@ define(function(require, exports, module) {
                 return true;
             }
             var prevSequence = this._contextState.prevSequence.getPrevious();
-            return !prevSequence || prevSequence.get();
+            return !(prevSequence && prevSequence.get());
         }
         else {
-            return !this._contextState.nextSequence || !this._contextState.nextSequence.get();
+            return !(this._contextState.nextSequence && this._contextState.nextSequence.get());
         }
     };
 
