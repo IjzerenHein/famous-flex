@@ -47,7 +47,7 @@ define(function(require, exports, module) {
         LayoutController.call(this, options, _createLayoutNode.bind(this));
 
         // Set options
-        this.options = Object.create(FlowLayoutController.DEFAULT_OPTIONS);
+        this.options = Object.create(this.constructor.DEFAULT_OPTIONS || FlowLayoutController.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) {
             this.setOptions(options);
