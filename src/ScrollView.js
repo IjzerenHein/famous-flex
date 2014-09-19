@@ -30,10 +30,14 @@ define(function(require, exports, module) {
     var ScrollSync = require('famous/inputs/ScrollSync');
     var TouchSync = require('famous/inputs/TouchSync');
 
+    /**
+     * Boudary reached detection
+     */
     var Bounds = {
         NONE: 0,
         FIRST: 1,
-        LAST: 2
+        LAST: 2,
+        BOTH: 3
     };
 
     /**
@@ -46,15 +50,13 @@ define(function(require, exports, module) {
 
         // Scrolling
         this._scroll = {
-            startX: 0,
-            startY: 0,
             moveOffset: 0,
             scrollDelta: 0,
             // physics-engine to use for scrolling
             pe: new PhysicsEngine(),
             // particle that represents the scroll-offset
             particle: new Particle({
-                axis: Particle.AXES.X | Particle.AXES.X,
+                axis: Particle.AXES.X,
                 position: [0, 0]
             }),
             // drag-force that slows the particle down after a "flick"
@@ -62,10 +64,7 @@ define(function(require, exports, module) {
             // spring-force that acts upon the particle to ensure that
             // the particle doesn't scroll past the edges
             edgeSpringVector: new Vector([0, 0, 0]),
-            edgeSpringForce: new Spring({
-                dampingRatio: 0.8,
-                period: 300
-            })
+            edgeSpringForce: new Spring(this.options.edgeSpring)
         };
 
         // Configure physics engine with particle and drag
@@ -120,9 +119,17 @@ define(function(require, exports, module) {
     ScrollView.prototype = Object.create(LayoutController.prototype);
     ScrollView.prototype.constructor = ScrollView;
 
-    function _verifyIntegrity() {
+    ScrollView.DEFAULT_OPTIONS = {
+        particleRounding: 0.2,
+        edgeSpring: {
+            dampingRatio: 0.8,
+            period: 300
+        }
+    };
+
+    /*function _verifyIntegrity() {
         if ((this._scroll.moveStart !== undefined) && isNaN(this._scroll.moveStart)) {
-            throw 'hey goffer';
+            throw 'moveStart';
         }
         if ((this._scroll.moveOffset !== undefined) && isNaN(this._scroll.moveOffset)) {
             throw 'hey goffer';
@@ -139,7 +146,7 @@ define(function(require, exports, module) {
         if (isNaN(this._scroll.particle.getPosition1D(0))) {
             throw 'hey goffer';
         }
-    }
+    }*/
 
     /**
      * Called whenever the user starts moving the scroll-view, using either
@@ -150,12 +157,8 @@ define(function(require, exports, module) {
             this._scroll.moveStart = Array.isArray(event.position) ? event.position[this._direction] : event.position;
         } else if (sync === this._scrollSync) {
             this._scroll.scrollDelta += Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-            //console.log('scroll-move:' + this._scroll.scrollDelta);
         }
-        _verifyIntegrity.call(this);
         this._scroll.particle.setVelocity1D(0);
-        _verifyIntegrity.call(this);
-        //console.log('moveStart: ' + this._scroll.moveStart);
     }
 
     /**
@@ -167,12 +170,8 @@ define(function(require, exports, module) {
             this._scroll.moveOffset = event.position[this._direction] - this._scroll.moveStart;
         } else if (sync === this._scrollSync) {
             this._scroll.scrollDelta += Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-            //console.log('scroll-move:' + this._scroll.scrollDelta);
             this._scroll.particle.setVelocity1D(0);
-            _verifyIntegrity.call(this);
         }
-        _verifyIntegrity.call(this);
-        //,console.log('move: ' + this._scroll.moveOffset);
     }
 
     /**
@@ -182,36 +181,42 @@ define(function(require, exports, module) {
     function _moveEnd(sync, event) {
         if (sync === this._touchSync) {
             this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + this._scroll.moveOffset);
-            _verifyIntegrity.call(this);
             if (event.velocity !== undefined) {
                 this._scroll.particle.setVelocity1D(Array.isArray(event.velocity) ? event.velocity[this._direction] : event.velocity);
-                _verifyIntegrity.call(this);
             }
             this._scroll.moveOffset = 0;
             this._scroll.moveStart = undefined;
         } else if (sync === this._scrollSync) {
             this._scroll.scrollDelta += Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-            //console.log('scroll-move:' + this._scroll.scrollDelta);
             this._scroll.particle.setVelocity1D(0);
-            _verifyIntegrity.call(this);
         }
-        //console.log('moveEnd: ' + (this._scroll.moveOffset + this._scroll.offset));
     }
 
+    /**
+     * Get the scroll position particle position. The position is rounded according to
+     * the `options.particleRounding` option.
+     */
+    function _getParticlePosition() {
+        var pos = this._scroll.particle.getPosition1D();
+        return Math.round(pos / this.options.particleRounding) * this.options.particleRounding;
+    }
+
+    /**
+     * Get the in-use scroll-offset.
+     */
     function _getScrollOffset() {
-        _verifyIntegrity.call(this);
 
         // When scrolling using the mouse-wheel, halt at the boundary entirely
-        /*if ((this._scroll.scrollDelta > 0) && this._nodes.endReached(true)) {
-            console.log('ignoring scroll-delta, top-reached: ' + this._scroll.scrollDelta);
+        if ((this._scroll.scrollDelta > 0) && (this._scroll.boundsReached & Bounds.FIRST)) {
+            //console.log('ignoring scroll-delta, top-reached: ' + this._scroll.scrollDelta);
             this._scroll.scrollDelta = 0;
-        } else if ((this._scroll.scrollDelta < 0) && this._nodes.endReached(false)) {
-            console.log('ignoring scroll-delta, bottom-reached: ' + this._scroll.scrollDelta);
+        } else if ((this._scroll.scrollDelta < 0) && (this._scroll.boundsReached & Bounds.LAST)) {
+            //console.log('ignoring scroll-delta, bottom-reached: ' + this._scroll.scrollDelta);
             this._scroll.scrollDelta = 0;
-        }*/
+        }
 
         // Calculate new offset
-        return this._scroll.particle.getPosition1D() + this._scroll.moveOffset + this._scroll.scrollDelta;
+        return _getParticlePosition.call(this) + this._scroll.moveOffset + this._scroll.scrollDelta;
     }
 
     /**
@@ -244,14 +249,13 @@ define(function(require, exports, module) {
      * I.e., when the scroll-offset is changed, e.g. by scrolling up
      * or down, then renderables may end-up outside the visible range.
      */
-    function _normalizeScrollOffset() {
+    function _normalizeScrollOffset(size, offset) {
         if (!this._viewSequence) {
             return;
         }
 
         // Prepare
         var specs = this._commitOutput.target;
-        var offset = _getScrollOffset.call(this);
         var startSpecIndex = _lookupSpecByViewSequence(specs, this._viewSequence, true);
         var sequenceNode;
         if (offset >= 0) {
@@ -277,14 +281,21 @@ define(function(require, exports, module) {
                 // Normalize and make this the first visible node
                 this._viewSequence = sequenceNode;
                 this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() - specSize);
-                _verifyIntegrity.call(this);
-                console.log('normalized prev-node with size: ' + specSize);
+                //console.log('normalized prev-node with size: ' + specSize);
 
                 // Move to previous node
                 sequenceNode = this._viewSequence.getPrevious();
             }
         }
-        else if (!this._nodes.endReached(false)) {
+        else {
+
+            // Don't normalize when the end has been reached
+            var lastSpec = this._commitOutput.target[this._commitOutput.target.length - 1];
+            var lastSpecOffset = lastSpec.transform[12 + this._direction];
+            var lastSpecSize = lastSpec.size[this._direction];
+            if ((lastSpecOffset + lastSpecSize) < size[this._direction]) {
+                return;
+            }
 
             // Move scroll-offset down as long as view-sequence nodes
             // are not visible.
@@ -308,8 +319,7 @@ define(function(require, exports, module) {
                 // Normalize and make this the first visible node
                 this._viewSequence = sequenceNode;
                 this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + prevSpecSize);
-                _verifyIntegrity.call(this);
-                console.log('normalized next-node with size: ' + prevSpecSize);
+                //console.log('normalized next-node with size: ' + prevSpecSize);
 
                 // Move to next node
                 prevSequenceNode = sequenceNode;
@@ -327,42 +337,50 @@ define(function(require, exports, module) {
      * NOTE: This function assumes that the scroll-offset/current view-sequence
      *       has been normalized.
      */
-    function _boundsReached(size, scrollOffset) {
+    function _calculateBoundsReached(size, scrollOffset) {
+
+        // Prepare
+        var specs = this._commitOutput.target;
+        var spec;
+        var specSize;
+        var specOffset;
 
         // Check whether the top was reached
-        if (!this._viewSequence || (this._nodes.endReached(true) && (scrollOffset >= 0))) {
-            return Bounds.FIRST;
+        this._scroll.boundsReached = !this._viewSequence ? Bounds.FIRST : Bounds.NONE;
+        if (specs.length && (this._nodes.endReached(true) && (scrollOffset >= 0))) {
+            spec = specs[0];
+            specOffset = spec.transform[12 + this._direction];
+            if (specOffset >= 0) {
+                this._scroll.boundsReached |= Bounds.FIRST;
+            }
         }
 
         // Check whether the bottom was reached
-        var specs = this._commitOutput.target;
         var startSpecIndex = _lookupSpecByViewSequence(specs, this._viewSequence, true);
         var sequenceNode = this._viewSequence;
-        var spec;
         while (sequenceNode && sequenceNode.get()) {
             spec = _lookupSpecByViewSequence(specs, sequenceNode, false, startSpecIndex);
             if (!spec || spec.trueSizeRequested) {
-                return Bounds.NONE;
+                return;
             }
             sequenceNode = sequenceNode.getNext();
         }
 
         // When the last item is still partially visible, then the end is not
         // yet reached.
-        var specOffset = spec.transform[12 + this._direction];
-        var specSize = spec.size[this._direction];
+        specOffset = spec.transform[12 + this._direction];
+        specSize = spec.size[this._direction];
         if ((specOffset + specSize) > size[this._direction]) {
-            return Bounds.NONE;
+            return;
         }
 
-        // When both top and bottom reached, choose top, otherwise bottom
         if (this._nodes.endReached(true)) {
-            return Bounds.FIRST;
+            this._scroll.boundsReached |= Bounds.FIRST;
         }
-        else {
-            this._scroll.lastScrollOffset = (size[this._direction] - (specOffset + specSize)) + scrollOffset;
-            return Bounds.LAST;
-        }
+
+        // End reached
+        this._scroll.lastScrollOffset = (size[this._direction] - (specOffset + specSize)) + scrollOffset;
+        this._scroll.boundsReached |= Bounds.LAST;
     }
 
     /**
@@ -380,7 +398,7 @@ define(function(require, exports, module) {
             if (this._scroll.edgeSpringForceId) {
                 this._scroll.pe.detach(this._scroll.edgeSpringForceId);
                 this._scroll.edgeSpringForceId = undefined;
-                console.log('disabled edge-spring');
+                //console.log('disabled edge-spring');
             }
         }
         else {
@@ -388,8 +406,7 @@ define(function(require, exports, module) {
                 this._scroll.edgeSpringForceId = this._scroll.pe.attach(this._scroll.edgeSpringForce, this._scroll.particle);
             }
             this._scroll.edgeSpringVector.set([edgeSpringOffset, 0, 0]);
-            console.log('setting edge-spring to: ' + edgeSpringOffset);
-            _verifyIntegrity.call(this);
+            //console.log('setting edge-spring to: ' + edgeSpringOffset);
         }
     }
 
@@ -400,17 +417,17 @@ define(function(require, exports, module) {
     function _updateBounds(size, scrollOffset) {
 
         // Check whether the top or bottom has been reached (0: top, 1: bottom)
-        var boundsReached = _boundsReached.call(this, size, scrollOffset);
-        if (this._scroll.boundsReached !== boundsReached) {
-            this._scroll.boundsReached = boundsReached;
-            console.log('bounds reached changed: ' + boundsReached);
-        }
+        //var boundsReached = this._scroll.boundsReached;
+        _calculateBoundsReached.call(this, size, scrollOffset);
+        /*if (this._scroll.boundsReached !== boundsReached) {
+            console.log('bounds reached changed: ' + this._scroll.boundsReached);
+        }*/
 
         // Calculate new edge spring offset
         var edgeSpringOffset;
-        if (this._scroll.boundsReached === Bounds.FIRST) {
+        if (this._scroll.boundsReached & Bounds.FIRST) {
             edgeSpringOffset = 0;
-        } else if (this._scroll.boundsReached === Bounds.LAST) {
+        } else if (this._scroll.boundsReached & Bounds.LAST) {
             edgeSpringOffset = this._scroll.lastScrollOffset;
         }
 
@@ -419,21 +436,21 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Integrates the scroll-delta ino the particle position.
+     * Integrates the scroll-delta (mouse-wheel) ino the particle position.
      */
     function _integrateScrollDelta() {
 
         // Get offset
-        var oldOffset = this._scroll.particle.getPosition1D();
+        var oldOffset = _getParticlePosition.call(this);
         if (!this._scroll.scrollDelta) {
             return oldOffset + this._scroll.moveOffset;
         }
         var newOffset = oldOffset + this._scroll.scrollDelta;
 
         // Ensure that the new position doesn't exceed the boundaries
-        if (this._scroll.boundsReached === Bounds.FIRST){
+        if (this._scroll.boundsReached & Bounds.FIRST){
             newOffset = 0;
-        } else if (this._scroll.boundsReached === Bounds.LAST){
+        } else if (this._scroll.boundsReached & Bounds.LAST){
             newOffset = Math.max(this._scroll.lastScrollOffset, newOffset);
         }
 
@@ -480,7 +497,7 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        _normalizeScrollOffset.call(this);
+        _normalizeScrollOffset.call(this, size, scrollOffset);
 
         // Update bounds
         _updateBounds.call(this, size, scrollOffset);
@@ -507,7 +524,6 @@ define(function(require, exports, module) {
         var size = context.size;
         var opacity = context.opacity;
         var scrollOffset = _getScrollOffset.call(this);
-        _verifyIntegrity.call(this);
 
         // When the size or layout function has changed, reflow the layout
         if (size[0] !== this._contextSizeCache[0] ||
@@ -523,11 +539,11 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Perform layout
+            //console.log('doing layout, particle: ' + _getParticlePosition.call(this), ', moveOffset: ' + this._scroll.moveOffset + ', delta: ' + this._scroll.scrollDelta);
             _layout.call(this, size, scrollOffset);
         }
         else {
             this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._direction);
-            _normalizeScrollOffset.call(this);
         }
 
         // Render child-nodes every commit
