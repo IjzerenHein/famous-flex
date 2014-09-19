@@ -249,16 +249,16 @@ define(function(require, exports, module) {
      * I.e., when the scroll-offset is changed, e.g. by scrolling up
      * or down, then renderables may end-up outside the visible range.
      */
-    function _normalizeScrollOffset(size, offset) {
+    function _normalizeScrollOffset(size, scrollOffset) {
         if (!this._viewSequence) {
-            return;
+            return scrollOffset;
         }
 
         // Prepare
         var specs = this._commitOutput.target;
         var startSpecIndex = _lookupSpecByViewSequence(specs, this._viewSequence, true);
         var sequenceNode;
-        if (offset >= 0) {
+        if (scrollOffset >= 0) {
 
             // Move scroll-offset up as long as view-sequence nodes
             // are not visible.
@@ -268,19 +268,20 @@ define(function(require, exports, module) {
                 // Get previous spec and check whether it can be normalized
                 var spec = _lookupSpecByViewSequence(specs, sequenceNode, false, startSpecIndex);
                 if (!spec || spec.trueSizeRequested) {
-                    return;
+                    return scrollOffset;
                 }
 
                 // Check whether previous node is still visible
                 var specOffset = spec.transform[12 + this._direction];
                 var specSize = spec.size[this._direction];
                 if ((specOffset + specSize) < 0) {
-                    return; // previous is not visible, stop normalize
+                    return scrollOffset; // previous is not visible, stop normalize
                 }
 
                 // Normalize and make this the first visible node
                 this._viewSequence = sequenceNode;
                 this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() - specSize);
+                scrollOffset -= specSize;
                 //console.log('normalized prev-node with size: ' + specSize);
 
                 // Move to previous node
@@ -294,7 +295,7 @@ define(function(require, exports, module) {
             var lastSpecOffset = lastSpec.transform[12 + this._direction];
             var lastSpecSize = lastSpec.size[this._direction];
             if ((lastSpecOffset + lastSpecSize) < size[this._direction]) {
-                return;
+                return scrollOffset;
             }
 
             // Move scroll-offset down as long as view-sequence nodes
@@ -306,19 +307,20 @@ define(function(require, exports, module) {
                 // Get previous spec and check whether it can be normalized
                 var prevSpec = _lookupSpecByViewSequence(specs, prevSequenceNode, false, startSpecIndex);
                 if (!prevSpec || prevSpec.trueSizeRequested) {
-                    return;
+                    return scrollOffset;
                 }
 
                 // Check whether previous node is still visible
                 var prevSpecOffset = prevSpec.transform[12 + this._direction];
                 var prevSpecSize = prevSpec.size[this._direction];
                 if ((prevSpecOffset + prevSpecSize) >= 0) {
-                    return; // yes it is visible, stop normalize
+                    return scrollOffset; // yes it is visible, stop normalize
                 }
 
                 // Normalize and make this the first visible node
                 this._viewSequence = sequenceNode;
                 this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + prevSpecSize);
+                scrollOffset += prevSpecSize;
                 //console.log('normalized next-node with size: ' + prevSpecSize);
 
                 // Move to next node
@@ -326,6 +328,8 @@ define(function(require, exports, module) {
                 sequenceNode = this._viewSequence.getNext();
             }
         }
+
+        return scrollOffset;
     }
 
     /**
@@ -497,7 +501,7 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        _normalizeScrollOffset.call(this, size, scrollOffset);
+        scrollOffset = _normalizeScrollOffset.call(this, size, scrollOffset);
 
         // Update bounds
         _updateBounds.call(this, size, scrollOffset);
