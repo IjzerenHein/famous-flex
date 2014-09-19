@@ -60,7 +60,7 @@ define(function(require, exports, module) {
                 position: [0, 0]
             }),
             // drag-force that slows the particle down after a "flick"
-            dragForce: new Drag(),
+            dragForce: new Drag(this.options.scrollDrag),
             // spring-force that acts upon the particle to ensure that
             // the particle doesn't scroll past the edges
             edgeSpringVector: new Vector([0, 0, 0]),
@@ -79,7 +79,7 @@ define(function(require, exports, module) {
         EventHandler.setOutputHandler(this, this._eventOutput);
 
         // Listen to scroll and touch events
-        this._touchSync = new TouchSync();
+        this._touchSync = new TouchSync(this.options.touchSync);
         this._eventInput.pipe(this._touchSync);
         //this._touchSync.pipe(this._eventInput);
         this._touchSync.on('start', _moveStart.bind(this, this._touchSync));
@@ -87,9 +87,7 @@ define(function(require, exports, module) {
         this._touchSync.on('end', _moveEnd.bind(this, this._touchSync));
 
         // Listen to mouse-wheel events
-        this._scrollSync = new ScrollSync({
-            scale: 0.1
-        });
+        this._scrollSync = new ScrollSync(this.options.scrollSync);
         this._eventInput.pipe(this._scrollSync);
         //this._scrollSync.on('start', _moveStart.bind(this, this._scrollSync));
         this._scrollSync.on('update', _moveUpdate.bind(this, this._scrollSync));
@@ -120,11 +118,18 @@ define(function(require, exports, module) {
     ScrollView.prototype.constructor = ScrollView;
 
     ScrollView.DEFAULT_OPTIONS = {
-        particleRounding: 0.2,
+        offsetRounding: 0.2,
+        scrollDrag: {
+            strength : 0.002
+        },
         edgeSpring: {
             dampingRatio: 0.8,
             period: 300
+        },
+        scrollSync: {
+            scale: 0.1
         }
+        //touchSync: {}
     };
 
     /*function _verifyIntegrity() {
@@ -193,12 +198,12 @@ define(function(require, exports, module) {
     }
 
     function _roundScrollOffset(scrollOffset) {
-        return Math.round(scrollOffset / this.options.particleRounding) * this.options.particleRounding;
+        return Math.round(scrollOffset / this.options.offsetRounding) * this.options.offsetRounding;
     }
 
     /**
      * Get the scroll position particle position. The position is rounded according to
-     * the `options.particleRounding` option.
+     * the `options.scrollRounding` option.
      */
     function _getParticlePosition() {
         return _roundScrollOffset.call(this, this._scroll.particle.getPosition1D());
