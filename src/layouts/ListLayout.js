@@ -57,6 +57,15 @@ define(function(require, exports, module) {
         var offset = context.scrollOffset;
         var node;
         var nodeSize;
+        var itemSize;
+
+        // Determine item-size or use true=size
+        if ((options.itemSize === true) || !options.hasOwnProperty('itemSize')) {
+            itemSize = true;
+        }
+        else {
+            itemSize = (options.itemSize === undefined) ? size[direction] : options.itemSize;
+        }
 
         // Process all next nodes
         while (offset < size[direction]) {
@@ -64,7 +73,7 @@ define(function(require, exports, module) {
             if (!node) {
                 break;
             }
-            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+            nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
             context.set(node, {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
                 translate: direction ? [0, offset, 0] : [offset, 0, 0]
