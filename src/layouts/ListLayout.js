@@ -45,7 +45,8 @@ define(function(require, exports, module) {
     var capabilities = {
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
-        scrolling: true
+        scrolling: true,
+        trueSize: true
     };
 
     // Layout function
