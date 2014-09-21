@@ -23,6 +23,7 @@ define(function(require, exports, module) {
     var Vector = require('famous/math/Vector');
     var Particle = require('famous/physics/bodies/Particle');
     var Spring = require('famous/physics/forces/Spring');
+    var PhysicsEngine = require('famous/physics/PhysicsEngine');
     var LayoutNode = require('./LayoutNode');
 
     /**
@@ -33,23 +34,33 @@ define(function(require, exports, module) {
      * @param {Object} physicsEngines physics-engines to use
      * @alias module:FlowLayoutNode
      */
-    function FlowLayoutNode(renderNode, spec, physicsEngines) {
+    function FlowLayoutNode(renderNode, spec) {
         LayoutNode.apply(this, arguments);
 
-        this._physicsEngines = physicsEngines;
-        this._properties = {
-            /*opacity: undefined,
-            size: undefined,
-            origin: undefined,
-            align: undefined,
-            translate: undefined,
-            skew: undefined,
-            rotate: undefined,
-            scale: undefined*/
-        };
-        //this._endstatereached = false;
+        if (!this._pe) {
+            this._pe = new PhysicsEngine();
+        }
+
+        if (!this._properties) {
+            this._properties = {
+                /*opacity: undefined,
+                size: undefined,
+                origin: undefined,
+                align: undefined,
+                translate: undefined,
+                skew: undefined,
+                rotate: undefined,
+                scale: undefined*/
+            };
+        }
+        else {
+            for (var propName in this._properties) {
+                this._properties[propName].init = false;
+            }
+        }
+
         this._initial = true;
-        this._removing = false;
+        this._endstatereached = false;
         if (spec) {
             _setFromSpec.call(this, spec);
         }
@@ -161,7 +172,7 @@ define(function(require, exports, module) {
      * forces from the physics-engine.
      */
     FlowLayoutNode.prototype.destroy = function() {
-        for (var propName in this._properties) {
+        /*for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.particle) {
                 var pe = this._physicsEngines[propName];
@@ -171,7 +182,7 @@ define(function(require, exports, module) {
                 delete prop.endstate;
             }
             delete this._properties[propName];
-        }
+        }*/
     };
 
     /**
@@ -187,22 +198,24 @@ define(function(require, exports, module) {
             this._endstatereached = true;
             for (var propName in this._properties) {
                 var prop = this._properties[propName];
-                var energy = prop.particle.getEnergy();
-                if (energy > ENERGY_RESTTOLERANCE) {
-                    this._endstatereached = false;
-                    break;
-                }
-                else {
-                    var curState = prop.particle.getPosition();
-                    var endState = prop.endState.get();
-                    if (endState.length !== curState.length) {
+                if (prop.init) {
+                    var energy = prop.particle.getEnergy();
+                    if (energy > ENERGY_RESTTOLERANCE) {
                         this._endstatereached = false;
                         break;
                     }
-                    for (var i = 0; i < curState.length; i++) {
-                        if (Math.abs(curState[i] - endState[i]) > VALUE_RESTTOLERANCE) {
+                    else {
+                        var curState = prop.particle.getPosition();
+                        var endState = prop.endState.get();
+                        if (endState.length !== curState.length) {
                             this._endstatereached = false;
                             break;
+                        }
+                        for (var i = 0; i < curState.length; i++) {
+                            if (Math.abs(curState[i] - endState[i]) > VALUE_RESTTOLERANCE) {
+                                this._endstatereached = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -222,22 +235,22 @@ define(function(require, exports, module) {
 
         // Animations are still going, build new spec
         this._initial = false;
-        this._spec.opacity = this._properties.opacity ? Math.max(0,Math.min(1, this._properties.opacity.particle.getPosition1D())) : undefined;
-        this._spec.size = this._properties.size ? this._properties.size.particle.getPosition() : undefined;
-        this._spec.align = this._properties.align ? this._properties.align.particle.getPosition() : undefined;
-        this._spec.origin = this._properties.origin ? this._properties.origin.particle.getPosition() : undefined;
+        this._spec.opacity = (this._properties.opacity && this._properties.opacity.init) ? Math.max(0,Math.min(1, this._properties.opacity.particle.getPosition1D())) : undefined;
+        this._spec.size = (this._properties.size && this._properties.size.init) ? this._properties.size.particle.getPosition() : undefined;
+        this._spec.align = (this._properties.align && this._properties.align.init) ? this._properties.align.particle.getPosition() : undefined;
+        this._spec.origin = (this._properties.origin && this._properties.origin.init) ? this._properties.origin.particle.getPosition() : undefined;
         this._spec.transform = Transform.build({
-            translate: this._properties.translate ? this._properties.translate.particle.getPosition() : DEFAULT.translate,
-            skew: this._properties.skew ? this._properties.skew.particle.getPosition() : DEFAULT.skew,
-            scale: this._properties.scale ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
-            rotate: this._properties.rotate ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
+            translate: (this._properties.translate && this._properties.translate.init) ? this._properties.translate.particle.getPosition() : DEFAULT.translate,
+            skew: (this._properties.skew && this._properties.skew.init) ? this._properties.skew.particle.getPosition() : DEFAULT.skew,
+            scale: (this._properties.scale && this._properties.scale.init) ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
+            rotate: (this._properties.rotate && this._properties.rotate.init) ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
         });
 
         // For scrolling views, lock the x/y position to the end-state.
         // This ensures that the layout-nodes instantly update their x/y position
         // whenever the view is scrolled, as opposed to updating smoothly using
         // a spring, which makes it feel laggy when scrolling.
-        if (this._properties.translate && (lockDirection !== undefined)) {
+        if (this._properties.translate && this._properties.translate.init && (lockDirection !== undefined)) {
             this._spec.transform[12 + lockDirection] = this._properties.translate.endState.get()[lockDirection];
         }
 
@@ -285,14 +298,14 @@ define(function(require, exports, module) {
                         period: 300,
                         anchor : prop.endState
                     });
-                    var pe = this._physicsEngines[propName];
-                    pe.addBody(prop.particle);
-                    prop.forceId = pe.attach(prop.force, prop.particle);
+                    this._pe.addBody(prop.particle);
+                    prop.forceId = this._pe.attach(prop.force, prop.particle);
                     this._properties[propName] = prop;
                 }
                 else {
                     prop.endState.set(value);
                 }
+                prop.init = true;
                 this._invalidated = true;
                 this._removing = false;
                 this._endstatereached = false;

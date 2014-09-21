@@ -30,9 +30,8 @@ define(function(require, exports, module) {
     function LayoutNode(renderNode, spec) {
         this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
         this._spec.renderNode = renderNode;
-        //this._next = undefined;
-        //this._invalidated = false;
-        //this._removing = false;
+        this._invalidated = false;
+        this._removing = false;
     }
 
     /**

@@ -31,6 +31,8 @@ define(function(require, exports, module) {
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
 
+    var MAX_POOL_SIZE = 10;
+
     /**
      * @class
      * @param {Function} createLayoutNodeFunction function to use when creating new nodes
@@ -51,6 +53,10 @@ define(function(require, exports, module) {
             //prevSequence: undefined,
             //next: undefined,
             //prev: undefined
+        };
+        this._pool = {
+            size: 0
+            //first: undefined
         };
         //this._first = undefined; // first item in the linked list
         //this._currentRenderNode = undefined; // first node in the view-sequence
@@ -142,6 +148,13 @@ define(function(require, exports, module) {
                     this._current = undefined;
                 }
 
+                // Add node to pool
+                if (this._pool.size < MAX_POOL_SIZE) {
+                    this._pool.size++;
+                    destroyNode._next = this._pool.first;
+                    this._pool.first = destroyNode;
+                }
+
                 _checkIntegrity.call(this);
             }
             else {
@@ -186,6 +199,27 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Creates a layout-node
+     *
+     * @param {Object} renderNode render-node for whom to create a layout-node for
+     * @return {LayoutNode} layout-node
+     */
+    LayoutNodeManager.prototype.createNode = function(renderNode) {
+        if (this._pool.first) {
+            var layoutNode = this._pool.first;
+            this._pool.first = layoutNode._next;
+            this._pool.size--;
+            layoutNode._prev = undefined;
+            layoutNode._next = undefined;
+            layoutNode.constructor.apply(layoutNode, arguments);
+            return layoutNode;
+        }
+        else {
+            return this._createLayoutNodeFunction.apply(this, arguments);
+        }
+    };
+
+    /**
      * Checks whether the end of was reached when using next/prev
      * to enumerate the nodes.
      *
@@ -205,7 +239,7 @@ define(function(require, exports, module) {
     };
 
     function _checkIntegrity() {
-        var node = this._first;
+        /*var node = this._first;
         var count = 0;
         var prevNode;
         while (node) {
@@ -218,7 +252,7 @@ define(function(require, exports, module) {
             prevNode = node;
             node = node._next;
             count++;
-        }
+        }*/
     }
 
     function _contextGetCreateAndOrderNodes(renderNode, prev) {
@@ -240,7 +274,7 @@ define(function(require, exports, module) {
                     node = node._next;
                 }
                 if (!node) {
-                    node = this._createLayoutNodeFunction(currentRenderNode);
+                    node = this.createNode(currentRenderNode);
                     node._next = this._first;
                     if (this._first) {
                         this._first._prev = node;
@@ -291,7 +325,7 @@ define(function(require, exports, module) {
 
         // Create new node if neccessary
         if (!node) {
-            node = this._createLayoutNodeFunction(renderNode);
+            node = this.createNode(renderNode);
             node._next = undefined;
             node._prev = undefined;
         }

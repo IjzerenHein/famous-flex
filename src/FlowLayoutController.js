@@ -28,7 +28,6 @@ define(function(require, exports, module) {
     var ViewSequence = require('famous/core/ViewSequence');
     var FlowLayoutNode = require('./FlowLayoutNode');
     var LayoutUtility = require('./LayoutUtility');
-    var PhysicsEngine = require('famous/physics/PhysicsEngine');
     var Transform = require('famous/core/Transform');
 
     /**
@@ -44,7 +43,9 @@ define(function(require, exports, module) {
      * @alias module:FlowLayoutController
      */
     function FlowLayoutController(options) {
-        LayoutController.call(this, options, _createLayoutNode.bind(this));
+        LayoutController.call(this, options, function(renderNode, spec) {
+            return new FlowLayoutNode(renderNode, spec || this.options.insertSpec);
+        }.bind(this));
 
         // Set options
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS || FlowLayoutController.DEFAULT_OPTIONS);
@@ -52,19 +53,6 @@ define(function(require, exports, module) {
         if (options) {
             this.setOptions(options);
         }
-
-        // Create physics engines
-        var mainPE = new PhysicsEngine();
-        this._physicsEngines = {
-            opacity: mainPE,
-            size: mainPE,
-            align: mainPE,
-            origin: mainPE,
-            rotate: mainPE,
-            skew: mainPE,
-            scale: mainPE,
-            translate: new PhysicsEngine()
-        };
     }
     FlowLayoutController.prototype = Object.create(LayoutController.prototype);
     FlowLayoutController.prototype.constructor = FlowLayoutController;
@@ -85,13 +73,6 @@ define(function(require, exports, module) {
             align: undefined
         }*/
     };
-
-    /**
-     * Creates a new layout-node for a render-node
-     */
-    function _createLayoutNode (renderNode, spec) {
-        return new FlowLayoutNode(renderNode, spec || this.options.insertSpec, this._physicsEngines);
-    }
 
     /**
      * Patches the FlowLayoutController instance's options with the passed-in ones.
@@ -157,7 +138,7 @@ define(function(require, exports, module) {
 
         // When a custom insert-spec was specified, store that in the layout-node
         if (spec) {
-            this._nodes.insertNode(_createLayoutNode.call(this, renderable, spec));
+            this._nodes.insertNode(this._nodes.createNode(renderable, spec));
         }
 
         // Force a reflow
