@@ -303,6 +303,9 @@ define(function(require, exports, module) {
                     this._properties[propName] = prop;
                 }
                 else {
+                    if (!prop.init) {
+                        prop.particle.setPosition(value);
+                    }
                     prop.endState.set(value);
                 }
                 prop.init = true;
