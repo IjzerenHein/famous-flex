@@ -357,6 +357,12 @@ define(function(require, exports, module) {
         var specSize;
         var specOffset;
 
+        // Use top bounds when no renderables exist
+        if (!specs || !specs.length) {
+            this._scroll.boundsReached = Bounds.FIRST;
+            return;
+        }
+
         // Check whether the top was reached
         var prevReached = this._nodes.endReached(true);
         this._scroll.boundsReached = !this._viewSequence ? Bounds.FIRST : Bounds.NONE;
