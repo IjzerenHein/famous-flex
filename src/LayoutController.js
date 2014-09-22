@@ -278,6 +278,40 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Scroll to the given renderable in the datasource.
+     *
+     * @param {RenderNode} [node] renderable to scroll to
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.scrollTo = function(node) {
+        if (this._viewSequence) {
+            var nextSequence = this._viewSequence;
+            var prevSequence = this._viewSequence.getPrevious();
+            while (nextSequence || prevSequence) {
+                var nextNode = nextSequence ? nextSequence.get() : undefined;
+                if (nextNode === node) {
+                    if (this._viewSequence !== nextSequence) {
+                        this._viewSequence = nextSequence;
+                        this._isDirty = true;
+                    }
+                    break;
+                }
+                var prevNode = prevSequence ? prevSequence.get() : undefined;
+                if (prevNode === node) {
+                    if (this._viewSequence !== prevSequence) {
+                        this._viewSequence = prevSequence;
+                        this._isDirty = true;
+                    }
+                    break;
+                }
+                nextSequence = nextNode ? nextSequence.getNext() : undefined;
+                prevSequence = prevNode ? prevSequence.getPrevious() : undefined;
+            }
+        }
+        return this;
+    };
+
+    /**
      * Get the spec (size, transform, etc..) for the given renderable or
      * Id.
      *
