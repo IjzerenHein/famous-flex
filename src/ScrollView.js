@@ -194,6 +194,7 @@ define(function(require, exports, module) {
         this._scroll.movePrevOffset = 0;
         this._scroll.movePrevTime = this._scroll.moveTime;
         this._scroll.particle.setVelocity1D(0);
+        this._eventOutput.emit('touchstart', event);
     }
     function _touchMove(event) {
         var touch = event.changedTouches[0];
@@ -202,6 +203,7 @@ define(function(require, exports, module) {
         this._scroll.movePrevTime = this._scroll.moveTime;
         this._scroll.moveOffset = offset - this._scroll.moveStart;
         this._scroll.moveTime = Date.now();
+        this._eventOutput.emit('touchmove', event);
     }
     function _touchEnd(event) {
         this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + this._scroll.moveOffset);
@@ -215,6 +217,7 @@ define(function(require, exports, module) {
         }
         this._scroll.moveOffset = 0;
         this._scroll.moveStart = undefined;
+        this._eventOutput.emit('touchend', event);
     }
 
     /**
