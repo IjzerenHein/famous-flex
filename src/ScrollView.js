@@ -412,8 +412,15 @@ define(function(require, exports, module) {
         if ((specOffset + specSize) > size[this._direction]) {
             return;
         }
+
+        // When the end is reached, and the height of all the renderables
+        // if less than the the total height, then also mark the top bounds
+        // as reached so that it sticks to that.
         if (prevReached) {
-            this._scroll.boundsReached |= Bounds.FIRST;
+            var totalHeight = (specOffset + specSize) - specs[0].transform[12 + this._direction];
+            if (totalHeight < size[this._direction]) {
+                this._scroll.boundsReached |= Bounds.FIRST;
+            }
         }
 
         // End reached
