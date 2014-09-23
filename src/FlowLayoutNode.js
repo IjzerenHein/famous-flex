@@ -171,7 +171,7 @@ define(function(require, exports, module) {
     /**
      * Creates the render-spec
      */
-    var ENERGY_RESTTOLERANCE = 1e-10;
+    var ENERGY_RESTTOLERANCE = 1e-4;
     var RESTTOLERANCE = {
         opacity:    1e-5,
         size:       0.1,
@@ -195,6 +195,7 @@ define(function(require, exports, module) {
                     var restTolerance = RESTTOLERANCE[propName];
                     var energy = prop.particle.getEnergy();
                     if (energy > ENERGY_RESTTOLERANCE) {
+                        //console.log('endstate nog reached: ' + propName + ' - energy: ' + energy);
                         this._endStateReached = false;
                         prop.endStateReached = false;
                     }
@@ -202,11 +203,13 @@ define(function(require, exports, module) {
                         var curState = prop.particle.getPosition();
                         var endState = prop.endState.get();
                         if (endState.length !== curState.length) {
+                            //console.log('endstate nog reached: ' + propName + ' - length !=');
                             this._endStateReached = false;
                             prop.endStateReached = false;
                         }
                         for (var i = 0; i < curState.length; i++) {
                             if (Math.abs(curState[i] - endState[i]) > restTolerance) {
+                                //console.log('endstate not reached: ' + propName + ' - ' + curState[i] + ' != ' + endState[i]);
                                 this._endStateReached = false;
                                 prop.endStateReached = false;
                                 break;
