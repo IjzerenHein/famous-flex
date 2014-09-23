@@ -134,7 +134,7 @@ define(function(require, exports, module) {
         scrollSync: {
             scale: 0.1
         },
-        paginated: true,
+        paginated: false,
         paginationEnergyThresshold: 0.001,
         paginationSpring: {
             dampingRatio: 1.0,
