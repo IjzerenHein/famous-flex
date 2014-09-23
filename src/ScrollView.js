@@ -18,7 +18,9 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var LayoutController = require('./FlowLayoutController');
+    var FlowLayoutController = require('./FlowLayoutController');
+    var FlowLayoutNode = require('./FlowLayoutNode');
+    var LayoutNodeManager = require('./LayoutNodeManager');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Transform = require('famous/core/Transform');
     var EventHandler = require('famous/core/EventHandler');
@@ -46,7 +48,7 @@ define(function(require, exports, module) {
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
-        LayoutController.call(this, options);
+        FlowLayoutController.call(this, options, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
 
         // Scrolling
         this._scroll = {
@@ -114,7 +116,7 @@ define(function(require, exports, module) {
             EventHandler.setOutputHandler(this.container, this);
         }
     }
-    ScrollView.prototype = Object.create(LayoutController.prototype);
+    ScrollView.prototype = Object.create(FlowLayoutController.prototype);
     ScrollView.prototype.constructor = ScrollView;
 
     ScrollView.DEFAULT_OPTIONS = {
@@ -131,6 +133,24 @@ define(function(require, exports, module) {
         }
         //touchSync: {}
     };
+
+    /**
+     * Called whenever a layout-node is created/re-used. Initializes
+     * the node with the `insertSpec` if it has been defined and enabled
+     * locking of the x/y translation so that the x/y position of the renderable
+     * is immediately updated when the user scrolls the view.
+     */
+    function _initLayoutNode(layoutNode, spec) {
+        if (!spec && this.options.insertSpec) {
+            layoutNode.setSpec(this.options.insertSpec);
+        }
+        if (!spec && !this.options.insertSpec) {
+            layoutNode.lock('translate', true, true);
+        }
+        else {
+            layoutNode.lock('translate', true, false);
+        }
+    }
 
     /*function _verifyIntegrity() {
         if ((this._scroll.moveStart !== undefined) && isNaN(this._scroll.moveStart)) {
@@ -560,6 +580,17 @@ define(function(require, exports, module) {
             this._nodes._trueSizeRequested ||
             this._scrollOffsetCache !== scrollOffset) {
 
+            // When the layout has changed, and we are not just scrolling,
+            // disable the locked state of the layout-nodes so that they
+            // can freely transition between the old and new state.
+            if (this._isDirty) {
+                var node = this._nodes._first;
+                while (node) {
+                    node.lock('translate', true, false); // keep lock enabled, but reset lock
+                    node = node._next;
+                }
+            }
+
             // Update state
             this._contextSizeCache[0] = size[0];
             this._contextSizeCache[1] = size[1];
@@ -570,7 +601,7 @@ define(function(require, exports, module) {
             _layout.call(this, size, scrollOffset);
         }
         else {
-            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._direction);
+            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
         }
 
         // Render child-nodes every commit

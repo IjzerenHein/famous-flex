@@ -24,6 +24,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var LayoutController = require('./LayoutController');
+    var LayoutNodeManager = require('./LayoutNodeManager');
     var OptionsManager = require('famous/core/OptionsManager');
     var ViewSequence = require('famous/core/ViewSequence');
     var FlowLayoutNode = require('./FlowLayoutNode');
@@ -42,10 +43,8 @@ define(function(require, exports, module) {
      * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
      * @alias module:FlowLayoutController
      */
-    function FlowLayoutController(options) {
-        LayoutController.call(this, options, function(renderNode, spec) {
-            return new FlowLayoutNode(renderNode, spec || this.options.insertSpec);
-        }.bind(this));
+    function FlowLayoutController(options, nodeManager) {
+        LayoutController.call(this, options, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
 
         // Set options
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS || FlowLayoutController.DEFAULT_OPTIONS);
@@ -73,6 +72,16 @@ define(function(require, exports, module) {
             align: undefined
         }*/
     };
+
+    /**
+     * Called whenever a layout-node is created/re-used. Initializes
+     * the node with the `insertSpec` if it has been defined.
+     */
+    function _initLayoutNode(layoutNode, spec) {
+        if (!spec && this.options.insertSpec) {
+            layoutNode.setSpec(this.options.insertSpec);
+        }
+    }
 
     /**
      * Patches the FlowLayoutController instance's options with the passed-in ones.

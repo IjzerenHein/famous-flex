@@ -41,7 +41,7 @@ define(function(require, exports, module) {
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @alias module:LayoutController
      */
-    function LayoutController(options, createNodeFn) {
+    function LayoutController(options, nodeManager) {
 
         // Commit
         this.id = Entity.register(this);
@@ -68,9 +68,7 @@ define(function(require, exports, module) {
         }.bind(this));
 
         // Create node manager that manages result LayoutNode instances
-        this._nodes = new LayoutNodeManager(createNodeFn || function(renderNode) {
-            return new LayoutNode(renderNode);
-        });
+        this._nodes = nodeManager || new LayoutNodeManager(LayoutNode);
 
         // Apply options
         if (options && options.dataSource) {

@@ -35,11 +35,13 @@ define(function(require, exports, module) {
 
     /**
      * @class
-     * @param {Function} createLayoutNodeFunction function to use when creating new nodes
+     * @param {LayoutNode} LayoutNode Layout-nodes to create
+     * @param {Function} initLayoutNodeFunction function to use when initializing new nodes
      * @alias module:LayoutNodeManager
      */
-    function LayoutNodeManager(createLayoutNodeFunction) {
-        this._createLayoutNodeFunction = createLayoutNodeFunction;
+    function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
+        this.LayoutNode = LayoutNode;
+        this._initLayoutNodeFn = initLayoutNodeFn;
         this._context = new LayoutContext({
             next: _contextNextNode.bind(this),
             prev: _contextPrevNode.bind(this),
@@ -122,11 +124,11 @@ define(function(require, exports, module) {
      *
      * @return {Array.Spec} array of Specs
      */
-    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function(lockDirection) {
+    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function() {
         var result = [];
         var node = this._first;
         while (node) {
-            var spec = node.getSpec(lockDirection);
+            var spec = node.getSpec();
             if (!spec) {
 
                 // Remove node from linked-list
@@ -204,19 +206,23 @@ define(function(require, exports, module) {
      * @param {Object} renderNode render-node for whom to create a layout-node for
      * @return {LayoutNode} layout-node
      */
-    LayoutNodeManager.prototype.createNode = function(renderNode) {
+    LayoutNodeManager.prototype.createNode = function(renderNode, spec) {
+        var layoutNode;
         if (this._pool.first) {
-            var layoutNode = this._pool.first;
+            layoutNode = this._pool.first;
             this._pool.first = layoutNode._next;
             this._pool.size--;
             layoutNode._prev = undefined;
             layoutNode._next = undefined;
             layoutNode.constructor.apply(layoutNode, arguments);
-            return layoutNode;
         }
         else {
-            return this._createLayoutNodeFunction.apply(this, arguments);
+            layoutNode = new this.LayoutNode(renderNode, spec);
         }
+        if (this._initLayoutNodeFn) {
+            this._initLayoutNodeFn.call(this, layoutNode, spec);
+        }
+        return layoutNode;
     };
 
     /**

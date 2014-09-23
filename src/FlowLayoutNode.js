@@ -56,13 +56,14 @@ define(function(require, exports, module) {
         else {
             for (var propName in this._properties) {
                 this._properties[propName].init = false;
+                delete this._locks;
             }
         }
 
         this._initial = true;
-        this._endstatereached = false;
+        this._endStateReached = false;
         if (spec) {
-            _setFromSpec.call(this, spec);
+            this.setSpec(spec);
         }
     }
     FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
@@ -88,7 +89,7 @@ define(function(require, exports, module) {
     function _equalsXYZ(ar1, ar2) {
         return (ar1[0] === ar2[0]) && (ar1[1] === ar2[1]) && (ar1[2] === ar2[2]);
     }
-    function _setFromSpec(spec) {
+    FlowLayoutNode.prototype.setSpec = function(spec) {
         var set = {};
         if (spec.opacity !== undefined) {
             set.opacity = spec.opacity;
@@ -119,7 +120,7 @@ define(function(require, exports, module) {
         }
         this.set(set);
         return set;
-    }
+    };
 
     /**
      * Reset the end-state. This function is called on all layout-nodes prior to
@@ -154,12 +155,12 @@ define(function(require, exports, module) {
             }
 
             // Set end-state
-            _setFromSpec.call(this, removeSpec);
+            this.setSpec(removeSpec);
         }
         else {
 
             // No end-state specified, remove immediately
-            this._endstatereached = true;
+            this._endStateReached = true;
         }
 
         // Mark for removal
@@ -168,52 +169,36 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Destroys the layout-node by removing all the particles and
-     * forces from the physics-engine.
-     */
-    FlowLayoutNode.prototype.destroy = function() {
-        /*for (var propName in this._properties) {
-            var prop = this._properties[propName];
-            if (prop.particle) {
-                var pe = this._physicsEngines[propName];
-                pe.removeBody(prop.particle);
-                delete prop.particle;
-                delete prop.force;
-                delete prop.endstate;
-            }
-            delete this._properties[propName];
-        }*/
-    };
-
-    /**
      * Creates the render-spec
      */
     var ENERGY_RESTTOLERANCE = 1e-10;
     var VALUE_RESTTOLERANCE = 1e-6;
-    FlowLayoutNode.prototype.getSpec = function(lockDirection) {
+    FlowLayoutNode.prototype.getSpec = function() {
 
         // Check whether the any property is still animating
-        if (!this._endstatereached &&
+        if (!this._endStateReached &&
             !(!this._invalidated && this._initial)) { // when a node was added (e.g. using insert), but it was immediately not layed-out, then remove it
-            this._endstatereached = true;
+            this._endStateReached = true;
             for (var propName in this._properties) {
                 var prop = this._properties[propName];
                 if (prop.init) {
+                    prop.endStateReached = true;
                     var energy = prop.particle.getEnergy();
                     if (energy > ENERGY_RESTTOLERANCE) {
-                        this._endstatereached = false;
-                        break;
+                        this._endStateReached = false;
+                        prop.endStateReached = false;
                     }
                     else {
                         var curState = prop.particle.getPosition();
                         var endState = prop.endState.get();
                         if (endState.length !== curState.length) {
-                            this._endstatereached = false;
-                            break;
+                            this._endStateReached = false;
+                            prop.endStateReached = false;
                         }
                         for (var i = 0; i < curState.length; i++) {
                             if (Math.abs(curState[i] - endState[i]) > VALUE_RESTTOLERANCE) {
-                                this._endstatereached = false;
+                                this._endStateReached = false;
+                                prop.endStateReached = false;
                                 break;
                             }
                         }
@@ -246,14 +231,6 @@ define(function(require, exports, module) {
             rotate: (this._properties.rotate && this._properties.rotate.init) ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
         });
 
-        // For scrolling views, lock the x/y position to the end-state.
-        // This ensures that the layout-nodes instantly update their x/y position
-        // whenever the view is scrolled, as opposed to updating smoothly using
-        // a spring, which makes it feel laggy when scrolling.
-        if (this._properties.translate && this._properties.translate.init && (lockDirection !== undefined)) {
-            this._spec.transform[12 + lockDirection] = this._properties.translate.endState.get()[lockDirection];
-        }
-
         /*console.log(JSON.stringify({
             opacity: this._spec.opacity,
             size: this._spec.size,
@@ -263,6 +240,26 @@ define(function(require, exports, module) {
         }));*/
 
         return this._spec;
+    };
+
+    /**
+     * Locks a property, or a specific array-dimension of the property
+     * fixed to the end-state value. Use this to e.g. lock the x-translation
+     * to a the fixed end-state, so that when scrolling the renderable sticks
+     * to the x-axis and does not feel sluggish.
+     */
+    FlowLayoutNode.prototype.lock = function(property, lock, endStateReached) {
+
+        // Update lock
+        if (!this._locks) {
+            this._locks = {};
+        }
+        this._locks[property] = lock;
+        if (endStateReached !== undefined) {
+            if (this._properties[property]) {
+                this._properties[property].endStateReached = endStateReached;
+            }
+        }
     };
 
     /**
@@ -291,7 +288,9 @@ define(function(require, exports, module) {
                             axis: AXES[propName],
                             position: this._initial ? value : DEFAULT[propName]
                         }),
-                        endState: new Vector(value)
+                        endState: new Vector(value),
+                        init: true,
+                        endStateReached: true
                     };
                     prop.force = new Spring({
                         dampingRatio: 0.8,
@@ -305,13 +304,17 @@ define(function(require, exports, module) {
                 else {
                     if (!prop.init) {
                         prop.particle.setPosition(value);
+                        prop.init = true;
+                        prop.endStateReached = true;
                     }
                     prop.endState.set(value);
                 }
-                prop.init = true;
+                if (this._locks && this._locks[propName] && prop.endStateReached) {
+                    prop.particle.setPosition(value);
+                }
                 this._invalidated = true;
                 this._removing = false;
-                this._endstatereached = false;
+                this._endStateReached = false;
             }
         }
     };
