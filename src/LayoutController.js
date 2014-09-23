@@ -32,6 +32,7 @@ define(function(require, exports, module) {
     var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutNode = require('./LayoutNode');
     var Transform = require('famous/core/Transform');
+    require('./helpers/LayoutDockHelper');
 
     /**
      * @class
