@@ -39,10 +39,13 @@ define(function(require, exports, module) {
      *
      *  @param {Array.Number} margins
      */
-    var zeroMargins = [0, 0, 0, 0];
     LayoutUtility.normalizeMargins = function(margins) {
-        if (!margins || (margins.length === 0)) {
-            return zeroMargins;
+        if (!margins) {
+            return [0, 0, 0, 0];
+        } else if (!Array.isArray(margins)) {
+            return [margins, margins, margins, margins];
+        } else if (margins.length === 0) {
+            return [0, 0, 0, 0];
         } else if (margins.length === 1) {
             return [margins[0], margins[0], margins[0], margins[0]];
         } else if (margins.length === 2) {
