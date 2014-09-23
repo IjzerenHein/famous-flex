@@ -172,7 +172,16 @@ define(function(require, exports, module) {
      * Creates the render-spec
      */
     var ENERGY_RESTTOLERANCE = 1e-10;
-    var VALUE_RESTTOLERANCE = 1e-6;
+    var RESTTOLERANCE = {
+        opacity:    1e-5,
+        size:       0.1,
+        origin:     1e-5,
+        align:      1e-5,
+        scale:      1e-5,
+        translate:  0.1,
+        rotate:     1e-5,
+        skew:       1e-5
+    };
     FlowLayoutNode.prototype.getSpec = function() {
 
         // Check whether the any property is still animating
@@ -183,6 +192,7 @@ define(function(require, exports, module) {
                 var prop = this._properties[propName];
                 if (prop.init) {
                     prop.endStateReached = true;
+                    var restTolerance = RESTTOLERANCE[propName];
                     var energy = prop.particle.getEnergy();
                     if (energy > ENERGY_RESTTOLERANCE) {
                         this._endStateReached = false;
@@ -196,7 +206,7 @@ define(function(require, exports, module) {
                             prop.endStateReached = false;
                         }
                         for (var i = 0; i < curState.length; i++) {
-                            if (Math.abs(curState[i] - endState[i]) > VALUE_RESTTOLERANCE) {
+                            if (Math.abs(curState[i] - endState[i]) > restTolerance) {
                                 this._endStateReached = false;
                                 prop.endStateReached = false;
                                 break;
