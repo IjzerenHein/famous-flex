@@ -13,10 +13,10 @@
 
 /**
  * LayoutNodeManager is a private class used internally by the LayoutControllers and
- * ScrollViews. It manages the layout-nodes that are rendered exposes the layout-context
+ * ScrollViews. It manages the layout-nodes that are rendered and exposes the layout-context
  * which is passed along to the layout-function.
  *
- * LayoutNodeManager keept track of every rendered node through an ordered single-linked
+ * LayoutNodeManager keeps track of every rendered node through an ordered double-linked
  * list. The first time the layout-function is called, the linked list is created.
  * After that, the linked list is updated to reflect the output of the layout-function.
  * When the layout is unchanged, then the linked-list exactly matches the order of the
@@ -36,7 +36,7 @@ define(function(require, exports, module) {
     /**
      * @class
      * @param {LayoutNode} LayoutNode Layout-nodes to create
-     * @param {Function} initLayoutNodeFunction function to use when initializing new nodes
+     * @param {Function} initLayoutNodeFn function to use when initializing new nodes
      * @alias module:LayoutNodeManager
      */
     function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
