@@ -19,6 +19,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var OptionsManager = require('famous/core/OptionsManager');
     var Transform = require('famous/core/Transform');
     var Vector = require('famous/math/Vector');
     var Particle = require('famous/physics/bodies/Particle');
@@ -37,9 +38,21 @@ define(function(require, exports, module) {
     function FlowLayoutNode(renderNode, spec) {
         LayoutNode.apply(this, arguments);
 
+        if (!this.options) {
+            this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+            this._optionsManager = new OptionsManager(this.options);
+        }
+
         if (!this._pe) {
             this._pe = new PhysicsEngine();
         }
+
+        this._options = {
+            spring: {
+                dampingRatio: 0.8,
+                period: 300
+            }
+        };
 
         if (!this._properties) {
             this._properties = {
@@ -69,6 +82,13 @@ define(function(require, exports, module) {
     FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
     FlowLayoutNode.prototype.constructor = FlowLayoutNode;
 
+    FlowLayoutNode.DEFAULT_OPTIONS = {
+        spring: {
+            dampingRatio: 0.8,
+            period: 300
+        }
+    };
+
     /**
      * Defaults
      */
@@ -81,6 +101,25 @@ define(function(require, exports, module) {
         translate: [0, 0, 0],
         rotate: [0, 0, 0],
         skew: [0, 0, 0]
+    };
+
+    /**
+     * Sets the configuration options
+     */
+    FlowLayoutNode.prototype.setOptions = function(options) {
+        this._optionsManager.setOptions(options);
+        for (var propName in this._properties) {
+            var prop = this._properties[propName];
+            if (prop.force) {
+                var springOptions = {};
+                for (var key in this.options.spring) {
+                    springOptions[key] = this.options.spring[key];
+                }
+                springOptions.anchor = prop.endState;
+                prop.force.setOptions(springOptions);
+            }
+        }
+        return this;
     };
 
     /**
@@ -305,11 +344,12 @@ define(function(require, exports, module) {
                         init: true,
                         endStateReached: true
                     };
-                    prop.force = new Spring({
-                        dampingRatio: 0.8,
-                        period: 300,
-                        anchor : prop.endState
-                    });
+                    var springOptions = {};
+                    for (var key in this.options.spring) {
+                        springOptions[key] = this.options.spring[key];
+                    }
+                    springOptions.anchor = prop.endState;
+                    prop.force = new Spring(springOptions);
                     this._pe.addBody(prop.particle);
                     prop.forceId = this._pe.attach(prop.force, prop.particle);
                     this._properties[propName] = prop;
@@ -322,7 +362,7 @@ define(function(require, exports, module) {
                     }
                     prop.endState.set(value);
                 }
-                if (this._locks && this._locks[propName] && prop.endStateReached) {
+                if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
                     prop.particle.setPosition(value);
                 }
                 this._invalidated = true;

@@ -47,7 +47,10 @@ define(function(require, exports, module) {
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
-        FlowLayoutController.call(this, options, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+        if (options) {
+            this.setOptions(options);
+        }
 
         // Scrolling
         this._scroll = {
@@ -149,6 +152,9 @@ define(function(require, exports, module) {
      * is immediately updated when the user scrolls the view.
      */
     function _initLayoutNode(layoutNode, spec) {
+        layoutNode.setOptions({
+            spring: this.options.nodeSpring
+        });
         if (!spec && this.options.insertSpec) {
             layoutNode.setSpec(this.options.insertSpec);
         }
@@ -160,26 +166,33 @@ define(function(require, exports, module) {
         }
     }
 
-    /*function _verifyIntegrity() {
+    /**
+     * Helper function to aid development and find bugs.
+     */
+    function _verifyIntegrity(phase) {
+        /*phase = phase ? ' (' + phase + ')' : '';
         if ((this._scroll.moveStart !== undefined) && isNaN(this._scroll.moveStart)) {
-            throw 'moveStart';
+            throw 'invalid moveStart ' + this._scroll.moveStart + phase;
         }
         if ((this._scroll.moveOffset !== undefined) && isNaN(this._scroll.moveOffset)) {
-            throw 'hey goffer';
+            throw 'invalid moveOffset ' + this._scroll.moveOffset + phase;
         }
         if ((this._scroll.scrollDelta !== undefined) && isNaN(this._scroll.scrollDelta)) {
-            throw 'hey goffer';
+            throw 'invalid scrollDelta: ' + this._scroll.scrollDelta + phase;
         }
         if ((this._scroll.edgeSpringOffset !== undefined) && isNaN(this._scroll.edgeSpringOffset)) {
-            throw 'hey goffer';
+            throw 'invalid edgeSpringOffset: ' + this._scroll.edgeSpringOffset + phase;
+        }
+        if ((this._scroll.paginationSpringOffset !== undefined) && isNaN(this._scroll.paginationSpringOffset)) {
+            throw 'invalid paginationSpringOffset ' + this._scroll.paginationSpringOffset + phase;
         }
         if (isNaN(this._scroll.particle.getVelocity1D(0))) {
-            throw 'hey goffer';
+            throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
         }
         if (isNaN(this._scroll.particle.getPosition1D(0))) {
-            throw 'hey goffer';
-        }
-    }*/
+            throw 'invalid particle position: ' + this._scroll.particle.getPosition1D(0) + phase;
+        }*/
+    }
 
     /**
      * Called whenever the user starts moving the scroll-view, using
@@ -610,26 +623,33 @@ define(function(require, exports, module) {
                 this._layout.options    // additional layout-options
             );
         }
+        _verifyIntegrity.call(this, 'layout.function');
 
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+        _verifyIntegrity.call(this, 'removeNonInvalidatedNodes');
 
         // Calculate the spec-output
         this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._direction);
+        _verifyIntegrity.call(this, 'buildSpecAndDestroyUnrenderedNodes');
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
         scrollOffset = _normalizeScrollOffset.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'normalizeScrollOffset');
 
         // Update bounds
         _updateBounds.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'updateBounds');
 
         // Snap to page when `paginated` is set to true
         _snapToPage.call(this, size);
+        _verifyIntegrity.call(this, 'snapToPage');
 
         // Integrate the scroll-delta into the particle position.
         var newOffset = _integrateScrollDelta.call(this, scrollOffset);
+        _verifyIntegrity.call(this, 'integrateScrollDelta');
         if (newOffset !== scrollOffset) {
             //console.log('re-layout after delta integration: ' + scrollOffset + ' != ' + newOffset);
             _layout.call(this, size, newOffset);
@@ -663,11 +683,9 @@ define(function(require, exports, module) {
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
             if (this._isDirty) {
-                var node = this._nodes._first;
-                while (node) {
+                this._nodes.forEach(function(node) {
                     node.lock('translate', true, false); // keep lock enabled, but reset lock
-                    node = node._next;
-                }
+                });
             }
 
             // Update state

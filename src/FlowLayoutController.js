@@ -47,7 +47,7 @@ define(function(require, exports, module) {
         LayoutController.call(this, options, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
 
         // Set options
-        this.options = Object.create(this.constructor.DEFAULT_OPTIONS || FlowLayoutController.DEFAULT_OPTIONS);
+        this.options = Object.create(FlowLayoutController.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) {
             this.setOptions(options);
@@ -57,6 +57,10 @@ define(function(require, exports, module) {
     FlowLayoutController.prototype.constructor = FlowLayoutController;
 
     FlowLayoutController.DEFAULT_OPTIONS = {
+        nodeSpring: {
+            dampingRatio: 0.8,
+            period: 300
+        }
         /*insertSpec: {
             opacity: undefined,
             size: undefined,
@@ -78,6 +82,9 @@ define(function(require, exports, module) {
      * the node with the `insertSpec` if it has been defined.
      */
     function _initLayoutNode(layoutNode, spec) {
+        layoutNode.setOptions({
+            spring: this.options.nodeSpring
+        });
         if (!spec && this.options.insertSpec) {
             layoutNode.setSpec(this.options.insertSpec);
         }
@@ -94,6 +101,11 @@ define(function(require, exports, module) {
      */
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
         this._optionsManager.setOptions(options);
+        if (options.nodeSpring) {
+            this._nodes.forEach(function(node) {
+                node.setOptions({spring: options.nodeSpring});
+            });
+        }
         return this;
     };
 
