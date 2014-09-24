@@ -226,6 +226,19 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Enumates all layout-nodes.
+     *
+     * @param {Function} callback Function that is called every node
+     */
+    LayoutNodeManager.prototype.forEach = function(callback) {
+        var node = this._first;
+        while (node) {
+            callback(node);
+            node = node._next;
+        }
+    };
+
+    /**
      * Checks whether the end of was reached when using next/prev
      * to enumerate the nodes.
      *
