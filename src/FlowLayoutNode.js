@@ -207,6 +207,15 @@ define(function(require, exports, module) {
         this._invalidated = false;
     };
 
+    function _getPropertyValue(prop, def) {
+        return (prop && prop.init) ? (prop.endStateReached ? prop.endState.get() : prop.particle.getPosition()) : def;
+    }
+
+    function _getOpacityValue() {
+        var prop = this._properties.opacity;
+        return (prop && prop.init) ? Math.max(0,Math.min(1, prop.particle.getPosition1D())) : undefined;
+    }
+
     /**
      * Creates the render-spec
      */
@@ -272,15 +281,15 @@ define(function(require, exports, module) {
 
         // Animations are still going, build new spec
         this._initial = false;
-        this._spec.opacity = (this._properties.opacity && this._properties.opacity.init) ? Math.max(0,Math.min(1, this._properties.opacity.particle.getPosition1D())) : undefined;
-        this._spec.size = (this._properties.size && this._properties.size.init) ? this._properties.size.particle.getPosition() : undefined;
-        this._spec.align = (this._properties.align && this._properties.align.init) ? this._properties.align.particle.getPosition() : undefined;
-        this._spec.origin = (this._properties.origin && this._properties.origin.init) ? this._properties.origin.particle.getPosition() : undefined;
+        this._spec.opacity = _getOpacityValue.call(this);
+        this._spec.size = _getPropertyValue(this._properties.size, undefined);
+        this._spec.align = _getPropertyValue(this._properties.align, undefined);
+        this._spec.origin = _getPropertyValue(this._properties.origin, undefined);
         this._spec.transform = Transform.build({
-            translate: (this._properties.translate && this._properties.translate.init) ? this._properties.translate.particle.getPosition() : DEFAULT.translate,
-            skew: (this._properties.skew && this._properties.skew.init) ? this._properties.skew.particle.getPosition() : DEFAULT.skew,
-            scale: (this._properties.scale && this._properties.scale.init) ? this._properties.scale.particle.getPosition() : DEFAULT.scale,
-            rotate: (this._properties.rotate && this._properties.rotate.init) ? this._properties.rotate.particle.getPosition() : DEFAULT.rotate
+            translate: _getPropertyValue(this._properties.translate, DEFAULT.translate),
+            skew: _getPropertyValue(this._properties.skew, DEFAULT.skew),
+            scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
+            rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
         });
 
         /*console.log(JSON.stringify({
