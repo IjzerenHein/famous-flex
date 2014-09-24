@@ -25,6 +25,7 @@ module.exports = function(grunt) {
             { src: 'src/LayoutContext.js', dest: 'docs/LayoutContext.md' },
             { src: 'src/LayoutController.js', dest: 'docs/LayoutController.md' },
             { src: 'src/FlowLayoutController.js', dest: 'docs/FlowLayoutController.md' },
+            { src: 'src/ScrollView.js', dest: 'docs/ScrollView.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             // helpers
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' },
