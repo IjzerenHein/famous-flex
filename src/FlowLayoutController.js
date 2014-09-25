@@ -101,6 +101,15 @@ define(function(require, exports, module) {
      */
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
         this._optionsManager.setOptions(options);
+        if (options.dataSource) {
+            this.setDataSource(options.dataSource);
+        }
+        if (options.layout || options.layoutOptions) {
+            this.setLayout(options.layout, options.layoutOptions);
+        }
+        if (options.direction !== undefined) {
+            this.setDirection(options.direction);
+        }
         if (options.nodeSpring) {
             this._nodes.forEach(function(node) {
                 node.setOptions({spring: options.nodeSpring});
