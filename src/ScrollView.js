@@ -696,10 +696,19 @@ define(function(require, exports, module) {
      * Helper function that scrolls the view towards a view-sequence node.
      */
     function _scrollToSequence(viewSequence, prev, animated) {
-        this._scroll.scrollToSequence = viewSequence;
-        this._scroll.scrollToEnergy = prev ? 1 : -1;
-        this._scroll.particle.setVelocity1D(this._scroll.scrollToEnergy);
-        //console.log('scrollToEnergy: ' + this._scroll.scrollToEnergy);
+        if (animated) {
+            this._scroll.scrollToSequence = viewSequence;
+            this._scroll.scrollToEnergy = prev ? 1 : -1;
+            this._scroll.particle.setVelocity1D(this._scroll.scrollToEnergy);
+            //console.log('scrollToEnergy: ' + this._scroll.scrollToEnergy);
+        }
+        else {
+            this._scroll.particle.setVelocity1D(0);
+            this._scroll.particle.setPosition1D(0);
+            this._scroll.scrollDelta = 0;
+            this._viewSequence = viewSequence;
+            this._isDirty = true;
+        }
     }
 
     /**
@@ -754,7 +763,7 @@ define(function(require, exports, module) {
         // Check current node
         if (this._viewSequence.get() === node) {
             _scrollToSequence.call(this, this._viewSequence, true, animated);
-            return;
+            return this;
         }
 
         // Find the sequence-node that we want to scroll to.
