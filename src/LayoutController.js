@@ -92,6 +92,25 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Patches the LayoutController instance's options with the passed-in ones.
+     *
+     * @param {Options} options An object of configurable options for the LayoutController instance.
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.setOptions = function setOptions(options) {
+        if (options.dataSource) {
+            this.setDataSource(options.dataSource);
+        }
+        if (options.layout || options.layoutOptions) {
+            this.setLayout(options.layout, options.layoutOptions);
+        }
+        if (options.direction !== undefined) {
+            this.setDirection(options.direction);
+        }
+        return this;
+    };
+
+    /**
      * Sets the collection of renderables which are layed out according to
      * the layout-function.
      *
@@ -503,8 +522,14 @@ define(function(require, exports, module) {
                 );
             }
 
-            // Update output
-            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            // Update output and optionally emit event
+            var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._commitOutput.target = result.specs;
+            if (result.modified || true) {
+                this._eventOutput.emit('reflow', {
+                    target: this
+                });
+            }
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);

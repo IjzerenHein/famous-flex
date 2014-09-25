@@ -819,8 +819,14 @@ define(function(require, exports, module) {
         _verifyIntegrity.call(this, 'removeNonInvalidatedNodes');
 
         // Calculate the spec-output
-        this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._direction);
+        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
         _verifyIntegrity.call(this, 'buildSpecAndDestroyUnrenderedNodes');
+        this._commitOutput.target = result.specs;
+        if (result.modified || true) {
+            this._eventOutput.emit('reflow', {
+                target: this
+            });
+        }
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
@@ -907,7 +913,15 @@ define(function(require, exports, module) {
             this._eventOutput.emit('layoutend', eventData);
         }
         else {
-            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+
+            // Update output and optionally emit event
+            var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._commitOutput.target = result.specs;
+            if (result.modified) {
+                this._eventOutput.emit('reflow', {
+                    target: this
+                });
+            }
         }
 
         // Render child-nodes every commit

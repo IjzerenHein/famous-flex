@@ -99,17 +99,10 @@ define(function(require, exports, module) {
      * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
      * @return {FlowLayoutController} this
      */
+    var oldSetOptions = FlowLayoutController.prototype.setOptions;
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
         this._optionsManager.setOptions(options);
-        if (options.dataSource) {
-            this.setDataSource(options.dataSource);
-        }
-        if (options.layout || options.layoutOptions) {
-            this.setLayout(options.layout, options.layoutOptions);
-        }
-        if (options.direction !== undefined) {
-            this.setDirection(options.direction);
-        }
+        oldSetOptions.call(this, options);
         if (options.nodeSpring) {
             this._nodes.forEach(function(node) {
                 node.setOptions({spring: options.nodeSpring});
@@ -241,6 +234,7 @@ define(function(require, exports, module) {
         var origin = context.origin;
         var size = context.size;
         var opacity = context.opacity;
+        var result;
 
         // When the size or layout function has changed, reflow the layout
         if (size[0] !== this._contextSizeCache[0] ||
@@ -283,14 +277,28 @@ define(function(require, exports, module) {
             // Mark non-invalidated nodes for removal
             this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
 
-            // Update output
-            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            // Update output and optionally emit event
+            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._commitOutput.target = result.specs;
+            if (result.modified || true) {
+                this._eventOutput.emit('reflow', {
+                    target: this
+                });
+            }
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);
         }
         else {
-            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+
+            // Update output and optionally emit event
+            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._commitOutput.target = result.specs;
+            if (result.modified) {
+                this._eventOutput.emit('reflow', {
+                    target: this
+                });
+            }
         }
 
         // Render child-nodes every commit

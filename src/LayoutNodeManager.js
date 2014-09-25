@@ -125,9 +125,14 @@ define(function(require, exports, module) {
      * @return {Array.Spec} array of Specs
      */
     LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function() {
-        var result = [];
+        var specs = [];
+        var result = {
+            specs: specs,
+            modified: false
+        };
         var node = this._first;
         while (node) {
+            var oldEndStateReached = node._endStateReached;
             var spec = node.getSpec();
             if (!spec) {
 
@@ -157,12 +162,20 @@ define(function(require, exports, module) {
                     this._pool.first = destroyNode;
                 }
 
+                // Mark as modified
+                result.modified = true;
+
                 _checkIntegrity.call(this);
             }
             else {
 
+                // Update stats
+                if (!node._endStateReached || !oldEndStateReached) {
+                    result.modified = true;
+                }
+
                 // Add node to result output
-                result.push(spec);
+                specs.push(spec);
                 node = node._next;
             }
         }
