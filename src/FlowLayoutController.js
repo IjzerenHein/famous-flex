@@ -239,6 +239,16 @@ define(function(require, exports, module) {
             this._isDirty ||
             this._nodes._trueSizeRequested) {
 
+            // Emit start event
+            var eventData = {
+                target: this,
+                oldSize: this._contextSizeCache,
+                size: size,
+                dirty: this._isDirty,
+                trueSizeRequested: this._nodes._trueSizeRequested
+            };
+            this._eventOutput.emit('layoutstart', eventData);
+
             // Update state
             this._contextSizeCache[0] = size[0];
             this._contextSizeCache[1] = size[1];
@@ -263,10 +273,16 @@ define(function(require, exports, module) {
 
             // Mark non-invalidated nodes for removal
             this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
-        }
 
-        // Update output
-        this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            // Update output
+            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+
+            // Emit end event
+            this._eventOutput.emit('layoutend', eventData);
+        }
+        else {
+            this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+        }
 
         // Render child-nodes every commit
         for (var i = 0; i < this._commitOutput.target.length; i++) {

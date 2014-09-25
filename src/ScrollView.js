@@ -75,11 +75,9 @@ define(function(require, exports, module) {
         _createSpring.call(this, 'pagination', this.options.paginationSpring); // spring-force that acts upon the particle to ensure that the particle aligns on a page bounds.
         _createSpring.call(this, 'scrollTo', this.options.edgeSpring); // spring-force that acts upon the particle to ensure that the particle scrolls to the requested position
 
-        // Setup event handlers
+        // Setup input event handler
         this._eventInput = new EventHandler();
-        this._eventOutput = new EventHandler();
         EventHandler.setInputHandler(this, this._eventInput);
-        EventHandler.setOutputHandler(this, this._eventOutput);
 
         // Listen to touch events
         this._eventInput.on('touchstart', _touchStart.bind(this));
@@ -875,6 +873,18 @@ define(function(require, exports, module) {
             this._nodes._trueSizeRequested ||
             this._scrollOffsetCache !== scrollOffset) {
 
+            // Emit start event
+            var eventData = {
+                target: this,
+                oldSize: this._contextSizeCache,
+                size: size,
+                oldScrollOffset: this._scrollOffsetCache,
+                scrollOffset: scrollOffset,
+                dirty: this._isDirty,
+                trueSizeRequested: this._nodes._trueSizeRequested
+            };
+            this._eventOutput.emit('layoutstart', eventData);
+
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
@@ -892,6 +902,9 @@ define(function(require, exports, module) {
 
             // Perform layout
             _layout.call(this, size, scrollOffset);
+
+            // Emit end event
+            this._eventOutput.emit('layoutend', eventData);
         }
         else {
             this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();

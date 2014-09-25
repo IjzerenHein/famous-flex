@@ -28,6 +28,7 @@ define(function(require, exports, module) {
     var Entity = require('famous/core/Entity');
     var ViewSequence = require('famous/core/ViewSequence');
     var OptionsManager = require('famous/core/OptionsManager');
+    var EventHandler = require('famous/core/EventHandler');
     var LayoutUtility = require('./LayoutUtility');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutNode = require('./LayoutNode');
@@ -49,6 +50,10 @@ define(function(require, exports, module) {
         this._isDirty = true;
         this._contextSizeCache = [0, 0];
         this._commitOutput = {};
+
+        // Setup event handlers
+        this._eventOutput = new EventHandler();
+        EventHandler.setOutputHandler(this, this._eventOutput);
 
         // Data-source
         //this._dataSource = undefined;
@@ -344,6 +349,86 @@ define(function(require, exports, module) {
         return undefined;
     };
 
+    function _getVisiblePercentage(spec) {
+        var specLeft = spec.transform[12];
+        var specTop = spec.transform[13];
+        var specSize = spec.size;
+        var left = Math.max(0, specLeft);
+        var top = Math.max(0, specTop);
+        var right = Math.min(this._contextSizeCache[0], specLeft + specSize[0]);
+        var bottom = Math.min(this._contextSizeCache[1], specTop + specSize[1]);
+        var width = right - left;
+        var height = bottom - top;
+        var volume = width * height;
+        var totalVolume = spec.size[0] * spec.size[1];
+        return totalVolume ? (volume / totalVolume) : 0;
+    }
+
+    function _getVisibleItem(spec) {
+        return {
+            spec: {
+                opacity: spec.opacity,
+                align: spec.align,
+                origin: spec.origin,
+                size: spec.size,
+                transform: spec.transform
+            },
+            renderNode: spec.renderNode,
+            visiblePerc: _getVisiblePercentage.call(this, spec)
+        };
+    }
+
+    /**
+     * TODO
+     */
+    function _getVisibleItems(start, count) {
+        var result = [];
+        var specs = this._commitOutput.target;
+        if (!specs) {
+            return [];
+        }
+        if (start === undefined) {
+            start = 0;
+        }
+        var end = specs.length;
+        if (count !== undefined) {
+            end = start + count;
+        }
+        for (var i = start; i < end; i++) {
+            var item = _getVisibleItem.call(this, specs[i]);
+            if (item.visiblePerc > 0) {
+                result.push(item);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Get the first visible item that meets the visible percentage criteria.
+     * The percentage indicates how many pixels should at least visible before
+     * the renderable is considered visible.
+     * `visible percentage = (width * height) / (visible width * visible height)`
+     *
+     * @param {Number} [visiblePerc] percentage in the range of 0..1 (default: 0.99)
+     * @return {Object} item object or undefined
+     */
+    LayoutController.prototype.getFirstVisibleItem = function(visiblePerc) {
+        var specs = this._commitOutput.target;
+        if (!specs) {
+            return undefined;
+        }
+        if (visiblePerc === undefined) {
+            visiblePerc = 0.99;
+        }
+        for (var i = 0; i < specs.length; i++) {
+            var item = _getVisibleItem.call(this, specs[i]);
+            if (item.visiblePerc >= visiblePerc) {
+                return item;
+            }
+        }
+        return undefined;
+    };
+
     /**
      * Forces a reflow of the layout the next render cycle.
      *
@@ -386,6 +471,16 @@ define(function(require, exports, module) {
             this._isDirty ||
             this._nodes._trueSizeRequested){
 
+            // Emit start event
+            var eventData = {
+                target: this,
+                oldSize: this._contextSizeCache,
+                size: size,
+                dirty: this._isDirty,
+                trueSizeRequested: this._nodes._trueSizeRequested
+            };
+            this._eventOutput.emit('layoutstart', eventData);
+
             // Update state
             this._contextSizeCache[0] = size[0];
             this._contextSizeCache[1] = size[1];
@@ -410,6 +505,9 @@ define(function(require, exports, module) {
 
             // Update output
             this._commitOutput.target = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+
+            // Emit end event
+            this._eventOutput.emit('layoutend', eventData);
         }
 
         // Render child-nodes every commit
