@@ -126,7 +126,8 @@ define(function(require, exports, module) {
         },
         edgeSpring: {
             dampingRatio: 0.8,
-            period: 300
+            period: 300,
+            disabled: false
         },
         scrollSync: {
             scale: 0.1
@@ -497,15 +498,17 @@ define(function(require, exports, module) {
     function _updateBounds(size, scrollOffset) {
 
         // Check whether the top or bottom has been reached (0: top, 1: bottom)
-        //var boundsReached = this._scroll.boundsReached;
+        var boundsReached = this._scroll.boundsReached;
         _calculateBoundsReached.call(this, size, scrollOffset);
-        //if (this._scroll.boundsReached !== boundsReached) {
-            //console.log('bounds reached changed: ' + this._scroll.boundsReached);
-        //}
+        if (this._scroll.boundsReached !== boundsReached) {
+            console.log('bounds reached changed: ' + this._scroll.boundsReached);
+        }
 
         // Calculate new edge spring offset
         var edgeSpringOffset;
-        if (this._scroll.boundsReached & Bounds.FIRST) {
+        if (this.options.edgeSpring.disabled) {
+            edgeSpringOffset = undefined;
+        } else if (this._scroll.boundsReached & Bounds.FIRST) {
             edgeSpringOffset = 0;
         } else if (this._scroll.boundsReached & Bounds.LAST) {
             edgeSpringOffset = this._scroll.lastScrollOffset;
