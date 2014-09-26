@@ -135,7 +135,8 @@ define(function(require, exports, module) {
         paginationSpring: {
             dampingRatio: 1.0,
             period: 2000
-        }
+        },
+        touchMoveDirectionThresshold: undefined // 0..1
     };
 
     function _createSpring(name, options) {
@@ -160,7 +161,7 @@ define(function(require, exports, module) {
             if (spring.forceId) {
                 this._scroll.pe.detach(spring.forceId);
                 spring.forceId = undefined;
-                console.log('disabled ' + name + '-spring');
+                //console.log('disabled ' + name + '-spring');
                 return false;
             }
         }
@@ -169,7 +170,7 @@ define(function(require, exports, module) {
                 spring.forceId = this._scroll.pe.attach(spring.force, this._scroll.particle);
             }
             spring.vector.set([value, 0, 0]);
-            console.log('setting ' + name + '-spring to: ' + value);
+            //console.log('setting ' + name + '-spring to: ' + value);
             return true;
         }
         return undefined;
@@ -230,8 +231,7 @@ define(function(require, exports, module) {
      */
     function _touchStart(event) {
         var touch = event.changedTouches[0];
-        var offset = this._direction ? touch.clientY : touch.clientX;
-        this._scroll.moveStart = offset;
+        this._scroll.moveStart = [touch.clientX, touch.clientY];
         this._scroll.moveOffset = 0;
         this._scroll.moveTime = Date.now();
         this._scroll.movePrevOffset = 0;
@@ -240,12 +240,24 @@ define(function(require, exports, module) {
         this._scroll.scrollToSequence = undefined;
         this._eventOutput.emit('touchstart', event);
     }
+    function _checkTouchMoveThresshold(x, y) {
+        if (this.options.touchMoveDirectionThresshold === undefined) {
+            return true;
+        }
+        var thresshold = Math.atan2(
+            Math.abs(x - this._scroll.moveStart[0]),
+            Math.abs(y - this._scroll.moveStart[1])) / (Math.PI / 2.0);
+        return thresshold >= this.options.touchMoveDirectionThresshold;
+    }
     function _touchMove(event) {
         var touch = event.changedTouches[0];
+        if (!_checkTouchMoveThresshold.call(this, touch.clientX, touch.clientY)) {
+            return;
+        }
         var offset = this._direction ? touch.clientY : touch.clientX;
         this._scroll.movePrevOffset = this._scroll.moveOffset;
         this._scroll.movePrevTime = this._scroll.moveTime;
-        this._scroll.moveOffset = offset - this._scroll.moveStart;
+        this._scroll.moveOffset = offset - this._scroll.moveStart[this._direction];
         this._scroll.moveTime = Date.now();
         this._scroll.scrollToSequence = undefined;
         this._eventOutput.emit('touchmove', event);
@@ -496,11 +508,11 @@ define(function(require, exports, module) {
     function _updateBounds(size, scrollOffset) {
 
         // Check whether the top or bottom has been reached (0: top, 1: bottom)
-        var boundsReached = this._scroll.boundsReached;
+        //var boundsReached = this._scroll.boundsReached;
         _calculateBoundsReached.call(this, size, scrollOffset);
-        if (this._scroll.boundsReached !== boundsReached) {
-            console.log('bounds reached changed: ' + this._scroll.boundsReached);
-        }
+        //if (this._scroll.boundsReached !== boundsReached) {
+        //    console.log('bounds reached changed: ' + this._scroll.boundsReached);
+        //}
 
         // Calculate new edge spring offset
         var edgeSpringOffset;
@@ -521,7 +533,7 @@ define(function(require, exports, module) {
                 var particleOffset = scrollOffset - (this._scroll.moveOffset + this._scroll.scrollDelta);
                 var diff = particleOffset - edgeSpringOffset;
                 this._scroll.particle.setPosition1D(edgeSpringOffset);
-                this._scroll.moveStart -= diff;
+                this._scroll.moveStart[this._direction] -= diff;
                 this._scroll.moveOffset -= diff;
             }
         }
