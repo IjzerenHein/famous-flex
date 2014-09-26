@@ -54,7 +54,8 @@ define(function(require, exports, module) {
 
         // Scrolling
         this._scroll = {
-            moveOffset: 0,
+            activeTouches: [],
+            moveOffset: [0, 0],
             scrollDelta: 0,
             // physics-engine to use for scrolling
             pe: new PhysicsEngine(),
@@ -139,6 +140,9 @@ define(function(require, exports, module) {
         touchMoveDirectionThresshold: undefined // 0..1
     };
 
+    /**
+     * Creates a spring which acts upon the scroll offset particle
+     */
     function _createSpring(name, options) {
         var spring = {
             vector: new Vector([0, 0, 0]),
@@ -148,6 +152,9 @@ define(function(require, exports, module) {
         this._springs[name] = spring;
     }
 
+    /**
+     * Sets the value for the spring, or set to `undefined` to disable the spring
+     */
     function _setSpring(name, value) {
         if (value !== undefined) {
             value = _roundScrollOffset.call(this, value);
@@ -201,28 +208,40 @@ define(function(require, exports, module) {
      * Helper function to aid development and find bugs.
      */
     function _verifyIntegrity(phase) {
-        /*phase = phase ? ' (' + phase + ')' : '';
-        if ((this._scroll.moveStart !== undefined) && isNaN(this._scroll.moveStart)) {
-            throw 'invalid moveStart ' + this._scroll.moveStart + phase;
-        }
-        if ((this._scroll.moveOffset !== undefined) && isNaN(this._scroll.moveOffset)) {
-            throw 'invalid moveOffset ' + this._scroll.moveOffset + phase;
+        phase = phase ? ' (' + phase + ')' : '';
+        if ((this._scroll.moveOffset !== undefined) && (isNaN(this._scroll.moveOffset[0]) || isNaN(this._scroll.moveOffset[1]))) {
+            throw 'invalid moveOffset ' + JSON.stringify(this._scroll.moveOffset) + phase;
         }
         if ((this._scroll.scrollDelta !== undefined) && isNaN(this._scroll.scrollDelta)) {
             throw 'invalid scrollDelta: ' + this._scroll.scrollDelta + phase;
         }
-        if ((this._scroll.edgeSpringOffset !== undefined) && isNaN(this._scroll.edgeSpringOffset)) {
-            throw 'invalid edgeSpringOffset: ' + this._scroll.edgeSpringOffset + phase;
-        }
-        if ((this._scroll.paginationSpringOffset !== undefined) && isNaN(this._scroll.paginationSpringOffset)) {
-            throw 'invalid paginationSpringOffset ' + this._scroll.paginationSpringOffset + phase;
+        for (var key in this._springs) {
+            var spring = this._springs[key];
+            if ((spring.value !== undefined) && isNaN(spring.value)) {
+                throw 'invalid ' + key + ' spring offset: ' + spring.value + phase;
+            }
         }
         if (isNaN(this._scroll.particle.getVelocity1D(0))) {
             throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
         }
         if (isNaN(this._scroll.particle.getPosition1D(0))) {
             throw 'invalid particle position: ' + this._scroll.particle.getPosition1D(0) + phase;
-        }*/
+        }
+    }
+
+    /**
+     * Re-calculates the touch-move offset after a touch-event has occured.
+     */
+    function _calculateTouchMoveOffset() {
+        if (this._scroll.activeTouches.length) {
+            var touch = this._scroll.activeTouches[0];
+            this._scroll.moveOffset[0] = touch.current[0] - touch.start[0];
+            this._scroll.moveOffset[1] = touch.current[1] - touch.start[1];
+        }
+        else {
+            this._scroll.moveOffset[0] = 0;
+            this._scroll.moveOffset[1] = 0;
+        }
     }
 
     /**
@@ -230,51 +249,139 @@ define(function(require, exports, module) {
      * touch gestures.
      */
     function _touchStart(event) {
-        var touch = event.changedTouches[0];
-        this._scroll.moveStart = [touch.clientX, touch.clientY];
-        this._scroll.moveOffset = 0;
-        this._scroll.moveTime = Date.now();
-        this._scroll.movePrevOffset = 0;
-        this._scroll.movePrevTime = this._scroll.moveTime;
-        this._scroll.particle.setVelocity1D(0);
-        this._scroll.scrollToSequence = undefined;
-        this._eventOutput.emit('touchstart', event);
-    }
-    function _checkTouchMoveThresshold(x, y) {
-        if (this.options.touchMoveDirectionThresshold === undefined) {
-            return true;
+
+        // Process touch
+        var oldTouchesCount = this._scroll.activeTouches.length;
+        for (var i = 0; i < event.changedTouches.length; i++) {
+            var changedTouch = event.changedTouches[i];
+            var current = [changedTouch.clientX, changedTouch.clientY];
+            var time = Date.now();
+            var touch = {
+                id: changedTouch.identifier,
+                start: current,
+                current: current,
+                prev: current,
+                time: time,
+                prevTime: time
+            };
+            this._scroll.activeTouches.push(touch);
         }
-        var thresshold = Math.atan2(
-            Math.abs(x - this._scroll.moveStart[0]),
-            Math.abs(y - this._scroll.moveStart[1])) / (Math.PI / 2.0);
-        return thresshold >= this.options.touchMoveDirectionThresshold;
+
+        // Update move offset
+        _calculateTouchMoveOffset.call(this);
+
+        // Reset any programmatic scrollTo request when the user is doing stuff
+        this._scroll.scrollToSequence = undefined;
+
+        // The first time a touch new touch gesture has arrived, emit event
+        if (!oldTouchesCount && this._scroll.activeTouches.length) {
+            this._scroll.particle.setVelocity1D(0);
+            this._eventOutput.emit('touchstart', event);
+        }
     }
+
+    /**
+     * Called whenever the user is moving his/her fingers to scroll the view.
+     * Updates the moveOffset so that the scroll-offset on the view is updated.
+     */
     function _touchMove(event) {
-        var touch = event.changedTouches[0];
-        if (!_checkTouchMoveThresshold.call(this, touch.clientX, touch.clientY)) {
+
+        // Reset any programmatic scrollTo request when the user is doing stuff
+        this._scroll.scrollToSequence = undefined;
+
+        // Process the touch event
+        var primaryTouch = false;
+        for (var i = 0; i < event.changedTouches.length; i++) {
+            var changedTouch = event.changedTouches[i];
+            for (var j = 0; j < this._scroll.activeTouches.length; j++) {
+                var touch = this._scroll.activeTouches[j];
+                if (touch.id === changedTouch.identifier) {
+
+                    // When a thresshold is configured, check whether the move operation (x/y ratio)
+                    // lies within the thresshold. A move of 10 pixels x and 10 pixels y is considered 45 deg,
+                    // which corresponds to a thresshold of 0.5.
+                    var moveDirection = Math.atan2(
+                        Math.abs(changedTouch.clientX - touch.prev[0]),
+                        Math.abs(changedTouch.clientY - touch.prev[1])) / (Math.PI / 2.0);
+                    if ((this.options.touchMoveDirectionThresshold === undefined) || (moveDirection >= this.options.touchMoveDirectionThresshold)){
+                        touch.prev = touch.current;
+                        touch.current = [changedTouch.clientX, changedTouch.clientY];
+                        touch.prevTime = touch.time;
+                        touch.direction = moveDirection;
+                        touch.time = Date.now();
+                        primaryTouch = (j === 0);
+                    }
+                }
+            }
+        }
+
+        // Update move offset and emit event
+        if (primaryTouch) {
+            _calculateTouchMoveOffset.call(this);
+            this._eventOutput.emit('touchmove', event);
+            //_verifyIntegrity.call(this, 'touchMove');
+        }
+    }
+
+    /**
+     * Called whenever the user releases his fingers and the touch gesture
+     * has completed. This will set the new position and if the user used a 'flick'
+     * gesture give the scroll-offset particle a velocity and momentum into a
+     * certain direction.
+     */
+    function _touchEnd(event) {
+
+        // Reset any programmatic scrollTo request when the user is doing stuff
+        this._scroll.scrollToSequence = undefined;
+
+        // Remove touch
+        var primaryTouch = this._scroll.activeTouches.length ? this._scroll.activeTouches[0] : undefined;
+        for (var i = 0; i < event.changedTouches.length; i++) {
+            var changedTouch = event.changedTouches[i];
+            for (var j = 0; j < this._scroll.activeTouches.length; j++) {
+                var touch = this._scroll.activeTouches[j];
+                if (touch.id === changedTouch.identifier) {
+
+                    // Remove touch
+                    this._scroll.activeTouches.splice(j, 1);
+
+                    // When a different touch now becomes the primary touch, update
+                    // its start position to match the current move offset.
+                    if ((j === 0) && this._scroll.activeTouches.length) {
+                        var newPrimaryTouch = this._scroll.activeTouches[0];
+                        newPrimaryTouch.start[0] = newPrimaryTouch.current[0] - this._scroll.moveOffset[0];
+                        newPrimaryTouch.start[1] = newPrimaryTouch.current[1] - this._scroll.moveOffset[1];
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Wait for all fingers to be released from the screen before integration
+        // the offet into the particle
+        if (this._scroll.activeTouches.length) {
             return;
         }
-        var offset = this._direction ? touch.clientY : touch.clientX;
-        this._scroll.movePrevOffset = this._scroll.moveOffset;
-        this._scroll.movePrevTime = this._scroll.moveTime;
-        this._scroll.moveOffset = offset - this._scroll.moveStart[this._direction];
-        this._scroll.moveTime = Date.now();
-        this._scroll.scrollToSequence = undefined;
-        this._eventOutput.emit('touchmove', event);
-    }
-    function _touchEnd(event) {
-        this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + this._scroll.moveOffset);
-        this._scroll.moveTime = Date.now();
-        var diffTime = this._scroll.moveTime - this._scroll.movePrevTime;
-        if (diffTime > 0) {
-            var diffOffset = this._scroll.moveOffset - this._scroll.movePrevOffset;
-            var velocity = diffOffset / diffTime;
-            this._scroll.particle.setVelocity1D(velocity);
-            //console.log('velocity: ' + velocity + ', time: ' + diffTime);
+
+        // Integrate move offset into particle
+        this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + this._scroll.moveOffset[this._direction]);
+
+        // Determine velocity and add to particle
+        if (primaryTouch) {
+            var diffTime = Date.now() - primaryTouch.prevTime;
+            if (diffTime > 0) {
+                var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
+                var velocity = diffOffset / diffTime;
+                this._scroll.particle.setVelocity1D(velocity);
+                //console.log('velocity: ' + velocity + ', time: ' + diffTime);
+            }
         }
-        this._scroll.moveOffset = 0;
-        this._scroll.moveStart = undefined;
-        this._scroll.scrollToSequence = undefined;
+
+        // Reset move offset
+        this._scroll.moveOffset[0] = 0;
+        this._scroll.moveOffset[1] = 0;
+
+        // Emit end event
         this._eventOutput.emit('touchend', event);
     }
 
@@ -316,7 +423,7 @@ define(function(require, exports, module) {
         }
 
         // Calculate new offset
-        return _getParticlePosition.call(this) + this._scroll.moveOffset + this._scroll.scrollDelta;
+        return _getParticlePosition.call(this) + this._scroll.moveOffset[this._direction] + this._scroll.scrollDelta;
     }
 
     /**
@@ -529,12 +636,15 @@ define(function(require, exports, module) {
 
             // Integrate move-offset into particle, so that the particle matches the same
             // position as the edge-spring.
-            if (this._scroll.moveStart !== undefined) {
-                var particleOffset = scrollOffset - (this._scroll.moveOffset + this._scroll.scrollDelta);
+            if (this._scroll.touchesCount) {
+                var particleOffset = scrollOffset - (this._scroll.moveOffset[this._direction] + this._scroll.scrollDelta);
                 var diff = particleOffset - edgeSpringOffset;
                 this._scroll.particle.setPosition1D(edgeSpringOffset);
-                this._scroll.moveStart[this._direction] -= diff;
-                this._scroll.moveOffset -= diff;
+                this._scroll.moveOffset[this._direction] -= diff;
+                for (var key in this._scroll.touches) {
+                    var touch = this._scroll.touches[key];
+                    touch.start[this._direction] -= diff;
+                }
             }
         }
     }
@@ -550,7 +660,7 @@ define(function(require, exports, module) {
         }
 
         // Ensure that the new position doesn't exceed the boundaries
-        var newOffset = scrollOffset - this._scroll.moveOffset;
+        var newOffset = scrollOffset - this._scroll.moveOffset[this._direction];
         if (this._scroll.boundsReached & Bounds.FIRST){
             newOffset = 0;
         } else if (this._scroll.boundsReached & Bounds.LAST){
@@ -564,7 +674,7 @@ define(function(require, exports, module) {
 
         // When the offset as adjusted (because a boundary was reached), return
         // true so that the layout-function re-layouts.
-        return newOffset + this._scroll.moveOffset;
+        return newOffset + this._scroll.moveOffset[this._direction];
     }
 
     /**
@@ -575,7 +685,7 @@ define(function(require, exports, module) {
     function _snapToPage(size) {
         if (!this.options.paginated ||
             this._scroll.boundsReached ||
-            this._scroll.moveOffset ||
+            this._scroll.moveOffset[this._direction] ||
             this._scroll.scrollDelta ||
             this._scroll.scrollToSequence) {
             _setSpring.call(this, 'pagination', undefined);
