@@ -249,6 +249,7 @@ define(function(require, exports, module) {
      * touch gestures.
      */
     function _touchStart(event) {
+        this._eventOutput.emit('touchstart', event);
 
         // Process touch
         var oldTouchesCount = this._scroll.activeTouches.length;
@@ -276,7 +277,7 @@ define(function(require, exports, module) {
         // The first time a touch new touch gesture has arrived, emit event
         if (!oldTouchesCount && this._scroll.activeTouches.length) {
             this._scroll.particle.setVelocity1D(0);
-            this._eventOutput.emit('touchstart', event);
+            this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
         }
     }
 
@@ -285,6 +286,7 @@ define(function(require, exports, module) {
      * Updates the moveOffset so that the scroll-offset on the view is updated.
      */
     function _touchMove(event) {
+        this._eventOutput.emit('touchmove', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
         this._scroll.scrollToSequence = undefined;
@@ -301,9 +303,10 @@ define(function(require, exports, module) {
                     // lies within the thresshold. A move of 10 pixels x and 10 pixels y is considered 45 deg,
                     // which corresponds to a thresshold of 0.5.
                     var moveDirection = Math.atan2(
-                        Math.abs(changedTouch.clientX - touch.prev[0]),
-                        Math.abs(changedTouch.clientY - touch.prev[1])) / (Math.PI / 2.0);
-                    if ((this.options.touchMoveDirectionThresshold === undefined) || (moveDirection >= this.options.touchMoveDirectionThresshold)){
+                        Math.abs(changedTouch.clientY - touch.prev[1]),
+                        Math.abs(changedTouch.clientX - touch.prev[0])) / (Math.PI / 2.0);
+                    var directionDiff = Math.abs(this._direction - moveDirection);
+                    if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
                         touch.prev = touch.current;
                         touch.current = [changedTouch.clientX, changedTouch.clientY];
                         touch.prevTime = touch.time;
@@ -318,7 +321,7 @@ define(function(require, exports, module) {
         // Update move offset and emit event
         if (primaryTouch) {
             _calculateTouchMoveOffset.call(this);
-            this._eventOutput.emit('touchmove', event);
+            this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
             //_verifyIntegrity.call(this, 'touchMove');
         }
     }
@@ -330,6 +333,7 @@ define(function(require, exports, module) {
      * certain direction.
      */
     function _touchEnd(event) {
+        this._eventOutput.emit('touchend', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
         this._scroll.scrollToSequence = undefined;
@@ -382,7 +386,7 @@ define(function(require, exports, module) {
         this._scroll.moveOffset[1] = 0;
 
         // Emit end event
-        this._eventOutput.emit('touchend', event);
+        this._eventOutput.emit('scrollend', primaryTouch);
     }
 
     /**
