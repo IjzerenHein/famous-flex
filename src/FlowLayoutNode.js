@@ -173,6 +173,7 @@ define(function(require, exports, module) {
             this._invalidated = false;
         }
         this._spec.trueSizeRequested = false;
+        this._scrollSize = undefined;
     };
 
     /**
@@ -378,6 +379,9 @@ define(function(require, exports, module) {
                 this._removing = false;
                 this._endStateReached = false;
             }
+        }
+        if (set.scrollSize) {
+            this._scrollSize = set.scrollSize;
         }
     };
 

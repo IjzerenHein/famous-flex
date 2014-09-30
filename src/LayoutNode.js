@@ -47,7 +47,16 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.reset = function() {
         this._invalidated = false;
-        this._spec.trueSizeRequested = false;
+        var spec = this._spec;
+        spec.trueSizeRequested = false;
+        spec.size = undefined;
+        spec.origin = undefined;
+        spec.align = undefined;
+        spec.translate = undefined;
+        spec.skew = undefined;
+        spec.scale = undefined;
+        spec.rotate = undefined;
+        this._scrollSize = undefined;
     };
 
     /**
@@ -80,6 +89,9 @@ define(function(require, exports, module) {
             }
         }
         // todo skew, scale, rotate
+        if (set.scrollSize) {
+            this._scrollSize = set.scrollSize;
+        }
     };
 
     /**

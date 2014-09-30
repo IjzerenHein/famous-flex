@@ -77,7 +77,8 @@ define(function(require, exports, module) {
             nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
             context.set(node, {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset, 0] : [offset, 0, 0]
+                translate: direction ? [0, offset, 0] : [offset, 0, 0],
+                scrollSize: nodeSize
             });
             offset += nodeSize;
         }
@@ -92,7 +93,8 @@ define(function(require, exports, module) {
             nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
             context.set(node, {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0]
+                translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0],
+                scrollSize: nodeSize[direction]
             });
             offset -= nodeSize;
         }

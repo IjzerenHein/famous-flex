@@ -242,12 +242,34 @@ define(function(require, exports, module) {
      * Enumates all layout-nodes.
      *
      * @param {Function} callback Function that is called every node
+     * @param {Bool} [next] undefined = all, true = all next, false = all previous
      */
-    LayoutNodeManager.prototype.forEach = function(callback) {
-        var node = this._first;
-        while (node) {
-            callback(node);
-            node = node._next;
+    LayoutNodeManager.prototype.forEach = function(callback, next) {
+        var node;
+        if (next === undefined) {
+            node = this._first;
+            while (node) {
+                if (!callback(node)) {
+                    return;
+                }
+                node = node._next;
+            }
+        } else if (next === true) {
+            node = this._contextState.start;
+            while (node) {
+                if (!node._invalidated || !callback(node)) {
+                    return;
+                }
+                node = node._next;
+            }
+        } else if (next === false) {
+            node = this._contextState.start ? this._contextState.start._prev : undefined;
+            while (node) {
+                if (!node._invalidated || !callback(node)) {
+                    return;
+                }
+                node = node._prev;
+            }
         }
     };
 
@@ -287,7 +309,7 @@ define(function(require, exports, module) {
         }*/
     }
 
-    function _contextGetCreateAndOrderNodes(renderNode, prev) {
+    function _contextGetCreateAndOrderNodes(renderNode, prev, viewSequence) {
 
         // The first time this function is called, the current
         // prev/next position is obtained.
@@ -315,6 +337,7 @@ define(function(require, exports, module) {
                 }
                 this._current = node;
             }
+            this._contextState.start = node;
             this._contextState.next = node;
             this._contextState.prev = node;
 
@@ -330,6 +353,7 @@ define(function(require, exports, module) {
                 var prevNode = this._contextState.prev._prev;
                 if (prevNode && (prevNode._spec.renderNode === renderNode)) {
                     this._contextState.prev = prevNode;
+                    prevNode._viewSequence = viewSequence;
                     _checkIntegrity.call(this);
                     return prevNode;
                 }
@@ -341,6 +365,7 @@ define(function(require, exports, module) {
                 if (nextNode._next) {
                     this._contextState.next = nextNode._next;
                 }
+                nextNode._viewSequence = viewSequence;
                 _checkIntegrity.call(this);
                 return nextNode;
             }
@@ -400,6 +425,7 @@ define(function(require, exports, module) {
             node._prev = this._contextState.next;
             this._contextState.next = node;
         }
+        node._viewSequence = viewSequence;
         _checkIntegrity.call(this);
 
         return node;
@@ -419,10 +445,11 @@ define(function(require, exports, module) {
             this._contextState.nextSequence = undefined;
             return undefined;
         }
+        var nextSequence = this._contextState.nextSequence;
         this._contextState.nextSequence = this._contextState.nextSequence.getNext();
 
         // Get the layout-node by its render-node
-        return _contextGetCreateAndOrderNodes.call(this, renderNode, false);
+        return _contextGetCreateAndOrderNodes.call(this, renderNode, false, nextSequence);
     }
 
     /**
@@ -445,7 +472,7 @@ define(function(require, exports, module) {
         }
 
         // Get the layout-node by its render-node
-        return _contextGetCreateAndOrderNodes.call(this, renderNode, true);
+        return _contextGetCreateAndOrderNodes.call(this, renderNode, true, this._contextState.prevSequence);
     }
 
     /**

@@ -545,6 +545,40 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Normalizes the scroll-offset so that scroll-offset is as close
+     * to 0 as can be. This function modifies the scrollOffset and the
+     * viewSeuqnce so that the least possible view-sequence nodes
+     * need to be rendered.
+     *
+     * I.e., when the scroll-offset is changed, e.g. by scrolling up
+     * or down, then renderables may end-up outside the visible range.
+     */
+    function _normalizeScrollOffset_new(size, scrollOffset) {
+        var next = scrollOffset < 0;
+        this._nodes.forEach(function(node) {
+
+            // Calculate new scrolloffset when we would normalize this node
+            var nodeSize = next ? node._scrollSize : -node._scrollSize;
+            var newScrollOffset = scrollOffset + nodeSize;
+
+            // Check if node may be normalized
+            if (node._spec.trueSizeRequested ||
+                (next && (newScrollOffset >= 0)) ||
+                (!next && (newScrollOffset <= 0))) {
+                return scrollOffset;
+            }
+
+            // Normalize and make this node the new first visible node
+            this._viewSequence = node._viewSequence;
+            scrollOffset = newScrollOffset;
+            this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + nodeSize);
+            console.log('normalized ' + (next ? 'next' : 'prev') + '-node with size: ' + nodeSize + ', scrollOffset: ' + scrollOffset);
+
+        }.bind(this), next);
+        return scrollOffset;
+    }
+
+    /**
      * Calculates whether a boundary exists for either the prev or next direction.
      * When no boundary exists, undefined is returned. When a boundary does exist,
      * 0 is returned for the prev-direction and (size - size-of-last-renderable)
