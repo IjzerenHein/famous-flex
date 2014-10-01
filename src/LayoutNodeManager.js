@@ -31,7 +31,7 @@ define(function(require, exports, module) {
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
 
-    var MAX_POOL_SIZE = 10;
+    var MAX_POOL_SIZE = 100;
 
     /**
      * @class
@@ -249,7 +249,7 @@ define(function(require, exports, module) {
         if (next === undefined) {
             node = this._first;
             while (node) {
-                if (!callback(node)) {
+                if (callback(node)) {
                     return;
                 }
                 node = node._next;
@@ -257,7 +257,7 @@ define(function(require, exports, module) {
         } else if (next === true) {
             node = this._contextState.start;
             while (node) {
-                if (!node._invalidated || !callback(node)) {
+                if (!node._invalidated || callback(node)) {
                     return;
                 }
                 node = node._next;
@@ -265,7 +265,7 @@ define(function(require, exports, module) {
         } else if (next === false) {
             node = this._contextState.start ? this._contextState.start._prev : undefined;
             while (node) {
-                if (!node._invalidated || !callback(node)) {
+                if (!node._invalidated || callback(node)) {
                     return;
                 }
                 node = node._prev;

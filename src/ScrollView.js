@@ -559,7 +559,7 @@ define(function(require, exports, module) {
 
             // Get scroll-length
             if (node._scrollLength === undefined) {
-                return false;
+                return true;
             }
             var scrollLength = next ? node._scrollLength : -node._scrollLength;
 
@@ -568,15 +568,14 @@ define(function(require, exports, module) {
             if (node._spec.trueSizeRequested ||
                 (next && (_roundScrollOffset.call(this, newScrollOffset) > 0)) ||
                 (!next && (_roundScrollOffset.call(this, scrollOffset) < 0))) {
-                return false;
+                return true;
             }
 
             // Normalize and make this node the new first visible node
             this._viewSequence = next ? node._viewSequence.getNext() : node._viewSequence;
             scrollOffset = newScrollOffset;
             this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + scrollLength);
-            console.log('normalized ' + (next ? 'next' : 'prev') + '-node with length: ' + scrollLength + ', scrollOffset: ' + scrollOffset);
-            return true;
+            //console.log('normalized ' + (next ? 'next' : 'prev') + '-node with length: ' + scrollLength + ', scrollOffset: ' + scrollOffset);
 
         }.bind(this), next);
         return scrollOffset;
