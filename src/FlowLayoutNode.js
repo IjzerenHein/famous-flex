@@ -173,7 +173,7 @@ define(function(require, exports, module) {
             this._invalidated = false;
         }
         this._spec.trueSizeRequested = false;
-        this._scrollSize = undefined;
+        this._scrollLength = undefined;
     };
 
     /**
@@ -341,47 +341,49 @@ define(function(require, exports, module) {
     };
     FlowLayoutNode.prototype.set = function(set) {
         for (var propName in set) {
-            var value = set[propName];
-            if (value !== undefined) {
-                var prop = this._properties[propName];
-                if (!prop) {
-                    prop = {
-                        particle: new Particle({
-                            axis: AXES[propName],
-                            position: this._initial ? value : DEFAULT[propName]
-                        }),
-                        endState: new Vector(value),
-                        init: true,
-                        endStateReached: true
-                    };
-                    var springOptions = {};
-                    for (var key in this.options.spring) {
-                        springOptions[key] = this.options.spring[key];
-                    }
-                    springOptions.anchor = prop.endState;
-                    prop.force = new Spring(springOptions);
-                    this._pe.addBody(prop.particle);
-                    prop.forceId = this._pe.attach(prop.force, prop.particle);
-                    this._properties[propName] = prop;
-                }
-                else {
-                    if (!prop.init) {
-                        prop.particle.setPosition(value);
-                        prop.init = true;
-                        prop.endStateReached = true;
-                    }
-                    prop.endState.set(value);
-                }
-                if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
-                    prop.particle.setPosition(value);
-                }
-                this._invalidated = true;
-                this._removing = false;
-                this._endStateReached = false;
+            if (propName === 'scrollLength') {
+                this._scrollLength = set.scrollLength;
             }
-        }
-        if (set.scrollSize) {
-            this._scrollSize = set.scrollSize;
+            else {
+                var value = set[propName];
+                if (value !== undefined) {
+                    var prop = this._properties[propName];
+                    if (!prop) {
+                        prop = {
+                            particle: new Particle({
+                                axis: AXES[propName],
+                                position: this._initial ? value : DEFAULT[propName]
+                            }),
+                            endState: new Vector(value),
+                            init: true,
+                            endStateReached: true
+                        };
+                        var springOptions = {};
+                        for (var key in this.options.spring) {
+                            springOptions[key] = this.options.spring[key];
+                        }
+                        springOptions.anchor = prop.endState;
+                        prop.force = new Spring(springOptions);
+                        this._pe.addBody(prop.particle);
+                        prop.forceId = this._pe.attach(prop.force, prop.particle);
+                        this._properties[propName] = prop;
+                    }
+                    else {
+                        if (!prop.init) {
+                            prop.particle.setPosition(value);
+                            prop.init = true;
+                            prop.endStateReached = true;
+                        }
+                        prop.endState.set(value);
+                    }
+                    if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
+                        prop.particle.setPosition(value);
+                    }
+                    this._invalidated = true;
+                    this._removing = false;
+                    this._endStateReached = false;
+                }
+            }
         }
     };
 

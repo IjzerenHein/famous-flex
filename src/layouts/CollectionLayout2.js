@@ -113,8 +113,8 @@ define(function(require, exports, module) {
                 context.set(lineNode.node, {
                     size: lineNode.size,
                     translate: translate,
-                    // first renderable has scrollSize, others have 0 scrollSize
-                    scrollSize: (i === 0) ? lineNode.size[direction] : 0
+                    // first renderable has scrollLength, others have 0 scrollLength
+                    scrollLength: (i === 0) ? lineNode.size[direction] : 0
                 });
                 lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
             }

@@ -78,7 +78,7 @@ define(function(require, exports, module) {
             origin: [0.5, 0.5],
             align: [0.5, 0.5],
             translate: [0, 0, zStart],
-            scrollSize: itemSize[direction]
+            scrollLength: itemSize[direction]
         });
 
         // Layout renderables
@@ -103,7 +103,7 @@ define(function(require, exports, module) {
                 translate: direction ? [0, prev ? -translate : translate, zIndex] : [prev ? -translate : translate, 0, zIndex],
                 scale: [scale, scale, 1],
                 opacity: opacity,
-                scrollSize: itemSize[direction]
+                scrollLength: itemSize[direction]
             });
             opacity -= opacityStep;
             scale -= scaleStep;

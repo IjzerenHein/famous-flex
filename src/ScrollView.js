@@ -557,22 +557,26 @@ define(function(require, exports, module) {
         var next = scrollOffset < 0;
         this._nodes.forEach(function(node) {
 
-            // Calculate new scrolloffset when we would normalize this node
-            var nodeSize = next ? node._scrollSize : -node._scrollSize;
-            var newScrollOffset = scrollOffset + nodeSize;
+            // Get scroll-length
+            if (node._scrollLength === undefined) {
+                return false;
+            }
+            var scrollLength = next ? node._scrollLength : -node._scrollLength;
 
             // Check if node may be normalized
+            var newScrollOffset = scrollOffset + scrollLength;
             if (node._spec.trueSizeRequested ||
-                (next && (newScrollOffset >= 0)) ||
-                (!next && (newScrollOffset <= 0))) {
-                return scrollOffset;
+                (next && (_roundScrollOffset.call(this, newScrollOffset) > 0)) ||
+                (!next && (_roundScrollOffset.call(this, scrollOffset) < 0))) {
+                return false;
             }
 
             // Normalize and make this node the new first visible node
-            this._viewSequence = node._viewSequence;
+            this._viewSequence = next ? node._viewSequence.getNext() : node._viewSequence;
             scrollOffset = newScrollOffset;
-            this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + nodeSize);
-            console.log('normalized ' + (next ? 'next' : 'prev') + '-node with size: ' + nodeSize + ', scrollOffset: ' + scrollOffset);
+            this._scroll.particle.setPosition1D(this._scroll.particle.getPosition1D() + scrollLength);
+            console.log('normalized ' + (next ? 'next' : 'prev') + '-node with length: ' + scrollLength + ', scrollOffset: ' + scrollOffset);
+            return true;
 
         }.bind(this), next);
         return scrollOffset;
@@ -991,7 +995,7 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        scrollOffset = _roundScrollOffset.call(this, _normalizeScrollOffset.call(this, size, scrollOffset));
+        scrollOffset = _roundScrollOffset.call(this, _normalizeScrollOffset_new.call(this, size, scrollOffset));
         _verifyIntegrity.call(this, 'normalizeScrollOffset');
 
         // Update bounds

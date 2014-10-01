@@ -78,7 +78,7 @@ define(function(require, exports, module) {
             context.set(node, {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
                 translate: direction ? [0, offset, 0] : [offset, 0, 0],
-                scrollSize: nodeSize
+                scrollLength: nodeSize
             });
             offset += nodeSize;
         }
@@ -94,7 +94,7 @@ define(function(require, exports, module) {
             context.set(node, {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
                 translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0],
-                scrollSize: nodeSize[direction]
+                scrollLength: nodeSize
             });
             offset -= nodeSize;
         }
