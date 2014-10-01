@@ -72,12 +72,14 @@ define(function(require, exports, module) {
                 delete this._locks;
             }
         }
+        _verifyIntegrity.call(this);
 
         this._initial = true;
         this._endStateReached = false;
         if (spec) {
             this.setSpec(spec);
         }
+        _verifyIntegrity.call(this);
     }
     FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
     FlowLayoutNode.prototype.constructor = FlowLayoutNode;
@@ -104,6 +106,33 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Verifies that the integrity of the layout-node is oke.
+     */
+    function _verifyIntegrity() {
+        /*var i;
+        for (var propName in this._properties) {
+            var prop = this._properties[propName];
+            if (prop.particle) {
+                if (isNaN(prop.particle.getEnergy())) {
+                    throw 'invalid particle energy: ' + propName;
+                }
+                var value = prop.particle.getPosition();
+                for (i = 0; i < value.length; i++) {
+                    if (isNaN(value[i])) {
+                       throw 'invalid particle value: ' + propName + '(' + i + ')';
+                    }
+                }
+                value = prop.endState.get();
+                for (i = 0; i < value.length; i++) {
+                    if (isNaN(value[i])) {
+                       throw 'invalid endState value: ' + propName + '(' + i + ')';
+                    }
+                }
+            }
+        }*/
+    }
+
+    /**
      * Sets the configuration options
      */
     FlowLayoutNode.prototype.setOptions = function(options) {
@@ -119,6 +148,7 @@ define(function(require, exports, module) {
                 prop.force.setOptions(springOptions);
             }
         }
+        _verifyIntegrity.call(this);
         return this;
     };
 
@@ -174,6 +204,7 @@ define(function(require, exports, module) {
         }
         this._spec.trueSizeRequested = false;
         this._scrollLength = undefined;
+        _verifyIntegrity.call(this);
     };
 
     /**
@@ -206,6 +237,7 @@ define(function(require, exports, module) {
         // Mark for removal
         this._removing = true;
         this._invalidated = false;
+        _verifyIntegrity.call(this);
     };
 
     function _getPropertyValue(prop, def) {
@@ -292,15 +324,18 @@ define(function(require, exports, module) {
             scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
             rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
         });
+        /*if (this._spec.renderNode._debug) {
+            this._spec.renderNode._debug = false;
+            console.log(JSON.stringify({
+                opacity: this._spec.opacity,
+                size: this._spec.size,
+                align: this._spec.align,
+                origin: this._spec.origin,
+                transform: this._spec.transform
+            }));
+        }*/
 
-        /*console.log(JSON.stringify({
-            opacity: this._spec.opacity,
-            size: this._spec.size,
-            align: this._spec.align,
-            origin: this._spec.origin,
-            transform: this._spec.transform
-        }));*/
-
+        _verifyIntegrity.call(this);
         return this._spec;
     };
 
@@ -385,6 +420,7 @@ define(function(require, exports, module) {
                 }
             }
         }
+        _verifyIntegrity.call(this);
     };
 
     module.exports = FlowLayoutNode;
