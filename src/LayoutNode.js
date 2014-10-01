@@ -56,7 +56,7 @@ define(function(require, exports, module) {
         spec.skew = undefined;
         spec.scale = undefined;
         spec.rotate = undefined;
-        this._scrollSize = undefined;
+        this._scrollLength = undefined;
     };
 
     /**
@@ -77,7 +77,15 @@ define(function(require, exports, module) {
         if (set.align) {
             spec.align = set.align;
         }
-        if (set.translate) {
+        if (set.translate || set.skew || set.rotate || set.scale) {
+            this._spec.transform = Transform.build({
+                translate: set.translate || [0, 0, 0],
+                skew: set.skew || [0, 0, 0],
+                scale: set.scale || [1, 1, 1],
+                rotate: set.rotate || [0, 0, 0]
+            });
+        }
+        /*if (set.translate) {
             var xyz = set.translate;
             if (!spec.transform) {
                 spec.transform = Transform.translate(xyz[0], xyz[1], xyz[2]);
@@ -87,10 +95,9 @@ define(function(require, exports, module) {
                 spec.transform[13] = xyz[1];
                 spec.transform[14] = xyz[2];
             }
-        }
-        // todo skew, scale, rotate
-        if (set.scrollSize) {
-            this._scrollSize = set.scrollSize;
+        }*/
+        if (set.scrollLength) {
+            this._scrollLength = set.scrollLength;
         }
     };
 
