@@ -128,7 +128,7 @@ define(function(require, exports, module) {
             // Create data-source if neccesary
             if (this._dataSource === undefined) {
                 this._dataSource = {};
-                this._nodesById = this._dataSource._dataSource;
+                this._nodesById = this._dataSource;
             }
 
             // Insert renderable

@@ -170,7 +170,7 @@ define(function(require, exports, module) {
      *
      * @param {String|Array|Object} arguments arguments to stringify and concatenate
      */
-    LayoutUtility.log = function() {
+    LayoutUtility.log = function(args) {
         var message = '';
         for (var i = 0; i < arguments.length; i++) {
             var arg = arguments[i];
