@@ -33,7 +33,7 @@ define(function(require, exports, module) {
     // direction
 
     /**
-     * Get the layout-node for the next renderable in the data-source. When
+     * Get the context-node for the next renderable in the data-source. When
      * the end of the data-source is reached, `undefined` is returned.
      * Use this function to enumerate the contents of a data-source that is
      * either an Array or a ViewSequence.
@@ -45,7 +45,7 @@ define(function(require, exports, module) {
      *   var height = 0;
      *   var node = context.next(); // get first node
      *   while (node) {
-     *     context.set({
+     *     context.set(node, {
      *       size: [context.size[0], 100],
      *       transform: [0, height, 0]
      *     });
@@ -55,7 +55,7 @@ define(function(require, exports, module) {
      * }
      * ```
      *
-     * @return {LayoutNode} layout-node or undefined
+     * @return {Object} context-node or undefined
      */
     LayoutContext.prototype.next = function() {
         // dummy implementation, override in constructor
@@ -66,7 +66,7 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the layout-node for a renderable with a specific id. This function
+     * Get the context-node for a renderable with a specific id. This function
      * should be used to access data-sources which are key-value collections.
      * When a data-source is an Array or a ViewSequence, use `next()`.
      * In many cases it is not neccesary to use `get()`, instead you can pass
@@ -104,8 +104,8 @@ define(function(require, exports, module) {
      * **Arrays:**
      *
      * A value at a specific id in the datasource can also be an array. To access the
-     * layout-nodes in the array use `get()` to get the array and enumerate the
-     * elements in the array:
+     * context-nodes in the array use `get()` to get the array and the elements in the
+     * array:
      *
      * ```javascript
      * var layoutController = new LayoutController({
@@ -120,7 +120,8 @@ define(function(require, exports, module) {
      *     // Position left-items (array)
      *     var leftItems = context.get('leftItems');
      *     for (var i = 0; i < leftItems.length; i++) {
-     *       context.set(leftItems[i], {
+     *       var leftItem = context.get(leftItems[i]);
+     *       context.set(leftItem, {
      *         size: [100, size[1]],
      *         translate: [left, 0, 0]
      *       });
@@ -137,15 +138,15 @@ define(function(require, exports, module) {
      * });
      * ```
      *
-     * @param {String|Array.Elmement} node node-id or array-element
-     * @return {LayoutNode} layout-node or undefined
+     * @param {String|Array.Element} node node-id or array-element
+     * @return {Object} context-node or undefined
      */
     LayoutContext.prototype.get = function(node) {
         // dummy implementation, override in constructor
     };
 
     /**
-     * Set the size, origin, align, translation, scale, rotate & skew for a layout-node.
+     * Set the size, origin, align, translation, scale, rotate, skew & opacity for a context-node.
      *
      * **Overview of all supported properties:**
      *
@@ -159,19 +160,20 @@ define(function(require, exports, module) {
      *     scale: [1, 1, 1],
      *     skew: [0, 0, 0],
      *     rotate: [Math.PI, 0, 0],
+     *     opacity: 1
      *   })
      * }
      * ```
      *
-     * @param {LayoutNode|String|Array.Element} node layout-node, node-id or array-element
-     * @param {Object} set properties: size, origin, align, translate, scale, rotate & skew
+     * @param {Object|String} node context-node or node-id
+     * @param {Object} set properties: size, origin, align, translate, scale, rotate, skew & opacity
      */
     LayoutContext.prototype.set = function(node, set) {
         // dummy implementation, override in constructor
     };
 
     /**
-     * Resolve the size of a layout-node by accessing the `getSize` function
+     * Resolve the size of a context-node by accessing the `getSize` function
      * of the renderable.
      *
      * **Example:**
@@ -201,10 +203,14 @@ define(function(require, exports, module) {
      * reflow of the layout the next render-cycle, ensuring that the renderables
      * are layed out as expected.
      *
-     * @param {LayoutNode|String|Array.Element} node layout-node, node-id or array-element
+     * @param {LayoutNode|String|Array.Element} node context-node, node-id or array-element
      * @return {Size} size of the node
      */
     LayoutContext.prototype.resolveSize = function(node) {
+        // dummy implementation, override in constructor
+    };
+
+    LayoutContext.prototype.getRenderNode = function(node) {
         // dummy implementation, override in constructor
     };
 

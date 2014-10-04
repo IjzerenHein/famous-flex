@@ -30,8 +30,10 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
+    var LayoutUtility = require('./LayoutUtility');
 
     var MAX_POOL_SIZE = 100;
+    var LOG_PREFIX = 'Nodes: ';
 
     /**
      * @class
@@ -43,25 +45,27 @@ define(function(require, exports, module) {
         this.LayoutNode = LayoutNode;
         this._initLayoutNodeFn = initLayoutNodeFn;
         this._context = new LayoutContext({
-            next: _contextNextNode.bind(this),
-            prev: _contextPrevNode.bind(this),
-            get: _contextGetNode.bind(this),
-            set: _contextSetNode.bind(this),
+            next: _contextNext.bind(this),
+            prev: _contextPrev.bind(this),
+            get: _contextGet.bind(this),
+            set: _contextSet.bind(this),
+            getRenderNode: _contextGetRenderNode.bind(this),
             resolveSize: _contextResolveSize.bind(this)
         });
         this._contextState = {
             // enumation state for the context
             //nextSequence: undefined,
             //prevSequence: undefined,
-            //next: undefined,
+            //next: undefined
             //prev: undefined
+            //start: undefined
         };
         this._pool = {
             size: 0
             //first: undefined
         };
+        this.verbose = true;
         //this._first = undefined; // first item in the linked list
-        //this._currentRenderNode = undefined; // first node in the view-sequence
         //this._nodesById = undefined;
         //this._trueSizeRequested = false;
     }
@@ -86,7 +90,6 @@ define(function(require, exports, module) {
         // Prepare data
         this._nodesById = nodesById;
         this._trueSizeRequested = false;
-        this._currentRenderNode = viewSequence ? viewSequence.get() : undefined;
 
         // Prepare context for enumation
         this._contextState.nextSequence = viewSequence;
@@ -111,9 +114,17 @@ define(function(require, exports, module) {
     LayoutNodeManager.prototype.removeNonInvalidatedNodes = function(removeSpec) {
         var node = this._first;
         while (node) {
+
+            // If a node existed, but it is no longer being layed out,
+            // then set it to the '_removing' state.
             if (!node._invalidated && !node._removing) {
+                if (this.verbose) {
+                    LayoutUtility.log(LOG_PREFIX, 'removing node');
+                }
                 node.remove(removeSpec);
             }
+
+            // Move to next node
             node = node._next;
         }
     };
@@ -151,8 +162,8 @@ define(function(require, exports, module) {
                 var destroyNode = node;
                 node = node._next;
                 destroyNode.destroy();
-                if (this._current === destroyNode) {
-                    this._current = undefined;
+                if (this.verbose) {
+                    LayoutUtility.log(LOG_PREFIX, 'destroying node');
                 }
 
                 // Add node to pool
@@ -191,7 +202,7 @@ define(function(require, exports, module) {
     LayoutNodeManager.prototype.getNodeByRenderNode = function(renderable) {
         var node = this._first;
         while (node) {
-            if (node._spec.renderNode === renderable) {
+            if (node.getRenderNode() === renderable) {
                 return node;
             }
             node = node._next;
@@ -220,22 +231,22 @@ define(function(require, exports, module) {
      * @return {LayoutNode} layout-node
      */
     LayoutNodeManager.prototype.createNode = function(renderNode, spec) {
-        var layoutNode;
+        var node;
         if (this._pool.first) {
-            layoutNode = this._pool.first;
-            this._pool.first = layoutNode._next;
+            node = this._pool.first;
+            this._pool.first = node._next;
             this._pool.size--;
-            layoutNode._prev = undefined;
-            layoutNode._next = undefined;
-            layoutNode.constructor.apply(layoutNode, arguments);
+            node.constructor.apply(node, arguments);
         }
         else {
-            layoutNode = new this.LayoutNode(renderNode, spec);
+            node = new this.LayoutNode(renderNode, spec);
         }
+        node._prev = undefined;
+        node._next = undefined;
         if (this._initLayoutNodeFn) {
-            this._initLayoutNodeFn.call(this, layoutNode, spec);
+            this._initLayoutNodeFn.call(this, node, spec);
         }
-        return layoutNode;
+        return node;
     };
 
     /**
@@ -293,7 +304,7 @@ define(function(require, exports, module) {
     };
 
     function _checkIntegrity() {
-        /*var node = this._first;
+        var node = this._first;
         var count = 0;
         var prevNode;
         while (node) {
@@ -306,36 +317,32 @@ define(function(require, exports, module) {
             prevNode = node;
             node = node._next;
             count++;
-        }*/
+        }
     }
 
-    function _contextGetCreateAndOrderNodes(renderNode, prev, viewSequence) {
+    /**
+     * Creates or gets a layout node.
+     */
+    function _contextGetCreateAndOrderNodes(renderNode, prev) {
 
         // The first time this function is called, the current
         // prev/next position is obtained.
         var node;
         if (!this._contextState.next) {
-            var currentRenderNode = this._currentRenderNode || renderNode;
-            if (this._current && (this._current._spec.renderNode === currentRenderNode)) {
-                node = this._current;
+            node = this._first;
+            while (node) {
+                if (node.getRenderNode() === renderNode) {
+                    break;
+                }
+                node = node._next;
             }
-            else {
-                node = this._first;
-                while (node) {
-                    if (node._spec.renderNode === currentRenderNode) {
-                        break;
-                    }
-                    node = node._next;
+            if (!node) {
+                node = this.createNode(renderNode);
+                node._next = this._first;
+                if (this._first) {
+                    this._first._prev = node;
                 }
-                if (!node) {
-                    node = this.createNode(currentRenderNode);
-                    node._next = this._first;
-                    if (this._first) {
-                        this._first._prev = node;
-                    }
-                    this._first = node;
-                }
-                this._current = node;
+                this._first = node;
             }
             this._contextState.start = node;
             this._contextState.next = node;
@@ -353,7 +360,6 @@ define(function(require, exports, module) {
                 var prevNode = this._contextState.prev._prev;
                 if (prevNode && (prevNode._spec.renderNode === renderNode)) {
                     this._contextState.prev = prevNode;
-                    prevNode._viewSequence = viewSequence;
                     _checkIntegrity.call(this);
                     return prevNode;
                 }
@@ -365,7 +371,6 @@ define(function(require, exports, module) {
                 if (nextNode._next) {
                     this._contextState.next = nextNode._next;
                 }
-                nextNode._viewSequence = viewSequence;
                 _checkIntegrity.call(this);
                 return nextNode;
             }
@@ -383,8 +388,6 @@ define(function(require, exports, module) {
         // Create new node if neccessary
         if (!node) {
             node = this.createNode(renderNode);
-            node._next = undefined;
-            node._prev = undefined;
         }
 
         // Node existed, remove from linked-list
@@ -425,16 +428,15 @@ define(function(require, exports, module) {
             node._prev = this._contextState.next;
             this._contextState.next = node;
         }
-        node._viewSequence = viewSequence;
         _checkIntegrity.call(this);
 
         return node;
     }
 
     /**
-     * Get the next layout-node
+     * Get the next render-node
      */
-    function _contextNextNode() {
+    function _contextNext() {
 
         // Get the next node from the sequence
         if (!this._contextState.nextSequence) {
@@ -447,15 +449,17 @@ define(function(require, exports, module) {
         }
         var nextSequence = this._contextState.nextSequence;
         this._contextState.nextSequence = this._contextState.nextSequence.getNext();
-
-        // Get the layout-node by its render-node
-        return _contextGetCreateAndOrderNodes.call(this, renderNode, false, nextSequence);
+        return {
+            renderNode: renderNode,
+            viewSequence: nextSequence,
+            next: true
+        };
     }
 
     /**
-     * Get the next layout-node
+     * Get the previous render-node
      */
-    function _contextPrevNode() {
+    function _contextPrev() {
 
         // Get the previous node from the sequence
         if (!this._contextState.prevSequence) {
@@ -470,53 +474,72 @@ define(function(require, exports, module) {
             this._contextState.prevSequence = undefined;
             return undefined;
         }
-
-        // Get the layout-node by its render-node
-        return _contextGetCreateAndOrderNodes.call(this, renderNode, true, this._contextState.prevSequence);
+        return {
+            renderNode: renderNode,
+            viewSequence: this._contextState.prevSequence,
+            prev: true
+        };
     }
 
     /**
-     * Get the layout-node by id.
+     * Resolve id into a context-node.
      */
-     function _contextGetNode(nodeId) {
-        if (!nodeId) {
+     function _contextGet(contextNodeOrId) {
+        if (!contextNodeOrId) {
             return undefined;
         }
-        if (nodeId instanceof LayoutNode) {
-            return nodeId;
-        }
-        var renderNode;
-        if ((nodeId instanceof String) || (typeof nodeId === 'string')) {
+        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
             if (!this._nodesById) {
                return undefined;
             }
-            renderNode = this._nodesById[nodeId];
+            var renderNode = this._nodesById[contextNodeOrId];
             if (!renderNode) {
                 return undefined;
             }
 
-            // If the result was an array, return that instead
+            // Arrays are not supported here
             if (renderNode instanceof Array) {
-                return renderNode;
+                return undefined;
             }
+
+            // Create context node
+            return {
+                renderNode: renderNode,
+                byId: true
+            };
         }
         else {
-            renderNode = nodeId;
+            return contextNodeOrId;
         }
+    }
 
-        // Get the layout-node by its render-node
-        return _contextGetCreateAndOrderNodes.call(this, renderNode);
+    /**
+     * Get render-node by its id.
+     */
+     function _contextGetRenderNode(contextNodeOrId) {
+        if (!contextNodeOrId) {
+            return undefined;
+        }
+        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
+            if (!this._nodesById) {
+               return undefined;
+            }
+            return this._nodesById[contextNodeOrId];
+        }
+        else {
+            return contextNodeOrId.renderNode;
+        }
     }
 
     /**
      * Set the node content
      */
-    function _contextSetNode(node, set) {
-        node = _contextGetNode.call(this, node);
-        if (!node) {
-            return this;
-        }
-        else {
+    function _contextSet(contextNodeOrId, set) {
+        var contextNode = _contextGet.call(this, contextNodeOrId);
+        if (contextNode) {
+            var node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
+            node._viewSequence = contextNode.viewSequence;
+            node._spec.trueSizeRequested = contextNode.trueSizeRequested;
             node.set(set);
         }
     }
@@ -524,14 +547,14 @@ define(function(require, exports, module) {
     /**
      * Resolve the size of the layout-node from the renderable itsself
      */
-    function _contextResolveSize(node, parentSize) {
-        node = _contextGetNode.call(this, node);
-        if (!node) {
+    function _contextResolveSize(contextNodeOrId, parentSize) {
+        var contextNode = _contextGet.call(this, contextNodeOrId);
+        if (!contextNode) {
             return this;
         }
-        var size = node._spec.renderNode.getSize(true);
+        var size = contextNode.renderNode.getSize(true);
         if (!size) {
-            size = node._spec.renderNode.getSize(false);
+            size = contextNode.renderNode.getSize(false);
             if (!size) {
                 size = parentSize;
             }
@@ -540,7 +563,7 @@ define(function(require, exports, module) {
                 if (size[0] === true) {
                    newSize[0] = 0; // true cannot be resolved at this stage, try again next render-cycle
                    this._trueSizeRequested = true;
-                   node._spec.trueSizeRequested = true;
+                   contextNode.trueSizeRequested = true;
                 }
                 else if (size[0] === undefined) {
                     newSize[0] = parentSize[0];
@@ -548,7 +571,7 @@ define(function(require, exports, module) {
                 if (size[1] === true) {
                    newSize[1] = 0; // true cannot be resolved at this stage, try again next render-cycle
                    this._trueSizeRequested = true;
-                   node._spec.trueSizeRequested = true;
+                   contextNode.trueSizeRequested = true;
                 }
                 else if (size[1] === undefined) {
                     newSize[1] = parentSize[1];
