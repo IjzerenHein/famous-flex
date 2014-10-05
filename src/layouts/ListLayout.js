@@ -59,6 +59,7 @@ define(function(require, exports, module) {
         var node;
         var nodeSize;
         var itemSize;
+        var set;
 
         // Determine item-size or use true=size
         if ((options.itemSize === true) || !options.hasOwnProperty('itemSize')) {
@@ -75,11 +76,15 @@ define(function(require, exports, module) {
                 break;
             }
             nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
-            context.set(node, {
+            set = {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
                 translate: direction ? [0, offset, 0] : [offset, 0, 0],
                 scrollLength: nodeSize
-            });
+            };
+            context.set(node, set);
+            if (options.callback) {
+                options.callback(context.getRenderNode(node), set, true);
+            }
             offset += nodeSize;
         }
 
@@ -91,11 +96,15 @@ define(function(require, exports, module) {
                 break;
             }
             nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-            context.set(node, {
+            set = {
                 size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
                 translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0],
                 scrollLength: nodeSize
-            });
+            };
+            context.set(node, set);
+            if (options.callback) {
+                options.callback(context.getRenderNode(node), set, false);
+            }
             offset -= nodeSize;
         }
     }

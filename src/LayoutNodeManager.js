@@ -64,7 +64,7 @@ define(function(require, exports, module) {
             size: 0
             //first: undefined
         };
-        this.verbose = true;
+        this.verbose = false;
         //this._first = undefined; // first item in the linked list
         //this._nodesById = undefined;
         //this._trueSizeRequested = false;
