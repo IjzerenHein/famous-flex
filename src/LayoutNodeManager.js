@@ -497,9 +497,16 @@ define(function(require, exports, module) {
                 return undefined;
             }
 
-            // Arrays are not supported here
+            // Return array
             if (renderNode instanceof Array) {
-                return undefined;
+                var result = [];
+                for (var i = 0 ; i < renderNode.length; i++) {
+                    result.push({
+                        renderNode: renderNode[i],
+                        arrayElement: true
+                    });
+                }
+                return result;
             }
 
             // Create context node
