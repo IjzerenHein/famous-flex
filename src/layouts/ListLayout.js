@@ -70,7 +70,7 @@ define(function(require, exports, module) {
         }
 
         // Process all next nodes
-        while (offset < size[direction]) {
+        while (offset < context.scrollEnd) {
             node = context.next();
             if (!node) {
                 break;
@@ -90,7 +90,7 @@ define(function(require, exports, module) {
 
         // Process previous nodes
         offset = context.scrollOffset;
-        while (offset > 0) {
+        while (offset > context.scrollStart) {
             node = context.prev();
             if (!node) {
                 break;

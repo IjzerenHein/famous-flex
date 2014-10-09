@@ -101,6 +101,8 @@ define(function(require, exports, module) {
         this._context.size = contextData.size;
         this._context.direction = contextData.direction;
         this._context.scrollOffset = contextData.scrollOffset || 0;
+        this._context.scrollStart = contextData.scrollStart || 0;
+        this._context.scrollEnd = contextData.scrollEnd || this._context.size[this._context.direction];
         return this._context;
     };
 
@@ -285,24 +287,8 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Checks whether the end of was reached when using next/prev
-     * to enumerate the nodes.
-     *
-     * @param {Boolean} prev prev or next direction
+     * Checks the integrity of the linked-list.
      */
-    LayoutNodeManager.prototype.endReached = function(prev) {
-        if (prev) {
-            if (!this._contextState.prevSequence) {
-                return true;
-            }
-            var prevSequence = this._contextState.prevSequence.getPrevious();
-            return !(prevSequence && prevSequence.get());
-        }
-        else {
-            return !(this._contextState.nextSequence && this._contextState.nextSequence.get());
-        }
-    };
-
     function _checkIntegrity() {
         var node = this._first;
         var count = 0;
