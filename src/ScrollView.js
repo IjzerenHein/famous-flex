@@ -139,7 +139,8 @@ define(function(require, exports, module) {
             scale: 0.1
         },
         paginated: true,
-        reverse: true,
+        //paginationEnergyThresshold: 0.001,
+        reverse: false,
         touchMoveDirectionThresshold: undefined // 0..1
     };
 
@@ -234,7 +235,7 @@ define(function(require, exports, module) {
             if (spring.forceId) {
                 this._scroll.pe.detach(spring.forceId);
                 spring.forceId = undefined;
-                _log.call(this, 'disabled ', name, '-spring');
+                //_log.call(this, 'disabled ', name, '-spring');
                 return false;
             }
         }
@@ -243,7 +244,7 @@ define(function(require, exports, module) {
                 spring.forceId = this._scroll.pe.attach(spring.force, this._scroll.particle);
             }
             spring.vector.set([value, 0, 0]);
-            _log.call(this, 'setting ', name, '-spring to: ', value);
+            //_log.call(this, 'setting ', name, '-spring to: ', value);
             return true;
         }
         return undefined;
@@ -517,7 +518,7 @@ define(function(require, exports, module) {
         }
         if ((totalHeight !== undefined) && (totalHeight < size[this._direction])) {
             this._scroll.boundsReached = Bounds.BOTH;
-            this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : 0;
+            this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : prevHeight;
             return;
         }
 
@@ -616,49 +617,52 @@ define(function(require, exports, module) {
         // Local data
         var pageOffset = scrollOffset;
         var pageLength;
+        var hasNext;
 
         // Lookup page in previous direction
+        var bound = this.options.reverse ? size[this._direction] : 0;
         this._nodes.forEach(function(node) {
-            if ((pageOffset <= 0) || (node._scrollLength === undefined)) {
-                return true;
+            if (node._scrollLength !== 0) {
+                if ((pageOffset <= bound) || (node._scrollLength === undefined)) {
+                    return true;
+                }
+                hasNext = (pageLength !== undefined);
+                pageLength = node._scrollLength;
+                pageOffset -= node._scrollLength;
             }
-            pageLength = node._scrollLength;
-            pageOffset -= node._scrollLength;
         }.bind(this), false);
 
         // Lookup page in next direction
         if (pageLength === undefined) {
-            var prevLength;
             this._nodes.forEach(function(node) {
-                if (prevLength !== undefined) {
-                    pageLength = prevLength;
-                }
-                if ((pageOffset >= 0) || (node._scrollLength === undefined)) {
-                    return true;
-                }
-                if (prevLength !== undefined) {
-                    if ((pageOffset + prevLength) > 0) {
+                if (node._scrollLength !== 0) {
+                    if (node._scrollLength === undefined) {
                         return true;
                     }
-                    pageOffset += prevLength;
+                    hasNext = (pageLength !== undefined);
+                    if (hasNext) {
+                        if ((pageOffset + pageLength) > bound) {
+                            return true;
+                        }
+                        pageOffset += pageLength;
+                    }
+                    pageLength = node._scrollLength;
                 }
-                prevLength = node._scrollLength;
             }.bind(this), true);
+        }
+        if (!pageLength) {
+            return;
         }
 
         // Determine snap spring-position
-        if (pageLength === undefined) {
-            this._scroll.springPosition = 0;
+        var boundOffset = pageOffset - bound;
+        if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
+            this._scroll.springPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
+            _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
         }
         else {
-            if (Math.abs(pageOffset) < Math.abs(pageOffset + pageLength)) {
-                this._scroll.springPosition = scrollOffset - pageOffset;
-                _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
-            }
-            else {
-                this._scroll.springPosition = scrollOffset - (pageOffset + pageLength);
-                _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
-            }
+            this._scroll.springPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
+            _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
         }
     }
 
