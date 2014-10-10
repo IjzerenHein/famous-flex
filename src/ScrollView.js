@@ -138,8 +138,8 @@ define(function(require, exports, module) {
         scrollSync: {
             scale: 0.1
         },
-        paginated: false,
-        reverse: false,
+        paginated: true,
+        reverse: true,
         touchMoveDirectionThresshold: undefined // 0..1
     };
 
@@ -382,6 +382,7 @@ define(function(require, exports, module) {
         // Disable the move-spring
         this._scroll.moveToStartPosition = undefined;
         _setSpring.call(this, 'move', undefined);
+        this._isDirty = true;
 
         // Emit end event
         this._eventOutput.emit('scrollend', primaryTouch);
@@ -443,6 +444,9 @@ define(function(require, exports, module) {
         return _roundScrollOffset.call(this, this._scroll.particle.getPosition1D());
     }
 
+    /**
+     * Helper function that calculates the prev layed out height.
+     */
     function _calcPrevHeight() {
         var height = 0;
         this._nodes.forEach(function(node) {
@@ -455,6 +459,9 @@ define(function(require, exports, module) {
         return height;
     }
 
+    /**
+     * Helper function that calculates the next layed out height.
+     */
     function _calcNextHeight() {
         var height = 0;
         this._nodes.forEach(function(node) {
@@ -593,6 +600,69 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Snaps to a page when paginanation is enabled and the energy of the particle
+     * is below the thesshold.
+     */
+    function _snapToPage(size, scrollOffset) {
+
+        // Check whether pagination is active
+        if (!this.options.paginated ||
+            (Math.abs(this._scroll.particle.getEnergy()) > this.options.paginationEnergyThresshold) ||
+            (this._scroll.springPosition !== undefined) ||
+            (_getSpring.call(this, 'move') !== undefined)) {
+            return;
+        }
+
+        // Local data
+        var pageOffset = scrollOffset;
+        var pageLength;
+
+        // Lookup page in previous direction
+        this._nodes.forEach(function(node) {
+            if ((pageOffset <= 0) || (node._scrollLength === undefined)) {
+                return true;
+            }
+            pageLength = node._scrollLength;
+            pageOffset -= node._scrollLength;
+        }.bind(this), false);
+
+        // Lookup page in next direction
+        if (pageLength === undefined) {
+            var prevLength;
+            this._nodes.forEach(function(node) {
+                if (prevLength !== undefined) {
+                    pageLength = prevLength;
+                }
+                if ((pageOffset >= 0) || (node._scrollLength === undefined)) {
+                    return true;
+                }
+                if (prevLength !== undefined) {
+                    if ((pageOffset + prevLength) > 0) {
+                        return true;
+                    }
+                    pageOffset += prevLength;
+                }
+                prevLength = node._scrollLength;
+            }.bind(this), true);
+        }
+
+        // Determine snap spring-position
+        if (pageLength === undefined) {
+            this._scroll.springPosition = 0;
+        }
+        else {
+            if (Math.abs(pageOffset) < Math.abs(pageOffset + pageLength)) {
+                this._scroll.springPosition = scrollOffset - pageOffset;
+                _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
+            }
+            else {
+                this._scroll.springPosition = scrollOffset - (pageOffset + pageLength);
+                _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
+            }
+        }
+    }
+
+    /**
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
     function _normalizePrevViewSequence(size, scrollOffset) {
@@ -706,39 +776,6 @@ define(function(require, exports, module) {
         return newOffset + this._scroll.moveOffset[this._direction];
     }*/
 
-    /**
-     * Snaps the particle position to a whole page when the energy
-     * of the particle is below the energy thresshold. This function
-     * implements the `paginated` behavior.
-     */
-    /*function _snapToPage(size) {
-        if (!this.options.paginated ||
-            this._scroll.boundsReached ||
-            this._scroll.moveOffset[this._direction] ||
-            this._scroll.scrollDelta ||
-            this._scroll.scrollToSequence) {
-            _setSpring.call(this, 'pagination', undefined);
-            return;
-        }
-        var energy = Math.abs(this._scroll.particle.getEnergy());
-        if ((energy > this.options.paginationEnergyThresshold) && !this._scroll.paginationSpringForceId) {
-            _setSpring.call(this, 'pagination', undefined);
-            return;
-        }
-
-        // Determine the renderable that is mostly visib
-        var spec = this._commitOutput.target[0];
-        var specOffset = spec.transform[12 + this._direction];
-        var specSize = spec.size[this._direction];
-        if (specOffset < -(specSize / 2)) {
-            _setSpring.call(this, 'pagination', -specSize);
-        }
-        else {
-            // snap to second spec
-            _setSpring.call(this, 'pagination', 0);
-        }
-    }*/
-
 
         /*function _getVisiblePercentage(spec) {
         var specLeft = spec.transform[12];
@@ -799,11 +836,10 @@ define(function(require, exports, module) {
     /**
      * Helper function that scrolls the view towards a view-sequence node.
      */
-    function _scrollToSequence(viewSequence, next, animated) {
+    function _scrollToSequence(viewSequence, next) {
         this._scroll.scrollToSequence = viewSequence;
         this._scroll.scrollToDirection = next;
         this._isDirty = true;
-        // TODO - Non animated ?
     }
 
     /**
@@ -931,13 +967,13 @@ define(function(require, exports, module) {
         _calcBounds.call(this, size, scrollOffset);
         _verifyIntegrity.call(this, 'calcBounds');
 
-        // Snap to page when `paginated` is set to true
-        //_snapToPage.call(this, size);
-        //_verifyIntegrity.call(this, 'snapToPage');
-
         // Update scroll-to spring
         _calcScrollToOffset.call(this, size, scrollOffset);
         _verifyIntegrity.call(this, 'calcScrollToOffset');
+
+        // When pagination is enabled, snap to page
+        _snapToPage.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'snapToPage');
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
@@ -948,13 +984,6 @@ define(function(require, exports, module) {
         // Update spring
         _setSpring.call(this, 'scroll', this._scroll.springPosition);
         _verifyIntegrity.call(this, 'setSpring: scroll');
-
-        /*if ((this._scroll.springPosition === undefined)) {
-            var moveSpringPosition = _getSpring.call(this, 'move');
-            if (moveSpringPosition !== undefined) {
-                _setParticle.call(this, moveSpringPosition, undefined, 'asdsa');
-            }
-        }*/
 
         // Integrate the scroll-delta into the particle position.
         /*var newOffset = _roundScrollOffset.call(this, _integrateScrollDelta.call(this, scrollOffset));
