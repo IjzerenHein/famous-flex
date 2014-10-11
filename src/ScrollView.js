@@ -60,7 +60,6 @@ define(function(require, exports, module) {
             pe: new PhysicsEngine(),
             // particle that represents the scroll-offset
             particle: new Particle({
-                axis: Particle.AXES.X,
                 position: [0, 0]
             }),
             // drag-force that slows the particle down after a "flick"
@@ -75,7 +74,7 @@ define(function(require, exports, module) {
 
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
-        this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+        //this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
         this._springs = {};
         _createSpring.call(this, 'scroll', this.options.scrollSpring);
         _createSpring.call(this, 'move', this.options.moveSpring);
@@ -138,9 +137,9 @@ define(function(require, exports, module) {
         scrollSync: {
             scale: 0.1
         },
-        paginated: true,
+        paginated: false,
         //paginationEnergyThresshold: 0.001,
-        reverse: false,
+        reverse: true,
         touchMoveDirectionThresshold: undefined // 0..1
     };
 
@@ -150,18 +149,18 @@ define(function(require, exports, module) {
      * locking of the x/y translation so that the x/y position of the renderable
      * is immediately updated when the user scrolls the view.
      */
-    function _initLayoutNode(layoutNode, spec) {
-        layoutNode.setOptions({
+    function _initLayoutNode(node, spec) {
+        node.setOptions({
             spring: this.options.nodeSpring
         });
         if (!spec && this.options.insertSpec) {
-            layoutNode.setSpec(this.options.insertSpec);
+            node.setSpec(this.options.insertSpec);
         }
         if (!spec && !this.options.insertSpec) {
-            layoutNode.lock('translate', true, true);
+            node.lock('translate', true, true);
         }
         else {
-            layoutNode.lock('translate', true, false);
+            node.lock('translate', true, false);
         }
     }
 
@@ -232,19 +231,20 @@ define(function(require, exports, module) {
         }
         spring.value = value;
         if (value === undefined) {
-            if (spring.forceId) {
+            if (spring.forceId !== undefined) {
                 this._scroll.pe.detach(spring.forceId);
                 spring.forceId = undefined;
-                //_log.call(this, 'disabled ', name, '-spring');
+                _log.call(this, 'disabled ', name, '-spring');
                 return false;
             }
         }
         else {
-            if (!spring.forceId) {
+            if (spring.forceId === undefined) {
                 spring.forceId = this._scroll.pe.attach(spring.force, this._scroll.particle);
             }
             spring.vector.set([value, 0, 0]);
-            //_log.call(this, 'setting ', name, '-spring to: ', value);
+            this._scroll.pe.wake();
+            _log.call(this, 'setting ', name, '-spring to: ', value);
             return true;
         }
         return undefined;

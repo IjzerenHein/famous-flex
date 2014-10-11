@@ -132,6 +132,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 0],
+            align: [0, 0],
             translate: [this._left, this._top, this._z]
         });
         this._top += height;
@@ -156,6 +157,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [width, this._bottom - this._top],
             origin: [0, 0],
+            align: [0, 0],
             translate: [this._left, this._top, this._z]
         });
         this._left += width;
@@ -180,6 +182,7 @@ define(function(require, exports, module) {
         this._context.set(node, {
             size: [this._right - this._left, height],
             origin: [0, 1],
+            align: [0, 1],
             translate: [this._left, -(this._size[1] - this._bottom), this._z]
         });
         this._bottom -= height;
@@ -205,6 +208,7 @@ define(function(require, exports, module) {
             this._context.set(node, {
                 size: [width, this._bottom - this._top],
                 origin: [1, 0],
+                align: [1, 0],
                 translate: [-(this._size[0] - this._right), this._top, this._z]
             });
         }

@@ -69,12 +69,11 @@ define(function(require, exports, module) {
         else {
             for (var propName in this._properties) {
                 this._properties[propName].init = false;
-                delete this._locks;
             }
+            delete this._locks;
         }
         _verifyIntegrity.call(this);
 
-        this._initial = true;
         this._endStateReached = false;
         if (spec) {
             this.setSpec(spec);
@@ -109,7 +108,7 @@ define(function(require, exports, module) {
      * Verifies that the integrity of the layout-node is oke.
      */
     function _verifyIntegrity() {
-        /*var i;
+        var i;
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.particle) {
@@ -129,7 +128,7 @@ define(function(require, exports, module) {
                     }
                 }
             }
-        }*/
+        }
     }
 
     /**
@@ -159,36 +158,23 @@ define(function(require, exports, module) {
         return (ar1[0] === ar2[0]) && (ar1[1] === ar2[1]) && (ar1[2] === ar2[2]);
     }
     FlowLayoutNode.prototype.setSpec = function(spec) {
-        var set = {};
-        if (spec.opacity !== undefined) {
-            set.opacity = spec.opacity;
-        }
-        if (spec.size !== undefined) {
-            set.size = spec.size;
-        }
-        if (spec.align !== undefined) {
-            set.align = spec.align;
-        }
-        if (spec.origin !== undefined) {
-            set.origin = spec.origin;
-        }
+        _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity, true);
+        _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size, true);
+        _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align, true);
+        _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin, true);
         if (spec.transform) {
             var transform = Transform.interpret(spec.transform);
-            if (!_equalsXYZ(transform.translate, DEFAULT.translate)) {
-                set.translate = transform.translate;
-            }
-            if (!_equalsXYZ(transform.scale, DEFAULT.scale)) {
-                set.scale = transform.scale;
-            }
-            if (!_equalsXYZ(transform.skew, DEFAULT.skew)) {
-                set.skew = transform.skew;
-            }
-            if (!_equalsXYZ(transform.rotate, DEFAULT.rotate)) {
-                set.rotate = transform.rotate;
-            }
+            _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate, true);
+            _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale, true);
+            _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew, true);
+            _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate, true);
         }
-        this.set(set);
-        return set;
+        else {
+            _setPropertyValue.call(this, 'translate', undefined, DEFAULT.translate, true);
+            _setPropertyValue.call(this, 'scale', undefined, DEFAULT.scale, true);
+            _setPropertyValue.call(this, 'skew', undefined, DEFAULT.skew, true);
+            _setPropertyValue.call(this, 'rotate', undefined, DEFAULT.rotate, true);
+        }
     };
 
     /**
@@ -198,7 +184,7 @@ define(function(require, exports, module) {
     FlowLayoutNode.prototype.reset = function() {
         if (this._invalidated) {
             for (var propName in this._properties) {
-                this._properties[propName].endState.set(DEFAULT[propName]);
+                this._properties[propName].invalidated = false;
             }
             this._invalidated = false;
         }
@@ -222,16 +208,12 @@ define(function(require, exports, module) {
                     this._properties[propName].endState.set(
                         this._properties[propName].particle.position.get()
                     );
+                    this._pe.wake();
                 }
             }
 
             // Set end-state
             this.setSpec(removeSpec);
-        }
-        else {
-
-            // No end-state specified, remove immediately
-            this._endStateReached = true;
         }
 
         // Mark for removal
@@ -240,17 +222,8 @@ define(function(require, exports, module) {
         _verifyIntegrity.call(this);
     };
 
-    function _getPropertyValue(prop, def) {
-        return (prop && prop.init) ? (prop.endStateReached ? prop.endState.get() : prop.particle.getPosition()) : def;
-    }
-
-    function _getOpacityValue() {
-        var prop = this._properties.opacity;
-        return (prop && prop.init) ? Math.max(0,Math.min(1, prop.particle.getPosition1D())) : undefined;
-    }
-
     /**
-     * Creates the render-spec
+     * Checks whether a property has reached its end-state.
      */
     var ENERGY_RESTTOLERANCE = 1e-4;
     var RESTTOLERANCE = {
@@ -263,47 +236,64 @@ define(function(require, exports, module) {
         rotate:     1e-5,
         skew:       1e-5
     };
+    function _endStateReached(prop, propName) {
+
+        // When the particle still has too much energy, state not reached
+        var energy = prop.particle.getEnergy();
+        var restTolerance = RESTTOLERANCE[propName];
+        if (energy > ENERGY_RESTTOLERANCE) {
+            //console.log('endstate not reached: ' + propName + ' - energy: ' + energy);
+            return false;
+        }
+
+        // Check whether the current particle value, and end-state value are really close
+        var curState = prop.particle.getPosition();
+        var endState = prop.endState.get();
+        if (endState.length !== curState.length) {
+            //console.log('endstate not reached: ' + propName + ' - length !=');
+            return false;
+        }
+        for (var i = 0; i < curState.length; i++) {
+            if (Math.abs(curState[i] - endState[i]) > restTolerance) {
+                //console.log('endstate not reached: ' + propName + ' - ' + curState[i] + ' != ' + endState[i]);
+                return false;
+            }
+        }
+
+        // End state reached
+        return true;
+    }
+
+    /**
+     * Helper function for getting the property value.
+     */
+    function _getPropertyValue(prop, def) {
+        return (prop && prop.init) ? (prop.endStateReached ? prop.endState.get() : prop.particle.getPosition()) : def;
+    }
+    function _getOpacityValue() {
+        var prop = this._properties.opacity;
+        return (prop && prop.init) ? Math.max(0,Math.min(1, prop.particle.getPosition1D())) : undefined;
+    }
+
+    /**
+     * Creates the render-spec
+     */
     FlowLayoutNode.prototype.getSpec = function() {
 
-        // Check whether the any property is still animating
-        if (!this._endStateReached &&
-            !(!this._invalidated && this._initial)) { // when a node was added (e.g. using insert), but it was immediately not layed-out, then remove it
-            this._endStateReached = true;
-            for (var propName in this._properties) {
-                var prop = this._properties[propName];
-                if (prop.init) {
-                    prop.endStateReached = true;
-                    var restTolerance = RESTTOLERANCE[propName];
-                    var energy = prop.particle.getEnergy();
-                    if (energy > ENERGY_RESTTOLERANCE) {
-                        //console.log('endstate nog reached: ' + propName + ' - energy: ' + energy);
-                        this._endStateReached = false;
-                        prop.endStateReached = false;
-                    }
-                    else {
-                        var curState = prop.particle.getPosition();
-                        var endState = prop.endState.get();
-                        if (endState.length !== curState.length) {
-                            //console.log('endstate nog reached: ' + propName + ' - length !=');
-                            this._endStateReached = false;
-                            prop.endStateReached = false;
-                        }
-                        for (var i = 0; i < curState.length; i++) {
-                            if (Math.abs(curState[i] - endState[i]) > restTolerance) {
-                                //console.log('endstate not reached: ' + propName + ' - ' + curState[i] + ' != ' + endState[i]);
-                                this._endStateReached = false;
-                                prop.endStateReached = false;
-                                break;
-                            }
-                        }
-                    }
+        // Check whether any properties have reached their end-state.
+        var endStateReached = true;
+        for (var propName in this._properties) {
+            var prop = this._properties[propName];
+            if (prop.init) {
+                prop.endStateReached = _endStateReached.call(this, prop, propName);
+                if (!prop.endStateReached) {
+                    endStateReached = false;
                 }
             }
         }
-        else {
 
-            // Animations have stopped
-            //return !this._invalidated ? undefined : this._spec;
+        // When the end state was reached, return the previous spec
+        if (this._endStateReached && endStateReached) {
             if (this._invalidated) {
                 return this._spec;
             }
@@ -311,9 +301,9 @@ define(function(require, exports, module) {
                 return undefined;
             }
         }
+        this._endStateReached = endStateReached;
 
-        // Animations are still going, build new spec
-        this._initial = false;
+        // Build fresh spec
         this._spec.opacity = _getOpacityValue.call(this);
         this._spec.size = _getPropertyValue(this._properties.size, undefined);
         this._spec.align = _getPropertyValue(this._properties.align, undefined);
@@ -324,8 +314,8 @@ define(function(require, exports, module) {
             scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
             rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
         });
-        /*if (this._spec.renderNode._debug) {
-            this._spec.renderNode._debug = false;
+        //if (this._spec.renderNode._debug) {
+            //this._spec.renderNode._debug = false;
             console.log(JSON.stringify({
                 opacity: this._spec.opacity,
                 size: this._spec.size,
@@ -333,7 +323,7 @@ define(function(require, exports, module) {
                 origin: this._spec.origin,
                 transform: this._spec.transform
             }));
-        }*/
+        //}
 
         _verifyIntegrity.call(this);
         return this._spec;
@@ -364,62 +354,85 @@ define(function(require, exports, module) {
      *
      * @param {Object} set
      */
-     var AXES = {
-        opacity:    Particle.AXES.X,
-        size:       Particle.AXES.X | Particle.AXES.Y,
-        origin:     Particle.AXES.X | Particle.AXES.Y,
-        align:      Particle.AXES.X | Particle.AXES.Y,
-        scale:      Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z,
-        translate:  Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z,
-        rotate:     Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z,
-        skew:       Particle.AXES.X | Particle.AXES.Y | Particle.AXES.Z
-    };
-    FlowLayoutNode.prototype.set = function(set) {
-        for (var propName in set) {
-            if (propName === 'scrollLength') {
-                this._scrollLength = set.scrollLength;
-            }
-            else {
-                var value = set[propName];
-                if (value !== undefined) {
-                    var prop = this._properties[propName];
-                    if (!prop) {
-                        prop = {
-                            particle: new Particle({
-                                axis: AXES[propName],
-                                position: this._initial ? value : DEFAULT[propName]
-                            }),
-                            endState: new Vector(value),
-                            init: true,
-                            endStateReached: true
-                        };
-                        var springOptions = {};
-                        for (var key in this.options.spring) {
-                            springOptions[key] = this.options.spring[key];
-                        }
-                        springOptions.anchor = prop.endState;
-                        prop.force = new Spring(springOptions);
-                        this._pe.addBody(prop.particle);
-                        prop.forceId = this._pe.attach(prop.force, prop.particle);
-                        this._properties[propName] = prop;
+     function _setPropertyValue(propName, endState, defaultValue, initial) {
+
+        // Check if end-state equals default-value, if so reset it to undefined
+        if ((endState !== undefined) && (defaultValue !== undefined)) {
+            if (Array.isArray(endState) && Array.isArray(defaultValue) && (endState.length === defaultValue.length)) {
+                var same = true;
+                for (var i = 0 ; i < endState.length; i++) {
+                    if (endState[i] !== defaultValue[i]) {
+                        same = false;
+                        break;
                     }
-                    else {
-                        if (!prop.init) {
-                            prop.particle.setPosition(value);
-                            prop.init = true;
-                            prop.endStateReached = true;
-                        }
-                        prop.endState.set(value);
-                    }
-                    if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
-                        prop.particle.setPosition(value);
-                    }
-                    this._invalidated = true;
-                    this._removing = false;
-                    this._endStateReached = false;
                 }
+                endState = same ? undefined : endState;
+            }
+            else if (endState === defaultValue) {
+                endState = undefined;
             }
         }
+
+        // Get property
+        var prop = this._properties[propName];
+
+        // When property doesn't exist, and no end-state, nothing to do
+        if ((endState === undefined) && (!prop || !prop.init)) {
+            return;
+        }
+
+        // Update the property
+        if (prop && prop.init) {
+            prop.invalidated = true;
+            prop.endState.set(endState || defaultValue);
+            this._pe.wake();
+            return;
+        }
+
+        // Create property if neccesary
+        if (!prop) {
+            prop = {
+                particle: new Particle({
+                    position: initial ? endState : defaultValue
+                }),
+                endState: new Vector(endState)
+            };
+            var springOptions = {};
+            for (var key in this.options.spring) {
+                springOptions[key] = this.options.spring[key];
+            }
+            springOptions.anchor = prop.endState;
+            prop.force = new Spring(springOptions);
+            this._pe.addBody(prop.particle);
+            prop.forceId = this._pe.attach(prop.force, prop.particle);
+            this._properties[propName] = prop;
+        }
+        else {
+            prop.particle.setPosition(initial ? endState : defaultValue);
+            prop.endState.set(endState);
+            this._pe.wake();
+        }
+        prop.init = true;
+        //prop.endStateReached = true;
+        prop.invalidated = true;
+
+        // huh
+        /*if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
+            prop.particle.setPosition(defaultValue);
+        }*/
+    }
+    FlowLayoutNode.prototype.set = function(set) {
+        this._scrollLength = set.scrollLength;
+        _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity, false);
+        _setPropertyValue.call(this, 'align', set.align, DEFAULT.align, false);
+        _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin, false);
+        _setPropertyValue.call(this, 'size', set.size, DEFAULT.size, false);
+        _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate, false);
+        _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew, false);
+        _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate, false);
+        _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale, false);
+        this._invalidated = true;
+        this._removing = false;
         _verifyIntegrity.call(this);
     };
 

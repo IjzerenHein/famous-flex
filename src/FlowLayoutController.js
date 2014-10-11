@@ -81,12 +81,12 @@ define(function(require, exports, module) {
      * Called whenever a layout-node is created/re-used. Initializes
      * the node with the `insertSpec` if it has been defined.
      */
-    function _initLayoutNode(layoutNode, spec) {
-        layoutNode.setOptions({
+    function _initLayoutNode(node, spec) {
+        node.setOptions({
             spring: this.options.nodeSpring
         });
         if (!spec && this.options.insertSpec) {
-            layoutNode.setSpec(this.options.insertSpec);
+            node.setSpec(this.options.insertSpec);
         }
     }
 
