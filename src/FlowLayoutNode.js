@@ -75,6 +75,7 @@ define(function(require, exports, module) {
         _verifyIntegrity.call(this);
 
         this._endStateReached = false;
+        this._initial = true;
         if (spec) {
             this.setSpec(spec);
         }
@@ -95,7 +96,7 @@ define(function(require, exports, module) {
      */
     var DEFAULT = {
         opacity: 1,
-        size: [0, 0],
+        size: [1000, 1000],
         origin: [0, 0],
         align: [0, 0],
         scale: [1, 1, 1],
@@ -154,26 +155,23 @@ define(function(require, exports, module) {
     /**
      * Set the properties from a spec.
      */
-    function _equalsXYZ(ar1, ar2) {
-        return (ar1[0] === ar2[0]) && (ar1[1] === ar2[1]) && (ar1[2] === ar2[2]);
-    }
     FlowLayoutNode.prototype.setSpec = function(spec) {
-        _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity, true);
-        _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size, true);
-        _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align, true);
-        _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin, true);
+        _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity);
+        _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size);
+        _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align);
+        _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin);
         if (spec.transform) {
             var transform = Transform.interpret(spec.transform);
-            _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate, true);
-            _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale, true);
-            _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew, true);
-            _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate, true);
+            _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate);
+            _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale);
+            _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew);
+            _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate);
         }
         else {
-            _setPropertyValue.call(this, 'translate', undefined, DEFAULT.translate, true);
-            _setPropertyValue.call(this, 'scale', undefined, DEFAULT.scale, true);
-            _setPropertyValue.call(this, 'skew', undefined, DEFAULT.skew, true);
-            _setPropertyValue.call(this, 'rotate', undefined, DEFAULT.rotate, true);
+            _setPropertyValue.call(this, 'translate', undefined, DEFAULT.translate);
+            _setPropertyValue.call(this, 'scale', undefined, DEFAULT.scale);
+            _setPropertyValue.call(this, 'skew', undefined, DEFAULT.skew);
+            _setPropertyValue.call(this, 'rotate', undefined, DEFAULT.rotate);
         }
     };
 
@@ -304,6 +302,7 @@ define(function(require, exports, module) {
         this._endStateReached = endStateReached;
 
         // Build fresh spec
+        this._initial = false;
         this._spec.opacity = _getOpacityValue.call(this);
         this._spec.size = _getPropertyValue(this._properties.size, undefined);
         this._spec.align = _getPropertyValue(this._properties.align, undefined);
@@ -354,7 +353,7 @@ define(function(require, exports, module) {
      *
      * @param {Object} set
      */
-     function _setPropertyValue(propName, endState, defaultValue, initial) {
+     function _setPropertyValue(propName, endState, defaultValue) {
 
         // Check if end-state equals default-value, if so reset it to undefined
         if ((endState !== undefined) && (defaultValue !== undefined)) {
@@ -393,7 +392,7 @@ define(function(require, exports, module) {
         if (!prop) {
             prop = {
                 particle: new Particle({
-                    position: initial ? endState : defaultValue
+                    position: this._initial ? endState : defaultValue
                 }),
                 endState: new Vector(endState)
             };
@@ -408,7 +407,7 @@ define(function(require, exports, module) {
             this._properties[propName] = prop;
         }
         else {
-            prop.particle.setPosition(initial ? endState : defaultValue);
+            prop.particle.setPosition(this._initial ? endState : defaultValue);
             prop.endState.set(endState);
             this._pe.wake();
         }
@@ -423,14 +422,14 @@ define(function(require, exports, module) {
     }
     FlowLayoutNode.prototype.set = function(set) {
         this._scrollLength = set.scrollLength;
-        _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity, false);
-        _setPropertyValue.call(this, 'align', set.align, DEFAULT.align, false);
-        _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin, false);
-        _setPropertyValue.call(this, 'size', set.size, DEFAULT.size, false);
-        _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate, false);
-        _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew, false);
-        _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate, false);
-        _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale, false);
+        _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
+        _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
+        _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);
+        _setPropertyValue.call(this, 'size', set.size, DEFAULT.size);
+        _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate);
+        _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew);
+        _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);
+        _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale);
         this._invalidated = true;
         this._removing = false;
         _verifyIntegrity.call(this);
