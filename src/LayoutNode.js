@@ -50,15 +50,7 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.reset = function() {
         this._invalidated = false;
-        var spec = this._spec;
-        spec.size = undefined;
-        spec.origin = undefined;
-        spec.align = undefined;
-        spec.translate = undefined;
-        spec.skew = undefined;
-        spec.scale = undefined;
-        spec.rotate = undefined;
-        this.scrollLength = undefined;
+        this._spec.transform = undefined;
         this.trueSizeRequested = false;
     };
 
@@ -71,15 +63,10 @@ define(function(require, exports, module) {
         this._invalidated = true;
         this._removing = false;
         var spec = this._spec;
-        if (set.size) {
-            spec.size = set.size;
-        }
-        if (set.origin) {
-            spec.origin = set.origin;
-        }
-        if (set.align) {
-            spec.align = set.align;
-        }
+        spec.opacity = set.opacity;
+        spec.size = set.size;
+        spec.origin = set.origin;
+        spec.align = set.align;
         if (set.translate || set.skew || set.rotate || set.scale) {
             this._spec.transform = Transform.build({
                 translate: set.translate || [0, 0, 0],
@@ -88,9 +75,7 @@ define(function(require, exports, module) {
                 rotate: set.rotate || [0, 0, 0]
             });
         }
-        if (set.scrollLength) {
-            this.scrollLength = set.scrollLength;
-        }
+        this.scrollLength = set.scrollLength;
     };
 
     /**
