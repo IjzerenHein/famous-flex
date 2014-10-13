@@ -55,16 +55,7 @@ define(function(require, exports, module) {
         };
 
         if (!this._properties) {
-            this._properties = {
-                /*opacity: undefined,
-                size: undefined,
-                origin: undefined,
-                align: undefined,
-                translate: undefined,
-                skew: undefined,
-                rotate: undefined,
-                scale: undefined*/
-            };
+            this._properties = {};
         }
         else {
             for (var propName in this._properties) {
@@ -156,22 +147,24 @@ define(function(require, exports, module) {
      * Set the properties from a spec.
      */
     FlowLayoutNode.prototype.setSpec = function(spec) {
-        _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity);
-        _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size);
-        _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align);
-        _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin);
-        if (spec.transform) {
-            var transform = Transform.interpret(spec.transform);
+        if ((spec.opacity !== undefined) || this._removing) {
+            _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity);
+        }
+        if (spec.size|| this._removing) {
+            _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size);
+        }
+        if (spec.align|| this._removing) {
+            _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align);
+        }
+        if (spec.origin|| this._removing) {
+            _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin);
+        }
+        if (spec.transform || this._removing) {
+            var transform = spec.transform ? Transform.interpret(spec.transform) : {};
             _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate);
             _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale);
             _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew);
             _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate);
-        }
-        else {
-            _setPropertyValue.call(this, 'translate', undefined, DEFAULT.translate);
-            _setPropertyValue.call(this, 'scale', undefined, DEFAULT.scale);
-            _setPropertyValue.call(this, 'skew', undefined, DEFAULT.skew);
-            _setPropertyValue.call(this, 'rotate', undefined, DEFAULT.rotate);
         }
     };
 
@@ -197,76 +190,21 @@ define(function(require, exports, module) {
     FlowLayoutNode.prototype.remove = function(removeSpec) {
 
         // Transition to the remove-spec state
+        this._removing = true;
         if (removeSpec) {
-
-            // Stop the particle from moving by setting the end-state
-            // to the current particle state
-            for (var propName in this._properties) {
-                if (removeSpec[propName] === undefined) {
-                    this._properties[propName].endState.set(
-                        this._properties[propName].particle.position.get()
-                    );
-                    this._pe.wake();
-                }
-            }
-
-            // Set end-state
             this.setSpec(removeSpec);
         }
 
         // Mark for removal
-        this._removing = true;
         this._invalidated = false;
         _verifyIntegrity.call(this);
     };
 
     /**
-     * Checks whether a property has reached its end-state.
-     */
-    var ENERGY_RESTTOLERANCE = 1e-4;
-    var RESTTOLERANCE = {
-        opacity:    1e-5,
-        size:       0.1,
-        origin:     1e-5,
-        align:      1e-5,
-        scale:      1e-5,
-        translate:  0.1,
-        rotate:     1e-5,
-        skew:       1e-5
-    };
-    function _endStateReached(prop, propName) {
-
-        // When the particle still has too much energy, state not reached
-        var energy = prop.particle.getEnergy();
-        var restTolerance = RESTTOLERANCE[propName];
-        if (energy > ENERGY_RESTTOLERANCE) {
-            //console.log('endstate not reached: ' + propName + ' - energy: ' + energy);
-            return false;
-        }
-
-        // Check whether the current particle value, and end-state value are really close
-        var curState = prop.particle.getPosition();
-        var endState = prop.endState.get();
-        if (endState.length !== curState.length) {
-            //console.log('endstate not reached: ' + propName + ' - length !=');
-            return false;
-        }
-        for (var i = 0; i < curState.length; i++) {
-            if (Math.abs(curState[i] - endState[i]) > restTolerance) {
-                //console.log('endstate not reached: ' + propName + ' - ' + curState[i] + ' != ' + endState[i]);
-                return false;
-            }
-        }
-
-        // End state reached
-        return true;
-    }
-
-    /**
      * Helper function for getting the property value.
      */
     function _getPropertyValue(prop, def) {
-        return (prop && prop.init) ? (prop.endStateReached ? prop.endState.get() : prop.particle.getPosition()) : def;
+        return (prop && prop.init) ? prop.particle.getPosition() : def;
     }
     function _getOpacityValue() {
         var prop = this._properties.opacity;
@@ -278,19 +216,8 @@ define(function(require, exports, module) {
      */
     FlowLayoutNode.prototype.getSpec = function() {
 
-        // Check whether any properties have reached their end-state.
-        var endStateReached = true;
-        for (var propName in this._properties) {
-            var prop = this._properties[propName];
-            if (prop.init) {
-                prop.endStateReached = _endStateReached.call(this, prop, propName);
-                if (!prop.endStateReached) {
-                    endStateReached = false;
-                }
-            }
-        }
-
         // When the end state was reached, return the previous spec
+        var endStateReached = this._pe.isSleeping();
         if (this._endStateReached && endStateReached) {
             if (this._invalidated) {
                 return this._spec;
@@ -383,7 +310,15 @@ define(function(require, exports, module) {
         // Update the property
         if (prop && prop.init) {
             prop.invalidated = true;
-            prop.endState.set(endState || defaultValue);
+            if (endState !== undefined) {
+                prop.endState.set(endState);
+            }
+            else if (this._removing) {
+                prop.endState.set(prop.particle.getPosition());
+            }
+            else {
+                prop.endState.set(defaultValue);
+            }
             this._pe.wake();
             return;
         }
@@ -412,7 +347,6 @@ define(function(require, exports, module) {
             this._pe.wake();
         }
         prop.init = true;
-        //prop.endStateReached = true;
         prop.invalidated = true;
 
         // huh
@@ -421,6 +355,7 @@ define(function(require, exports, module) {
         }*/
     }
     FlowLayoutNode.prototype.set = function(set) {
+        this._removing = false;
         this._scrollLength = set.scrollLength;
         _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
         _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
@@ -431,7 +366,6 @@ define(function(require, exports, module) {
         _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);
         _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale);
         this._invalidated = true;
-        this._removing = false;
         _verifyIntegrity.call(this);
     };
 

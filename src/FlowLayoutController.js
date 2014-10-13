@@ -38,7 +38,6 @@ define(function(require, exports, module) {
      * @param {Function} [options.layout] Layout function to use.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Number} [options.showOpacity] Opacity to use when showing renderables (default: 1)
      * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
      * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
      * @alias module:FlowLayoutController
@@ -206,9 +205,9 @@ define(function(require, exports, module) {
 
         // When a custom remove-spec was specified, store that in the layout-node
         if (renderNode && spec) {
-            var layoutNode = this._nodes.getNodeByRenderNode(renderNode);
-            if (layoutNode) {
-                layoutNode.remove(spec || this.options.removeSpec);
+            var node = this._nodes.getNodeByRenderNode(renderNode);
+            if (node) {
+                node.remove(spec || this.options.removeSpec);
             }
         }
 
