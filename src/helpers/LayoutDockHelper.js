@@ -117,7 +117,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the top.
      *
-     * @param {LayoutNode|String} [node] layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -142,7 +142,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the left
      *
-     * @param {LayoutNode|String} [node] layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -167,7 +167,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the bottom
      *
-     * @param {LayoutNode|String} [node] layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
      * @return {LayoutDockHelper} this
      */
@@ -192,7 +192,7 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the right.
      *
-     * @param {LayoutNode|String} [node] layout-node to dock
+     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
      * @return {LayoutDockHelper} this
      */

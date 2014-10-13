@@ -35,11 +35,13 @@ define(function(require, exports, module) {
      * @class
      * @extends LayoutController
      * @param {Object} options Options.
-     * @param {Function} [options.layout] Layout function to use.
-     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object.
+     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
-     * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
      * @alias module:FlowLayoutController
      */
     function FlowLayoutController(options, nodeManager) {
@@ -89,16 +91,20 @@ define(function(require, exports, module) {
         }
     }
 
+    var oldSetOptions = FlowLayoutController.prototype.setOptions;
     /**
      * Patches the FlowLayoutController instance's options with the passed-in ones.
      *
      * @param {Options} options An object of configurable options for the FlowLayoutController instance.
-     * @param {Number} [options.showOpacity] Opacity to use when showing renderables (default: 1)
-     * @param {Spec} [options.insertSpec] Default spec to use when animating renderables into the scene (default: opacity=0)
-     * @param {Spec} [options.removeSpec] Default spec to use when animating renderables out of the scene (default: opacity=0)
+     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
      * @return {FlowLayoutController} this
      */
-    var oldSetOptions = FlowLayoutController.prototype.setOptions;
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
         this._optionsManager.setOptions(options);
         oldSetOptions.call(this, options);

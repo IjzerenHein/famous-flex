@@ -180,7 +180,6 @@ define(function(require, exports, module) {
             this._invalidated = false;
         }
         this.trueSizeRequested = false;
-        this.scrollLength = undefined;
         _verifyIntegrity.call(this);
     };
 
@@ -242,13 +241,13 @@ define(function(require, exports, module) {
         });
         //if (this.renderNode._debug) {
             //this.renderNode._debug = false;
-            console.log(JSON.stringify({
+            /*console.log(JSON.stringify({
                 opacity: this._spec.opacity,
                 size: this._spec.size,
                 align: this._spec.align,
                 origin: this._spec.origin,
                 transform: this._spec.transform
-            }));
+            }));*/
         //}
 
         _verifyIntegrity.call(this);
@@ -276,11 +275,9 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Set the content of the node
-     *
-     * @param {Object} set
+     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
      */
-     function _setPropertyValue(propName, endState, defaultValue) {
+    function _setPropertyValue(propName, endState, defaultValue) {
 
         // Check if end-state equals default-value, if so reset it to undefined
         if ((endState !== undefined) && (defaultValue !== undefined)) {

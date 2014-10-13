@@ -13,6 +13,7 @@ layout-function.
 
 * [class: LayoutController ⏏](#exp_module_LayoutController)
   * [new LayoutController(options)](#exp_new_module_LayoutController)
+  * [layoutController.setOptions(options)](#module_LayoutController#setOptions)
   * [layoutController.setDataSource(dataSource)](#module_LayoutController#setDataSource)
   * [layoutController.getDataSource()](#module_LayoutController#getDataSource)
   * [layoutController.setLayout(layout, [options])](#module_LayoutController#setLayout)
@@ -20,7 +21,7 @@ layout-function.
   * [layoutController.setLayoutOptions([options])](#module_LayoutController#setLayoutOptions)
   * [layoutController.getLayoutOptions()](#module_LayoutController#getLayoutOptions)
   * [layoutController.setDirection(direction)](#module_LayoutController#setDirection)
-  * [layoutController.getDirection()](#module_LayoutController#getDirection)
+  * [layoutController.getDirection([actual])](#module_LayoutController#getDirection)
   * [layoutController.getSpec(node)](#module_LayoutController#getSpec)
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
 
@@ -29,10 +30,24 @@ layout-function.
 **Params**
 
 - options `Object` - Options.  
-  - \[layout\] `function` - Layout function to use.  
-  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object.  
+  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
+  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
 
+<a name="module_LayoutController#setOptions"></a>
+###layoutController.setOptions(options)
+Patches the LayoutController instance's options with the passed-in ones.
+
+**Params**
+
+- options `Options` - An object of configurable options for the LayoutController instance.  
+  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
+  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
+  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
+
+**Returns**: `LayoutController` - this  
 <a name="module_LayoutController#setDataSource"></a>
 ###layoutController.setDataSource(dataSource)
 Sets the collection of renderables which are layed out according to
@@ -92,8 +107,19 @@ direction of the layout function is used.
 
 **Returns**: `LayoutController` - this  
 <a name="module_LayoutController#getDirection"></a>
-###layoutController.getDirection()
-Get the direction (e.g. Utility.Direction.Y).
+###layoutController.getDirection([actual])
+Get the direction (e.g. Utility.Direction.Y). By default, this function
+returns the direction that was configured by setting `setDirection`. When
+the direction has not been set, `undefined` is returned.
+
+When no direction has been set, the first direction is used that is specified
+in the capabilities of the layout-function. To obtain the actual in-use direction,
+use `getDirection(true)`. This method returns the actual in-use direction and
+never returns undefined.
+
+**Params**
+
+- \[actual\] `Boolean` - Set to true to obtain the actual in-use direction  
 
 **Returns**: `Utility.Direction` - Direction or undefined  
 <a name="module_LayoutController#getSpec"></a>

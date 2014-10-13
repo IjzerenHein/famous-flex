@@ -168,7 +168,7 @@ define(function(require, exports, module) {
      * Helper function to log 1 or more arguments. All the arguments
      * are concatenated to produce a single string which is logged.
      *
-     * @param {String|Array|Object} arguments arguments to stringify and concatenate
+     * @param {String|Array|Object} args arguments to stringify and concatenate
      */
     LayoutUtility.log = function(args) {
         var message = '';

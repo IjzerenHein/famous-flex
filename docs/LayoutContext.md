@@ -8,14 +8,26 @@ renderables in the data-source and set their size, position, tranformation, etc.
 **Members**
 
 * [class: LayoutContext ⏏](#exp_module_LayoutContext)
+  * [layoutContext.size](#module_LayoutContext#size)
+  * [layoutContext.direction](#module_LayoutContext#direction)
   * [layoutContext.next()](#module_LayoutContext#next)
+  * [layoutContext.prev()](#module_LayoutContext#prev)
   * [layoutContext.get(node)](#module_LayoutContext#get)
   * [layoutContext.set(node, set)](#module_LayoutContext#set)
   * [layoutContext.resolveSize(node)](#module_LayoutContext#resolveSize)
+  * [layoutContext.getRenderNode(node)](#module_LayoutContext#getRenderNode)
+
+<a name="module_LayoutContext#size"></a>
+###layoutContext.size
+{Property} Size in which to layout the renderables.
+
+<a name="module_LayoutContext#direction"></a>
+###layoutContext.direction
+{Property} Direction in which to layout the renderables (0 = X, 1 = Y).
 
 <a name="module_LayoutContext#next"></a>
 ###layoutContext.next()
-Get the layout-node for the next renderable in the data-source. When
+Get the context-node for the next renderable in the data-source. When
 the end of the data-source is reached, `undefined` is returned.
 Use this function to enumerate the contents of a data-source that is
 either an Array or a ViewSequence.
@@ -25,9 +37,9 @@ either an Array or a ViewSequence.
 ```javascript
 function MyLayoutFunction(context, options) {
   var height = 0;
-  var node = context.next(); // get first node
+  var node = context.next(); // get first next node
   while (node) {
-    context.set({
+    context.set(node, {
       size: [context.size[0], 100],
       transform: [0, height, 0]
     });
@@ -37,10 +49,35 @@ function MyLayoutFunction(context, options) {
 }
 ```
 
-**Returns**: `LayoutNode` - layout-node or undefined  
+**Returns**: `Object` - context-node or undefined  
+<a name="module_LayoutContext#prev"></a>
+###layoutContext.prev()
+Get the context-node for the previous renderable in the data-source. When
+the start of the data-source is reached, `undefined` is returned.
+Use this function to enumerate the contents of a data-source that is
+either an Array or a ViewSequence.
+
+**Example:**
+
+```javascript
+function MyLayoutFunction(context, options) {
+  var height = 0;
+  var node = context.prev(); // get first previous
+  while (node) {
+    height -= 100;
+    context.set(node, {
+      size: [context.size[0], 100],
+      transform: [0, height, 0]
+    });
+    node = context.next(); // get prev node
+  }
+}
+```
+
+**Returns**: `Object` - context-node or undefined  
 <a name="module_LayoutContext#get"></a>
 ###layoutContext.get(node)
-Get the layout-node for a renderable with a specific id. This function
+Get the context-node for a renderable with a specific id. This function
 should be used to access data-sources which are key-value collections.
 When a data-source is an Array or a ViewSequence, use `next()`.
 In many cases it is not neccesary to use `get()`, instead you can pass
@@ -78,8 +115,8 @@ var layoutController = new LayoutController({
 **Arrays:**
 
 A value at a specific id in the datasource can also be an array. To access the
-layout-nodes in the array use `get()` to get the array and enumerate the
-elements in the array:
+context-nodes in the array use `get()` to get the array and the elements in the
+array:
 
 ```javascript
 var layoutController = new LayoutController({
@@ -94,7 +131,8 @@ var layoutController = new LayoutController({
     // Position left-items (array)
     var leftItems = context.get('leftItems');
     for (var i = 0; i < leftItems.length; i++) {
-      context.set(leftItems[i], {
+      var leftItem = context.get(leftItems[i]);
+      context.set(leftItem, {
         size: [100, size[1]],
         translate: [left, 0, 0]
       });
@@ -113,12 +151,13 @@ var layoutController = new LayoutController({
 
 **Params**
 
-- node `String` | `Array.Elmement` - node-id or array-element  
+- node `Object` | `String` - context-node or node-id  
 
-**Returns**: `LayoutNode` - layout-node or undefined  
+**Returns**: `Object` - context-node or undefined  
 <a name="module_LayoutContext#set"></a>
 ###layoutContext.set(node, set)
-Set the size, origin, align, translation, scale, rotate & skew for a layout-node.
+Set the size, origin, align, translation, scale, rotate, skew & opacity for a context-node.
+This function should only be called only **once** for a node.
 
 **Overview of all supported properties:**
 
@@ -132,18 +171,19 @@ function MyLayoutFunction(context, options) {
     scale: [1, 1, 1],
     skew: [0, 0, 0],
     rotate: [Math.PI, 0, 0],
+    opacity: 1
   })
 }
 ```
 
 **Params**
 
-- node `LayoutNode` | `String` | `Array.Element` - layout-node, node-id or array-element  
-- set `Object` - properties: size, origin, align, translate, scale, rotate & skew  
+- node `Object` | `String` - context-node or node-id  
+- set `Object` - properties: size, origin, align, translate, scale, rotate, skew & opacity  
 
 <a name="module_LayoutContext#resolveSize"></a>
 ###layoutContext.resolveSize(node)
-Resolve the size of a layout-node by accessing the `getSize` function
+Resolve the size of a context-node by accessing the `getSize` function
 of the renderable.
 
 **Example:**
@@ -175,6 +215,15 @@ are layed out as expected.
 
 **Params**
 
-- node `LayoutNode` | `String` | `Array.Element` - layout-node, node-id or array-element  
+- node `Object` | `String` - context-node, node-id or array-element  
 
 **Returns**: `Size` - size of the node  
+<a name="module_LayoutContext#getRenderNode"></a>
+###layoutContext.getRenderNode(node)
+Get the underlying render-node that should be layed out.
+
+**Params**
+
+- node `Object` | `String` - context-node or node-id  
+
+**Returns**: `Renderable` - Renderable or `undefined` if not found  

@@ -80,7 +80,7 @@ Dock the node to the top.
 
 **Params**
 
-- \[node\] `LayoutNode` | `String` - layout-node to dock  
+- \[node\] `LayoutNode` | `String` - layout-node to dock, when ommited the `height` argument argument is used for padding  
 - \[height\] `Number` - height of the layout-node, when ommited the height of the node is used  
 
 **Returns**: `LayoutDockHelper` - this  
@@ -90,7 +90,7 @@ Dock the node to the left
 
 **Params**
 
-- \[node\] `LayoutNode` | `String` - layout-node to dock  
+- \[node\] `LayoutNode` | `String` - layout-node to dock, when ommited the `width` argument argument is used for padding  
 - \[width\] `Number` - width of the layout-node, when ommited the width of the node is used  
 
 **Returns**: `LayoutDockHelper` - this  
@@ -100,7 +100,7 @@ Dock the node to the bottom
 
 **Params**
 
-- \[node\] `LayoutNode` | `String` - layout-node to dock  
+- \[node\] `LayoutNode` | `String` - layout-node to dock, when ommited the `height` argument argument is used for padding  
 - \[height\] `Number` - height of the layout-node, when ommited the height of the node is used  
 
 **Returns**: `LayoutDockHelper` - this  
@@ -110,7 +110,7 @@ Dock the node to the right.
 
 **Params**
 
-- \[node\] `LayoutNode` | `String` - layout-node to dock  
+- \[node\] `LayoutNode` | `String` - layout-node to dock, when ommited the `width` argument argument is used for padding  
 - \[width\] `Number` - width of the layout-node, when ommited the width of the node is used  
 
 **Returns**: `LayoutDockHelper` - this  

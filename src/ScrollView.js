@@ -12,7 +12,9 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * TODO
+ * Work in progress - do not use.
+ *
+ * Inherited from: [FlowLayoutController](./FlowLayoutController.md)
  * @module
  */
 define(function(require, exports, module) {
@@ -779,7 +781,6 @@ define(function(require, exports, module) {
         // true so that the layout-function re-layouts.
         return newOffset + this._scroll.moveOffset[this._direction];
     }*/
-
 
         /*function _getVisiblePercentage(spec) {
         var specLeft = spec.transform[12];

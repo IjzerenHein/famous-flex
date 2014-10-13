@@ -23,12 +23,13 @@ Inherited from: [LayoutController](./LayoutController.md)
 **Params**
 
 - options `Object` - Options.  
-  - \[layout\] `function` - Layout function to use.  
-  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object.  
+  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
+  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
-  - \[showOpacity\] `Number` - Opacity to use when showing renderables (default: 1)  
-  - \[insertSpec\] `Spec` - Default spec to use when animating renderables into the scene (default: opacity=0)  
-  - \[removeSpec\] `Spec` - Default spec to use when animating renderables out of the scene (default: opacity=0)  
+  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene.  
+  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene.  
+  - \[nodeSpring\] `Object` - Spring options to use when transitioning between states  
 
 **Extends**: `LayoutController`  
 <a name="module_FlowLayoutController#setOptions"></a>
@@ -38,9 +39,13 @@ Patches the FlowLayoutController instance's options with the passed-in ones.
 **Params**
 
 - options `Options` - An object of configurable options for the FlowLayoutController instance.  
-  - \[showOpacity\] `Number` - Opacity to use when showing renderables (default: 1)  
-  - \[insertSpec\] `Spec` - Default spec to use when animating renderables into the scene (default: opacity=0)  
-  - \[removeSpec\] `Spec` - Default spec to use when animating renderables out of the scene (default: opacity=0)  
+  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
+  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
+  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
+  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
+  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene.  
+  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene.  
+  - \[nodeSpring\] `Object` - Spring options to use when transitioning between states  
 
 **Returns**: `FlowLayoutController` - this  
 <a name="module_FlowLayoutController#insert"></a>

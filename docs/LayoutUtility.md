@@ -7,15 +7,24 @@ Utility class for famous-flex.
 **Members**
 
 * [class: LayoutUtility ⏏](#exp_module_LayoutUtility)
+  * [LayoutUtility.normalizeMargins(margins)](#module_LayoutUtility.normalizeMargins)
   * [LayoutUtility.cloneSpec(spec)](#module_LayoutUtility.cloneSpec)
   * [LayoutUtility.clearSpec(spec)](#module_LayoutUtility.clearSpec)
   * [LayoutUtility.isEqualSpec(spec1, spec2)](#module_LayoutUtility.isEqualSpec)
   * [LayoutUtility.error(message)](#module_LayoutUtility.error)
   * [LayoutUtility.warning(message)](#module_LayoutUtility.warning)
-  * [LayoutUtility.log(arguments)](#module_LayoutUtility.log)
+  * [LayoutUtility.log(args)](#module_LayoutUtility.log)
   * [LayoutUtility.registerHelper(name, Helper)](#module_LayoutUtility.registerHelper)
   * [LayoutUtility.unregisterHelper(name)](#module_LayoutUtility.unregisterHelper)
   * [LayoutUtility.getRegisteredHelper(name)](#module_LayoutUtility.getRegisteredHelper)
+
+<a name="module_LayoutUtility.normalizeMargins"></a>
+###LayoutUtility.normalizeMargins(margins)
+Normalizes the margins argument.
+
+**Params**
+
+- margins `Array.Number`  
 
 <a name="module_LayoutUtility.cloneSpec"></a>
 ###LayoutUtility.cloneSpec(spec)
@@ -62,13 +71,13 @@ Helper function to call whenever a warning error has occurred.
 - message `String` - warning-message  
 
 <a name="module_LayoutUtility.log"></a>
-###LayoutUtility.log(arguments)
+###LayoutUtility.log(args)
 Helper function to log 1 or more arguments. All the arguments
 are concatenated to produce a single string which is logged.
 
 **Params**
 
-- arguments `String` | `Array` | `Object` - arguments to stringify and concatenate  
+- args `String` | `Array` | `Object` - arguments to stringify and concatenate  
 
 <a name="module_LayoutUtility.registerHelper"></a>
 ###LayoutUtility.registerHelper(name, Helper)
