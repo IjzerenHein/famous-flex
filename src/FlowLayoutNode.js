@@ -87,7 +87,7 @@ define(function(require, exports, module) {
      */
     var DEFAULT = {
         opacity: 1,
-        size: [1000, 1000],
+        size: [0, 0],
         origin: [0, 0],
         align: [0, 0],
         scale: [1, 1, 1],
@@ -351,13 +351,13 @@ define(function(require, exports, module) {
             prop.particle.setPosition(defaultValue);
         }*/
     }
-    FlowLayoutNode.prototype.set = function(set) {
+    FlowLayoutNode.prototype.set = function(set, size) {
         this._removing = false;
         this.scrollLength = set.scrollLength;
         _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
         _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
         _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);
-        _setPropertyValue.call(this, 'size', set.size, DEFAULT.size);
+        _setPropertyValue.call(this, 'size', set.size, size);
         _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate);
         _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew);
         _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);

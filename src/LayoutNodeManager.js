@@ -533,7 +533,7 @@ define(function(require, exports, module) {
             var node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
             node._viewSequence = contextNode.viewSequence;
             node.trueSizeRequested = contextNode.trueSizeRequested;
-            node.set(set);
+            node.set(set, this._context.size);
         }
     }
 

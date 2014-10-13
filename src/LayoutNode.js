@@ -59,7 +59,7 @@ define(function(require, exports, module) {
      *
      * @param {Object} set
      */
-    LayoutNode.prototype.set = function(set) {
+    LayoutNode.prototype.set = function(set, size) {
         this._invalidated = true;
         this._removing = false;
         var spec = this._spec;
