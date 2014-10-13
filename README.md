@@ -197,7 +197,7 @@ var layoutController = new LayoutController({
 ## Standard layouts
 
 |Layout|DataSource|Description|
-|---|---|
+|---|---|---|
 |[GridLayout](docs/layouts/GridLayout.md)|Sequence/Array|Grid-layout with fixed number of rows & columns.|
 |[ListLayout](docs/layouts/ListLayout.md)|Sequence/Array|Lays out renderables in a horizontal or vertical list.|
 |[CollectionLayout](docs/layouts/CollectionLayout.md)|Sequence/Array|Lays out renderables with a specific width & height.|
