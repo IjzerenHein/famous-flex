@@ -451,11 +451,11 @@ define(function(require, exports, module) {
     function _calcPrevHeight() {
         var height = 0;
         this._nodes.forEach(function(node) {
-            if ((node._scrollLength === undefined) || node._spec.trueSizeRequested) {
+            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 height = undefined; // can't determine height
                 return true;
             }
-            height += node._scrollLength;
+            height += node.scrollLength;
         }.bind(this), false);
         return height;
     }
@@ -466,11 +466,11 @@ define(function(require, exports, module) {
     function _calcNextHeight() {
         var height = 0;
         this._nodes.forEach(function(node) {
-            if ((node._scrollLength === undefined) || node._spec.trueSizeRequested) {
+            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 height = undefined; // can't determine height
                 return true;
             }
-            height += node._scrollLength;
+            height += node.scrollLength;
         }.bind(this), true);
         return height;
     }
@@ -564,22 +564,22 @@ define(function(require, exports, module) {
         var foundNode;
         var scrollToOffset = 0;
         this._nodes.forEach(function(node) {
-            if (node._scrollLength === undefined) {
+            if (node.scrollLength === undefined) {
                 return true;
             }
             if (node._viewSequence === this._scroll.scrollToSequence) {
                 foundNode = node;
                 return true;
             }
-            scrollToOffset -= node._scrollLength;
+            scrollToOffset -= node.scrollLength;
         }.bind(this), true);
         if (!foundNode) {
             scrollToOffset = 0;
             this._nodes.forEach(function(node) {
-                if (node._scrollLength === undefined) {
+                if (node.scrollLength === undefined) {
                     return true;
                 }
-                scrollToOffset += node._scrollLength;
+                scrollToOffset += node.scrollLength;
                 if (node._viewSequence === this._scroll.scrollToSequence) {
                     foundNode = node;
                     return true;
@@ -622,21 +622,21 @@ define(function(require, exports, module) {
         // Lookup page in previous direction
         var bound = this.options.reverse ? size[this._direction] : 0;
         this._nodes.forEach(function(node) {
-            if (node._scrollLength !== 0) {
-                if ((pageOffset <= bound) || (node._scrollLength === undefined)) {
+            if (node.scrollLength !== 0) {
+                if ((pageOffset <= bound) || (node.scrollLength === undefined)) {
                     return true;
                 }
                 hasNext = (pageLength !== undefined);
-                pageLength = node._scrollLength;
-                pageOffset -= node._scrollLength;
+                pageLength = node.scrollLength;
+                pageOffset -= node.scrollLength;
             }
         }.bind(this), false);
 
         // Lookup page in next direction
         if (pageLength === undefined) {
             this._nodes.forEach(function(node) {
-                if (node._scrollLength !== 0) {
-                    if (node._scrollLength === undefined) {
+                if (node.scrollLength !== 0) {
+                    if (node.scrollLength === undefined) {
                         return true;
                     }
                     hasNext = (pageLength !== undefined);
@@ -646,7 +646,7 @@ define(function(require, exports, module) {
                         }
                         pageOffset += pageLength;
                     }
-                    pageLength = node._scrollLength;
+                    pageLength = node.scrollLength;
                 }
             }.bind(this), true);
         }
@@ -671,26 +671,26 @@ define(function(require, exports, module) {
      */
     function _normalizePrevViewSequence(size, scrollOffset) {
         this._nodes.forEach(function(node) {
-            if ((node._scrollLength === undefined) || node._spec.trueSizeRequested) {
+            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
             if (scrollOffset < 0){
                 return true;
             }
             this._viewSequence = node._viewSequence;
-            scrollOffset -= node._scrollLength;
-            _log.call(this, 'normalized prev node with length: ', node._scrollLength, ', scrollOffset: ', scrollOffset);
+            scrollOffset -= node.scrollLength;
+            _log.call(this, 'normalized prev node with length: ', node.scrollLength, ', scrollOffset: ', scrollOffset);
         }.bind(this), false);
         return scrollOffset;
     }
     function _normalizeNextViewSequence(size, scrollOffset) {
         var prevScrollLength;
         this._nodes.forEach(function(node) {
-            if ((node._scrollLength === undefined) || node._spec.trueSizeRequested) {
+            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
             if (prevScrollLength !== undefined) {
-                prevScrollLength = node._scrollLength;
+                prevScrollLength = node.scrollLength;
                 if ((scrollOffset + prevScrollLength) >= 0){
                     return true;
                 }
@@ -698,7 +698,7 @@ define(function(require, exports, module) {
                 scrollOffset += prevScrollLength;
                 _log.call(this, 'normalized next node with length: ', prevScrollLength, ', scrollOffset: ', scrollOffset);
             }
-            prevScrollLength = node._scrollLength;
+            prevScrollLength = node.scrollLength;
         }.bind(this), true);
         return scrollOffset;
     }
@@ -824,10 +824,10 @@ define(function(require, exports, module) {
         var next = scrollOffset <= 0;
         var foundNode;
         this._nodes.forEach(function(node) {
-            if (node._scrollLength === undefined) {
+            if (node.scrollLength === undefined) {
                 return true;
             }
-            scrollOffset += next ? node._scrollLength : -node._scrollLength;
+            scrollOffset += next ? node.scrollLength : -node.scrollLength;
             if ((next && (scrollOffset > 0)) ||
                 (!next && (scrollOffset <= 0))) {
                 foundNode = node;

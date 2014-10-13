@@ -28,10 +28,13 @@ define(function(require, exports, module) {
      * @alias module:LayoutNode
      */
     function LayoutNode(renderNode, spec) {
+        this.renderNode = renderNode;
         this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-        this._spec.renderNode = renderNode;
+        this._spec.renderNode = renderNode; // also store in spec
         this._invalidated = false;
         this._removing = false;
+        //this.scrollLength = undefined;
+        //this.trueSizeRequested = false;
     }
 
     /**
@@ -48,7 +51,6 @@ define(function(require, exports, module) {
     LayoutNode.prototype.reset = function() {
         this._invalidated = false;
         var spec = this._spec;
-        spec.trueSizeRequested = false;
         spec.size = undefined;
         spec.origin = undefined;
         spec.align = undefined;
@@ -56,7 +58,8 @@ define(function(require, exports, module) {
         spec.skew = undefined;
         spec.scale = undefined;
         spec.rotate = undefined;
-        this._scrollLength = undefined;
+        this.scrollLength = undefined;
+        this.trueSizeRequested = false;
     };
 
     /**
@@ -85,19 +88,8 @@ define(function(require, exports, module) {
                 rotate: set.rotate || [0, 0, 0]
             });
         }
-        /*if (set.translate) {
-            var xyz = set.translate;
-            if (!spec.transform) {
-                spec.transform = Transform.translate(xyz[0], xyz[1], xyz[2]);
-            }
-            else {
-                spec.transform[12] = xyz[0];
-                spec.transform[13] = xyz[1];
-                spec.transform[14] = xyz[2];
-            }
-        }*/
         if (set.scrollLength) {
-            this._scrollLength = set.scrollLength;
+            this.scrollLength = set.scrollLength;
         }
     };
 
@@ -106,13 +98,6 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.getSpec = function() {
         return this._invalidated ? this._spec : undefined;
-    };
-
-    /**
-     * Creates the render-spec
-     */
-    LayoutNode.prototype.getRenderNode = function() {
-        return this._spec.renderNode;
     };
 
     /**

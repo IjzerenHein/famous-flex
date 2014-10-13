@@ -179,8 +179,8 @@ define(function(require, exports, module) {
             }
             this._invalidated = false;
         }
-        this._spec.trueSizeRequested = false;
-        this._scrollLength = undefined;
+        this.trueSizeRequested = false;
+        this.scrollLength = undefined;
         _verifyIntegrity.call(this);
     };
 
@@ -240,8 +240,8 @@ define(function(require, exports, module) {
             scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
             rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
         });
-        //if (this._spec.renderNode._debug) {
-            //this._spec.renderNode._debug = false;
+        //if (this.renderNode._debug) {
+            //this.renderNode._debug = false;
             console.log(JSON.stringify({
                 opacity: this._spec.opacity,
                 size: this._spec.size,
@@ -356,7 +356,7 @@ define(function(require, exports, module) {
     }
     FlowLayoutNode.prototype.set = function(set) {
         this._removing = false;
-        this._scrollLength = set.scrollLength;
+        this.scrollLength = set.scrollLength;
         _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
         _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
         _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);

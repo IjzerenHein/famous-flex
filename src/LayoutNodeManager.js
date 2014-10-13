@@ -204,7 +204,7 @@ define(function(require, exports, module) {
     LayoutNodeManager.prototype.getNodeByRenderNode = function(renderable) {
         var node = this._first;
         while (node) {
-            if (node.getRenderNode() === renderable) {
+            if (node.renderNode === renderable) {
                 return node;
             }
             node = node._next;
@@ -317,7 +317,7 @@ define(function(require, exports, module) {
         if (!this._contextState.next) {
             node = this._first;
             while (node) {
-                if (node.getRenderNode() === renderNode) {
+                if (node.renderNode === renderNode) {
                     break;
                 }
                 node = node._next;
@@ -344,7 +344,7 @@ define(function(require, exports, module) {
         if (prev) {
             if (this._contextState.prev) {
                 var prevNode = this._contextState.prev._prev;
-                if (prevNode && (prevNode._spec.renderNode === renderNode)) {
+                if (prevNode && (prevNode.renderNode === renderNode)) {
                     this._contextState.prev = prevNode;
                     _checkIntegrity.call(this);
                     return prevNode;
@@ -353,7 +353,7 @@ define(function(require, exports, module) {
         }
         else {
             var nextNode = this._contextState.next;
-            if (nextNode && (nextNode._spec.renderNode === renderNode)) {
+            if (nextNode && (nextNode.renderNode === renderNode)) {
                 if (nextNode._next) {
                     this._contextState.next = nextNode._next;
                 }
@@ -365,7 +365,7 @@ define(function(require, exports, module) {
         // Lookup the node anywhere in the list..
         node = this._first;
         while (node) {
-            if (node._spec.renderNode === renderNode) {
+            if (node.renderNode === renderNode) {
                 break;
             }
             node = node._next;
@@ -532,7 +532,7 @@ define(function(require, exports, module) {
         if (contextNode) {
             var node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
             node._viewSequence = contextNode.viewSequence;
-            node._spec.trueSizeRequested = contextNode.trueSizeRequested;
+            node.trueSizeRequested = contextNode.trueSizeRequested;
             node.set(set);
         }
     }
