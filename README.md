@@ -9,6 +9,8 @@ Flexible, animated and plugable layout-controller for famo.us, which:
 - Allows you to easily create custom layouts and layout-helpers
 - Is very good at creating responsive designs
 
+![Screenshot](screenshot.gif)
+
 Above anything, famous-flex is a concept in which renderables are seperated from how
 they are layed-out. This makes it possible to change layouts on the fly and animate
 the renderables from one layout to another. For instance, you can layout a collection
@@ -16,34 +18,24 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 `FlowLayoutController` the renderables will smoothly transition from the old state
 to the new state using physics, particles and springs.
 
-[View the demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
+[View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
 
-### Roadmap
-
-Famous-flex is still in its infancy. I am commited in creating a first-class
-layout-solution for famo.us that is as performant, pluggable and awesome as
-can be. But to do this, I need your support and feedback. Let me know which of
-features below are most important to you, by leaving a comment in the corresponding
-issue.
-
-- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrollview/container supporting layout-functions + smooth transitions)
-- [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
-- [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
-- [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
 
 ### Index
 
-- [Getting started](#getting-started)
-- [LayoutController and FlowLayoutController](#layoutcontroller-and-flowlayoutcontroller)
-- [Standard layouts](#standard-layouts)
-- [Datasource](#datasource)
+- [Installation](#installation)
+- [LayoutController](#flowlayoutcontroller)
 - [Layout function](#layout-function)
-- [Layout helpers](#layout-helpers)
+- [Datasource](#datasource)
+- [Standard layouts](#standard-layouts)
 - [Layout literals](#layout-literals)
+- [Layout helpers](#layout-helpers)
+- [FlowLayoutController](#flowlayoutcontroller)
 - [API reference](#api-reference)
+- [Roadmap](#roadmap)
 
 
-## Getting started
+## Installation
 
 Install using bower or npm:
 
@@ -63,14 +55,22 @@ require.config({
 });
 ```
 
+
+## LayoutController
+
+A `LayoutController` lays out renderables based on:
+- a layout-function
+- a data-source containing renderables
+- optional layout-options
+
 Example of laying out renderables using a CollectionLayout:
 
 ```javascript
-var FlowLayoutController = require('famous-flex/FlowLayoutController');
-var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+var LayoutController = require('famous-flex/LayoutController');
+var CollectionLayout = require('famous-flex/layouts/CollectionLayout'); // import standard layout
 
 // create collection-layout
-var layoutController = new FlowLayoutController({
+var layoutController = new LayoutController({
 	layout: CollectionLayout,
 	layoutOptions: {
 		itemSize: [100, 100],
@@ -83,74 +83,50 @@ var layoutController = new FlowLayoutController({
 		new Surface({content: 'surface3'})
 	]
 });
-this.add(layoutController);
+this.add(layoutController); // add layout-controller to the render-tree
 ```
 
-And when you change the layout, `FlowLayoutController` will smoothly animate
-the renderables to the their new position, size, etc... It doesn't matter 
-whether you change a single layout-option or change the whole layout from 
-a CollectionLayout to a ListLayout,  `FlowLayoutController` simply calculates
-the new end-state and transitions the renderables from the previous state 
-to the new state.
+
+## Layout function
+
+A layout is represented as a `Function`, which takes a `context` argument and
+an optional `options` argument. The purpose of the function is to lay-out the 
+renderables in the data-source by calling `context.set()` on a renderable.
+When `context.set()` is not called on a renderable in the data-source then it is 
+not added to the render-tree.
+
+Famous-flex comes shipped with various [standard layouts](#standard-layouts), but 
+it is also very easy to create your own layout-functions. 
+View [LayoutContext](docs/LayoutContext.md) for more details on creating layout-functions.
 
 ```javascript
+/**
+ * @param {LayoutContext} context Context used for enumerating renderables and setting the layout
+ * @param {Object} [options] additional layout-options that are passed to the function
+ */
+function LayoutFunction(context, options) {
 
-// Change the item-size on the existing collection-layout
-layoutController.setLayoutOptions({
-	itemSize: [200, 200]
-});
-
-// Or just completely change the layout function and direction
-layoutController.setLayout(ListLayout, itemSize: [300]);
-layoutController.setDirection(Utility.Direction.X);
-
-// Change the order of the renderables in the array datasource
-var dataSource = layoutController.getDataSource();
-var swap = dataSource[0];
-dataSource[0] = dataSource[1];
-dataSource[1] = swap;
-layoutController.setDataSource(dataSource);
+	// simple layout-function that lays out renderables from top to bottom
+	var node = context.next();
+	var y = 0;
+	while (node) {
+		context.set(node, {
+			size: [context.size[0], 100],
+			translate: [0, y, 0]
+		});
+		y += 100;
+		node = context.next();
+	}
+};
 ```
 
-
-## LayoutController and FlowLayoutController
-
-Layout-controllers are at the heart of famous-flex. They take a datasource
-containing renderables, a layout function as input and render them to the famo.us
-render-tree.
-
-`LayoutController` is the most basic and lightweight version of a layout-controller.
-It updates the size, transform, etc.. of a renderable instantly after the layout
-has changed.
-
-`FlowLayoutController` uses physics to animate renderables from one state to
-another. FlowLayoutController really demonstrates the power of famous-flex
-in that it can flow renderables from any layout to another layout. Physics, particles
-and springs are used to smoothly animate renderables in natural patterns.
-
-For optimal performance, the layout-controller tries to minimize the
-execution of the layout-function. The layout function is only executed when:
+For optimal performance, the layout function is only executed when:
 - A resize occurs
 - `setLayout` is called on the layout-controller
 - `setLayoutOptions` is called on the layout-controller
 - `setDirection` is called on the layout-controller
 - `setDataSource` is called on the layout-controller
 - `reflowLayout` is called on the layout-controller
-- `insert` or `remove` is called on `FlowLayoutController`
-
-
-## Standard layouts
-
-Famous-flex is shipped with a selection of commonly used layouts. It is also very easy
-to [write your own layout functions](#layout-function).
-
-|Layout|Description|
-|---|---|
-|[GridLayout](docs/layouts/GridLayout.md)|Grid-layout with fixed number of rows & columns.|
-|[ListLayout](docs/layouts/ListLayout.md)|Lays out renderables in a horizontal or vertical list.|
-|[CollectionLayout](docs/layouts/CollectionLayout.md)|Lays out renderables with a specific width & height.|
-|[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Layout containing a top-header, bottom- footer and content.|
-|[NavBarLayout](docs/layouts/NavBarLayout.md)|Layout containing one or more left and right items and a title.|
 
 
 ## Datasource
@@ -162,11 +138,23 @@ It can be one of three things:
 - A `ViewSequence`
 - An `Object` with key/value pairs
 
-Example of an array/sequence of renderables:
+In case of an `Array` or `ViewSequence`, use `context.next()` in your 
+layout-function to enumerate all the renderables in the data-source:
 
 ```javascript
 var layoutController = new LayoutController({
-	layout: GridLayout,
+	layout: function (context, options) {
+		var y = 0;
+		var node = context.next();
+		while (node) {
+			context.set(node, {
+				size: [context.size[0], 100],
+				translate: [0, y, 0]
+			});
+			y += 100;
+			node = context.next();
+		}
+	},
 	layoutOptions: {
 		cells: [3, 1],
 	},
@@ -178,47 +166,43 @@ var layoutController = new LayoutController({
 });
 ```
 
-Example of an object with key/value pairs:
+Sometimes it is easier to identify renderables by an id, rather than a 
+sequence. In that case use `context.get()` or directly pass the data-source id
+to the `context.set()` function:
 
 ```javascript
 var layoutController = new LayoutController({
-	layout: NavBarLayout,
+	layout: function (context, options) {
+		node.set('one', {
+			size: [100, 100],
+			translate: [0, 0, 0]
+		});
+		node.set('two', {
+			size: [100, 100],
+			translate: [100, 0, 0]
+		});
+		node.set('three', {
+			size: [100, 100],
+			translate: [200, 0, 0]
+		});
+	},
 	dataSource: {
-		'title': new Surface({content: 'title'}),
-		'leftItems': [
-			new Surface({content: 'btn1'}),
-			new Surface({content: 'btn2'})
-		]
+		'one': new Surface({content: 'one'}),
+		'two': new Surface({content: 'two'}),
+		'three': new Surface({content: 'three'})
 	}
 });
 ```
 
+## Standard layouts
 
-## Layout function
-
-A layout is either represented as a `Function` with the following parameters, or a 
-[layout literal](#layout-literals).
-
-```javascript
-/**
- * @param {LayoutContext} context Context used for enumerating renderables and setting the layout
- * @param {Object} [options] additional options that were passed to the function
- */
-function LayoutFunction(context, options) {
-	// put your layout-logic here, see LayoutContext for details
-};
-```
-
-It is easy to create your own layout functions. In order to do this read the [LayoutContext documentation](docs/LayoutContext.md) which contains various examples.
-
-
-## Layout helpers
-
-Layout helpers are special classes that simplify writing layout functions.
-
-|Helper|Literal|Description|
-|---|---|---|
-|[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
+|Layout|DataSource|Description|
+|---|---|
+|[GridLayout](docs/layouts/GridLayout.md)|Sequence/Array|Grid-layout with fixed number of rows & columns.|
+|[ListLayout](docs/layouts/ListLayout.md)|Sequence/Array|Lays out renderables in a horizontal or vertical list.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|Sequence/Array|Lays out renderables with a specific width & height.|
+|[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|Layout containing a top-header, bottom- footer and content.|
+|[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|Layout containing one or more left and right items and a title.|
 
 
 ## Layout literals
@@ -249,6 +233,61 @@ layout literals, perform the following steps:
 - Register the helper using `LayoutUtility.registerHelper`.
 
 
+## Layout helpers
+
+Layout helpers are special classes that simplify writing layout functions.
+
+|Helper|Literal|Description|
+|---|---|---|
+|[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
+
+
+## FlowLayoutController
+
+`FlowLayoutController` extends `LayoutController` and smoothly animates renderables
+between different layouts. It doesn't matter whether you change a single layout-option 
+or change the whole layout from a CollectionLayout to a ListLayout,  
+`FlowLayoutController` simply calculates the new end-state and transitions the renderables
+from the previous state to the new state.
+
+```javascript
+var flowLC = require('famous-flex/FlowLayoutController');
+var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+
+// create collection-layout
+var flowLC = new FlowLayoutController({
+	layout: CollectionLayout,
+	layoutOptions: {
+		itemSize: [100, 100],
+		gutter: [20, 20],
+		justify: true
+	},
+	dataSource: [
+		new Surface({content: 'surface1'}),
+		new Surface({content: 'surface2'}),
+		new Surface({content: 'surface3'})
+	]
+});
+this.add(flowLC); // add layout-controller to the render-tree
+
+// Change the item-size on the existing collection-layout
+flowLC.setLayoutOptions({
+	itemSize: [200, 200]
+});
+
+// Or just completely change the layout function and direction
+flowLC.setLayout(ListLayout, itemSize: [300]);
+flowLC.setDirection(Utility.Direction.X);
+
+// Change the order of the renderables in the array datasource
+var dataSource = flowLC.getDataSource();
+var swap = dataSource[0];
+dataSource[0] = dataSource[1];
+dataSource[1] = swap;
+flowLC.setDataSource(dataSource);
+```
+
+
 ## API reference
 
 |Class|Description|
@@ -258,10 +297,26 @@ layout literals, perform the following steps:
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 
+
+## Roadmap
+
+Famous-flex is still in its infancy. I am commited in creating a first-class
+layout-solution for famo.us that is as performant, pluggable and awesome as
+can be. But to do this, I need your support and feedback. Let me know which of
+features below are most important to you, by leaving a comment in the corresponding
+issue.
+
+- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrollview/container supporting layout-functions + smooth transitions)
+- [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
+- [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
+- [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
+
+
 ## Contribute
 
 If you like this project and want to support it, show some love
 and give it a star.
+
 
 ## Contact
 - 	@IjzerenHein
