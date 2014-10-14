@@ -241,27 +241,58 @@ define(function(require, exports, module) {
      * touch gestures.
      */
     function _touchStart(event) {
+        _log.call(this, 'touchStart');
         this._eventOutput.emit('touchstart', event);
-
-        // Process touch
-        var oldTouchesCount = this._scroll.activeTouches.length;
-        for (var i = 0; i < event.changedTouches.length; i++) {
-            var changedTouch = event.changedTouches[i];
-            var current = [changedTouch.clientX, changedTouch.clientY];
-            var time = Date.now();
-            var touch = {
-                id: changedTouch.identifier,
-                start: current,
-                current: current,
-                prev: current,
-                time: time,
-                prevTime: time
-            };
-            this._scroll.activeTouches.push(touch);
-        }
 
         // Reset any programmatic scrollTo request when the user is doing stuff
         this._scroll.scrollToSequence = undefined;
+
+        // Remove any touches that are no longer active
+        var oldTouchesCount = this._scroll.activeTouches.length;
+        var i = 0;
+        var touchFound;
+        while (i < this._scroll.activeTouches.length) {
+            var activeTouch = this._scroll.activeTouches[i];
+            touchFound = false;
+            for (var j = 0; j < event.touches.length; j++) {
+                var touch = event.touches[j];
+                if (touch.identifier === activeTouch.id) {
+                    touchFound = true;
+                    break;
+                }
+            }
+            if (!touchFound) {
+                _log.cal(this, 'removing touch with id: ', activeTouch.id);
+                this._scroll.activeTouches.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+        }
+
+        // Process touch
+        for (i = 0; i < event.touches.length; i++) {
+            var changedTouch = event.touches[i];
+            touchFound = false;
+            for (j = 0; j < this._scroll.activeTouches.length; i++) {
+                if (this._scroll.activeTouches[j].id === changedTouch.identifier) {
+                    touchFound = true;
+                    break;
+                }
+            }
+            if (!touchFound) {
+                var current = [changedTouch.clientX, changedTouch.clientY];
+                var time = Date.now();
+                this._scroll.activeTouches.push({
+                    id: changedTouch.identifier,
+                    start: current,
+                    current: current,
+                    prev: current,
+                    time: time,
+                    prevTime: time
+                });
+            }
+        }
 
         // The first time a touch new touch gesture has arrived, emit event
         if (!oldTouchesCount && this._scroll.activeTouches.length) {
@@ -277,6 +308,7 @@ define(function(require, exports, module) {
      * Updates the moveOffset so that the scroll-offset on the view is updated.
      */
     function _touchMove(event) {
+        _log.call(this, 'touchMove');
         this._eventOutput.emit('touchmove', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
@@ -325,6 +357,7 @@ define(function(require, exports, module) {
      * certain direction.
      */
     function _touchEnd(event) {
+        _log.call(this, 'touchEnd');
         this._eventOutput.emit('touchend', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
