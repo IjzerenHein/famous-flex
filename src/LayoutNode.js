@@ -50,8 +50,20 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.reset = function() {
         this._invalidated = false;
-        this._spec.transform = undefined;
         this.trueSizeRequested = false;
+    };
+
+    /**
+     * Set the spec of the node
+     *
+     * @param {Object} spec
+     */
+    LayoutNode.prototype.setSpec = function(spec) {
+        this._spec.align = spec.align;
+        this._spec.origin = spec.origin;
+        this._spec.size = spec.size;
+        this._spec.transform = spec.transform;
+        this._spec.opacity = spec.opacity;
     };
 
     /**
@@ -74,6 +86,9 @@ define(function(require, exports, module) {
                 scale: set.scale || [1, 1, 1],
                 rotate: set.rotate || [0, 0, 0]
             });
+        }
+        else {
+            this._spec.transform = undefined;
         }
         this.scrollLength = set.scrollLength;
     };
