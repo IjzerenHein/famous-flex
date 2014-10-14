@@ -77,18 +77,12 @@ define(function(require, exports, module) {
         // Create node manager that manages result LayoutNode instances
         this._nodes = nodeManager || new LayoutNodeManager(LayoutNode);
 
-        // Apply options
-        if (options && options.dataSource) {
-            this.setDataSource(options.dataSource);
-        }
-        if (options && (options.layout || options.layoutOptions)) {
-            this.setLayout(options.layout, options.layoutOptions);
-        }
-        if (options && (options.direction !== undefined)) {
-            this.setDirection(options.direction);
-        }
-        else {
-            this.setDirection(undefined);
+        // Create options
+        this.options = Object.create({});
+        this._optionsManager = new OptionsManager(this.options);
+        this.setDirection(undefined);
+        if (options) {
+            this.setOptions(options);
         }
     }
 
@@ -103,6 +97,7 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
+        this._optionsManager.setOptions(options);
         if (options.dataSource) {
             this.setDataSource(options.dataSource);
         }
@@ -324,6 +319,123 @@ define(function(require, exports, module) {
      */
     LayoutController.prototype.reflowLayout = function() {
         this._isDirty = true;
+        return this;
+    };
+
+    /**
+     * Inserts a renderable into the data-source.
+     *
+     * The optional argument `insertSpec` is only used by 'FlowLayoutController' and
+     * `ScrollLayoutController`. When specified, the renderable is inserted using an
+     * animation starting with size, origin, opacity, transform, etc... as specified
+     * in `insertSpec'.
+     *
+     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @param {Object} renderable Renderable to add to the data-source
+     * @param {Spec} [insertSpec] Size, transform, etc.. to start with when inserting
+     * @return {FlowLayoutController} this
+     */
+    LayoutController.prototype.insert = function(indexOrId, renderable, insertSpec) {
+
+        // Add the renderable in case of an id (String)
+        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+
+            // Create data-source if neccesary
+            if (this._dataSource === undefined) {
+                this._dataSource = {};
+                this._nodesById = this._dataSource;
+            }
+
+            // Insert renderable
+            this._nodesById[indexOrId] = renderable;
+        }
+
+        // Add the renderable using an index
+        else {
+
+            // Create data-source if neccesary
+            if (this._dataSource === undefined) {
+                this._dataSource = [];
+                this._viewSequence = new ViewSequence(this._dataSource);
+            }
+
+            // Using insert in this way, only works when the data-source is an array
+            if (!(this._dataSource instanceof Array)) {
+                LayoutUtility.error('LayoutController.insert(index) only works when the dataSource is an array');
+                return this;
+            }
+
+            // Insert into array
+            if (indexOrId < 0) {
+                this._dataSource.push(renderable);
+            }
+            else {
+                this._dataSource.splice(indexOrId, 0, renderable);
+            }
+        }
+
+        // When a custom insert-spec was specified, store that in the layout-node
+        if (insertSpec) {
+            this._nodes.insertNode(this._nodes.createNode(renderable, insertSpec));
+        }
+
+        // Force a reflow
+        this._isDirty = true;
+
+        return this;
+    };
+
+    /**
+     * Removes a renderable from the data-source.
+     *
+     * The optional argument `removeSpec` is only used by 'FlowLayoutController' and
+     * `ScrollLayoutController`. When specified, the renderable is removed using an
+     * animation ending at the size, origin, opacity, transform, etc... as specified
+     * in `removeSpec'.
+     *
+     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @param {Spec} [removeSpec] Size, transform, etc.. to end with when removing
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.remove = function(indexOrId, removeSpec) {
+
+        // Remove the renderable in case of an id (String)
+        var renderNode;
+        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+
+            // Find and remove renderable from data-source
+            renderNode = this._nodesById[indexOrId];
+            if (renderNode) {
+                delete this._nodesById[indexOrId];
+            }
+        }
+
+        // Remove the renderable using an index
+        else {
+
+            // Using remove in this way, only works when the data-source is an array
+            if (!(this._dataSource instanceof Array)) {
+                LayoutUtility.error('LayoutController.remove(index) only works when the dataSource is an array');
+                return this;
+            }
+
+            // Remove from array
+            renderNode = this._dataSource.splice(indexOrId, 1)[0];
+        }
+
+        // When a custom remove-spec was specified, store that in the layout-node
+        if (renderNode && removeSpec) {
+            var node = this._nodes.getNodeByRenderNode(renderNode);
+            if (node) {
+                node.remove(removeSpec || this.options.removeSpec);
+            }
+        }
+
+        // Force a reflow
+        if (renderNode) {
+            this._isDirty = true;
+        }
+
         return this;
     };
 

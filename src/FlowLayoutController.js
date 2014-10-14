@@ -25,10 +25,7 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutController = require('./LayoutController');
     var LayoutNodeManager = require('./LayoutNodeManager');
-    var OptionsManager = require('famous/core/OptionsManager');
-    var ViewSequence = require('famous/core/ViewSequence');
     var FlowLayoutNode = require('./FlowLayoutNode');
-    var LayoutUtility = require('./LayoutUtility');
     var Transform = require('famous/core/Transform');
 
     /**
@@ -45,11 +42,7 @@ define(function(require, exports, module) {
      * @alias module:FlowLayoutController
      */
     function FlowLayoutController(options, nodeManager) {
-        LayoutController.call(this, options, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
-
-        // Set options
-        this.options = Object.create(FlowLayoutController.DEFAULT_OPTIONS);
-        this._optionsManager = new OptionsManager(this.options);
+        LayoutController.call(this, FlowLayoutController.DEFAULT_OPTIONS, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
         if (options) {
             this.setOptions(options);
         }
@@ -83,9 +76,11 @@ define(function(require, exports, module) {
      * the node with the `insertSpec` if it has been defined.
      */
     function _initLayoutNode(node, spec) {
-        node.setOptions({
-            spring: this.options.nodeSpring
-        });
+        if (node.setOptions) {
+            node.setOptions({
+                spring: this.options.nodeSpring
+            });
+        }
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
@@ -106,122 +101,12 @@ define(function(require, exports, module) {
      * @return {FlowLayoutController} this
      */
     FlowLayoutController.prototype.setOptions = function setOptions(options) {
-        this._optionsManager.setOptions(options);
         oldSetOptions.call(this, options);
         if (options.nodeSpring) {
             this._nodes.forEach(function(node) {
                 node.setOptions({spring: options.nodeSpring});
             });
         }
-        return this;
-    };
-
-    /**
-     * Inserts a renderable into the data-source. If the renderable is visible
-     * then it is inserted using an animation.
-     *
-     * @param {Number|String} indexOrId Index within dataSource array or id (String)
-     * @param {Object} renderable Rendeable to add to the data-source
-     * @param {Spec} [spec] Size, transform, etc.. to start with when inserting
-     * @return {FlowLayoutController} this
-     */
-    FlowLayoutController.prototype.insert = function(indexOrId, renderable, spec) {
-
-        // Add the renderable in case of an id (String)
-        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
-
-            // Create data-source if neccesary
-            if (this._dataSource === undefined) {
-                this._dataSource = {};
-                this._nodesById = this._dataSource;
-            }
-
-            // Insert renderable
-            this._nodesById[indexOrId] = renderable;
-        }
-
-        // Add the renderable using an index
-        else {
-
-            // Create data-source if neccesary
-            if (this._dataSource === undefined) {
-                this._dataSource = [];
-                this._viewSequence = new ViewSequence(this._dataSource);
-            }
-
-            // Using insert in this way, only works when the data-source is an array
-            if (!(this._dataSource instanceof Array)) {
-                LayoutUtility.error('FlowLayoutController.insert(index) only works when the dataSource is an array');
-                return this;
-            }
-
-            // Insert into array
-            if (indexOrId < 0) {
-                this._dataSource.push(renderable);
-            }
-            else {
-                this._dataSource.splice(indexOrId, 0, renderable);
-            }
-        }
-
-        // When a custom insert-spec was specified, store that in the layout-node
-        if (spec) {
-            this._nodes.insertNode(this._nodes.createNode(renderable, spec));
-        }
-
-        // Force a reflow
-        this._isDirty = true;
-
-        return this;
-    };
-
-    /**
-     * Removes a renderable from the data-source. If the renderable is visible
-     * then it will be removed using an animation.
-     *
-     * @param {Number|String} indexOrId Index within dataSource array or id (String)
-     * @param {Spec} [spec] Size, transform, etc.. to end with when removing
-     * @return {FlowLayoutController} this
-     */
-    FlowLayoutController.prototype.remove = function(indexOrId, spec) {
-
-        // Remove the renderable in case of an id (String)
-        var renderNode;
-        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
-
-            // Find and remove renderable from data-source
-            renderNode = this._nodesById[indexOrId];
-            if (renderNode) {
-                delete this._nodesById[indexOrId];
-            }
-        }
-
-        // Remove the renderable using an index
-        else {
-
-            // Using remove in this way, only works when the data-source is an array
-            if (!(this._dataSource instanceof Array)) {
-                LayoutUtility.error('FlowLayoutController.remove(index) only works when the dataSource is an array');
-                return this;
-            }
-
-            // Remove from array
-            renderNode = this._dataSource.splice(indexOrId, 1)[0];
-        }
-
-        // When a custom remove-spec was specified, store that in the layout-node
-        if (renderNode && spec) {
-            var node = this._nodes.getNodeByRenderNode(renderNode);
-            if (node) {
-                node.remove(spec || this.options.removeSpec);
-            }
-        }
-
-        // Force a reflow
-        if (renderNode) {
-            this._isDirty = true;
-        }
-
         return this;
     };
 
