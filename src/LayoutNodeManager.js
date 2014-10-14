@@ -245,6 +245,7 @@ define(function(require, exports, module) {
         }
         node._prev = undefined;
         node._next = undefined;
+        node._viewSequence = undefined;
         if (this._initLayoutNodeFn) {
             this._initLayoutNodeFn.call(this, node, spec);
         }
@@ -341,7 +342,7 @@ define(function(require, exports, module) {
         // in the linked-list. If so, return that node immediately
         // and advanced the prev/next pointer for the next/prev
         // lookup operation.
-        if (prev) {
+        if (prev && (this._contextState.start !== node)) {
             if (this._contextState.prev) {
                 var prevNode = this._contextState.prev._prev;
                 if (prevNode && (prevNode.renderNode === renderNode)) {
