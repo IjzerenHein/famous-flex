@@ -56,9 +56,6 @@ define(function(require, exports, module) {
 
     function CollectionLayout(context, options) {
 
-        console.log('scrollOffset: ' + context.scrollOffset);
-
-
         // Prepare
         var size = context.size;
         var direction = context.direction;
@@ -102,6 +99,7 @@ define(function(require, exports, module) {
             // Determine size of the line
             var i;
             var lineSize = [0, 0];
+            var lineNode;
             lineSize[lineDirection] = gutter[lineDirection];
             for (i = 0; i < lineNodes.length; i++) {
                 lineSize[direction] = Math.max(lineSize[direction], lineNodes[i].size[direction]);
@@ -109,21 +107,26 @@ define(function(require, exports, module) {
             }
 
             // Layout nodes from left to right or top to bottom
-            var translate = [0, 0, 0];
             var justifyOffset = justify[lineDirection] ? ((size[lineDirection] - lineSize[lineDirection]) / (lineNodes.length * 2)) : 0;
             var lineOffset = gutter[lineDirection] + justifyOffset;
             for (i = 0; i < lineNodes.length; i++) {
-                var lineNode = lineNodes[i];
+                lineNode = lineNodes[i];
+                var translate = [0, 0, 0];
                 translate[lineDirection] = lineOffset;
                 translate[direction] = next ? (offset + gutter[direction]) : (offset - lineSize[direction]);
-                var scrollLength = (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached ? gutter[direction] : 0)) : 0;
-                context.set(lineNode.node, {
+                lineNode.set = {
                     size: lineNode.size,
                     translate: translate,
                     // first renderable has scrollLength, others have 0 scrollLength
-                    scrollLength: scrollLength
-                });
+                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached ? gutter[direction] : 0)) : 0
+                };
                 lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
+            }
+
+            // Set nodes
+            for (i = 0; i < lineNodes.length; i++) {
+                lineNode = next ? lineNodes[i] : lineNodes[(lineNodes.length - 1) - i];
+                context.set(lineNode.node, lineNode.set);
             }
 
             // Prepare for next line
