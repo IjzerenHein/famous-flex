@@ -96,6 +96,10 @@ define(function(require, exports, module) {
         this._contextState.prevSequence = viewSequence;
         this._contextState.next = undefined;
         this._contextState.prev = undefined;
+        this._contextState.nextGetIndex = 0;
+        this._contextState.prevGetIndex = 0;
+        this._contextState.nextSetIndex = 0;
+        this._contextState.prevSetIndex = 0;
 
         // Prepare content
         this._context.size = contextData.size;
@@ -439,7 +443,8 @@ define(function(require, exports, module) {
         return {
             renderNode: renderNode,
             viewSequence: nextSequence,
-            next: true
+            next: true,
+            index: ++this._contextState.nextGetIndex
         };
     }
 
@@ -464,7 +469,8 @@ define(function(require, exports, module) {
         return {
             renderNode: renderNode,
             viewSequence: this._contextState.prevSequence,
-            prev: true
+            prev: true,
+            index: --this._contextState.prevGetIndex
         };
     }
 
@@ -531,6 +537,17 @@ define(function(require, exports, module) {
     function _contextSet(contextNodeOrId, set) {
         var contextNode = _contextGet.call(this, contextNodeOrId);
         if (contextNode) {
+            if (contextNode.next) {
+                 if (contextNode.index < this._contextState.nextSetIndex) {
+                    LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
+                 }
+                 this._contextState.nextSetIndex = contextNode.index;
+            } else if (contextNode.prev) {
+                 if (contextNode.index > this._contextState.prevSetIndex) {
+                    LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
+                 }
+                 this._contextState.prevSetIndex = contextNode.index;
+            }
             var node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
             node._viewSequence = contextNode.viewSequence;
             node.trueSizeRequested = contextNode.trueSizeRequested;
