@@ -128,7 +128,7 @@ define(function(require, exports, module) {
         //insertSpec: undefined,
         //removeSpec: undefined,
         useContainer: false,
-        offsetRounding: 0.2,
+        offsetRounding: 1.0,
         scrollDrag: {
             strength : 0.001
         },
@@ -241,7 +241,7 @@ define(function(require, exports, module) {
      * touch gestures.
      */
     function _touchStart(event) {
-        _log.call(this, 'touchStart');
+        //_log.call(this, 'touchStart');
         this._eventOutput.emit('touchstart', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
@@ -262,7 +262,7 @@ define(function(require, exports, module) {
                 }
             }
             if (!touchFound) {
-                _log.cal(this, 'removing touch with id: ', activeTouch.id);
+                //_log.cal(this, 'removing touch with id: ', activeTouch.id);
                 this._scroll.activeTouches.splice(i, 1);
             }
             else {
@@ -308,7 +308,7 @@ define(function(require, exports, module) {
      * Updates the moveOffset so that the scroll-offset on the view is updated.
      */
     function _touchMove(event) {
-        _log.call(this, 'touchMove');
+        //_log.call(this, 'touchMove');
         this._eventOutput.emit('touchmove', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
@@ -357,7 +357,7 @@ define(function(require, exports, module) {
      * certain direction.
      */
     function _touchEnd(event) {
-        _log.call(this, 'touchEnd');
+        //_log.call(this, 'touchEnd');
         this._eventOutput.emit('touchend', event);
 
         // Reset any programmatic scrollTo request when the user is doing stuff
@@ -731,7 +731,6 @@ define(function(require, exports, module) {
                 return true;
             }
             if (prevScrollLength !== undefined) {
-                prevScrollLength = node.scrollLength;
                 if ((scrollOffset + prevScrollLength) >= 0){
                     return true;
                 }
@@ -939,7 +938,7 @@ define(function(require, exports, module) {
 
         // Track the number of times the layout-function was executed
         this._debug.layoutCount++;
-        _log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
+        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
 
         // Prepare for layout
         var layoutContext = this._nodes.prepareForLayout(
