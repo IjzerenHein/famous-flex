@@ -56,6 +56,9 @@ define(function(require, exports, module) {
 
     function CollectionLayout(context, options) {
 
+        console.log('scrollOffset: ' + context.scrollOffset);
+
+
         // Prepare
         var size = context.size;
         var direction = context.direction;
@@ -91,7 +94,10 @@ define(function(require, exports, module) {
          * - justify
          * - center align
          */
-        function _layoutLine() {
+        function _layoutLine(next, endReached) {
+            if (!lineNodes.length) {
+                return 0;
+            }
 
             // Determine size of the line
             var i;
@@ -109,12 +115,13 @@ define(function(require, exports, module) {
             for (i = 0; i < lineNodes.length; i++) {
                 var lineNode = lineNodes[i];
                 translate[lineDirection] = lineOffset;
-                translate[direction] = offset; // TODO
+                translate[direction] = next ? (offset + gutter[direction]) : (offset - lineSize[direction]);
+                var scrollLength = (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached ? gutter[direction] : 0)) : 0;
                 context.set(lineNode.node, {
                     size: lineNode.size,
                     translate: translate,
                     // first renderable has scrollLength, others have 0 scrollLength
-                    scrollLength: (i === 0) ? lineNode.size[direction] : 0
+                    scrollLength: scrollLength
                 });
                 lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
             }
@@ -147,36 +154,37 @@ define(function(require, exports, module) {
          * Process all next nodes
          */
         lineLength = gutter[lineDirection];
-        while (offset < size[direction]) {
+        while (offset < context.scrollEnd) {
             node = context.next();
             if (!node) {
-                _layoutLine();
+                _layoutLine(true, true);
                 break;
             }
             nodeSize = _resolveNodeSize(node);
             lineLength += nodeSize[lineDirection] + gutter[lineDirection];
             if (lineLength > size[lineDirection]) {
-                offset += _layoutLine();
+                offset += _layoutLine(true, !node);
                 lineLength = gutter[lineDirection] + nodeSize[lineDirection] + gutter[lineDirection];
             }
             lineNodes.push({node: node, size: nodeSize});
         }
+        lineNodes = [];
 
         /**
          * Process previous nodes
          */
         offset = context.scrollOffset;
         lineLength = gutter[lineDirection];
-        while (offset > 0) {
+        while (offset > context.scrollStart) {
             node = context.prev();
             if (!node) {
-                _layoutLine();
+                _layoutLine(false);
                 break;
             }
             nodeSize = _resolveNodeSize(node);
             lineLength += nodeSize[lineDirection] + gutter[lineDirection];
             if (lineLength > size[lineDirection]) {
-                offset -= _layoutLine();
+                offset -= _layoutLine(false);
                 lineLength = gutter[lineDirection] + nodeSize[lineDirection] + gutter[lineDirection];
             }
             lineNodes.unshift({node: node, size: nodeSize});
