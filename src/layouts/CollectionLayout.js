@@ -18,9 +18,7 @@
  * |---|---|---|
  * |`itemSize`|Size|Size of an item to layout|
  * |`[gutter]`|Size|Gutter-space between renderables|
- * |`[justify]`|Bool|Justifies the renderables accross the width & height|
- * |`[justifyHorizontal]`|Bool|Justifies the renderables accross the width|
- * |`[justifyVertical]`|Bool|Justifies the renderables accross the height|
+ * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
  *
  * Example:
  *
@@ -52,61 +50,147 @@ define(function(require, exports, module) {
     var capabilities = {
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
-        scrolling: true
+        scrolling: true,
+        trueSize: true
     };
 
     function CollectionLayout(context, options) {
 
         // Prepare
         var size = context.size;
+        var direction = context.direction;
+        var lineDirection = (direction + 1) % 2;
+        var offset = context.scrollOffset;
         var gutter = options.gutter || [0, 0];
-        var left = gutter[0];
-        var top = gutter[1];
-        var nodeSize = options.itemSize;
-        var nodeWidth = (options.justify || options.horizontalJustify)
-            ? ((size[0] - gutter[0]) / Math.floor((size[0] - gutter[0]) / (nodeSize[0] + gutter[0])))
-            : (nodeSize[0] + gutter[0]);
-        var nodeHeight = (options.justify || options.verticalJustify)
-            ? ((size[1] - gutter[1]) / Math.floor((size[1] - gutter[1]) / (nodeSize[1] + gutter[1])))
-            : (nodeSize[1] + gutter[1]);
-        //var offset = context.scrollOffset || 0;
+        var justify = Array.isArray(options.justify) ? options.justify : (options.justify ? [true, true] : [false, false]);
+        var node;
+        var nodeSize;
+        var itemSize;
+        var lineLength;
+        var lineNodes = [];
 
-        // Layout next renderables
-        var node = context.next();
-        while (node) {
+        // Prepare item-size
+        if (!options.itemSize) {
+            itemSize = [true, true]; // when no item-size specified, use size from renderables
+        } else if ((options.itemSize[0] === undefined) || (options.itemSize[0] === undefined)){
+            // resolve 'undefined' into a fixed size
+            itemSize = [
+                (options.itemSize[0] === undefined) ? size[0] : options.itemSize[0],
+                (options.itemSize[1] === undefined) ? size[1] : options.itemSize[1]
+            ];
+        }
+        else {
+            itemSize = options.itemSize;
+        }
 
-            // Layout current node
-            context.set(node, {
-                size: nodeSize,
-                translate: [
-                    left + ((nodeWidth - gutter[0]) - nodeSize[0]) / 2,
-                    top + ((nodeHeight - gutter[1]) - nodeSize[1]) / 2,
-                    0
-                ]
-            });
+        /**
+         * Lays out the renderables in a single line. Taking into account
+         * the following variables:
+         * - true-size
+         * - gutter
+         * - justify
+         * - center align
+         */
+        function _layoutLine(next, endReached) {
+            if (!lineNodes.length) {
+                return 0;
+            }
 
-            // Calculate next node
-            if ((context.direction === undefined) || (context.direction === Utility.Direction.Y)) {
-                left += nodeWidth;
-                if ((left + nodeSize[0]) > size[0]) {
-                    left = gutter[0];
-                    top += nodeHeight;
+            // Determine size of the line
+            var i;
+            var lineSize = [0, 0];
+            var lineNode;
+            lineSize[lineDirection] = gutter[lineDirection];
+            for (i = 0; i < lineNodes.length; i++) {
+                lineSize[direction] = Math.max(lineSize[direction], lineNodes[i].size[direction]);
+                lineSize[lineDirection] += lineNodes[i].size[lineDirection] + gutter[lineDirection];
+            }
+
+            // Layout nodes from left to right or top to bottom
+            var justifyOffset = justify[lineDirection] ? ((size[lineDirection] - lineSize[lineDirection]) / (lineNodes.length * 2)) : 0;
+            var lineOffset = gutter[lineDirection] + justifyOffset;
+            for (i = 0; i < lineNodes.length; i++) {
+                lineNode = lineNodes[i];
+                var translate = [0, 0, 0];
+                translate[lineDirection] = lineOffset;
+                translate[direction] = next ? (offset + gutter[direction]) : (offset - lineSize[direction]);
+                lineNode.set = {
+                    size: lineNode.size,
+                    translate: translate,
+                    // first renderable has scrollLength, others have 0 scrollLength
+                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached ? gutter[direction] : 0)) : 0
+                };
+                lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
+            }
+
+            // Set nodes
+            for (i = 0; i < lineNodes.length; i++) {
+                lineNode = next ? lineNodes[i] : lineNodes[(lineNodes.length - 1) - i];
+                context.set(lineNode.node, lineNode.set);
+            }
+
+            // Prepare for next line
+            lineNodes = [];
+            return lineSize[direction] + gutter[direction];
+        }
+
+        /**
+         * Helper function to resolving the size of a node.
+         */
+        function _resolveNodeSize(node) {
+            if ((itemSize[0] === true) || (itemSize[1] === true)) {
+                var result = context.resolveSize(node, size);
+                if (itemSize[0] !== true) {
+                    result[0] = itemSize[0];
                 }
-                if (top >= size[1]) {
-                    return;
+                if (itemSize[1] !== true) {
+                    result[1] = itemSize[1];
                 }
+                return result;
             }
             else {
-                top += nodeHeight;
-                if ((top + nodeSize[1]) > size[1]) {
-                    top = gutter[1];
-                    left += nodeWidth;
-                }
-                if (left >= size[0]) {
-                    return;
-                }
+                return itemSize;
             }
+        }
+
+        /**
+         * Process all next nodes
+         */
+        lineLength = gutter[lineDirection];
+        while (offset < context.scrollEnd) {
             node = context.next();
+            if (!node) {
+                _layoutLine(true, true);
+                break;
+            }
+            nodeSize = _resolveNodeSize(node);
+            lineLength += nodeSize[lineDirection] + gutter[lineDirection];
+            if (lineLength > size[lineDirection]) {
+                offset += _layoutLine(true, !node);
+                lineLength = gutter[lineDirection] + nodeSize[lineDirection] + gutter[lineDirection];
+            }
+            lineNodes.push({node: node, size: nodeSize});
+        }
+        lineNodes = [];
+
+        /**
+         * Process previous nodes
+         */
+        offset = context.scrollOffset;
+        lineLength = gutter[lineDirection];
+        while (offset > context.scrollStart) {
+            node = context.prev();
+            if (!node) {
+                _layoutLine(false);
+                break;
+            }
+            nodeSize = _resolveNodeSize(node);
+            lineLength += nodeSize[lineDirection] + gutter[lineDirection];
+            if (lineLength > size[lineDirection]) {
+                offset -= _layoutLine(false);
+                lineLength = gutter[lineDirection] + nodeSize[lineDirection] + gutter[lineDirection];
+            }
+            lineNodes.unshift({node: node, size: nodeSize});
         }
     }
 
