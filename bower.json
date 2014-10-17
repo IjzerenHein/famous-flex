@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -17,7 +17,9 @@
     "famous-flex",
     "layoutcontroller",
     "flowlayoutcontroller",
-    "flex-layoutcontroller"
+    "flex-layoutcontroller",
+    "scrollview",
+    "flex-scrollview"
   ],
   "license": "MIT",
   "ignore": [
