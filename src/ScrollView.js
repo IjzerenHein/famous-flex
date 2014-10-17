@@ -20,8 +20,8 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var LayoutController = require('./LayoutController');
-    var LayoutNode = require('./LayoutNode');
+    var FlowLayoutController = require('./FlowLayoutController');
+    var FlowLayoutNode = require('./FlowLayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Transform = require('famous/core/Transform');
@@ -49,7 +49,7 @@ define(function(require, exports, module) {
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
-        LayoutController.call(this, ScrollView.DEFAULT_OPTIONS, new LayoutNodeManager(LayoutNode, _initLayoutNode.bind(this)));
+        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
         if (options) {
             this.setOptions(options);
         }
@@ -121,7 +121,7 @@ define(function(require, exports, module) {
             EventHandler.setOutputHandler(this.container, this);
         }
     }
-    ScrollView.prototype = Object.create(LayoutController.prototype);
+    ScrollView.prototype = Object.create(FlowLayoutController.prototype);
     ScrollView.prototype.constructor = ScrollView;
 
     ScrollView.DEFAULT_OPTIONS = {
@@ -160,14 +160,9 @@ define(function(require, exports, module) {
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
-        /*if (node.lock) {
-            if (!spec && !this.options.insertSpec) {
-                node.lock('translate', true, true);
-            }
-            else {
-                node.lock('translate', true, false);
-            }
-        }*/
+        if (node.setDirectionLock) {
+            node.setDirectionLock(this._direction, 1);
+        }
     }
 
     /**
@@ -850,7 +845,7 @@ define(function(require, exports, module) {
     function _scrollToSequence(viewSequence, next) {
         this._scroll.scrollToSequence = viewSequence;
         this._scroll.scrollToDirection = next;
-        this._isDirty = true;
+        this._scroll.scrollToDirty = true;
     }
 
     /**
@@ -893,7 +888,7 @@ define(function(require, exports, module) {
      * Scroll to the given renderable in the datasource.
      *
      * @param {RenderNode} [node] renderable to scroll to
-     * @return {LayoutController} this
+     * @return {ScrollView} this
      */
     ScrollView.prototype.scrollTo = function(node) {
 
@@ -1009,6 +1004,24 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Override of the setDirection function to detect whether the
+     * direction has changed. If so, the directionLock on the nodes
+     * is updated.
+     */
+    var oldSetDirection = ScrollView.prototype.setDirection;
+    ScrollView.prototype.setDirection = function(direction) {
+        var oldDirection = this._direction;
+        oldSetDirection.call(this, direction);
+        if (oldDirection !== this._direction) {
+            this._nodes.forEach(function(node) {
+                if (node.setDirectionLock) {
+                    node.setDirectionLock(this._direction, 0);
+                }
+            }.bind(this));
+        }
+    };
+
+    /**
      * Apply changes from this component to the corresponding document element.
      * This includes changes to classes, styles, size, content, opacity, origin,
      * and matrix transforms.
@@ -1028,6 +1041,7 @@ define(function(require, exports, module) {
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
+            this._scroll.scrollToDirty ||
             this._nodes._trueSizeRequested ||
             this._scrollOffsetCache !== scrollOffset) {
 
@@ -1046,19 +1060,20 @@ define(function(require, exports, module) {
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
-            /*if (this._isDirty) {
+            if (this._isDirty) {
                 this._nodes.forEach(function(node) {
-                    if (node.lock) {
-                        node.lock('translate', true, false); // keep lock enabled, but reset lock
+                    if (node.setDirectionLock) {
+                        node.setDirectionLock(this._direction, 0);
                     }
-                });
-            }*/
+                }.bind(this));
+            }
 
             // Update state
             this._contextSizeCache[0] = size[0];
             this._contextSizeCache[1] = size[1];
             this._scrollOffsetCache = scrollOffset;
             this._isDirty = false;
+            this._scroll.scrollToDirty = false;
 
             // Perform layout
             _layout.call(this, size, scrollOffset);

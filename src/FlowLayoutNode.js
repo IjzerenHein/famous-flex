@@ -26,6 +26,7 @@ define(function(require, exports, module) {
     var Spring = require('famous/physics/forces/Spring');
     var PhysicsEngine = require('famous/physics/PhysicsEngine');
     var LayoutNode = require('./LayoutNode');
+    var Transitionable = require('famous/transitions/Transitionable');
 
     /**
      * @class
@@ -61,7 +62,6 @@ define(function(require, exports, module) {
             for (var propName in this._properties) {
                 this._properties[propName].init = false;
             }
-            delete this._locks;
         }
         _verifyIntegrity.call(this);
 
@@ -200,6 +200,33 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Locks a property, or a specific array-dimension of the property
+     * fixed to the end-state value. Use this to e.g. lock the x-translation
+     * to a the fixed end-state, so that when scrolling the renderable sticks
+     * to the x-axis and does not feel sluggish.
+     */
+    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
+        if (direction === undefined) {
+            this._lockDirection = undefined;
+        }
+        else {
+            this._lockDirection = direction;
+            if (value !== undefined) {
+                if (!this._lockTransitionable) {
+                    this._lockTransitionable = new Transitionable(1);
+                }
+                this._lockTransitionable.halt();
+                this._lockTransitionable.reset(value);
+                if (value !== 1) {
+                    this._lockTransitionable.set(1, {
+                        duration: (1 - value) * 1000
+                    });
+                }
+            }
+        }
+    };
+
+    /**
      * Helper function for getting the property value.
      */
     function _getPropertyValue(prop, def) {
@@ -208,6 +235,21 @@ define(function(require, exports, module) {
     function _getOpacityValue() {
         var prop = this._properties.opacity;
         return (prop && prop.init) ? Math.max(0,Math.min(1, prop.particle.getPosition1D())) : undefined;
+    }
+    function _getTranslateValue(def) {
+        var prop = this._properties.translate;
+        if (!prop || !prop.init) {
+            return def;
+        }
+        var position = prop.particle.getPosition();
+        if (this._lockDirection !== undefined) {
+            var value = position[this._lockDirection];
+            var endState = prop.endState.get()[this._lockDirection];
+            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
+            position = [position[0], position[1], position[2]];
+            position[this._lockDirection] = lockValue;
+        }
+        return position;
     }
 
     /**
@@ -234,7 +276,7 @@ define(function(require, exports, module) {
         this._spec.align = _getPropertyValue(this._properties.align, undefined);
         this._spec.origin = _getPropertyValue(this._properties.origin, undefined);
         this._spec.transform = Transform.build({
-            translate: _getPropertyValue(this._properties.translate, DEFAULT.translate),
+            translate: _getTranslateValue.call(this, DEFAULT.translate),
             skew: _getPropertyValue(this._properties.skew, DEFAULT.skew),
             scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
             rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
@@ -252,26 +294,6 @@ define(function(require, exports, module) {
 
         _verifyIntegrity.call(this);
         return this._spec;
-    };
-
-    /**
-     * Locks a property, or a specific array-dimension of the property
-     * fixed to the end-state value. Use this to e.g. lock the x-translation
-     * to a the fixed end-state, so that when scrolling the renderable sticks
-     * to the x-axis and does not feel sluggish.
-     */
-    FlowLayoutNode.prototype.lock = function(property, lock, endStateReached) {
-
-        // Update lock
-        if (!this._locks) {
-            this._locks = {};
-        }
-        this._locks[property] = lock;
-        if (endStateReached !== undefined) {
-            if (this._properties[property]) {
-                this._properties[property].endStateReached = endStateReached;
-            }
-        }
     };
 
     /**
@@ -345,11 +367,6 @@ define(function(require, exports, module) {
         }
         prop.init = true;
         prop.invalidated = true;
-
-        // huh
-        /*if ((this._locks && this._locks[propName] && prop.endStateReached) || this.options.spring.disabled) {
-            prop.particle.setPosition(defaultValue);
-        }*/
     }
     FlowLayoutNode.prototype.set = function(set, size) {
         this._removing = false;
