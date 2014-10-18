@@ -100,7 +100,7 @@ define(function(require, exports, module) {
      * Verifies that the integrity of the layout-node is oke.
      */
     function _verifyIntegrity() {
-        var i;
+        /*var i;
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.particle) {
@@ -120,7 +120,7 @@ define(function(require, exports, module) {
                     }
                 }
             }
-        }
+        }*/
     }
 
     /**
