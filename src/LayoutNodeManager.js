@@ -537,21 +537,24 @@ define(function(require, exports, module) {
     function _contextSet(contextNodeOrId, set) {
         var contextNode = _contextGet.call(this, contextNodeOrId);
         if (contextNode) {
-            if (contextNode.next) {
-                 if (contextNode.index < this._contextState.nextSetIndex) {
-                    LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
-                 }
-                 this._contextState.nextSetIndex = contextNode.index;
-            } else if (contextNode.prev) {
-                 if (contextNode.index > this._contextState.prevSetIndex) {
-                    LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
-                 }
-                 this._contextState.prevSetIndex = contextNode.index;
+            if (!contextNode.node) {
+                if (contextNode.next) {
+                     if (contextNode.index < this._contextState.nextSetIndex) {
+                        LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
+                     }
+                     this._contextState.nextSetIndex = contextNode.index;
+                } else if (contextNode.prev) {
+                     if (contextNode.index > this._contextState.prevSetIndex) {
+                        LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
+                     }
+                     this._contextState.prevSetIndex = contextNode.index;
+                }
+                contextNode.node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
+                contextNode.node._viewSequence = contextNode.viewSequence;
             }
-            var node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
-            node._viewSequence = contextNode.viewSequence;
-            node.trueSizeRequested = contextNode.trueSizeRequested;
-            node.set(set, this._context.size);
+            contextNode.node.trueSizeRequested = contextNode.trueSizeRequested;
+            contextNode.node.set(set, this._context.size);
+            contextNode.set = set;
         }
     }
 
