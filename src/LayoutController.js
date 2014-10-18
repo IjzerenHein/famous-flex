@@ -440,6 +440,15 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Return size of contained element or `undefined` when size is not defined.
+     *
+     * @return {Array.Number} [width, height]
+     */
+    LayoutController.prototype.getSize = function() {
+        return this.options.size;
+    };
+
+    /**
      * Generate a render spec from the contents of this component.
      *
      * @private
