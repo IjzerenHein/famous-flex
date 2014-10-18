@@ -32,7 +32,7 @@
  * var layoutController = new LayoutController({
  *   layout: {dock: [
  *     ['top', 'header', 40],
- *     ['bottom', 'footer', 40],
+ *     ['bottom', 'footer', 40, 1], // z-index +1
  *     ['fill', 'content']
  *   ]},
  *   dataSource: {
@@ -82,14 +82,14 @@ define(function(require, exports, module) {
     /**
      * Parses the layout-rules based on a JSON data object.
      * The object should be an array with the following syntax:
-     * `[[rule, node, value], [rule, node, value], ...]`
+     * `[[rule, node, value, z], [rule, node, value, z], ...]`
      *
      * **Example:**
      *
      * ```JSON
      * [
      *   ['top': 'header', 50],
-     *   ['bottom': 'footer', 50],
+     *   ['bottom': 'footer', 50, 10], // z-index: 10
      *   ['fill', 'content']
      * ]
      * ```
@@ -101,15 +101,15 @@ define(function(require, exports, module) {
             var rule = data[i];
             var value = (data.length >= 3) ? rule[2] : undefined;
             if (rule[0] === 'top') {
-                this.top(rule[1], value);
+                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'left') {
-                this.left(rule[1], value);
+                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'right') {
-                this.right(rule[1], value);
+                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'bottom') {
-                this.bottom(rule[1], value);
+                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'fill') {
-                this.fill(rule[1]);
+                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
             }
         }
     };
@@ -119,9 +119,10 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+     * @param {Number} [z] z-index to use for the node}
      * @return {LayoutDockHelper} this
      */
-    LayoutDockHelper.prototype.top = function(node, height) {
+    LayoutDockHelper.prototype.top = function(node, height, z) {
         if (height instanceof Array) {
             height = height[1];
         }
@@ -133,7 +134,7 @@ define(function(require, exports, module) {
             size: [this._right - this._left, height],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, this._z]
+            translate: [this._left, this._top, (z === undefined) ? this._z : z]
         });
         this._top += height;
         return this;
@@ -144,9 +145,10 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+     * @param {Number} [z] z-index to use for the node}
      * @return {LayoutDockHelper} this
      */
-    LayoutDockHelper.prototype.left = function(node, width) {
+    LayoutDockHelper.prototype.left = function(node, width, z) {
         if (width instanceof Array) {
             width = width[0];
         }
@@ -158,7 +160,7 @@ define(function(require, exports, module) {
             size: [width, this._bottom - this._top],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, this._z]
+            translate: [this._left, this._top, (z === undefined) ? this._z : z]
         });
         this._left += width;
         return this;
@@ -169,9 +171,10 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+     * @param {Number} [z] z-index to use for the node}
      * @return {LayoutDockHelper} this
      */
-    LayoutDockHelper.prototype.bottom = function(node, height) {
+    LayoutDockHelper.prototype.bottom = function(node, height, z) {
         if (height instanceof Array) {
             height = height[1];
         }
@@ -183,7 +186,7 @@ define(function(require, exports, module) {
             size: [this._right - this._left, height],
             origin: [0, 1],
             align: [0, 1],
-            translate: [this._left, -(this._size[1] - this._bottom), this._z]
+            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
         });
         this._bottom -= height;
         return this;
@@ -194,9 +197,10 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+     * @param {Number} [z] z-index to use for the node}
      * @return {LayoutDockHelper} this
      */
-    LayoutDockHelper.prototype.right = function(node, width) {
+    LayoutDockHelper.prototype.right = function(node, width, z) {
         if (width instanceof Array) {
             width = width[0];
         }
@@ -209,7 +213,7 @@ define(function(require, exports, module) {
                 size: [width, this._bottom - this._top],
                 origin: [1, 0],
                 align: [1, 0],
-                translate: [-(this._size[0] - this._right), this._top, this._z]
+                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
             });
         }
         if (width) {
@@ -222,12 +226,13 @@ define(function(require, exports, module) {
      * Fills the node to the remaining content.
      *
      * @param {LayoutNode|String} node layout-node to dock
+     * @param {Number} [z] z-index to use for the node}
      * @return {LayoutDockHelper} this
      */
-    LayoutDockHelper.prototype.fill = function(node) {
+    LayoutDockHelper.prototype.fill = function(node, z) {
         this._context.set(node, {
             size: [this._right - this._left, this._bottom - this._top],
-            translate: [this._left, this._top, this._z]
+            translate: [this._left, this._top, (z === undefined) ? this._z : z]
         });
         return this;
     };
