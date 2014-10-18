@@ -79,7 +79,8 @@ define(function(require, exports, module) {
         spring: {
             dampingRatio: 0.8,
             period: 300
-        }
+        },
+        particleRounding: 0.01
     };
 
     /**
@@ -121,6 +122,14 @@ define(function(require, exports, module) {
                 }
             }
         }*/
+    }
+
+    /**
+     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
+     * move infinitely.
+     */
+    function _roundParticleValue(value) {
+        return Math.round(value / this.options.particleRounding) * this.options.particleRounding;
     }
 
     /**
@@ -232,9 +241,20 @@ define(function(require, exports, module) {
     function _getPropertyValue(prop, def) {
         return (prop && prop.init) ? prop.particle.getPosition() : def;
     }
+    function _getSizeValue() {
+        var prop = this._properties.size;
+        if (!prop || !prop.init) {
+            return undefined;
+        }
+        var size = prop.particle.getPosition();
+        return [
+            _roundParticleValue.call(this, size[0]),
+            _roundParticleValue.call(this, size[1])
+        ];
+    }
     function _getOpacityValue() {
         var prop = this._properties.opacity;
-        return (prop && prop.init) ? Math.max(0,Math.min(1, prop.particle.getPosition1D())) : undefined;
+        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
     }
     function _getTranslateValue(def) {
         var prop = this._properties.translate;
@@ -272,7 +292,7 @@ define(function(require, exports, module) {
         // Build fresh spec
         this._initial = false;
         this._spec.opacity = _getOpacityValue.call(this);
-        this._spec.size = _getPropertyValue(this._properties.size, undefined);
+        this._spec.size = _getSizeValue.call(this);
         this._spec.align = _getPropertyValue(this._properties.align, undefined);
         this._spec.origin = _getPropertyValue(this._properties.origin, undefined);
         this._spec.transform = Transform.build({
