@@ -75,7 +75,7 @@ define(function(require, exports, module) {
         // Diagnostics
         this._debug = {
             layoutCount: 0,
-            logging: true
+            logging: false
         };
 
         // Configure physics engine with particle and drag
@@ -189,7 +189,7 @@ define(function(require, exports, module) {
      * Helper function to aid development and find bugs.
      */
     function _verifyIntegrity(phase, scrollOffset) {
-        phase = phase ? ' (' + phase + ')' : '';
+        /*phase = phase ? ' (' + phase + ')' : '';
         if ((scrollOffset !== undefined) && isNaN(scrollOffset)) {
             throw 'invalid scrollOffset: ' + scrollOffset + phase;
         }
@@ -201,7 +201,7 @@ define(function(require, exports, module) {
         }
         if (isNaN(this._scroll.particle.getPosition1D(0))) {
             throw 'invalid particle position: ' + this._scroll.particle.getPosition1D(0) + phase;
-        }
+        }*/
     }
 
     /**
@@ -705,12 +705,12 @@ define(function(require, exports, module) {
     /**
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
-    function _normalizePrevViewSequence(size, scrollOffset) {
+    function _normalizePrevViewSequence(size, scrollOffset, baseOffset) {
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (scrollOffset < 0){
+            if (scrollOffset < baseOffset){
                 return true;
             }
             this._viewSequence = node._viewSequence;
@@ -719,14 +719,14 @@ define(function(require, exports, module) {
         }.bind(this), false);
         return scrollOffset;
     }
-    function _normalizeNextViewSequence(size, scrollOffset) {
+    function _normalizeNextViewSequence(size, scrollOffset, baseOffset) {
         var prevScrollLength;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
             if (prevScrollLength !== undefined) {
-                if ((scrollOffset + prevScrollLength) >= 0){
+                if ((scrollOffset + prevScrollLength) >= baseOffset){
                     return true;
                 }
                 this._viewSequence = node._viewSequence;
@@ -739,27 +739,41 @@ define(function(require, exports, module) {
     }
     function _normalizeViewSequence(size, scrollOffset) {
 
+        // Check whether normalisation is disabled
+        if (this._layout.capabilities && this._layout.capabilities.debug &&
+            (this._layout.capabilities.debug.normalize !== undefined) &&
+            !this._layout.capabilities.debug.normalize) {
+            return scrollOffset;
+        }
+
         // Don't normalize when moving
         if (this._scroll.moveToStartPosition !== undefined) {
             return scrollOffset;
         }
 
+        // Determine base offset (by default 0 = top/left), but may be overwriten
+        // by the layout function to test layout in the prev-direction.
+        var baseOffset = 0; // top/left
+        if (this._layout.capabilities && this._layout.capabilities.debug && this._layout.capabilities.debug.testPrev) {
+            baseOffset = size[this._direction];
+        }
+
         // 1. Normalize in primary direction
         var normalizedScrollOffset = scrollOffset;
         if (this.options.reverse) {
-            normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
+            normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset, baseOffset);
         }
         else {
-            normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
+            normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset, baseOffset);
         }
 
         // 2. Normalize in secondary direction
         if (normalizedScrollOffset === scrollOffset) {
             if (this.options.reverse) {
-                normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
+                normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset, baseOffset);
             }
             else {
-                normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
+                normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset, baseOffset);
             }
         }
 
