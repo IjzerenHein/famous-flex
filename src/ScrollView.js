@@ -20,12 +20,14 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var LayoutUtility = require('./LayoutUtility');
     var FlowLayoutController = require('./FlowLayoutController');
-    var FlowLayoutNode = require('./FlowLayoutNode');
+    var FlowLayoutNode = require('./LayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Transform = require('famous/core/Transform');
     var EventHandler = require('famous/core/EventHandler');
+    var Group = require('famous/core/Group');
     var Vector = require('famous/math/Vector');
     var PhysicsEngine = require('famous/physics/PhysicsEngine');
     var Particle = require('famous/physics/bodies/Particle');
@@ -69,7 +71,10 @@ define(function(require, exports, module) {
             // spring
             springValue: undefined,
             springForce: new Spring(this.options.scrollSpring),
-            springEndState: new Vector([0, 0, 0])
+            springEndState: new Vector([0, 0, 0]),
+            // window
+            windowStart: undefined,
+            groupStart: undefined
         };
 
         // Diagnostics
@@ -77,6 +82,10 @@ define(function(require, exports, module) {
             layoutCount: 0,
             logging: false
         };
+
+        // Create groupt for faster rendering
+        this.group = new Group();
+        this.group.add({render: _innerRender.bind(this)});
 
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
@@ -793,6 +802,10 @@ define(function(require, exports, module) {
             if (this._scroll.moveToStartPosition !== undefined) {
                 this._scroll.moveToStartPosition += delta;
             }
+
+            // Adjust group offset
+            this._scroll.windowStart -= delta;
+            this._scroll.groupStart -= delta;
         }
         return normalizedScrollOffset;
     }
@@ -940,6 +953,52 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Prepares the layout for the layout-function.
+     * Determines the scrollStart and scrollEnd positions so that the layout-function
+     * renders the same renderables as much as possible to reduce insert/remove into
+     * the DOM as much as possible.
+     */
+    function _prepareLayout(size, scrollOffset) {
+
+        // Determine current window-size
+        var windowSize = size[this._direction] * 5;
+
+        // Initialize window start position
+        if (this._scroll.windowStart === undefined) {
+            this._scroll.windowStart = -size[this._direction];
+            this._scroll.groupStart = this._scroll.windowStart;
+        }
+
+        // Normalize window-start in case renderables outside the
+        // window should be displayed.
+        var scrollStart = scrollOffset + this._scroll.windowStart;
+        if (scrollStart >= 0) {
+            _log.call(this, 'normalizing window #1, scrollStart: ' + scrollStart);
+            this._scroll.windowStart = scrollOffset - size[this._direction];
+            scrollStart = scrollOffset - this._scroll.windowStart;
+            //console.log('norm #1: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
+        } else if ((scrollStart + windowSize) <= size[this._direction]) {
+            _log.call(this, 'normalizing window #2, scrollStart: ' + scrollStart);
+            this._scroll.windowStart = scrollOffset - size[this._direction];
+            scrollStart = scrollOffset - this._scroll.windowStart;
+            //console.log('norm #2: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
+        }
+
+        // Prepare for layout
+        //_log.call(this, 'scrollStart: ' + scrollStart + ', offset: ' + scrollOffset + ', end: ' + (scrollStart + windowSize) + ', windowStart: ' + this._scroll.windowStart);
+        return this._nodes.prepareForLayout(
+            this._viewSequence,     // first node to layout
+            this._nodesById, {      // so we can do fast id lookups
+                size: size,
+                direction: this._direction,
+                scrollOffset: scrollOffset,
+                scrollStart: scrollStart,
+                scrollEnd: scrollStart + windowSize
+            }
+        );
+    }
+
+    /**
      * Executes the layout and updates the state of the scrollview.
      */
     function _layout(size, scrollOffset, nested) {
@@ -949,17 +1008,9 @@ define(function(require, exports, module) {
         this._debug.layoutCount++;
         //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
 
-        // Prepare for layout
-        var layoutContext = this._nodes.prepareForLayout(
-            this._viewSequence,     // first node to layout
-            this._nodesById, {      // so we can do fast id lookups
-                size: size,
-                direction: this._direction,
-                scrollOffset: scrollOffset,
-                scrollStart: Math.min(scrollOffset, -size[this._direction]),
-                scrollEnd: Math.max(scrollOffset, size[this._direction] * 2)
-            }
-        );
+        // Normalize the group
+        var layoutContext = _prepareLayout.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'prepareLayout');
 
         // Layout objects
         if (this._layout.function) {
@@ -984,14 +1035,13 @@ define(function(require, exports, module) {
         _integrateScrollDelta.call(this, newScrollOffset);
         if (!nested && (newScrollOffset !== scrollOffset)) {
             _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
-            _layout.call(this, size, newScrollOffset, true);
-            return;
+            return _layout.call(this, size, newScrollOffset, true);
         }
 
         // Calculate the spec-output
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
         _verifyIntegrity.call(this, 'buildSpecAndDestroyUnrenderedNodes', scrollOffset);
-        this._commitOutput.target = result.specs;
+        this._specs = result.specs;
         if (result.modified || true) {
             this._eventOutput.emit('reflow', {
                 target: this
@@ -1015,6 +1065,8 @@ define(function(require, exports, module) {
         // Update spring
         _setSpring.call(this, this._scroll.springPosition);
         _verifyIntegrity.call(this, 'setSpring', scrollOffset);
+
+        return scrollOffset;
     }
 
     /**
@@ -1036,6 +1088,45 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Inner render function of the Group
+     */
+    function _innerRender() {
+        var specs = [];
+        var scrollOffset = this._scrollOffsetCache;
+        var translate = [0, 0, 0];
+        translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+        for (var i = 0; i < this._specs.length; i++) {
+            var spec = this._specs[i];
+            var transform = Transform.thenMove(spec.transform, translate);
+            /*var newSpec = spec._windowSpec;
+            if (!newSpec) {
+                newSpec = {};
+                spec._windowSpec = newSpec;
+            }*/
+            var newSpec = {};
+            newSpec.origin = spec.origin;
+            newSpec.align = spec.align;
+            newSpec.opacity = spec.opacity;
+            newSpec.size = spec.size;
+            newSpec.transform = transform;
+            newSpec.target = spec.renderNode.render();
+            /*if (spec._translatedSpec) {
+                if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
+                    var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
+                    _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', windowOffset: ' + this._scroll.windowStart + ')');
+                }
+            }
+            else {
+                _log.call(this, 'new spec rendered');
+            }*/
+            spec._translatedSpec = newSpec;
+            newSpec.scrollOffset = scrollOffset;
+            specs.push(newSpec);
+        }
+        return specs;
+    }
+
+    /**
      * Apply changes from this component to the corresponding document element.
      * This includes changes to classes, styles, size, content, opacity, origin,
      * and matrix transforms.
@@ -1045,10 +1136,7 @@ define(function(require, exports, module) {
      * @param {Context} context commit context
      */
     ScrollView.prototype.commit = function commit(context) {
-        var transform = context.transform;
-        var origin = context.origin;
         var size = context.size;
-        var opacity = context.opacity;
         var scrollOffset = _calcScrollOffset.call(this);
 
         // When the size or layout function has changed, reflow the layout
@@ -1090,7 +1178,8 @@ define(function(require, exports, module) {
             this._scroll.scrollToDirty = false;
 
             // Perform layout
-            _layout.call(this, size, scrollOffset);
+            scrollOffset = _layout.call(this, size, scrollOffset);
+            this._scrollOffsetCache = scrollOffset;
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);
@@ -1099,7 +1188,7 @@ define(function(require, exports, module) {
 
             // Update output and optionally emit event
             var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-            this._commitOutput.target = result.specs;
+            this._specs = result.specs;
             if (result.modified) {
                 this._eventOutput.emit('reflow', {
                     target: this
@@ -1107,19 +1196,17 @@ define(function(require, exports, module) {
             }
         }
 
-        // Render child-nodes every commit
-        for (var i = 0; i < this._commitOutput.target.length; i++) {
-            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
-        }
-
-        // Return
-        if (size) {
-            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
-        }
-        this._commitOutput.size = size;
-        this._commitOutput.opacity = opacity;
-        this._commitOutput.transform = transform;
-        return this._commitOutput;
+        // Translate the group
+        var windowOffset = scrollOffset + this._scroll.groupStart;
+        var transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
+        transform = Transform.multiply(context.transform, transform);
+        return {
+            transform: transform,
+            size: size,
+            opacity: context.opacity,
+            origin: context.origin,
+            target: this.group.render()
+        };
     };
 
     /**
