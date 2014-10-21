@@ -266,7 +266,11 @@ define(function(require, exports, module) {
             var value = position[this._lockDirection];
             var endState = prop.endState.get()[this._lockDirection];
             var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-            position = [position[0], position[1], position[2]];
+            position = [
+                _roundParticleValue.call(this,position[0]),
+                _roundParticleValue.call(this,position[1]),
+                _roundParticleValue.call(this,position[2])
+            ];
             position[this._lockDirection] = lockValue;
         }
         return position;
