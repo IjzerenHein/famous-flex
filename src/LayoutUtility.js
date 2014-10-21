@@ -146,6 +146,34 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Helper function that returns a string containing the differences
+     * between two specs.
+     *
+     * @param {Spec} spec1 Spec to compare
+     * @param {Spec} spec2 Spec to compare
+     * @return {String} text
+     */
+    LayoutUtility.getSpecDiffText = function(spec1, spec2) {
+        var result = 'spec diff:';
+        if (spec1.opacity !== spec2.opacity) {
+            result += '\nopacity: ' + spec1.opacity + ' != ' + spec2.opacity;
+        }
+        if (!_isEqualArray(spec1.size, spec2.size)) {
+            result += '\nsize: ' + JSON.stringify(spec1.size) + ' != ' + JSON.stringify(spec2.size);
+        }
+        if (!_isEqualArray(spec1.transform, spec2.transform)) {
+            result += '\ntransform: ' + JSON.stringify(spec1.transform) + ' != ' + JSON.stringify(spec2.transform);
+        }
+        if (!_isEqualArray(spec1.origin, spec2.origin)) {
+            result += '\norigin: ' + JSON.stringify(spec1.origin) + ' != ' + JSON.stringify(spec2.origin);
+        }
+        if (!_isEqualArray(spec1.align, spec2.align)) {
+            result += '\nalign: ' + JSON.stringify(spec1.align) + ' != ' + JSON.stringify(spec2.align);
+        }
+        return result;
+    };
+
+    /**
      * Helper function to call whenever a critical error has occurred.
      *
      * @param {String} message error-message
