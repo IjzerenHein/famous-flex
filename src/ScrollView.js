@@ -72,9 +72,8 @@ define(function(require, exports, module) {
             springValue: undefined,
             springForce: new Spring(this.options.scrollSpring),
             springEndState: new Vector([0, 0, 0]),
-            // window
-            windowStart: undefined,
-            groupStart: undefined
+            // group
+            groupStart: 0
         };
 
         // Diagnostics
@@ -441,16 +440,15 @@ define(function(require, exports, module) {
      * Updates the scroll offset particle.
      */
     function _setParticle(position, velocity, phase) {
-        phase = phase ? ' (' + phase + ')' : '';
         if (position !== undefined) {
             var oldPosition = this._scroll.particle.getPosition1D();
             this._scroll.particle.setPosition1D(position);
-            _log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ')', phase);
+            _log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
         }
         if (velocity !== undefined) {
             var oldVelocity = this._scroll.particle.getVelocity1D();
             this._scroll.particle.setVelocity1D(velocity);
-            _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ')', phase);
+            _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
         }
     }
 
@@ -703,11 +701,11 @@ define(function(require, exports, module) {
         var boundOffset = pageOffset - bound;
         if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
             this._scroll.springPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
-            _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
+            _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ',  scrollOffset);
         }
         else {
             this._scroll.springPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
-            _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
+            _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ',  scrollOffset);
         }
     }
 
@@ -804,7 +802,6 @@ define(function(require, exports, module) {
             }
 
             // Adjust group offset
-            this._scroll.windowStart -= delta;
             this._scroll.groupStart -= delta;
         }
         return normalizedScrollOffset;
@@ -953,52 +950,6 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Prepares the layout for the layout-function.
-     * Determines the scrollStart and scrollEnd positions so that the layout-function
-     * renders the same renderables as much as possible to reduce insert/remove into
-     * the DOM as much as possible.
-     */
-    function _prepareLayout(size, scrollOffset) {
-
-        // Determine current window-size
-        var windowSize = size[this._direction] * 5;
-
-        // Initialize window start position
-        if (this._scroll.windowStart === undefined) {
-            this._scroll.windowStart = -size[this._direction];
-            this._scroll.groupStart = this._scroll.windowStart;
-        }
-
-        // Normalize window-start in case renderables outside the
-        // window should be displayed.
-        var scrollStart = scrollOffset + this._scroll.windowStart;
-        if (scrollStart >= 0) {
-            _log.call(this, 'normalizing window #1, scrollStart: ' + scrollStart);
-            this._scroll.windowStart = scrollOffset - size[this._direction];
-            scrollStart = scrollOffset - this._scroll.windowStart;
-            //console.log('norm #1: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
-        } else if ((scrollStart + windowSize) <= size[this._direction]) {
-            _log.call(this, 'normalizing window #2, scrollStart: ' + scrollStart);
-            this._scroll.windowStart = scrollOffset - size[this._direction];
-            scrollStart = scrollOffset - this._scroll.windowStart;
-            //console.log('norm #2: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
-        }
-
-        // Prepare for layout
-        //_log.call(this, 'scrollStart: ' + scrollStart + ', offset: ' + scrollOffset + ', end: ' + (scrollStart + windowSize) + ', windowStart: ' + this._scroll.windowStart);
-        return this._nodes.prepareForLayout(
-            this._viewSequence,     // first node to layout
-            this._nodesById, {      // so we can do fast id lookups
-                size: size,
-                direction: this._direction,
-                scrollOffset: scrollOffset,
-                scrollStart: scrollStart,
-                scrollEnd: scrollStart + windowSize
-            }
-        );
-    }
-
-    /**
      * Executes the layout and updates the state of the scrollview.
      */
     function _layout(size, scrollOffset, nested) {
@@ -1008,8 +959,17 @@ define(function(require, exports, module) {
         this._debug.layoutCount++;
         //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
 
-        // Normalize the group
-        var layoutContext = _prepareLayout.call(this, size, scrollOffset);
+        // Prepare for layout
+        var layoutContext = this._nodes.prepareForLayout(
+            this._viewSequence,     // first node to layout
+            this._nodesById, {      // so we can do fast id lookups
+                size: size,
+                direction: this._direction,
+                scrollOffset: scrollOffset,
+                scrollStart: scrollOffset - size[this._direction],
+                scrollEnd: scrollOffset +  (size[this._direction] * 2)
+            }
+        );
         _verifyIntegrity.call(this, 'prepareLayout');
 
         // Layout objects
@@ -1110,17 +1070,17 @@ define(function(require, exports, module) {
             newSpec.size = spec.size;
             newSpec.transform = transform;
             newSpec.target = spec.renderNode.render();
+            newSpec.scrollOffset = scrollOffset;
             /*if (spec._translatedSpec) {
                 if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
                     var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-                    _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', windowOffset: ' + this._scroll.windowStart + ')');
+                    _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
                 }
             }
             else {
                 _log.call(this, 'new spec rendered');
             }*/
             spec._translatedSpec = newSpec;
-            newSpec.scrollOffset = scrollOffset;
             specs.push(newSpec);
         }
         return specs;
