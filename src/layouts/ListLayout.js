@@ -46,7 +46,8 @@ define(function(require, exports, module) {
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
         scrolling: true,
-        trueSize: true
+        trueSize: true,
+        sequentialScrollingOptimized: true
     };
 
     // Layout function

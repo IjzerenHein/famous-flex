@@ -802,7 +802,9 @@ define(function(require, exports, module) {
             }
 
             // Adjust group offset
-            this._scroll.groupStart -= delta;
+            if (this._layout.capabilities.sequentialScrollingOptimized) {
+                this._scroll.groupStart -= delta;
+            }
         }
         return normalizedScrollOffset;
     }
@@ -1051,37 +1053,53 @@ define(function(require, exports, module) {
      * Inner render function of the Group
      */
     function _innerRender() {
-        var specs = [];
-        var scrollOffset = this._scrollOffsetCache;
-        var translate = [0, 0, 0];
-        translate[this._direction] = -this._scroll.groupStart - scrollOffset;
-        for (var i = 0; i < this._specs.length; i++) {
-            var spec = this._specs[i];
-            var transform = Transform.thenMove(spec.transform, translate);
-            /*var newSpec = spec._windowSpec;
-            if (!newSpec) {
-                newSpec = {};
-                spec._windowSpec = newSpec;
-            }*/
-            var newSpec = {};
-            newSpec.origin = spec.origin;
-            newSpec.align = spec.align;
-            newSpec.opacity = spec.opacity;
-            newSpec.size = spec.size;
-            newSpec.transform = transform;
-            newSpec.target = spec.renderNode.render();
-            newSpec.scrollOffset = scrollOffset;
-            /*if (spec._translatedSpec) {
-                if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
-                    var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-                    _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
+        var specs;
+        var i;
+
+        // When sequential scrolling is optimized, translate the spec back
+        // to a sequential position so that the matrix is unchanged and
+        // famo.s doesn't have to update the matrix in the DOM.
+        if (this._layout.capabilities.sequentialScrollingOptimized) {
+            specs = [];
+            var scrollOffset = this._scrollOffsetCache;
+            var translate = [0, 0, 0];
+            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+            for (i = 0; i < this._specs.length; i++) {
+                var spec = this._specs[i];
+                var transform = Transform.thenMove(spec.transform, translate);
+                /*var newSpec = spec._windowSpec;
+                if (!newSpec) {
+                    newSpec = {};
+                    spec._windowSpec = newSpec;
+                }*/
+                var newSpec = {};
+                newSpec.origin = spec.origin;
+                newSpec.align = spec.align;
+                newSpec.opacity = spec.opacity;
+                newSpec.size = spec.size;
+                newSpec.transform = transform;
+                newSpec.target = spec.renderNode.render();
+                newSpec.scrollOffset = scrollOffset;
+                /*if (spec._translatedSpec) {
+                    if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
+                        var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
+                        _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
+                    }
                 }
+                else {
+                    _log.call(this, 'new spec rendered');
+                }*/
+                spec._translatedSpec = newSpec;
+                specs.push(newSpec);
             }
-            else {
-                _log.call(this, 'new spec rendered');
-            }*/
-            spec._translatedSpec = newSpec;
-            specs.push(newSpec);
+        }
+        else {
+
+            // Call render on all nodes
+            specs = this._specs;
+            for (i = 0; i < specs.length; i++) {
+                specs[i].target = specs[i].renderNode.render();
+            }
         }
         return specs;
     }
@@ -1156,10 +1174,20 @@ define(function(require, exports, module) {
             }
         }
 
-        // Translate the group
-        var windowOffset = scrollOffset + this._scroll.groupStart;
-        var transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
-        transform = Transform.multiply(context.transform, transform);
+        // When renderables are layed out sequentiall (e.g. a ListLayout or
+        // CollectionLayout), then offset the renderables onto the Group
+        // and move the group offset instead. This creates a very big performance gain
+        // as the renderables don't have to be repositioned for every change
+        // to the scrollOffset. For layouts that don't layout sequence, disable
+        // this behavior as it will be decremental to the performance.
+        var transform = context.transform;
+        if (this._layout.capabilities.sequentialScrollingOptimized) {
+            var windowOffset = scrollOffset + this._scroll.groupStart;
+            transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
+            transform = Transform.multiply(context.transform, transform);
+        }
+
+        // Return the spec
         return {
             transform: transform,
             size: size,
