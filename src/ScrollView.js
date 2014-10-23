@@ -46,6 +46,21 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Source of the spring
+     */
+    var SpringSource = {
+        NONE: 'none',
+        NEXTBOUNDS: 'next-bounds', // top
+        PREVBOUNDS: 'prev-bounds', // bottom
+        MINSIZE: 'minimal-size',
+        GOTOSEQUENCE: 'goto-sequence',
+        GOTOPREVDIRECTION: 'goto-prev-direction',
+        GOTONEXTDIRECTION: 'goto-next-direction',
+        SNAPPREV: 'snap-prev', // paginated: true
+        SNAPNEXT: 'snap-next'  // paginated: true
+    };
+
+    /**
      * @class
      * @param {Object} options Options.
      * @alias module:ScrollView
@@ -216,13 +231,14 @@ define(function(require, exports, module) {
     /**
      * Sets the value for the spring, or set to `undefined` to disable the spring
      */
-    function _setSpring(value) {
-        if (value !== undefined) {
-            value = _roundScrollOffset.call(this, value);
+    function _updateSpring() {
+        var springValue = this._scroll.scrollForceCount ? undefined : this._scroll.springPosition;
+        if (springValue !== undefined) {
+            springValue = _roundScrollOffset.call(this, springValue);
         }
-        if (this._scroll.springValue !== value) {
-            this._scroll.springValue = value;
-            if (value === undefined) {
+        if (this._scroll.springValue !== springValue) {
+            this._scroll.springValue = springValue;
+            if (springValue === undefined) {
                 if (this._scroll.springForceId !== undefined) {
                     this._scroll.pe.detach(this._scroll.springForceId);
                     this._scroll.springForceId = undefined;
@@ -233,9 +249,9 @@ define(function(require, exports, module) {
                 if (this._scroll.springForceId === undefined) {
                     this._scroll.springForceId = this._scroll.pe.attach(this._scroll.springForce, this._scroll.particle);
                 }
-                this._scroll.springEndState.set1D(value);
+                this._scroll.springEndState.set1D(springValue);
                 this._scroll.pe.wake();
-                _log.call(this, 'setting spring to: ', value);
+                _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
             }
         }
     }
@@ -527,6 +543,7 @@ define(function(require, exports, module) {
             if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])) {
                 this._scroll.boundsReached = Bounds.NEXT;
                 this._scroll.springPosition = size[this._direction] - nextHeight;
+                this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
             }
             prevHeight = _calcPrevHeight.call(this);
@@ -536,6 +553,7 @@ define(function(require, exports, module) {
             if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = prevHeight;
+                this._scroll.springSource = SpringSource.PREVBOUNDS;
                 return;
             }
             nextHeight = _calcNextHeight.call(this);
@@ -550,6 +568,7 @@ define(function(require, exports, module) {
         if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
             this._scroll.boundsReached = Bounds.BOTH;
             this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : prevHeight;
+            this._scroll.springSource = SpringSource.MINSIZE;
             return;
         }
 
@@ -558,6 +577,7 @@ define(function(require, exports, module) {
             if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = prevHeight;
+                this._scroll.springSource = SpringSource.PREVBOUNDS;
                 return;
             }
         }
@@ -565,6 +585,7 @@ define(function(require, exports, module) {
             if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
                 this._scroll.boundsReached = Bounds.NEXT;
                 this._scroll.springPosition = size[this._direction] - nextHeight;
+                this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
 
             }
@@ -573,6 +594,7 @@ define(function(require, exports, module) {
         // No bounds reached
         this._scroll.boundsReached = Bounds.NONE;
         this._scroll.springPosition = undefined;
+        this._scroll.springSource = SpringSource.NONE;
     }
 
     /**
@@ -619,15 +641,18 @@ define(function(require, exports, module) {
         }
         if (foundNode) {
             this._scroll.springPosition = scrollToOffset;
+            this._scroll.springSource = SpringSource.GOTOSEQUENCE;
             return;
         }
 
         // 3. When node not found, set the spring to a position into that direction
         if (this._scroll.scrollToDirection) {
             this._scroll.springPosition = scrollOffset - size[this._direction];
+            this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
         }
         else {
             this._scroll.springPosition = scrollOffset + size[this._direction];
+            this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
         }
     }
 
@@ -693,6 +718,7 @@ define(function(require, exports, module) {
             if (snapSpringPosition !== this._scroll.springPosition) {
                 //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
+                this._scroll.springSource = SpringSource.SNAPPREV;
             }
         }
         else {
@@ -700,6 +726,7 @@ define(function(require, exports, module) {
             if (snapSpringPosition !== this._scroll.springPosition) {
                 //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
+                this._scroll.springSource = SpringSource.SNAPNEXT;
             }
         }
     }
@@ -873,7 +900,7 @@ define(function(require, exports, module) {
     function _scrollToSequence(viewSequence, next) {
         this._scroll.scrollToSequence = viewSequence;
         this._scroll.scrollToDirection = next;
-        this._scroll.scrollToDirty = true;
+        this._scroll.scrollDirty = true;
     }
 
     /**
@@ -978,9 +1005,7 @@ define(function(require, exports, module) {
             _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
             this._scroll.pe.wake();
             this._scroll.scrollForce = 0;
-            if (this.options.paginated) {
-                this._isDirty = true;
-            }
+            this._scroll.scrollDirty = true;
         }
         else {
             this._scroll.scrollForce -= offset;
@@ -1134,7 +1159,7 @@ define(function(require, exports, module) {
         _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
         // Update spring
-        _setSpring.call(this, this._scroll.springPosition);
+        _updateSpring.call(this);
         _verifyIntegrity.call(this, 'setSpring', scrollOffset);
 
         return scrollOffset;
@@ -1230,7 +1255,7 @@ define(function(require, exports, module) {
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
-            this._scroll.scrollToDirty ||
+            this._scroll.scrollDirty ||
             this._nodes._trueSizeRequested ||
             this._scrollOffsetCache !== scrollOffset) {
 
@@ -1262,7 +1287,7 @@ define(function(require, exports, module) {
             this._contextSizeCache[1] = size[1];
             this._scrollOffsetCache = scrollOffset;
             this._isDirty = false;
-            this._scroll.scrollToDirty = false;
+            this._scroll.scrollDirty = false;
 
             // Perform layout
             scrollOffset = _layout.call(this, size, scrollOffset);
