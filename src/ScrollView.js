@@ -20,7 +20,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var LayoutUtility = require('./LayoutUtility');
+    //var LayoutUtility = require('./LayoutUtility');
     var FlowLayoutController = require('./FlowLayoutController');
     var FlowLayoutNode = require('./LayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
@@ -59,7 +59,6 @@ define(function(require, exports, module) {
         // Scrolling
         this._scroll = {
             activeTouches: [],
-            scrollDelta: 0,
             // physics-engine to use for scrolling
             pe: new PhysicsEngine(),
             // particle that represents the scroll-offset
@@ -73,13 +72,17 @@ define(function(require, exports, module) {
             springForce: new Spring(this.options.scrollSpring),
             springEndState: new Vector([0, 0, 0]),
             // group
-            groupStart: 0
+            groupStart: 0,
+            // delta
+            scrollDelta: 0,
+            normalizedScrollDelta: 0,
+            scrollForce: 0,
+            scrollForceCount: 0
         };
 
         // Diagnostics
         this._debug = {
-            layoutCount: 0,
-            logging: false
+            layoutCount: 0
         };
 
         // Create groupt for faster rendering
@@ -150,7 +153,8 @@ define(function(require, exports, module) {
         paginated: false,
         //paginationEnergyThresshold: 0.001,
         reverse: false,
-        touchMoveDirectionThresshold: undefined // 0..1
+        touchMoveDirectionThresshold: undefined, // 0..1
+        logging: false
     };
 
     /**
@@ -177,7 +181,7 @@ define(function(require, exports, module) {
      * Helper function for logging debug statements to the console.
      */
     function _log(args) {
-        if (!this._debug.logging) {
+        if (!this.options.logging) {
             return;
         }
         var message = this._debug.layoutCount + ': ';
@@ -200,9 +204,6 @@ define(function(require, exports, module) {
         /*phase = phase ? ' (' + phase + ')' : '';
         if ((scrollOffset !== undefined) && isNaN(scrollOffset)) {
             throw 'invalid scrollOffset: ' + scrollOffset + phase;
-        }
-        if ((this._scroll.scrollDelta !== undefined) && isNaN(this._scroll.scrollDelta)) {
-            throw 'invalid scrollDelta: ' + this._scroll.scrollDelta + phase;
         }
         if (isNaN(this._scroll.particle.getVelocity1D(0))) {
             throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
@@ -245,10 +246,7 @@ define(function(require, exports, module) {
      */
     function _touchStart(event) {
         //_log.call(this, 'touchStart');
-        this._eventOutput.emit('touchstart', event);
-
-        // Reset any programmatic scrollTo request when the user is doing stuff
-        this._scroll.scrollToSequence = undefined;
+        //this._eventOutput.emit('touchstart', event);
 
         // Remove any touches that are no longer active
         var oldTouchesCount = this._scroll.activeTouches.length;
@@ -299,10 +297,9 @@ define(function(require, exports, module) {
 
         // The first time a touch new touch gesture has arrived, emit event
         if (!oldTouchesCount && this._scroll.activeTouches.length) {
-            _setParticle.call(this, undefined, 0, 'touchStart'); // reset particle velocity
-            this._scroll.moveToStartPosition = this._scroll.particle.getPosition1D();
-            this._scroll.moveToPosition = this._scroll.moveToStartPosition;
-            this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
+            this.applyScrollForce(0);
+            this._scroll.touchDelta = 0;
+            //this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
         }
     }
 
@@ -312,10 +309,7 @@ define(function(require, exports, module) {
      */
     function _touchMove(event) {
         //_log.call(this, 'touchMove');
-        this._eventOutput.emit('touchmove', event);
-
-        // Reset any programmatic scrollTo request when the user is doing stuff
-        this._scroll.scrollToSequence = undefined;
+        //this._eventOutput.emit('touchmove', event);
 
         // Process the touch event
         var primaryTouch;
@@ -347,9 +341,9 @@ define(function(require, exports, module) {
         // Update move offset and emit event
         if (primaryTouch) {
             var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
-            this._scroll.moveToPosition = this._scroll.moveToStartPosition + delta;
-            this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
-            _verifyIntegrity.call(this, 'touchMove');
+            this.updateScrollForce(this._scroll.touchDelta, delta);
+            this._scroll.touchDelta = delta;
+            //this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
         }
     }
 
@@ -361,10 +355,7 @@ define(function(require, exports, module) {
      */
     function _touchEnd(event) {
         //_log.call(this, 'touchEnd');
-        this._eventOutput.emit('touchend', event);
-
-        // Reset any programmatic scrollTo request when the user is doing stuff
-        this._scroll.scrollToSequence = undefined;
+        //this._eventOutput.emit('touchend', event);
 
         // Remove touch
         var primaryTouch = this._scroll.activeTouches.length ? this._scroll.activeTouches[0] : undefined;
@@ -402,17 +393,12 @@ define(function(require, exports, module) {
             velocity = diffOffset / diffTime;
         }
 
-        // Update particle
-        var scrollOffset = _calcScrollOffset.call(this);
-        _setParticle.call(this, scrollOffset, velocity, 'moveEnd');
-        this._scroll.pe.wake();
-
-        // Stop the move operation
-        this._scroll.moveToStartPosition = undefined;
-        this._scroll.moveToPosition = undefined;
+        // Release scroll force
+        this.releaseScrollForce(this._scroll.touchDelta, velocity);
+        this._scroll.touchDelta = 0;
 
         // Emit end event
-        this._eventOutput.emit('scrollend', primaryTouch);
+        //this._eventOutput.emit('scrollend', primaryTouch);
     }
 
     /**
@@ -420,12 +406,8 @@ define(function(require, exports, module) {
      * scroll wheel or a track-pad.
      */
     function _scrollUpdate(event) {
-
-        // Reset any programmatic scrollTo request when the user is doing stuff
-        this._scroll.scrollToSequence = undefined;
-
-        // Store the scroll delta
-        this._scroll.scrollDelta += Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
+        var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
+        this.applyScrollOffset(offset);
     }
 
     /**
@@ -447,46 +429,51 @@ define(function(require, exports, module) {
         }
         if (velocity !== undefined) {
             var oldVelocity = this._scroll.particle.getVelocity1D();
-            this._scroll.particle.setVelocity1D(velocity);
-            _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
+            if (oldVelocity !== velocity) {
+                this._scroll.particle.setVelocity1D(velocity);
+                _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
+            }
         }
     }
 
     /**
      * Get the in-use scroll-offset.
      */
-    function _calcScrollOffset() {
+    function _calcScrollOffset(normalize) {
 
         // When moving using touch-gestures, make the offset stick to the
         // finger. When the bounds is exceeded, decrease the scroll distance
         // by two.
         var scrollOffset = this._scroll.particle.getPosition1D();
-        if (this._scroll.moveToPosition !== undefined) {
-            if (this._scroll.springPosition !== undefined) {
-                scrollOffset = (this._scroll.moveToPosition + this._scroll.springPosition) / 2.0;
-            }
-            else {
-                scrollOffset = this._scroll.moveToPosition;
-            }
-        } else if (this._scroll.scrollDelta) {
-            scrollOffset += this._scroll.scrollDelta;
+
+        if (this._scroll.scrollDelta || this._scroll.normalizedScrollDelta) {
+            scrollOffset += this._scroll.scrollDelta + this._scroll.normalizedScrollDelta;
             if (((this._scroll.boundsReached & Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) ||
                ((this._scroll.boundsReached & Bounds.NEXT) && (scrollOffset < this._scroll.springPosition)) ||
                (this._scroll.boundsReached === Bounds.BOTH)) {
                 scrollOffset = this._scroll.springPosition;
             }
+            if (normalize) {
+                if (!this._scroll.scrollDelta) {
+                    this._scroll.normalizedScrollDelta = 0;
+                    _setParticle.call(this, scrollOffset, undefined, '_calcScrollOffset');
+                }
+                this._scroll.normalizedScrollDelta += this._scroll.scrollDelta;
+                this._scroll.scrollDelta = 0;
+            }
         }
-        return _roundScrollOffset.call(this, scrollOffset);
-    }
 
-    /**
-     * Integrates the scroll delta into the particle position.
-     */
-    function _integrateScrollDelta(scrollOffset) {
-        if (this._scroll.scrollDelta) {
-            this._scroll.scrollDelta = 0;
-            _setParticle.call(this, scrollOffset, undefined, 'integrateScrollDelta');
+        if (this._scroll.scrollForceCount) {
+            if (this._scroll.springPosition !== undefined) {
+                scrollOffset = (scrollOffset + this._scroll.scrollForce + this._scroll.springPosition) / 2.0;
+            }
+            else {
+                scrollOffset += this._scroll.scrollForce;
+            }
         }
+
+        //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
+        return _roundScrollOffset.call(this, scrollOffset);
     }
 
     /**
@@ -537,7 +524,7 @@ define(function(require, exports, module) {
         // 1. Check whether primary boundary has been reached
         if (this.options.reverse) {
             nextHeight = _calcNextHeight.call(this);
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) < size[this._direction])) {
+            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])) {
                 this._scroll.boundsReached = Bounds.NEXT;
                 this._scroll.springPosition = size[this._direction] - nextHeight;
                 return;
@@ -546,7 +533,7 @@ define(function(require, exports, module) {
         }
         else {
             prevHeight = _calcPrevHeight.call(this);
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) > 0)) {
+            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = prevHeight;
                 return;
@@ -560,7 +547,7 @@ define(function(require, exports, module) {
         if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
             totalHeight = prevHeight + nextHeight;
         }
-        if ((totalHeight !== undefined) && (totalHeight < size[this._direction])) {
+        if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
             this._scroll.boundsReached = Bounds.BOTH;
             this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : prevHeight;
             return;
@@ -568,14 +555,14 @@ define(function(require, exports, module) {
 
         // 3. Check if secondary bounds has been reached
         if (this.options.reverse) {
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) > 0)) {
+            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = prevHeight;
                 return;
             }
         }
         else {
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) < size[this._direction])){
+            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
                 this._scroll.boundsReached = Bounds.NEXT;
                 this._scroll.springPosition = size[this._direction] - nextHeight;
                 return;
@@ -652,6 +639,7 @@ define(function(require, exports, module) {
 
         // Check whether pagination is active
         if (!this.options.paginated ||
+            this._scroll.scrollForceCount ||
             (Math.abs(this._scroll.particle.getEnergy()) > this.options.paginationEnergyThresshold) ||
             (this._scroll.springPosition !== undefined)) {
             return;
@@ -699,13 +687,20 @@ define(function(require, exports, module) {
 
         // Determine snap spring-position
         var boundOffset = pageOffset - bound;
+        var snapSpringPosition;
         if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
-            this._scroll.springPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
-            _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ',  scrollOffset);
+            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
+            if (snapSpringPosition !== this._scroll.springPosition) {
+                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                this._scroll.springPosition = snapSpringPosition;
+            }
         }
         else {
-            this._scroll.springPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
-            _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ',  scrollOffset);
+            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
+            if (snapSpringPosition !== this._scroll.springPosition) {
+                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                this._scroll.springPosition = snapSpringPosition;
+            }
         }
     }
 
@@ -713,6 +708,8 @@ define(function(require, exports, module) {
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
     function _normalizePrevViewSequence(size, scrollOffset, baseOffset) {
+        var normalizedCount = 0;
+        var normalizedLength = 0;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
@@ -722,12 +719,18 @@ define(function(require, exports, module) {
             }
             this._viewSequence = node._viewSequence;
             scrollOffset -= node.scrollLength;
-            _log.call(this, 'normalized prev node with length: ', node.scrollLength, ', scrollOffset: ', scrollOffset);
+            normalizedLength -= node.scrollLength;
+            normalizedCount++;
         }.bind(this), false);
+        if (normalizedCount) {
+            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
+        }
         return scrollOffset;
     }
     function _normalizeNextViewSequence(size, scrollOffset, baseOffset) {
         var prevScrollLength;
+        var normalizedCount = 0;
+        var normalizedLength = 0;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
@@ -738,10 +741,14 @@ define(function(require, exports, module) {
                 }
                 this._viewSequence = node._viewSequence;
                 scrollOffset += prevScrollLength;
-                _log.call(this, 'normalized next node with length: ', prevScrollLength, ', scrollOffset: ', scrollOffset);
+                normalizedLength += prevScrollLength;
+                normalizedCount++;
             }
             prevScrollLength = node.scrollLength;
         }.bind(this), true);
+        if (normalizedCount) {
+            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
+        }
         return scrollOffset;
     }
     function _normalizeViewSequence(size, scrollOffset) {
@@ -753,8 +760,8 @@ define(function(require, exports, module) {
             return scrollOffset;
         }
 
-        // Don't normalize when moving
-        if (this._scroll.moveToStartPosition !== undefined) {
+        // Don't normalize when forces are at work
+        if (this._scroll.scrollForceCount) {
             return scrollOffset;
         }
 
@@ -794,11 +801,6 @@ define(function(require, exports, module) {
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
                 this._scroll.springPosition += delta;
-            }
-
-            // Adjust move position
-            if (this._scroll.moveToStartPosition !== undefined) {
-                this._scroll.moveToStartPosition += delta;
             }
 
             // Adjust group offset
@@ -878,16 +880,15 @@ define(function(require, exports, module) {
      * Moves to the next node in the viewSequence.
      *
      * @param {Number} [amount] Amount of nodes to move
-     * @return {ScrollView} this
      */
-    ScrollView.prototype.scroll = function(amount) {
+    function _goToPage(amount) {
 
         // Get current scroll-position. When a previous call was made to
         // `scroll' or `scrollTo` and that node has not yet been reached, then
         // the amount is accumalated onto that scroll target.
         var viewSequence = this._scroll.scrollToSequence || this.getFirstVisibleItem() || this._viewSequence;
         if (!viewSequence) {
-            return this;
+            return;
         }
 
         // When the first renderable is partially shown, then treat `-1` (previous)
@@ -907,16 +908,125 @@ define(function(require, exports, module) {
             }
         }
         _scrollToSequence.call(this, viewSequence, amount >= 0);
+    }
+
+    /**
+     * Halts all scrolling going on. In essence this function sets
+     * the velocity to 0 and cancels any `goToXxx` operation that
+     * was applied.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.halt = function() {
+        this._scroll.scrollToSequence = undefined;
+        _setParticle.call(this, undefined, 0, 'halt');
+        return this;
+    };
+
+    /**
+     * Applies a permanent scroll-force (offset) until it is released.
+     * When the cumulative scroll-offset lies outside the allowed bounds
+     * a strech effect is used, and the offset beyond the bounds is
+     * substracted by halve. This function should always be accompanied
+     * by a call to `releaseScrollForce`.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchstart` event.
+     *
+     * @param {Number} offset Scroll offset to add to the current
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.applyScrollForce = function(offset) {
+        this.halt();
+        this._scroll.scrollForceCount++;
+        this._scroll.scrollForce += offset;
+        return this;
+    };
+
+    /**
+     * Updates a existing scroll-force previously applied by calling
+     * `applyScrollForce`.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchmove` event.
+     *
+     * @param {Number} [prevOffset] Previous offset
+     * @param {Number} [newOffset] New offset
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.updateScrollForce = function(prevOffset, newOffset) {
+        this.halt();
+        newOffset -= prevOffset;
+        this._scroll.scrollForce += newOffset;
+        return this;
+    };
+
+    /**
+     * Releases a scroll-force and sets the velocity.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchend` event.
+     *
+     * @param {Number} offset Scroll offset to release
+     * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.releaseScrollForce = function(offset, velocity) {
+        this.halt();
+        if (this._scroll.scrollForceCount === 1) {
+            var scrollOffset = _calcScrollOffset.call(this);
+            _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
+            this._scroll.pe.wake();
+            this._scroll.scrollForce = 0;
+            if (this.options.paginated) {
+                this._isDirty = true;
+            }
+        }
+        else {
+            this._scroll.scrollForce -= offset;
+        }
+        this._scroll.scrollForceCount--;
+        return this;
+    };
+
+    /**
+     * Scrolls the view by the specified offset.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.applyScrollOffset = function(offset) {
+        this.halt();
+        this._scroll.scrollDelta += offset;
+        return this;
+    };
+
+    /**
+     * Scroll to the previous page, making it visible.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.goToPreviousPage = function() {
+        _goToPage.call(this, -1);
+        return this;
+    };
+
+    /**
+     * Scroll to the next page, making it visible.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.goToNextPage = function() {
+        _goToPage.call(this, 1);
         return this;
     };
 
     /**
      * Scroll to the given renderable in the datasource.
      *
-     * @param {RenderNode} [node] renderable to scroll to
+     * @param {RenderNode} node renderable to scroll to
      * @return {ScrollView} this
      */
-    ScrollView.prototype.scrollTo = function(node) {
+    ScrollView.prototype.goToRenderNode = function(node) {
 
         // Verify arguments and state
         if (!this._viewSequence || !node) {
@@ -959,7 +1069,7 @@ define(function(require, exports, module) {
 
         // Track the number of times the layout-function was executed
         this._debug.layoutCount++;
-        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
+        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
 
         // Prepare for layout
         var layoutContext = this._nodes.prepareForLayout(
@@ -991,10 +1101,17 @@ define(function(require, exports, module) {
         _calcBounds.call(this, size, scrollOffset);
         _verifyIntegrity.call(this, 'calcBounds', scrollOffset);
 
+        // Update scroll-to spring
+        _calcScrollToOffset.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
+
+        // When pagination is enabled, snap to page
+        _snapToPage.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
+
         // If the bounds have changed, and the scroll-offset would be different
         // than before, then re-layout entirely using the new offset.
-        var newScrollOffset = _calcScrollOffset.call(this);
-        _integrateScrollDelta.call(this, newScrollOffset);
+        var newScrollOffset = _calcScrollOffset.call(this, true);
         if (!nested && (newScrollOffset !== scrollOffset)) {
             _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
             return _layout.call(this, size, newScrollOffset, true);
@@ -1009,14 +1126,6 @@ define(function(require, exports, module) {
                 target: this
             });
         }
-
-        // Update scroll-to spring
-        _calcScrollToOffset.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
-
-        // When pagination is enabled, snap to page
-        _snapToPage.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
@@ -1115,7 +1224,7 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.commit = function commit(context) {
         var size = context.size;
-        var scrollOffset = _calcScrollOffset.call(this);
+        var scrollOffset = _calcScrollOffset.call(this, true);
 
         // When the size or layout function has changed, reflow the layout
         if (size[0] !== this._contextSizeCache[0] ||
