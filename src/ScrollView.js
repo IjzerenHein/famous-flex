@@ -149,6 +149,7 @@ define(function(require, exports, module) {
     }
     ScrollView.prototype = Object.create(FlowLayoutController.prototype);
     ScrollView.prototype.constructor = ScrollView;
+    ScrollView.Bounds = Bounds;
 
     ScrollView.DEFAULT_OPTIONS = {
         //insertSpec: undefined,
@@ -169,7 +170,28 @@ define(function(require, exports, module) {
         //paginationEnergyThresshold: 0.001,
         reverse: false,
         touchMoveDirectionThresshold: undefined, // 0..1
-        logging: false
+        logging: false,
+        scrollCallback: undefined //function(offset, force)
+    };
+
+    var oldSetOptions = ScrollView.prototype.setOptions;
+    /**
+     * Patches the ScrollView instance's options with the passed-in ones.
+     *
+     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
+     * @return {FlowLayoutController} this
+     */
+    ScrollView.prototype.setOptions = function(options) {
+        oldSetOptions.call(this, options);
+        // todo - all other options
+        return this;
     };
 
     /**
@@ -315,6 +337,9 @@ define(function(require, exports, module) {
         if (!oldTouchesCount && this._scroll.activeTouches.length) {
             this.applyScrollForce(0);
             this._scroll.touchDelta = 0;
+            if (this.options.scrollCallback) {
+                this.options.scrollCallback(0, 1);
+            }
             //this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
         }
     }
@@ -357,6 +382,9 @@ define(function(require, exports, module) {
         // Update move offset and emit event
         if (primaryTouch) {
             var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
+            if (this.options.scrollCallback) {
+                delta = this.options.scrollCallback(delta, 2);
+            }
             this.updateScrollForce(this._scroll.touchDelta, delta);
             this._scroll.touchDelta = delta;
             //this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
@@ -409,8 +437,14 @@ define(function(require, exports, module) {
             velocity = diffOffset / diffTime;
         }
 
+        // Execute callback
+        var delta = this._scroll.touchDelta;
+        if (this.options.scrollCallback) {
+            delta = this.options.scrollCallback(delta, 3, velocity);
+        }
+
         // Release scroll force
-        this.releaseScrollForce(this._scroll.touchDelta, velocity);
+        this.releaseScrollForce(delta, velocity);
         this._scroll.touchDelta = 0;
 
         // Emit end event
@@ -423,7 +457,10 @@ define(function(require, exports, module) {
      */
     function _scrollUpdate(event) {
         var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-        this.applyScrollOffset(offset);
+        if (this.options.scrollCallback) {
+            offset = this.options.scrollCallback(offset, 0);
+        }
+        this.scroll(offset);
     }
 
     /**
@@ -1015,14 +1052,60 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Checks whether the scrollview can scroll the given offset.
+     * When the scrollView can scroll the whole offset, then
+     * the return value is the same as the offset. If it cannot
+     * scroll the entire offset, the return value is the number of
+     * pixels that can be scrolled.
+     *
+     * @return {Number} number of pixels the view can scroll or offset
+     */
+    ScrollView.prototype.canScroll = function(offset) {
+
+        // Calculate height in both directions
+        var scrollOffset = _calcScrollOffset.call(this);
+        var prevHeight = _calcPrevHeight.call(this);
+        var nextHeight = _calcNextHeight.call(this);
+
+        // When the rendered height is smaller than the total height,
+        // then no scrolling whatsover is allowed.
+        var totalHeight;
+        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
+            totalHeight = prevHeight + nextHeight;
+        }
+        if ((totalHeight !== undefined) && (totalHeight <= this._contextSizeCache[this._direction])) {
+            return 0; // no scrolling at all allowed
+        }
+
+        // Determine the offset that we can scroll
+        if ((offset < 0) && (nextHeight !== undefined)) {
+            var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
+            return Math.min(nextOffset, offset);
+        } else if ((offset > 0) && (prevHeight !== undefined)) {
+            var prevOffset = -(scrollOffset - prevHeight);
+            return Math.min(prevOffset, offset);
+        }
+        return offset;
+    };
+
+    /**
      * Scrolls the view by the specified offset.
      *
      * @return {ScrollView} this
      */
-    ScrollView.prototype.applyScrollOffset = function(offset) {
+    ScrollView.prototype.scroll = function(offset) {
         this.halt();
         this._scroll.scrollDelta += offset;
         return this;
+    };
+
+    /**
+     * Checks whether any boundaries have been reached.
+     *
+     * @return {ScrollView.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
+     */
+    ScrollView.prototype.getBoundsReached = function() {
+        return this._scroll.boundsReached;
     };
 
     /**
@@ -1060,7 +1143,8 @@ define(function(require, exports, module) {
 
         // Check current node
         if (this._viewSequence.get() === node) {
-            _scrollToSequence.call(this, this._viewSequence, true);
+            var next = _calcScrollOffset.call(this) >= 0;
+            _scrollToSequence.call(this, this._viewSequence, next);
             return this;
         }
 
