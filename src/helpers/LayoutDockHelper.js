@@ -99,17 +99,17 @@ define(function(require, exports, module) {
     LayoutDockHelper.prototype.parse = function(data) {
         for (var i = 0; i < data.length; i++) {
             var rule = data[i];
-            var value = (data.length >= 3) ? rule[2] : undefined;
+            var value = (rule.length >= 3) ? rule[2] : undefined;
             if (rule[0] === 'top') {
-                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+                this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'left') {
-                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+                this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'right') {
-                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+                this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'bottom') {
-                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+                this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'fill') {
-                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
+                this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
             }
         }
     };
