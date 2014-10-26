@@ -564,7 +564,7 @@ define(function(require, exports, module) {
     function _contextResolveSize(contextNodeOrId, parentSize) {
         var contextNode = _contextGet.call(this, contextNodeOrId);
         if (!contextNode) {
-            return this;
+            return [0, 0];
         }
         var size = contextNode.renderNode.getSize(true);
         if (!size) {
