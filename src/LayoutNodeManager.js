@@ -50,7 +50,8 @@ define(function(require, exports, module) {
             get: _contextGet.bind(this),
             set: _contextSet.bind(this),
             getRenderNode: _contextGetRenderNode.bind(this),
-            resolveSize: _contextResolveSize.bind(this)
+            resolveSize: _contextResolveSize.bind(this),
+            size: [0, 0]
         });
         this._contextState = {
             // enumation state for the context
@@ -90,6 +91,10 @@ define(function(require, exports, module) {
         // Prepare data
         this._nodesById = nodesById;
         this._trueSizeRequested = false;
+        this._reevalTrueSize =
+            !this._context.size ||
+            (this._context.size[0] !== contextData.size[0]) ||
+            (this._context.size[1] !== contextData.size[1]);
 
         // Prepare context for enumation
         this._contextState.nextSequence = viewSequence;
@@ -102,7 +107,8 @@ define(function(require, exports, module) {
         this._contextState.prevSetIndex = 0;
 
         // Prepare content
-        this._context.size = contextData.size;
+        this._context.size[0] = contextData.size[0];
+        this._context.size[1] = contextData.size[1];
         this._context.direction = contextData.direction;
         this._context.scrollOffset = contextData.scrollOffset || 0;
         this._context.scrollStart = contextData.scrollStart || 0;
@@ -566,31 +572,34 @@ define(function(require, exports, module) {
         if (!contextNode) {
             return [0, 0];
         }
-        var size = contextNode.renderNode.getSize(true);
+
+        // Get in use size
+        var size = contextNode.renderNode.getSize();
         if (!size) {
-            size = contextNode.renderNode.getSize(false);
-            if (!size) {
-                size = parentSize;
+            return parentSize;
+        }
+
+        // Check if true-size is used and it must be reavaluated
+        var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
+        if (configSize && this._reevalTrueSize && ((configSize[0] === true) || (configSize[1] === true))) {
+            this._trueSizeRequested = true;
+            contextNode.trueSizeRequested = true;
+            contextNode.renderNode._trueSizeCheck = true;
+            contextNode.renderNode._size = undefined; // fix for bug #428
+        }
+
+        // Resolve 'undefined' to parent-size and true to 0
+        if ((size[0] === undefined) || (size[0] === true) || (size[1] === undefined) || (size[1] === true)) {
+            size = [size[0], size[1]];
+            if (size[0] === undefined) {
+                size[0] = parentSize[0];
+            } else if (size[0] === true) {
+                size[0] = 0;
             }
-            else {
-                var newSize = [size[0], size[1]];
-                if (size[0] === true) {
-                   newSize[0] = 0; // true cannot be resolved at this stage, try again next render-cycle
-                   this._trueSizeRequested = true;
-                   contextNode.trueSizeRequested = true;
-                }
-                else if (size[0] === undefined) {
-                    newSize[0] = parentSize[0];
-                }
-                if (size[1] === true) {
-                   newSize[1] = 0; // true cannot be resolved at this stage, try again next render-cycle
-                   this._trueSizeRequested = true;
-                   contextNode.trueSizeRequested = true;
-                }
-                else if (size[1] === undefined) {
-                    newSize[1] = parentSize[1];
-                }
-                size = newSize;
+            if (size[1] === undefined) {
+                size[1] = parentSize[1];
+            } else if (size[1] === true) {
+                size[1] = 0;
             }
         }
         return size;
