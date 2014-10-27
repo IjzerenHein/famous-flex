@@ -22,7 +22,7 @@ define(function(require, exports, module) {
     // import dependencies
     //var LayoutUtility = require('./LayoutUtility');
     var FlowLayoutController = require('./FlowLayoutController');
-    var FlowLayoutNode = require('./LayoutNode');
+    var FlowLayoutNode = require('./FlowLayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var Transform = require('famous/core/Transform');
@@ -170,7 +170,7 @@ define(function(require, exports, module) {
         //paginationEnergyThresshold: 0.001,
         reverse: false,
         touchMoveDirectionThresshold: undefined, // 0..1
-        logging: false,
+        logging: true,
         scrollCallback: undefined //function(offset, force)
     };
 
@@ -530,9 +530,9 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Helper function that calculates the prev layed out height.
+     * Helper function that calculates the next/prev layed out height.
      */
-    function _calcPrevHeight() {
+    function _calcHeight(next) {
         var height = 0;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
@@ -540,22 +540,7 @@ define(function(require, exports, module) {
                 return true;
             }
             height += node.scrollLength;
-        }.bind(this), false);
-        return height;
-    }
-
-    /**
-     * Helper function that calculates the next layed out height.
-     */
-    function _calcNextHeight() {
-        var height = 0;
-        this._nodes.forEach(function(node) {
-            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-                height = undefined; // can't determine height
-                return true;
-            }
-            height += node.scrollLength;
-        }.bind(this), true);
+        }.bind(this), next);
         return height;
     }
 
@@ -576,24 +561,24 @@ define(function(require, exports, module) {
 
         // 1. Check whether primary boundary has been reached
         if (this.options.reverse) {
-            nextHeight = _calcNextHeight.call(this);
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])) {
+            nextHeight = _calcHeight.call(this, true);
+            prevHeight = _calcHeight.call(this, false);
+            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
                 this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = size[this._direction] - nextHeight;
+                this._scroll.springPosition = -nextHeight;
                 this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
             }
-            prevHeight = _calcPrevHeight.call(this);
         }
         else {
-            prevHeight = _calcPrevHeight.call(this);
+            prevHeight = _calcHeight.call(this, false);
             if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = prevHeight;
                 this._scroll.springSource = SpringSource.PREVBOUNDS;
                 return;
             }
-            nextHeight = _calcNextHeight.call(this);
+            nextHeight = _calcHeight.call(this, true);
         }
 
         // 2. When the rendered height is smaller than the total height,
@@ -604,16 +589,16 @@ define(function(require, exports, module) {
         }
         if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
             this._scroll.boundsReached = Bounds.BOTH;
-            this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : prevHeight;
+            this._scroll.springPosition = this.options.reverse ? -nextHeight : prevHeight;
             this._scroll.springSource = SpringSource.MINSIZE;
             return;
         }
 
         // 3. Check if secondary bounds has been reached
         if (this.options.reverse) {
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
+            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
                 this._scroll.boundsReached = Bounds.PREV;
-                this._scroll.springPosition = prevHeight;
+                this._scroll.springPosition = prevHeight; // -prevHeight ???!? TODO!!!
                 this._scroll.springSource = SpringSource.PREVBOUNDS;
                 return;
             }
@@ -621,7 +606,7 @@ define(function(require, exports, module) {
         else {
             if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
                 this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = size[this._direction] - nextHeight;
+                this._scroll.springPosition = nextHeight;
                 this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
 
@@ -1064,8 +1049,8 @@ define(function(require, exports, module) {
 
         // Calculate height in both directions
         var scrollOffset = _calcScrollOffset.call(this);
-        var prevHeight = _calcPrevHeight.call(this);
-        var nextHeight = _calcNextHeight.call(this);
+        var prevHeight = _calcHeight.call(this, false);
+        var nextHeight = _calcHeight.call(this, true);
 
         // When the rendered height is smaller than the total height,
         // then no scrolling whatsover is allowed.
@@ -1186,9 +1171,10 @@ define(function(require, exports, module) {
             this._nodesById, {      // so we can do fast id lookups
                 size: size,
                 direction: this._direction,
-                scrollOffset: scrollOffset,
+                reverse: this.options.reverse,
+                scrollOffset: this.options.reverse ? (scrollOffset + size[this._direction]) : scrollOffset,
                 scrollStart: scrollOffset - size[this._direction],
-                scrollEnd: scrollOffset +  (size[this._direction] * 2)
+                scrollEnd: scrollOffset + (size[this._direction] * 2)
             }
         );
         _verifyIntegrity.call(this, 'prepareLayout');
@@ -1239,8 +1225,8 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
+        //scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
+        //_verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
         // Update spring
         _updateSpring.call(this);

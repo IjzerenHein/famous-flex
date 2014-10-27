@@ -110,6 +110,7 @@ define(function(require, exports, module) {
         this._context.size[0] = contextData.size[0];
         this._context.size[1] = contextData.size[1];
         this._context.direction = contextData.direction;
+        this._context.reverse = contextData.reverse;
         this._context.scrollOffset = contextData.scrollOffset || 0;
         this._context.scrollStart = contextData.scrollStart || 0;
         this._context.scrollEnd = contextData.scrollEnd || this._context.size[this._context.direction];
@@ -279,7 +280,7 @@ define(function(require, exports, module) {
                 node = node._next;
             }
         } else if (next === true) {
-            node = this._contextState.start;
+            node = (this._contextState.start && this._contextState.startPrev) ? this._contextState.start._next : this._contextState.start;
             while (node) {
                 if (!node._invalidated || callback(node)) {
                     return;
@@ -287,7 +288,7 @@ define(function(require, exports, module) {
                 node = node._next;
             }
         } else if (next === false) {
-            node = this._contextState.start ? this._contextState.start._prev : undefined;
+            node = (this._contextState.start && !this._contextState.startPrev) ? this._contextState.start._prev : this._contextState.start;
             while (node) {
                 if (!node._invalidated || callback(node)) {
                     return;
@@ -325,7 +326,7 @@ define(function(require, exports, module) {
         // The first time this function is called, the current
         // prev/next position is obtained.
         var node;
-        if (!this._contextState.next) {
+        if (!this._contextState.prev && !this._contextState.next) {
             node = this._first;
             while (node) {
                 if (node.renderNode === renderNode) {
@@ -342,29 +343,43 @@ define(function(require, exports, module) {
                 this._first = node;
             }
             this._contextState.start = node;
-            this._contextState.next = node;
-            this._contextState.prev = node;
-
+            this._contextState.startPrev = prev;
+            this._contextState.prev = prev ? node : undefined;
+            this._contextState.next = prev ? undefined : node;
             _checkIntegrity.call(this);
         }
 
         // Check whether node already exist at the correct position
         // in the linked-list. If so, return that node immediately
-        // and advanced the prev/next pointer for the next/prev
+        // and advance the prev/next pointer for the next/prev
         // lookup operation.
-        if (prev && (this._contextState.start !== node)) {
-            if (this._contextState.prev) {
-                var prevNode = this._contextState.prev._prev;
-                if (prevNode && (prevNode.renderNode === renderNode)) {
-                    this._contextState.prev = prevNode;
-                    _checkIntegrity.call(this);
-                    return prevNode;
+        var prevNode;
+        var nextNode;
+        if (prev) {
+            if (this._contextState.prev && (this._contextState.prev.renderNode === renderNode)) {
+                prevNode = this._contextState.prev;
+            }
+            else if (!this._contextState.prev && this._contextState.start && this._contextState.start._prev && (this._contextState.start._prev.renderNode === renderNode)) {
+                prevNode = this._contextState.start._prev;
+                this._contextState.prev = prevNode;
+            }
+            if (prevNode) {
+                if (prevNode._prev) {
+                    this._contextState.prev = prevNode._prev;
                 }
+                _checkIntegrity.call(this);
+                return prevNode;
             }
         }
         else {
-            var nextNode = this._contextState.next;
-            if (nextNode && (nextNode.renderNode === renderNode)) {
+            if (this._contextState.next && (this._contextState.next.renderNode === renderNode)) {
+                nextNode = this._contextState.next;
+            }
+            else if (!this._contextState.next && this._contextState.start && this._contextState.start._next && (this._contextState.start._next.renderNode === renderNode)) {
+                nextNode = this._contextState.start._next;
+                this._contextState.next = nextNode;
+            }
+            if (nextNode) {
                 if (nextNode._next) {
                     this._contextState.next = nextNode._next;
                 }
@@ -405,24 +420,26 @@ define(function(require, exports, module) {
 
         // Insert node into the linked list
         if (prev) {
-            if (this._contextState.prev._prev) {
-                node._prev = this._contextState.prev._prev;
-                this._contextState.prev._prev._next = node;
+            prevNode = this._contextState.prev || this._contextState.start;
+            if (prevNode._prev) {
+                node._prev = prevNode._prev;
+                prevNode._prev._next = node;
             }
             else {
                 this._first = node;
             }
-            this._contextState.prev._prev = node;
-            node._next = this._contextState.prev;
+            prevNode._prev = node;
+            node._next = prevNode;
             this._contextState.prev = node;
         }
         else {
-            if (this._contextState.next._next) {
-                node._next = this._contextState.next._next;
-                this._contextState.next._next._prev = node;
+            nextNode = this._contextState.next || this._contextState.start;
+            if (nextNode._next) {
+                node._next = nextNode._next;
+                nextNode._next._prev = node;
             }
-            this._contextState.next._next = node;
-            node._prev = this._contextState.next;
+            nextNode._next = node;
+            node._prev = nextNode;
             this._contextState.next = node;
         }
         _checkIntegrity.call(this);
@@ -439,13 +456,21 @@ define(function(require, exports, module) {
         if (!this._contextState.nextSequence) {
             return undefined;
         }
+        if (this._context.reverse) {
+            this._contextState.nextSequence = this._contextState.nextSequence.getNext();
+            if (!this._contextState.nextSequence) {
+                return undefined;
+            }
+        }
         var renderNode = this._contextState.nextSequence.get();
         if (!renderNode) {
             this._contextState.nextSequence = undefined;
             return undefined;
         }
         var nextSequence = this._contextState.nextSequence;
-        this._contextState.nextSequence = this._contextState.nextSequence.getNext();
+        if (!this._context.reverse) {
+            this._contextState.nextSequence = this._contextState.nextSequence.getNext();
+        }
         return {
             renderNode: renderNode,
             viewSequence: nextSequence,
@@ -463,18 +488,24 @@ define(function(require, exports, module) {
         if (!this._contextState.prevSequence) {
             return undefined;
         }
-        this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
-        if (!this._contextState.prevSequence) {
-            return undefined;
+        if (!this._context.reverse) {
+            this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
+            if (!this._contextState.prevSequence) {
+                return undefined;
+            }
         }
         var renderNode = this._contextState.prevSequence.get();
         if (!renderNode) {
             this._contextState.prevSequence = undefined;
             return undefined;
         }
+        var prevSequence = this._contextState.prevSequence;
+        if (this._context.reverse) {
+            this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
+        }
         return {
             renderNode: renderNode,
-            viewSequence: this._contextState.prevSequence,
+            viewSequence: prevSequence,
             prev: true,
             index: --this._contextState.prevGetIndex
         };
@@ -581,10 +612,10 @@ define(function(require, exports, module) {
 
         // Check if true-size is used and it must be reavaluated
         var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
-        if (configSize && this._reevalTrueSize && ((configSize[0] === true) || (configSize[1] === true))) {
+        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
             this._trueSizeRequested = true;
-            contextNode.trueSizeRequested = true;
-            contextNode.renderNode._trueSizeCheck = true;
+            //contextNode.trueSizeRequested = true;
+            contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
             contextNode.renderNode._size = undefined; // fix for bug #428
         }
 
