@@ -330,7 +330,7 @@ define(function(require, exports, module) {
      * animation starting with size, origin, opacity, transform, etc... as specified
      * in `insertSpec'.
      *
-     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @param {Number|String} indexOrId Index (0 = before first, -1 at end), within dataSource array or id (String)
      * @param {Object} renderable Renderable to add to the data-source
      * @param {Spec} [insertSpec] Size, transform, etc.. to start with when inserting
      * @return {FlowLayoutController} this
@@ -359,17 +359,29 @@ define(function(require, exports, module) {
                 this._viewSequence = new ViewSequence(this._dataSource);
             }
 
-            // Using insert in this way, only works when the data-source is an array
-            if (!(this._dataSource instanceof Array)) {
-                LayoutUtility.error('LayoutController.insert(index) only works when the dataSource is an array');
-                return this;
-            }
-
             // Insert into array
-            if (indexOrId < 0) {
-                this._dataSource.push(renderable);
+            if (indexOrId === -1) {
+                if (this._viewSequence) {
+                    this._viewSequence.push(renderable);
+                }
+                else {
+                    this._dataSource.push(renderable);
+                }
+            }
+            else if (indexOrId === 0) {
+                if (this._viewSequence) {
+                    this._viewSequence.unshift(renderable);
+                }
+                else {
+                    this._dataSource.unshift(renderable);
+                }
             }
             else {
+                // Using insert in this way, only works when the data-source is an array
+                if (!(this._dataSource instanceof Array)) {
+                    LayoutUtility.error('LayoutController.insert(1..n) only works when the dataSource is an array');
+                    return this;
+                }
                 this._dataSource.splice(indexOrId, 0, renderable);
             }
         }
@@ -401,7 +413,7 @@ define(function(require, exports, module) {
 
         // Remove the renderable in case of an id (String)
         var renderNode;
-        if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+        if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
 
             // Find and remove renderable from data-source
             renderNode = this._nodesById[indexOrId];
@@ -412,12 +424,6 @@ define(function(require, exports, module) {
 
         // Remove the renderable using an index
         else {
-
-            // Using remove in this way, only works when the data-source is an array
-            if (!(this._dataSource instanceof Array)) {
-                LayoutUtility.error('LayoutController.remove(index) only works when the dataSource is an array');
-                return this;
-            }
 
             // Remove from array
             renderNode = this._dataSource.splice(indexOrId, 1)[0];
