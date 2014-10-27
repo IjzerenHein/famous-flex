@@ -595,11 +595,15 @@ define(function(require, exports, module) {
                 size[0] = parentSize[0];
             } else if (size[0] === true) {
                 size[0] = 0;
+                this._trueSizeRequested = true;
+                contextNode.trueSizeRequested = true;
             }
             if (size[1] === undefined) {
                 size[1] = parentSize[1];
             } else if (size[1] === true) {
                 size[1] = 0;
+                this._trueSizeRequested = true;
+                contextNode.trueSizeRequested = true;
             }
         }
         return size;
