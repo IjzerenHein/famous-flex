@@ -613,7 +613,7 @@ define(function(require, exports, module) {
         // Check if true-size is used and it must be reavaluated
         var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
-            this._trueSizeRequested = true;
+            //this._trueSizeRequested = true;
             contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
             //contextNode.renderNode._size = undefined; // fix for bug #428
         }
