@@ -170,7 +170,7 @@ define(function(require, exports, module) {
         //paginationEnergyThresshold: 0.001,
         reverse: false,
         touchMoveDirectionThresshold: undefined, // 0..1
-        logging: true,
+        logging: false,
         scrollCallback: undefined //function(offset, force)
     };
 
@@ -642,11 +642,16 @@ define(function(require, exports, module) {
             if (node.scrollLength === undefined) {
                 return true;
             }
+            if (this.options.reverse) {
+                scrollToOffset -= node.scrollLength;
+            }
             if (node._viewSequence === this._scroll.scrollToSequence) {
                 foundNode = node;
                 return true;
             }
-            scrollToOffset -= node.scrollLength;
+            if (!this.options.reverse) {
+                scrollToOffset -= node.scrollLength;
+            }
         }.bind(this), true);
         if (!foundNode) {
             scrollToOffset = 0;
@@ -654,10 +659,15 @@ define(function(require, exports, module) {
                 if (node.scrollLength === undefined) {
                     return true;
                 }
-                scrollToOffset += node.scrollLength;
+                if (!this.options.reverse) {
+                    scrollToOffset += node.scrollLength;
+                }
                 if (node._viewSequence === this._scroll.scrollToSequence) {
                     foundNode = node;
                     return true;
+                }
+                if (this.options.reverse) {
+                    scrollToOffset += node.scrollLength;
                 }
             }.bind(this), false);
         }
