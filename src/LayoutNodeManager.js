@@ -302,7 +302,7 @@ define(function(require, exports, module) {
      * Checks the integrity of the linked-list.
      */
     function _checkIntegrity() {
-        var node = this._first;
+        /*var node = this._first;
         var count = 0;
         var prevNode;
         while (node) {
@@ -315,7 +315,7 @@ define(function(require, exports, module) {
             prevNode = node;
             node = node._next;
             count++;
-        }
+        }*/
     }
 
     /**
