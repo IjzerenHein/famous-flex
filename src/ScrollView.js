@@ -598,7 +598,7 @@ define(function(require, exports, module) {
         if (this.options.reverse) {
             if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
                 this._scroll.boundsReached = Bounds.PREV;
-                this._scroll.springPosition = prevHeight; // -prevHeight ???!? TODO!!!
+                this._scroll.springPosition = -size[this._direction] + prevHeight;
                 this._scroll.springSource = SpringSource.PREVBOUNDS;
                 return;
             }
@@ -606,7 +606,7 @@ define(function(require, exports, module) {
         else {
             if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
                 this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = nextHeight;
+                this._scroll.springPosition = size[this._direction] - nextHeight;
                 this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
 
@@ -763,7 +763,7 @@ define(function(require, exports, module) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (scrollOffset < baseOffset){
+            if (scrollOffset <= baseOffset){
                 return true;
             }
             this._viewSequence = node._viewSequence;
@@ -1225,8 +1225,8 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        //scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
-        //_verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
+        scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
+        _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
         // Update spring
         _updateSpring.call(this);
