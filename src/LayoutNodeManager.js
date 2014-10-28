@@ -614,9 +614,8 @@ define(function(require, exports, module) {
         var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
             this._trueSizeRequested = true;
-            //contextNode.trueSizeRequested = true;
             contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
-            contextNode.renderNode._size = undefined; // fix for bug #428
+            //contextNode.renderNode._size = undefined; // fix for bug #428
         }
 
         // Resolve 'undefined' to parent-size and true to 0
