@@ -119,6 +119,11 @@ define(function(require, exports, module) {
         this._eventInput.on('touchend', _touchEnd.bind(this));
         this._eventInput.on('touchcancel', _touchEnd.bind(this));
 
+        // Listen to mouse-move events
+        this._eventInput.on('mousedown', _mouseDown.bind(this));
+        this._eventInput.on('mouseup', _mouseUp.bind(this));
+        this._eventInput.on('mousemove', _mouseMove.bind(this));
+
         // Listen to mouse-wheel events
         this._scrollSync = new ScrollSync(this.options.scrollSync);
         this._eventInput.pipe(this._scrollSync);
@@ -129,7 +134,7 @@ define(function(require, exports, module) {
         // Embed in container surface if neccesary
         if (this.options.useContainer) {
             this.container = new ContainerSurface({
-                properties: {overflow : 'hidden'}
+                properties: {overflow: 'hidden'}
             });
 
             // Create container surface, which has one child, which just returns
@@ -157,7 +162,7 @@ define(function(require, exports, module) {
         useContainer: false,
         offsetRounding: 1.0,
         scrollDrag: {
-            strength : 0.001
+            strength: 0.001
         },
         scrollSpring: {
             dampingRatio: 1.0,
@@ -171,6 +176,7 @@ define(function(require, exports, module) {
         reverse: false,
         touchMoveDirectionThresshold: undefined, // 0..1
         logging: false,
+        mouseMove: false,
         scrollCallback: undefined //function(offset, force)
     };
 
@@ -276,6 +282,84 @@ define(function(require, exports, module) {
                 _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
             }
         }
+    }
+
+    /**
+     * Called whenever the user presses the mouse button on the scrollview
+     */
+    function _mouseDown(event) {
+
+        // Check whether mouse-scrolling is enabled
+        if (!this.options.mouseMove) {
+            return;
+        }
+
+        // Reset any previous mouse-move operation that has not yet been
+        // cleared.
+        if (this._scroll.mouseMove) {
+            this.releaseScrollForce(this._scroll.mouseMove.delta);
+        }
+
+        // Calculate start of move operation
+        var current = [event.clientX, event.clientY];
+        var time = Date.now();
+        this._scroll.mouseMove = {
+            delta: 0,
+            start: current,
+            current: current,
+            prev: current,
+            time: time,
+            prevTime: time
+        };
+
+        // Apply scroll force
+        this.applyScrollForce(this._scroll.mouseMove.delta);
+    }
+    function _mouseMove(event) {
+
+        // Check if any mouse-move is active
+        if (!this._scroll.mouseMove) {
+            return;
+        }
+
+        // When a thresshold is configured, check whether the move operation (x/y ratio)
+        // lies within the thresshold. A move of 10 pixels x and 10 pixels y is considered 45 deg,
+        // which corresponds to a thresshold of 0.5.
+        var moveDirection = Math.atan2(
+            Math.abs(event.clientY - this._scroll.mouseMove.prev[1]),
+            Math.abs(event.clientX - this._scroll.mouseMove.prev[0])) / (Math.PI / 2.0);
+        var directionDiff = Math.abs(this._direction - moveDirection);
+        if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
+            this._scroll.mouseMove.prev = this._scroll.mouseMove.current;
+            this._scroll.mouseMove.current = [event.clientX, event.clientY];
+            this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
+            this._scroll.mouseMove.direction = moveDirection;
+            this._scroll.mouseMove.time = Date.now();
+        }
+
+        // Update scroll-force
+        var delta = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.start[this._direction];
+        this.updateScrollForce(this._scroll.mouseMove.delta, delta);
+        this._scroll.mouseMove.delta = delta;
+    }
+    function _mouseUp(event) {
+
+        // Check if any mouse-move is active
+        if (!this._scroll.mouseMove) {
+            return;
+        }
+
+        // Calculate delta and velocity
+        var velocity = 0;
+        var diffTime = Date.now() - this._scroll.mouseMove.prevTime;
+        if (diffTime > 0) {
+            var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
+            velocity = diffOffset / diffTime;
+        }
+
+        // Release scroll force
+        this.releaseScrollForce(this._scroll.mouseMove.delta, velocity);
+        this._scroll.mouseMove = undefined;
     }
 
     /**
