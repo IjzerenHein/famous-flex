@@ -757,19 +757,34 @@ define(function(require, exports, module) {
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
     function _normalizePrevViewSequence(size, scrollOffset, baseOffset) {
+        var prevScrollLength;
         var normalizedCount = 0;
         var normalizedLength = 0;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (scrollOffset <= baseOffset){
-                return true;
+            if (this.options.reverse) {
+                if (prevScrollLength !== undefined) {
+                    if ((scrollOffset - prevScrollLength) <= baseOffset){
+                        return true;
+                    }
+                    this._viewSequence = node._viewSequence;
+                    scrollOffset -= prevScrollLength;
+                    normalizedLength -= prevScrollLength;
+                    normalizedCount++;
+                }
+                prevScrollLength = node.scrollLength;
             }
-            this._viewSequence = node._viewSequence;
-            scrollOffset -= node.scrollLength;
-            normalizedLength -= node.scrollLength;
-            normalizedCount++;
+            else {
+                if (scrollOffset <= baseOffset){
+                    return true;
+                }
+                this._viewSequence = node._viewSequence;
+                scrollOffset -= node.scrollLength;
+                normalizedLength -= node.scrollLength;
+                normalizedCount++;
+            }
         }.bind(this), false);
         if (normalizedCount) {
             _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
@@ -784,16 +799,27 @@ define(function(require, exports, module) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (prevScrollLength !== undefined) {
-                if ((scrollOffset + prevScrollLength) >= baseOffset){
+            if (this.options.reverse) {
+                if (scrollOffset >= baseOffset){
                     return true;
                 }
                 this._viewSequence = node._viewSequence;
-                scrollOffset += prevScrollLength;
-                normalizedLength += prevScrollLength;
+                scrollOffset += node.scrollLength;
+                normalizedLength += node.scrollLength;
                 normalizedCount++;
             }
-            prevScrollLength = node.scrollLength;
+            else {
+                if (prevScrollLength !== undefined) {
+                    if ((scrollOffset + prevScrollLength) >= baseOffset){
+                        return true;
+                    }
+                    this._viewSequence = node._viewSequence;
+                    scrollOffset += prevScrollLength;
+                    normalizedLength += prevScrollLength;
+                    normalizedCount++;
+                }
+                prevScrollLength = node.scrollLength;
+            }
         }.bind(this), true);
         if (normalizedCount) {
             _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
