@@ -897,75 +897,73 @@ define(function(require, exports, module) {
     /**
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
-    function _normalizePrevViewSequence(size, scrollOffset, baseOffset) {
-        var prevScrollLength;
+    function _normalizePrevViewSequence(size, scrollOffset) {
+        var count = 0;
         var normalizedCount = 0;
-        var normalizedLength = 0;
+        var startScrollOffset = scrollOffset;
+        var normalizedScrollOffset = scrollOffset;
+        var normalizeNextPrev = false;
         this._nodes.forEach(function(node) {
+            if (normalizeNextPrev) {
+                this._viewSequence = node._viewSequence;
+                normalizedScrollOffset = scrollOffset;
+                normalizedCount = count;
+                normalizeNextPrev = false;
+            }
+            if (scrollOffset < 0) {
+                return true;
+            }
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (this.options.alignment) {
-                if (prevScrollLength !== undefined) {
-                    if ((scrollOffset - prevScrollLength) <= baseOffset){
-                        return true;
-                    }
+            scrollOffset -= node.scrollLength;
+            count++;
+            if (node.scrollLength) {
+                if (this.options.alignment) {
+                    normalizeNextPrev = (scrollOffset >= 0);
+                }
+                else {
                     this._viewSequence = node._viewSequence;
-                    scrollOffset -= prevScrollLength;
-                    normalizedLength -= prevScrollLength;
-                    normalizedCount++;
+                    normalizedScrollOffset = scrollOffset;
+                    normalizedCount = count;
                 }
-                prevScrollLength = node.scrollLength;
-            }
-            else {
-                if (scrollOffset <= baseOffset){
-                    return true;
-                }
-                this._viewSequence = node._viewSequence;
-                scrollOffset -= node.scrollLength;
-                normalizedLength -= node.scrollLength;
-                normalizedCount++;
             }
         }.bind(this), false);
         if (normalizedCount) {
-            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
+            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }
-        return scrollOffset;
+        return normalizedScrollOffset;
     }
-    function _normalizeNextViewSequence(size, scrollOffset, baseOffset) {
-        var prevScrollLength;
+    function _normalizeNextViewSequence(size, scrollOffset) {
+        var count = 0;
         var normalizedCount = 0;
-        var normalizedLength = 0;
+        var startScrollOffset = scrollOffset;
+        var normalizedScrollOffset = scrollOffset;
         this._nodes.forEach(function(node) {
+            if ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0))) {
+                return true;
+            }
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
             if (this.options.alignment) {
-                if (scrollOffset >= baseOffset){
-                    return true;
-                }
-                this._viewSequence = node._viewSequence;
                 scrollOffset += node.scrollLength;
-                normalizedLength += node.scrollLength;
-                normalizedCount++;
+                count++;
             }
-            else {
-                if (prevScrollLength !== undefined) {
-                    if ((scrollOffset + prevScrollLength) >= baseOffset){
-                        return true;
-                    }
-                    this._viewSequence = node._viewSequence;
-                    scrollOffset += prevScrollLength;
-                    normalizedLength += prevScrollLength;
-                    normalizedCount++;
-                }
-                prevScrollLength = node.scrollLength;
+            if (node.scrollLength || this.options.alignment) {
+                this._viewSequence = node._viewSequence;
+                normalizedScrollOffset = scrollOffset;
+                normalizedCount = count;
+            }
+            if (!this.options.alignment) {
+                scrollOffset += node.scrollLength;
+                count++;
             }
         }.bind(this), true);
         if (normalizedCount) {
-            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
+            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }
-        return scrollOffset;
+        return normalizedScrollOffset;
     }
     function _normalizeViewSequence(size, scrollOffset) {
 
@@ -981,34 +979,28 @@ define(function(require, exports, module) {
             return scrollOffset;
         }
 
-        // Determine base offset (by default 0 = top/left), but may be overwriten
-        // by the layout function to test layout in the prev-direction.
-        var baseOffset = 0; // top/left
-        if (this._layout.capabilities && this._layout.capabilities.debug && this._layout.capabilities.debug.testPrev) {
-            baseOffset = size[this._direction];
-        }
-
         // 1. Normalize in primary direction
         var normalizedScrollOffset = scrollOffset;
-        if (this.options.alignment) {
-            normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset, baseOffset);
+        if (this.options.alignment && (scrollOffset < 0)) {
+            normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
         }
-        else {
-            normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset, baseOffset);
+        else if (!this.options.alignment && (scrollOffset > 0)){
+            normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
         }
 
         // 2. Normalize in secondary direction
         if (normalizedScrollOffset === scrollOffset) {
-            if (this.options.alignment) {
-                normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset, baseOffset);
+            if (this.options.alignment && (scrollOffset > 0)) {
+                normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
             }
-            else {
-                normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset, baseOffset);
+            else if (!this.options.alignment && (scrollOffset < 0)) {
+                normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
             }
         }
 
         // Adjust particle and springs
         if (normalizedScrollOffset !== scrollOffset) {
+            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset);
             var delta = normalizedScrollOffset - scrollOffset;
 
             // Adjust particle
