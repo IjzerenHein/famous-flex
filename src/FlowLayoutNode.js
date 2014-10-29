@@ -197,6 +197,10 @@ define(function(require, exports, module) {
         if (removeSpec) {
             this.setSpec(removeSpec);
         }
+        else {
+            this._pe.sleep();
+            this._endStateReached = true;
+        }
 
         // Mark for removal
         this._invalidated = false;
@@ -262,11 +266,11 @@ define(function(require, exports, module) {
             var endState = prop.endState.get()[this._lockDirection];
             var lockValue = value + ((endState - value) * this._lockTransitionable.get());
             position = [
-                _roundParticleValue.call(this,position[0]),
-                _roundParticleValue.call(this,position[1]),
-                _roundParticleValue.call(this,position[2])
+                _roundParticleValue.call(this, position[0]),
+                _roundParticleValue.call(this, position[1]),
+                _roundParticleValue.call(this, position[2])
             ];
-            position[this._lockDirection] = lockValue;
+            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
         }
         return position;
     }
