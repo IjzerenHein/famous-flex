@@ -11,8 +11,8 @@
 /*global define*/
 
 /**
- * Lays a collection of renderables from left to right, and when the right edge is reached,
- * continues at the left of the next line.
+ * Lays a collection of renderables from left to right or top to bottom, and when the right/bottom edge is reached,
+ * continues at the next column/row.
  *
  * |options|type|description|
  * |---|---|---|
@@ -154,9 +154,9 @@ define(function(require, exports, module) {
             }
         }
 
-        /**
-         * Process all next nodes
-         */
+        //
+        // Process all next nodes
+        //
         lineLength = gutter[lineDirection];
         while (offset < context.scrollEnd) {
             node = context.next();
@@ -174,9 +174,9 @@ define(function(require, exports, module) {
         }
         lineNodes = [];
 
-        /**
-         * Process previous nodes
-         */
+        //
+        // Process previous nodes
+        //
         offset = context.scrollOffset;
         lineLength = gutter[lineDirection];
         while (offset > context.scrollStart) {

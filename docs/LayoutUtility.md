@@ -11,6 +11,7 @@ Utility class for famous-flex.
   * [LayoutUtility.cloneSpec(spec)](#module_LayoutUtility.cloneSpec)
   * [LayoutUtility.clearSpec(spec)](#module_LayoutUtility.clearSpec)
   * [LayoutUtility.isEqualSpec(spec1, spec2)](#module_LayoutUtility.isEqualSpec)
+  * [LayoutUtility.getSpecDiffText(spec1, spec2)](#module_LayoutUtility.getSpecDiffText)
   * [LayoutUtility.error(message)](#module_LayoutUtility.error)
   * [LayoutUtility.warning(message)](#module_LayoutUtility.warning)
   * [LayoutUtility.log(args)](#module_LayoutUtility.log)
@@ -54,6 +55,17 @@ Compares two specs for equality.
 - spec2 `Spec` - Spec to compare  
 
 **Returns**: `Boolean` - true/false  
+<a name="module_LayoutUtility.getSpecDiffText"></a>
+###LayoutUtility.getSpecDiffText(spec1, spec2)
+Helper function that returns a string containing the differences
+between two specs.
+
+**Params**
+
+- spec1 `Spec` - Spec to compare  
+- spec2 `Spec` - Spec to compare  
+
+**Returns**: `String` - text  
 <a name="module_LayoutUtility.error"></a>
 ###LayoutUtility.error(message)
 Helper function to call whenever a critical error has occurred.

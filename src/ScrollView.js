@@ -71,6 +71,7 @@ define(function(require, exports, module) {
 
     /**
      * @class
+     * @extends FlowLayoutController
      * @param {Object} options Options.
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
@@ -86,6 +87,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
      * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
+     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollView
      */
@@ -224,6 +226,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
      * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
+     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollView} this
      */
@@ -1078,17 +1081,17 @@ define(function(require, exports, module) {
     /**
      * Get the first visible item in the view.
      *
-     * @param {Number} [allowedPartlyVisiblePerc] percentage in the range of 0..1 (default: 0.5)
+     * An item is considered to be the first visible item when:
+     * -    First item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
+     * -    It is the first item after the top/left bounds
+     *
      * @return {Object} item or `undefined`
      */
-    ScrollView.prototype.getFirstVisibleItem = function(allowedPartlyVisiblePerc) {
-        if (allowedPartlyVisiblePerc === undefined) {
-            allowedPartlyVisiblePerc = this.options.visibleItemThresshold;
-        }
+    ScrollView.prototype.getFirstVisibleItem = function() {
         var items = this.getVisibleItems();
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            if ((item.visiblePerc >= allowedPartlyVisiblePerc) ||
+            if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
                 (item.relativePosition >= 0)) {
                 return item;
             }
@@ -1099,17 +1102,17 @@ define(function(require, exports, module) {
     /**
      * Get the last visible item in the view.
      *
-     * @param {Number} [allowedPartlyVisiblePerc] percentage in the range of 0..1 (default: 0.5)
+     * An item is considered to be the last visible item when:
+     * -    Last item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
+     * -    It is the last item before the bottom/right bounds
+     *
      * @return {Object} item or `undefined`
      */
-    ScrollView.prototype.getLastVisibleItem = function(allowedPartlyVisiblePerc) {
-        if (allowedPartlyVisiblePerc === undefined) {
-            allowedPartlyVisiblePerc = this.options.visibleItemThresshold;
-        }
+    ScrollView.prototype.getLastVisibleItem = function() {
         var items = this.getVisibleItems();
         for (var i = items.length - 1; i >= 0; i--) {
             var item = items[i];
-            if ((item.visiblePerc >= allowedPartlyVisiblePerc) ||
+            if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
                 (item.relativePosition <= 1)) {
                 return item;
             }
@@ -1304,19 +1307,6 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Halts all scrolling going on. In essence this function sets
-     * the velocity to 0 and cancels any `goToXxx` operation that
-     * was applied.
-     *
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.halt = function() {
-        this._scroll.scrollToSequence = undefined;
-        _setParticle.call(this, undefined, 0, 'halt');
-        return this;
-    };
-
-    /**
      * Checks whether the scrollview can scroll the given delta.
      * When the scrollView can scroll the whole delta, then
      * the return value is the same as the delta. If it cannot
@@ -1352,6 +1342,19 @@ define(function(require, exports, module) {
             return Math.min(prevOffset, delta);
         }
         return delta;
+    };
+
+    /**
+     * Halts all scrolling going on. In essence this function sets
+     * the velocity to 0 and cancels any `goToXxx` operation that
+     * was applied.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.halt = function() {
+        this._scroll.scrollToSequence = undefined;
+        _setParticle.call(this, undefined, 0, 'halt');
+        return this;
     };
 
     /**

@@ -15,8 +15,6 @@ Inherited from: [LayoutController](./LayoutController.md)
 * [class: FlowLayoutController ⏏](#exp_module_FlowLayoutController)
   * [new FlowLayoutController(options)](#exp_new_module_FlowLayoutController)
   * [flowLayoutController.setOptions(options)](#module_FlowLayoutController#setOptions)
-  * [flowLayoutController.insert(indexOrId, renderable, [spec])](#module_FlowLayoutController#insert)
-  * [flowLayoutController.remove(indexOrId, [spec])](#module_FlowLayoutController#remove)
 
 <a name="exp_new_module_FlowLayoutController"></a>
 ###new FlowLayoutController(options)
@@ -46,28 +44,5 @@ Patches the FlowLayoutController instance's options with the passed-in ones.
   - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene.  
   - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene.  
   - \[nodeSpring\] `Object` - Spring options to use when transitioning between states  
-
-**Returns**: `FlowLayoutController` - this  
-<a name="module_FlowLayoutController#insert"></a>
-###flowLayoutController.insert(indexOrId, renderable, [spec])
-Inserts a renderable into the data-source. If the renderable is visible
-then it is inserted using an animation.
-
-**Params**
-
-- indexOrId `Number` | `String` - Index within dataSource array or id (String)  
-- renderable `Object` - Rendeable to add to the data-source  
-- \[spec\] `Spec` - Size, transform, etc.. to start with when inserting  
-
-**Returns**: `FlowLayoutController` - this  
-<a name="module_FlowLayoutController#remove"></a>
-###flowLayoutController.remove(indexOrId, [spec])
-Removes a renderable from the data-source. If the renderable is visible
-then it will be removed using an animation.
-
-**Params**
-
-- indexOrId `Number` | `String` - Index within dataSource array or id (String)  
-- \[spec\] `Spec` - Size, transform, etc.. to end with when removing  
 
 **Returns**: `FlowLayoutController` - this  

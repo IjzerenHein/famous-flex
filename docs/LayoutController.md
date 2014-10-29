@@ -24,6 +24,9 @@ layout-function.
   * [layoutController.getDirection([actual])](#module_LayoutController#getDirection)
   * [layoutController.getSpec(node)](#module_LayoutController#getSpec)
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
+  * [layoutController.insert(indexOrId, renderable, [insertSpec])](#module_LayoutController#insert)
+  * [layoutController.remove(indexOrId, [removeSpec])](#module_LayoutController#remove)
+  * [layoutController.getSize()](#module_LayoutController#getSize)
 
 <a name="exp_new_module_LayoutController"></a>
 ###new LayoutController(options)
@@ -137,3 +140,39 @@ Id.
 Forces a reflow of the layout the next render cycle.
 
 **Returns**: `LayoutController` - this  
+<a name="module_LayoutController#insert"></a>
+###layoutController.insert(indexOrId, renderable, [insertSpec])
+Inserts a renderable into the data-source.
+
+The optional argument `insertSpec` is only used by 'FlowLayoutController' and
+`ScrollLayoutController`. When specified, the renderable is inserted using an
+animation starting with size, origin, opacity, transform, etc... as specified
+in `insertSpec'.
+
+**Params**
+
+- indexOrId `Number` | `String` - Index (0 = before first, -1 at end), within dataSource array or id (String)  
+- renderable `Object` - Renderable to add to the data-source  
+- \[insertSpec\] `Spec` - Size, transform, etc.. to start with when inserting  
+
+**Returns**: `FlowLayoutController` - this  
+<a name="module_LayoutController#remove"></a>
+###layoutController.remove(indexOrId, [removeSpec])
+Removes a renderable from the data-source.
+
+The optional argument `removeSpec` is only used by 'FlowLayoutController' and
+`ScrollLayoutController`. When specified, the renderable is removed using an
+animation ending at the size, origin, opacity, transform, etc... as specified
+in `removeSpec'.
+
+**Params**
+
+- indexOrId `Number` | `String` - Index within dataSource array or id (String)  
+- \[removeSpec\] `Spec` - Size, transform, etc.. to end with when removing  
+
+**Returns**: `LayoutController` - this  
+<a name="module_LayoutController#getSize"></a>
+###layoutController.getSize()
+Return size of contained element or `undefined` when size is not defined.
+
+**Returns**: `Array.Number` - [width, height]  

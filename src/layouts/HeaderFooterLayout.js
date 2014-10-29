@@ -11,7 +11,7 @@
 /*global define*/
 
 /**
- * Three part layout consiting of a top-header, bottom-footer and middle part.
+ * Three part layout consisting of a top-header, bottom-footer and middle part.
  *
  * |options|type|description|
  * |---|---|---|

@@ -119,7 +119,7 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-     * @param {Number} [z] z-index to use for the node}
+     * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.top = function(node, height, z) {
@@ -145,7 +145,7 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-     * @param {Number} [z] z-index to use for the node}
+     * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.left = function(node, width, z) {
@@ -171,7 +171,7 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
      * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-     * @param {Number} [z] z-index to use for the node}
+     * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.bottom = function(node, height, z) {
@@ -197,7 +197,7 @@ define(function(require, exports, module) {
      *
      * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
      * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-     * @param {Number} [z] z-index to use for the node}
+     * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.right = function(node, width, z) {
@@ -226,7 +226,7 @@ define(function(require, exports, module) {
      * Fills the node to the remaining content.
      *
      * @param {LayoutNode|String} node layout-node to dock
-     * @param {Number} [z] z-index to use for the node}
+     * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
     LayoutDockHelper.prototype.fill = function(node, z) {

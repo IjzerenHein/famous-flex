@@ -1,15 +1,13 @@
 <a name="module_CollectionLayout"></a>
 #CollectionLayout
-Lays a collection of renderables from left to right, and when the right edge is reached,
-continues at the left of the next line.
+Lays a collection of renderables from left to right or top to bottom, and when the right/bottom edge is reached,
+continues at the next column/row.
 
 |options|type|description|
 |---|---|---|
 |`itemSize`|Size|Size of an item to layout|
 |`[gutter]`|Size|Gutter-space between renderables|
-|`[justify]`|Bool|Justifies the renderables accross the width & height|
-|`[justifyHorizontal]`|Bool|Justifies the renderables accross the width|
-|`[justifyVertical]`|Bool|Justifies the renderables accross the height|
+|`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
 
 Example:
 
