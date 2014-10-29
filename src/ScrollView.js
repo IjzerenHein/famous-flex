@@ -264,13 +264,14 @@ define(function(require, exports, module) {
         if (node.setDirectionLock) {
             node.setDirectionLock(this._direction, 1);
         }
+        node._spec._translatedSpec = undefined; // for debugging..
     }
 
     /**
      * Helper function for logging debug statements to the console.
      */
     function _log(args) {
-        if (!this.options.logging) {
+        if (!this.options.debug) {
             return;
         }
         var message = this._debug.layoutCount + ': ';
@@ -606,15 +607,15 @@ define(function(require, exports, module) {
      */
     function _setParticle(position, velocity, phase) {
         if (position !== undefined) {
-            var oldPosition = this._scroll.particle.getPosition1D();
+            //var oldPosition = this._scroll.particle.getPosition1D();
             this._scroll.particle.setPosition1D(position);
-            _log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
+            //_log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
         }
         if (velocity !== undefined) {
             var oldVelocity = this._scroll.particle.getVelocity1D();
             if (oldVelocity !== velocity) {
                 this._scroll.particle.setVelocity1D(velocity);
-                _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
+                //_log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
             }
         }
     }
@@ -1057,10 +1058,12 @@ define(function(require, exports, module) {
                     viewSequence: node._viewSequence,
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1,
-                    relativePosition: ((scrollOffset - node.scrollLength) + (node.scrollLength / 2)) / size[this._direction]
+                    scrollOffset: scrollOffset - node.scrollLength,
+                    scrollLength: node.scrollLength
                 });
             }
         }.bind(this), true);
+        scrollOffset = this._scrollOffsetCache;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || (scrollOffset < 0)) {
                 return true;
@@ -1071,7 +1074,8 @@ define(function(require, exports, module) {
                     viewSequence: node._viewSequence,
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1,
-                    relativePosition: (scrollOffset + (node.scrollLength / 2)) / size[this._direction]
+                    scrollOffset: scrollOffset,
+                    scrollLength: node.scrollLength
                 });
             }
         }.bind(this), false);
@@ -1092,7 +1096,7 @@ define(function(require, exports, module) {
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
             if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
-                (item.relativePosition >= 0)) {
+                (item.scrollOffset >= 0)) {
                 return item;
             }
         }
@@ -1110,10 +1114,11 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.getLastVisibleItem = function() {
         var items = this.getVisibleItems();
+        var size = this._contextSizeCache;
         for (var i = items.length - 1; i >= 0; i--) {
             var item = items[i];
             if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
-                (item.relativePosition <= 1)) {
+                ((item.scrollOffset + item.scrollLength) <= size[this._direction])) {
                 return item;
             }
         }
@@ -1139,18 +1144,15 @@ define(function(require, exports, module) {
         // Get current scroll-position. When a previous call was made to
         // `scroll' or `scrollTo` and that node has not yet been reached, then
         // the amount is accumalated onto that scroll target.
-        var viewSequence = this._scroll.scrollToSequence;
-        if (!viewSequence) {
+        var viewSequence = this._scroll.scrollToSequence || this._viewSequence;
+        if (!this._scroll.scrollToSequence) {
             var firstVisibleItem = this.getFirstVisibleItem();
             if (firstVisibleItem) {
                 viewSequence = firstVisibleItem.viewSequence;
-                if (((amount < 0) && (firstVisibleItem.relativePosition < 0)) ||
-                    ((amount > 0) && (firstVisibleItem.relativePosition > 0))) {
+                if (((amount < 0) && (firstVisibleItem.scrollOffset < 0)) ||
+                    ((amount > 0) && (firstVisibleItem.scrollOffset > 0))) {
                     amount = 0;
                 }
-            }
-            else {
-                viewSequence = this._viewSequence;
             }
         }
         if (!viewSequence) {
@@ -1467,8 +1469,8 @@ define(function(require, exports, module) {
                 direction: this._direction,
                 reverse: this.options.alignment ? true : false,
                 scrollOffset: this.options.alignment ? (scrollOffset + size[this._direction]) : scrollOffset,
-                scrollStart: scrollOffset - size[this._direction],
-                scrollEnd: scrollOffset + (size[this._direction] * 2)
+                scrollStart: Math.min(scrollOffset - size[this._direction], -size[this._direction]),
+                scrollEnd: Math.max(scrollOffset + (size[this._direction] * 2), size[this._direction] * 2)
             }
         );
         _verifyIntegrity.call(this, 'prepareLayout');
@@ -1550,6 +1552,7 @@ define(function(require, exports, module) {
     /**
      * Inner render function of the Group
      */
+    var newRenderedSpecId = 1;
     function _innerRender() {
         var specs;
         var i;
@@ -1573,17 +1576,25 @@ define(function(require, exports, module) {
                 newSpec.transform = transform;
                 newSpec.target = spec.renderNode.render();
                 newSpec.scrollOffset = scrollOffset;
-                /*if (spec._translatedSpec) {
-                    if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
-                        var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-                        _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-                    }
-                }
-                else {
-                    _log.call(this, 'new spec rendered');
-                }*/
-                spec._translatedSpec = newSpec;
                 specs.push(newSpec);
+
+                // Show new spec position for debugging purposes
+                if (this.options.debug) {
+                    if (spec._translatedSpec) {
+                        newSpec._renderedId = spec._translatedSpec._renderedId;
+                        if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
+                            var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
+                            _log.call(this, 'spec: ', spec._translatedSpec._renderedId, ', ' + diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
+                            //console.log(diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
+                        }
+                    }
+                    else {
+                        newSpec._renderedId = newRenderedSpecId++;
+                        _log.call(this, 'new spec rendered: ', newSpec._renderedId);
+                        //console.log('new spec rendered');
+                    }
+                    spec._translatedSpec = newSpec;
+                }
             }
         }
         else {
