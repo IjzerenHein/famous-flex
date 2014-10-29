@@ -140,12 +140,7 @@ define(function(require, exports, module) {
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.force) {
-                var springOptions = {};
-                for (var key in this.options.spring) {
-                    springOptions[key] = this.options.spring[key];
-                }
-                springOptions.anchor = prop.endState;
-                prop.force.setOptions(springOptions);
+                prop.force.setOptions(prop.force);
             }
         }
         _verifyIntegrity.call(this);
