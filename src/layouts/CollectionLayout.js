@@ -182,13 +182,13 @@ define(function(require, exports, module) {
         while (offset > context.scrollStart) {
             node = context.prev();
             if (!node) {
-                _layoutLine(false);
+                _layoutLine(false, true);
                 break;
             }
             nodeSize = _resolveNodeSize(node);
             lineLength += nodeSize[lineDirection] + gutter[lineDirection];
             if (lineLength > size[lineDirection]) {
-                offset -= _layoutLine(false);
+                offset -= _layoutLine(false, !node);
                 lineLength = gutter[lineDirection] + nodeSize[lineDirection] + gutter[lineDirection];
             }
             lineNodes.unshift({node: node, size: nodeSize});
