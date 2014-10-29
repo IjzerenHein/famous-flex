@@ -844,7 +844,7 @@ define(function(require, exports, module) {
                 pageLength = node.scrollLength;
                 pageOffset -= node.scrollLength;
             }
-        }.bind(this), false);
+        }, false);
 
         // Lookup page in next direction
         if (pageLength === undefined) {
@@ -862,7 +862,7 @@ define(function(require, exports, module) {
                     }
                     pageLength = node.scrollLength;
                 }
-            }.bind(this), true);
+            }, true);
         }
         if (!pageLength) {
             return;
@@ -1315,6 +1315,25 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.getBoundsReached = function() {
         return this._scroll.boundsReached;
+    };
+
+    /**
+     * Get the current scrolling velocity.
+     *
+     * @return {Number} Scroll velocity
+     */
+    ScrollView.prototype.getVelocity = function() {
+        return this._scroll.particle.getVelocity1D();
+    };
+
+    /**
+     * Set the scrolling velocity.
+     *
+     * @param {Number} velocity New scroll velocity
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.setVelocity = function(velocity) {
+        return this._scroll.particle.setVelocity1D(velocity);
     };
 
     /**
