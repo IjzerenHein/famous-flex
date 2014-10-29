@@ -12,7 +12,16 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * Work in progress - do not use.
+ * Advanced ScrollView for supporting flexible layouts.
+ *
+ * Key features:
+ * -    Customizable layout
+ * -    Insert/remove renderables into the scene using animations/spec
+ * -    Support for `true` size renderables
+ * -    Horizontal/vertical direction
+ * -    Top/left or bottom/right alignment
+ * -    Pagination
+ * -    Option to embed in a ContainerSurface
  *
  * Inherited from: [FlowLayoutController](./FlowLayoutController.md)
  * @module
@@ -20,7 +29,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    //var LayoutUtility = require('./LayoutUtility');
+    var LayoutUtility = require('./LayoutUtility');
     var FlowLayoutController = require('./FlowLayoutController');
     var FlowLayoutNode = require('./FlowLayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
@@ -63,6 +72,21 @@ define(function(require, exports, module) {
     /**
      * @class
      * @param {Object} options Options.
+     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
+     * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
+     * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
+     * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
+     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
+     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
+     * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
+     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
@@ -77,9 +101,7 @@ define(function(require, exports, module) {
             // physics-engine to use for scrolling
             pe: new PhysicsEngine(),
             // particle that represents the scroll-offset
-            particle: new Particle({
-                position: [0, 0]
-            }),
+            particle: new Particle(this.options.scrollParticle),
             // drag-force that slows the particle down after a "flick"
             dragForce: new Drag(this.options.scrollDrag),
             // spring
@@ -127,9 +149,7 @@ define(function(require, exports, module) {
         // Listen to mouse-wheel events
         this._scrollSync = new ScrollSync(this.options.scrollSync);
         this._eventInput.pipe(this._scrollSync);
-        //this._scrollSync.on('start', _moveStart.bind(this, this._scrollSync));
         this._scrollSync.on('update', _scrollUpdate.bind(this));
-        //this._scrollSync.on('end', _moveEnd.bind(this, this._scrollSync));
 
         // Embed in container surface if neccesary
         if (this.options.useContainer) {
@@ -159,8 +179,11 @@ define(function(require, exports, module) {
     ScrollView.DEFAULT_OPTIONS = {
         //insertSpec: undefined,
         //removeSpec: undefined,
-        useContainer: false,
-        offsetRounding: 1.0,
+        useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
+        offsetRounding: 1.0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
+        scrollParticle: {
+            // use defaults
+        },
         scrollDrag: {
             strength: 0.001
         },
@@ -169,34 +192,53 @@ define(function(require, exports, module) {
             period: 500
         },
         scrollSync: {
-            scale: 0.1
+            scale: 0.2
         },
         paginated: false,
         //paginationEnergyThresshold: 0.001,
-        reverse: false,
+        alignment: 0,         // [0: top/left, 1: bottom/right]
         touchMoveDirectionThresshold: undefined, // 0..1
-        logging: false,
         mouseMove: false,
-        scrollCallback: undefined //function(offset, force)
+        scrollCallback: undefined, //function(offset, force)
+        debug: false
     };
 
     var oldSetOptions = ScrollView.prototype.setOptions;
     /**
      * Patches the ScrollView instance's options with the passed-in ones.
      *
-     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+     * @param {Object} options An object of configurable options for the ScrollView instance.
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-     * @return {FlowLayoutController} this
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
+     * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
+     * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
+     * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
+     * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
+     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
+     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
+     * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
+     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
+     * @return {ScrollView} this
      */
     ScrollView.prototype.setOptions = function(options) {
         oldSetOptions.call(this, options);
-        // todo - all other options
+        if (this._scroll) {
+            if (options.scrollSpring) {
+                this._scroll.springForce.setOptions(options.scrollSpring);
+            }
+            if (options.scrollDrag) {
+                this._scroll.dragForce.setOptions(options.scrollDrag);
+            }
+        }
+        if (options.scrollSync && this._scrollSync) {
+            this._scrollSync.setOptions(options.scrollSync);
+        }
         return this;
     };
 
@@ -207,11 +249,11 @@ define(function(require, exports, module) {
      * is immediately updated when the user scrolls the view.
      */
     function _initLayoutNode(node, spec) {
-        /*if (node.setOptions) {
+        if (node.setOptions) {
             node.setOptions({
                 spring: this.options.nodeSpring
             });
-        }*/
+        }
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
@@ -644,7 +686,7 @@ define(function(require, exports, module) {
         var nextHeight;
 
         // 1. Check whether primary boundary has been reached
-        if (this.options.reverse) {
+        if (this.options.alignment) {
             nextHeight = _calcHeight.call(this, true);
             prevHeight = _calcHeight.call(this, false);
             if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
@@ -673,13 +715,13 @@ define(function(require, exports, module) {
         }
         if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
             this._scroll.boundsReached = Bounds.BOTH;
-            this._scroll.springPosition = this.options.reverse ? -nextHeight : prevHeight;
+            this._scroll.springPosition = this.options.alignment ? -nextHeight : prevHeight;
             this._scroll.springSource = SpringSource.MINSIZE;
             return;
         }
 
         // 3. Check if secondary bounds has been reached
-        if (this.options.reverse) {
+        if (this.options.alignment) {
             if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = -size[this._direction] + prevHeight;
@@ -726,14 +768,14 @@ define(function(require, exports, module) {
             if (node.scrollLength === undefined) {
                 return true;
             }
-            if (this.options.reverse) {
+            if (this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
             if (node._viewSequence === this._scroll.scrollToSequence) {
                 foundNode = node;
                 return true;
             }
-            if (!this.options.reverse) {
+            if (!this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
         }.bind(this), true);
@@ -743,14 +785,14 @@ define(function(require, exports, module) {
                 if (node.scrollLength === undefined) {
                     return true;
                 }
-                if (!this.options.reverse) {
+                if (!this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
                 if (node._viewSequence === this._scroll.scrollToSequence) {
                     foundNode = node;
                     return true;
                 }
-                if (this.options.reverse) {
+                if (this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
             }.bind(this), false);
@@ -792,7 +834,7 @@ define(function(require, exports, module) {
         var hasNext;
 
         // Lookup page in previous direction
-        var bound = this.options.reverse ? size[this._direction] : 0;
+        var bound = this.options.alignment ? size[this._direction] : 0;
         this._nodes.forEach(function(node) {
             if (node.scrollLength !== 0) {
                 if ((pageOffset <= bound) || (node.scrollLength === undefined)) {
@@ -830,7 +872,7 @@ define(function(require, exports, module) {
         var boundOffset = pageOffset - bound;
         var snapSpringPosition;
         if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
-            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
+            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.alignment ? size[this._direction] : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
                 //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
@@ -838,7 +880,7 @@ define(function(require, exports, module) {
             }
         }
         else {
-            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
+            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.alignment ? size[this._direction] : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
                 //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
@@ -858,7 +900,7 @@ define(function(require, exports, module) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (this.options.reverse) {
+            if (this.options.alignment) {
                 if (prevScrollLength !== undefined) {
                     if ((scrollOffset - prevScrollLength) <= baseOffset){
                         return true;
@@ -893,7 +935,7 @@ define(function(require, exports, module) {
             if ((node.scrollLength === undefined) || node.trueSizeRequested) {
                 return true;
             }
-            if (this.options.reverse) {
+            if (this.options.alignment) {
                 if (scrollOffset >= baseOffset){
                     return true;
                 }
@@ -943,7 +985,7 @@ define(function(require, exports, module) {
 
         // 1. Normalize in primary direction
         var normalizedScrollOffset = scrollOffset;
-        if (this.options.reverse) {
+        if (this.options.alignment) {
             normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset, baseOffset);
         }
         else {
@@ -952,7 +994,7 @@ define(function(require, exports, module) {
 
         // 2. Normalize in secondary direction
         if (normalizedScrollOffset === scrollOffset) {
-            if (this.options.reverse) {
+            if (this.options.alignment) {
                 normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset, baseOffset);
             }
             else {
@@ -1080,137 +1122,34 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Halts all scrolling going on. In essence this function sets
-     * the velocity to 0 and cancels any `goToXxx` operation that
-     * was applied.
+     * Scroll to the first page, making it visible.
+     *
+     * NOTE: This function does not work on ViewSequences that have the `loop` property enabled.
      *
      * @return {ScrollView} this
      */
-    ScrollView.prototype.halt = function() {
-        this._scroll.scrollToSequence = undefined;
-        _setParticle.call(this, undefined, 0, 'halt');
-        return this;
-    };
-
-    /**
-     * Applies a permanent scroll-force (offset) until it is released.
-     * When the cumulative scroll-offset lies outside the allowed bounds
-     * a strech effect is used, and the offset beyond the bounds is
-     * substracted by halve. This function should always be accompanied
-     * by a call to `releaseScrollForce`.
-     *
-     * This method is used for instance when using touch gestures to move
-     * the scroll offset and corresponds to the `touchstart` event.
-     *
-     * @param {Number} offset Scroll offset to add to the current
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.applyScrollForce = function(offset) {
-        this.halt();
-        this._scroll.scrollForceCount++;
-        this._scroll.scrollForce += offset;
-        return this;
-    };
-
-    /**
-     * Updates a existing scroll-force previously applied by calling
-     * `applyScrollForce`.
-     *
-     * This method is used for instance when using touch gestures to move
-     * the scroll offset and corresponds to the `touchmove` event.
-     *
-     * @param {Number} [prevOffset] Previous offset
-     * @param {Number} [newOffset] New offset
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.updateScrollForce = function(prevOffset, newOffset) {
-        this.halt();
-        newOffset -= prevOffset;
-        this._scroll.scrollForce += newOffset;
-        return this;
-    };
-
-    /**
-     * Releases a scroll-force and sets the velocity.
-     *
-     * This method is used for instance when using touch gestures to move
-     * the scroll offset and corresponds to the `touchend` event.
-     *
-     * @param {Number} offset Scroll offset to release
-     * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.releaseScrollForce = function(offset, velocity) {
-        this.halt();
-        if (this._scroll.scrollForceCount === 1) {
-            var scrollOffset = _calcScrollOffset.call(this);
-            _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
-            this._scroll.pe.wake();
-            this._scroll.scrollForce = 0;
-            this._scroll.scrollDirty = true;
+    ScrollView.prototype.goToFirstPage = function() {
+        if (!this._viewSequence) {
+            return this;
         }
-        else {
-            this._scroll.scrollForce -= offset;
+        if (this._viewSequence._ && this._viewSequence._.loop) {
+            LayoutUtility.error('Unable to go to first item of looped ViewSequence');
+            return this;
         }
-        this._scroll.scrollForceCount--;
+        var viewSequence = this._viewSequence;
+        while (viewSequence) {
+            var prev = viewSequence.getPrevious();
+            if (prev && prev.get()) {
+                viewSequence = prev;
+            }
+            else {
+                break;
+            }
+        }
+        this._scroll.scrollToSequence = viewSequence;
+        this._scroll.scrollToDirection = false;
+        this._scroll.scrollDirty = true;
         return this;
-    };
-
-    /**
-     * Checks whether the scrollview can scroll the given offset.
-     * When the scrollView can scroll the whole offset, then
-     * the return value is the same as the offset. If it cannot
-     * scroll the entire offset, the return value is the number of
-     * pixels that can be scrolled.
-     *
-     * @return {Number} number of pixels the view can scroll or offset
-     */
-    ScrollView.prototype.canScroll = function(offset) {
-
-        // Calculate height in both directions
-        var scrollOffset = _calcScrollOffset.call(this);
-        var prevHeight = _calcHeight.call(this, false);
-        var nextHeight = _calcHeight.call(this, true);
-
-        // When the rendered height is smaller than the total height,
-        // then no scrolling whatsover is allowed.
-        var totalHeight;
-        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
-            totalHeight = prevHeight + nextHeight;
-        }
-        if ((totalHeight !== undefined) && (totalHeight <= this._contextSizeCache[this._direction])) {
-            return 0; // no scrolling at all allowed
-        }
-
-        // Determine the offset that we can scroll
-        if ((offset < 0) && (nextHeight !== undefined)) {
-            var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
-            return Math.min(nextOffset, offset);
-        } else if ((offset > 0) && (prevHeight !== undefined)) {
-            var prevOffset = -(scrollOffset - prevHeight);
-            return Math.min(prevOffset, offset);
-        }
-        return offset;
-    };
-
-    /**
-     * Scrolls the view by the specified offset.
-     *
-     * @return {ScrollView} this
-     */
-    ScrollView.prototype.scroll = function(offset) {
-        this.halt();
-        this._scroll.scrollDelta += offset;
-        return this;
-    };
-
-    /**
-     * Checks whether any boundaries have been reached.
-     *
-     * @return {ScrollView.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
-     */
-    ScrollView.prototype.getBoundsReached = function() {
-        return this._scroll.boundsReached;
     };
 
     /**
@@ -1234,9 +1173,40 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Scroll to the last page, making it visible.
+     *
+     * NOTE: This function does not work on ViewSequences that have the `loop` property enabled.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.goToLastPage = function() {
+        if (!this._viewSequence) {
+            return this;
+        }
+        if (this._viewSequence._ && this._viewSequence._.loop) {
+            LayoutUtility.error('Unable to go to last item of looped ViewSequence');
+            return this;
+        }
+        var viewSequence = this._viewSequence;
+        while (viewSequence) {
+            var next = viewSequence.getNext();
+            if (next && next.get()) {
+                viewSequence = next;
+            }
+            else {
+                break;
+            }
+        }
+        this._scroll.scrollToSequence = viewSequence;
+        this._scroll.scrollToDirection = true;
+        this._scroll.scrollDirty = true;
+        return this;
+    };
+
+    /**
      * Scroll to the given renderable in the datasource.
      *
-     * @param {RenderNode} node renderable to scroll to
+     * @param {RenderNode} node renderable to scroll to.
      * @return {ScrollView} this
      */
     ScrollView.prototype.goToRenderNode = function(node) {
@@ -1276,6 +1246,142 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Scrolls the view by the specified number of pixels.
+     *
+     * @param {Number} delta Delta in pixels (< 0 = down/right, > 0 = top/left).
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.scroll = function(delta) {
+        this.halt();
+        this._scroll.scrollDelta += delta;
+        return this;
+    };
+
+    /**
+     * Halts all scrolling going on. In essence this function sets
+     * the velocity to 0 and cancels any `goToXxx` operation that
+     * was applied.
+     *
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.halt = function() {
+        this._scroll.scrollToSequence = undefined;
+        _setParticle.call(this, undefined, 0, 'halt');
+        return this;
+    };
+
+    /**
+     * Checks whether the scrollview can scroll the given delta.
+     * When the scrollView can scroll the whole delta, then
+     * the return value is the same as the delta. If it cannot
+     * scroll the entire delta, the return value is the number of
+     * pixels that can be scrolled.
+     *
+     * @param {Number} delta Delta to test
+     * @return {Number} Number of pixels the view is allowed to scroll
+     */
+    ScrollView.prototype.canScroll = function(delta) {
+
+        // Calculate height in both directions
+        var scrollOffset = _calcScrollOffset.call(this);
+        var prevHeight = _calcHeight.call(this, false);
+        var nextHeight = _calcHeight.call(this, true);
+
+        // When the rendered height is smaller than the total height,
+        // then no scrolling whatsover is allowed.
+        var totalHeight;
+        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
+            totalHeight = prevHeight + nextHeight;
+        }
+        if ((totalHeight !== undefined) && (totalHeight <= this._contextSizeCache[this._direction])) {
+            return 0; // no scrolling at all allowed
+        }
+
+        // Determine the offset that we can scroll
+        if ((delta < 0) && (nextHeight !== undefined)) {
+            var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
+            return Math.min(nextOffset, delta);
+        } else if ((delta > 0) && (prevHeight !== undefined)) {
+            var prevOffset = -(scrollOffset - prevHeight);
+            return Math.min(prevOffset, delta);
+        }
+        return delta;
+    };
+
+    /**
+     * Checks whether any boundaries have been reached.
+     *
+     * @return {ScrollView.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
+     */
+    ScrollView.prototype.getBoundsReached = function() {
+        return this._scroll.boundsReached;
+    };
+
+    /**
+     * Applies a permanent scroll-force (delta) until it is released.
+     * When the cumulative scroll-offset lies outside the allowed bounds
+     * a strech effect is used, and the offset beyond the bounds is
+     * substracted by halve. This function should always be accompanied
+     * by a call to `releaseScrollForce`.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchstart` event.
+     *
+     * @param {Number} delta Starting scroll-delta force to apply
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.applyScrollForce = function(delta) {
+        this.halt();
+        this._scroll.scrollForceCount++;
+        this._scroll.scrollForce += delta;
+        return this;
+    };
+
+    /**
+     * Updates a existing scroll-force previously applied by calling
+     * `applyScrollForce`.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchmove` event.
+     *
+     * @param {Number} prevDelta Previous delta
+     * @param {Number} newDelta New delta
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
+        this.halt();
+        newDelta -= prevDelta;
+        this._scroll.scrollForce += newDelta;
+        return this;
+    };
+
+    /**
+     * Releases a scroll-force and sets the velocity.
+     *
+     * This method is used for instance when using touch gestures to move
+     * the scroll offset and corresponds to the `touchend` event.
+     *
+     * @param {Number} delta Scroll delta to release
+     * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+        this.halt();
+        if (this._scroll.scrollForceCount === 1) {
+            var scrollOffset = _calcScrollOffset.call(this);
+            _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
+            this._scroll.pe.wake();
+            this._scroll.scrollForce = 0;
+            this._scroll.scrollDirty = true;
+        }
+        else {
+            this._scroll.scrollForce -= delta;
+        }
+        this._scroll.scrollForceCount--;
+        return this;
+    };
+
+    /**
      * Executes the layout and updates the state of the scrollview.
      */
     function _layout(size, scrollOffset, nested) {
@@ -1291,8 +1397,8 @@ define(function(require, exports, module) {
             this._nodesById, {      // so we can do fast id lookups
                 size: size,
                 direction: this._direction,
-                reverse: this.options.reverse,
-                scrollOffset: this.options.reverse ? (scrollOffset + size[this._direction]) : scrollOffset,
+                reverse: this.options.alignment ? true : false,
+                scrollOffset: this.options.alignment ? (scrollOffset + size[this._direction]) : scrollOffset,
                 scrollStart: scrollOffset - size[this._direction],
                 scrollEnd: scrollOffset + (size[this._direction] * 2)
             }
@@ -1391,11 +1497,6 @@ define(function(require, exports, module) {
             for (i = 0; i < this._specs.length; i++) {
                 var spec = this._specs[i];
                 var transform = Transform.thenMove(spec.transform, translate);
-                /*var newSpec = spec._windowSpec;
-                if (!newSpec) {
-                    newSpec = {};
-                    spec._windowSpec = newSpec;
-                }*/
                 var newSpec = {};
                 newSpec.origin = spec.origin;
                 newSpec.align = spec.align;
