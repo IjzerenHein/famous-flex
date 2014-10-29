@@ -80,7 +80,7 @@ define(function(require, exports, module) {
             dampingRatio: 0.8,
             period: 300
         },
-        particleRounding: 0.01
+        particleRounding: 0.001
     };
 
     /**
@@ -237,18 +237,25 @@ define(function(require, exports, module) {
     /**
      * Helper function for getting the property value.
      */
-    function _getPropertyValue(prop, def) {
-        return (prop && prop.init) ? prop.particle.getPosition() : def;
-    }
-    function _getSizeValue() {
-        var prop = this._properties.size;
+    function _getRoundedValue2D(prop, def) {
         if (!prop || !prop.init) {
-            return undefined;
+            return def;
         }
-        var size = prop.particle.getPosition();
+        var value = prop.particle.getPosition();
         return [
-            _roundParticleValue.call(this, size[0]),
-            _roundParticleValue.call(this, size[1])
+            _roundParticleValue.call(this, value[0]),
+            _roundParticleValue.call(this, value[1])
+        ];
+    }
+    function _getRoundedValue3D(prop, def) {
+        if (!prop || !prop.init) {
+            return def;
+        }
+        var value = prop.particle.getPosition();
+        return [
+            _roundParticleValue.call(this, value[0]),
+            _roundParticleValue.call(this, value[1]),
+            _roundParticleValue.call(this, value[2])
         ];
     }
     function _getOpacityValue() {
@@ -295,14 +302,14 @@ define(function(require, exports, module) {
         // Build fresh spec
         this._initial = false;
         this._spec.opacity = _getOpacityValue.call(this);
-        this._spec.size = _getSizeValue.call(this);
-        this._spec.align = _getPropertyValue(this._properties.align, undefined);
-        this._spec.origin = _getPropertyValue(this._properties.origin, undefined);
+        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined);
+        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
+        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
         this._spec.transform = Transform.build({
             translate: _getTranslateValue.call(this, DEFAULT.translate),
-            skew: _getPropertyValue(this._properties.skew, DEFAULT.skew),
-            scale: _getPropertyValue(this._properties.scale, DEFAULT.scale),
-            rotate: _getPropertyValue(this._properties.rotate, DEFAULT.rotate)
+            skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
+            scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
+            rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
         });
         //if (this.renderNode._debug) {
             //this.renderNode._debug = false;
