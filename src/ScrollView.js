@@ -181,6 +181,7 @@ define(function(require, exports, module) {
         //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
         offsetRounding: 1.0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
+        visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults
         },
@@ -1022,60 +1023,98 @@ define(function(require, exports, module) {
         return normalizedScrollOffset;
     }
 
-        /*function _getVisiblePercentage(spec) {
-        var specLeft = spec.transform[12];
-        var specTop = spec.transform[13];
-        var specSize = spec.size;
-        var left = Math.max(0, specLeft);
-        var top = Math.max(0, specTop);
-        var right = Math.min(this._contextSizeCache[0], specLeft + specSize[0]);
-        var bottom = Math.min(this._contextSizeCache[1], specTop + specSize[1]);
-        var width = right - left;
-        var height = bottom - top;
-        var volume = width * height;
-        var totalVolume = spec.size[0] * spec.size[1];
-        return totalVolume ? (volume / totalVolume) : 0;
-    }
-
-    function _getVisibleItem(spec) {
-        return {
-            spec: {
-                opacity: spec.opacity,
-                align: spec.align,
-                origin: spec.origin,
-                size: spec.size,
-                transform: spec.transform
-            },
-            renderNode: spec.renderNode,
-            visiblePerc: _getVisiblePercentage.call(this, spec)
-        };
-    }*/
+    /**
+     * Get all items that are partly or completely visible.
+     *
+     * The returned result is an array of objects containing the
+     * following properties. Example:
+     * ```javascript
+     * {
+     *   viewSequence: {ViewSequence},
+     *   renderNode: {renderable},
+     *   visiblePerc: {Number} 0..1
+     * }
+     * ```
+     * @return {Array} array of items
+     */
+    ScrollView.prototype.getVisibleItems = function() {
+        var scrollOffset = this._scrollOffsetCache;
+        var size = this._contextSizeCache;
+        if (this.options.alignment) {
+            scrollOffset += size[this._direction];
+        }
+        var result = [];
+        this._nodes.forEach(function(node) {
+            if ((node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
+                return true;
+            }
+            scrollOffset += node.scrollLength;
+            if (scrollOffset >= 0) {
+                result.push({
+                    viewSequence: node._viewSequence,
+                    renderNode: node.renderNode,
+                    visiblePerc: node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1,
+                    relativePosition: ((scrollOffset - node.scrollLength) + (node.scrollLength / 2)) / size[this._direction]
+                });
+            }
+        }.bind(this), true);
+        this._nodes.forEach(function(node) {
+            if ((node.scrollLength === undefined) || (scrollOffset < 0)) {
+                return true;
+            }
+            scrollOffset -= node.scrollLength;
+            if (scrollOffset < size[this._direction]) {
+                result.unshift({
+                    viewSequence: node._viewSequence,
+                    renderNode: node.renderNode,
+                    visiblePerc: node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1,
+                    relativePosition: (scrollOffset + (node.scrollLength / 2)) / size[this._direction]
+                });
+            }
+        }.bind(this), false);
+        return result;
+    };
 
     /**
-     * Get the first visible item that meets the visible percentage criteria.
-     * The percentage indicates how many pixels should at least visible before
-     * the renderable is considered visible.
-     * `visible percentage = (width * height) / (visible width * visible height)`
+     * Get the first visible item in the view.
      *
-     * @param {Number} [visiblePerc] percentage in the range of 0..1 (default: 0.99)
-     * @return {Object} item object or undefined
+     * @param {Number} [allowedPartlyVisiblePerc] percentage in the range of 0..1 (default: 0.5)
+     * @return {Object} item or `undefined`
      */
-    ScrollView.prototype.getFirstVisibleItem = function(visiblePerc) {
-        var scrollOffset = _calcScrollOffset.call(this);
-        var next = scrollOffset <= 0;
-        var foundNode;
-        this._nodes.forEach(function(node) {
-            if (node.scrollLength === undefined) {
-                return true;
+    ScrollView.prototype.getFirstVisibleItem = function(allowedPartlyVisiblePerc) {
+        if (allowedPartlyVisiblePerc === undefined) {
+            allowedPartlyVisiblePerc = this.options.visibleItemThresshold;
+        }
+        var items = this.getVisibleItems();
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            if ((item.visiblePerc >= allowedPartlyVisiblePerc) ||
+                (item.relativePosition >= 0)) {
+                return item;
             }
-            scrollOffset += next ? node.scrollLength : -node.scrollLength;
-            if ((next && (scrollOffset > 0)) ||
-                (!next && (scrollOffset <= 0))) {
-                foundNode = node;
-                return true;
+        }
+        return items.length ? items[0] : undefined;
+    };
+
+    /**
+     * Get the last visible item in the view.
+     *
+     * @param {Number} [allowedPartlyVisiblePerc] percentage in the range of 0..1 (default: 0.5)
+     * @return {Object} item or `undefined`
+     */
+    ScrollView.prototype.getLastVisibleItem = function(allowedPartlyVisiblePerc) {
+        if (allowedPartlyVisiblePerc === undefined) {
+            allowedPartlyVisiblePerc = this.options.visibleItemThresshold;
+        }
+        var items = this.getVisibleItems();
+        for (var i = items.length - 1; i >= 0; i--) {
+            var item = items[i];
+            if ((item.visiblePerc >= allowedPartlyVisiblePerc) ||
+                (item.relativePosition <= 1)) {
+                return item;
             }
-        }, next);
-        return foundNode ? foundNode._viewSequence : undefined;
+        }
+        return items.length ? items[items.length - 1] : undefined;
     };
 
     /**
@@ -1097,15 +1136,22 @@ define(function(require, exports, module) {
         // Get current scroll-position. When a previous call was made to
         // `scroll' or `scrollTo` and that node has not yet been reached, then
         // the amount is accumalated onto that scroll target.
-        var viewSequence = this._scroll.scrollToSequence || this.getFirstVisibleItem() || this._viewSequence;
+        var viewSequence = this._scroll.scrollToSequence;
+        if (!viewSequence) {
+            var firstVisibleItem = this.getFirstVisibleItem();
+            if (firstVisibleItem) {
+                viewSequence = firstVisibleItem.viewSequence;
+                if (((amount < 0) && (firstVisibleItem.relativePosition < 0)) ||
+                    ((amount > 0) && (firstVisibleItem.relativePosition > 0))) {
+                    amount = 0;
+                }
+            }
+            else {
+                viewSequence = this._viewSequence;
+            }
+        }
         if (!viewSequence) {
             return;
-        }
-
-        // When the first renderable is partially shown, then treat `-1` (previous)
-        // as `show the current renderable fully`.
-        if (!this._scroll.scrollToSequence && (amount < 0) && (_calcScrollOffset.call(this) < 0)){
-            amount += 1;
         }
 
         // Find scroll target
