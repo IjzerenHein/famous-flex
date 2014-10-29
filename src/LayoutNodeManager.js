@@ -589,6 +589,7 @@ define(function(require, exports, module) {
                 contextNode.node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
                 contextNode.node._viewSequence = contextNode.viewSequence;
             }
+            contextNode.node.usesTrueSize = contextNode.usesTrueSize;
             contextNode.node.trueSizeRequested = contextNode.trueSizeRequested;
             contextNode.node.set(set, this._context.size);
             contextNode.set = set;
@@ -613,6 +614,7 @@ define(function(require, exports, module) {
         // Check if true-size is used and it must be reavaluated
         var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
+            contextNode.usesTrueSize = true;
             //this._trueSizeRequested = true;
             contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
             //contextNode.renderNode._size = undefined; // fix for bug #428

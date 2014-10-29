@@ -185,6 +185,7 @@ define(function(require, exports, module) {
             this._invalidated = false;
         }
         this.trueSizeRequested = false;
+        this.usesTrueSize = false;
         _verifyIntegrity.call(this);
     };
 
@@ -330,7 +331,7 @@ define(function(require, exports, module) {
     /**
      * Helper function to set the property of a node (e.g. opacity, translate, etc..)
      */
-    function _setPropertyValue(propName, endState, defaultValue) {
+    function _setPropertyValue(propName, endState, defaultValue, immediate) {
 
         // Check if end-state equals default-value, if so reset it to undefined
         if ((endState !== undefined) && (defaultValue !== undefined)) {
@@ -360,14 +361,16 @@ define(function(require, exports, module) {
         // Update the property
         if (prop && prop.init) {
             prop.invalidated = true;
+            var value = defaultValue;
             if (endState !== undefined) {
-                prop.endState.set(endState);
+                value = endState;
             }
             else if (this._removing) {
-                prop.endState.set(prop.particle.getPosition());
+                value = prop.particle.getPosition();
             }
-            else {
-                prop.endState.set(defaultValue);
+            prop.endState.set(value);
+            if (immediate) {
+                prop.particle.setPosition(value);
             }
             this._pe.wake();
             return;
@@ -377,7 +380,7 @@ define(function(require, exports, module) {
         if (!prop) {
             prop = {
                 particle: new Particle({
-                    position: this._initial ? endState : defaultValue
+                    position: (this._initial || immediate) ? endState : defaultValue
                 }),
                 endState: new Vector(endState)
             };
@@ -392,7 +395,7 @@ define(function(require, exports, module) {
             this._properties[propName] = prop;
         }
         else {
-            prop.particle.setPosition(this._initial ? endState : defaultValue);
+            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
             prop.endState.set(endState);
             this._pe.wake();
         }
@@ -405,7 +408,7 @@ define(function(require, exports, module) {
         _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
         _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
         _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);
-        _setPropertyValue.call(this, 'size', set.size, size);
+        _setPropertyValue.call(this, 'size', set.size, size, this.usesTrueSize);
         _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate);
         _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew);
         _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);
