@@ -128,8 +128,9 @@ define(function(require, exports, module) {
      * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
      * move infinitely.
      */
-    function _roundParticleValue(value) {
-        return Math.round(value / this.options.particleRounding) * this.options.particleRounding;
+    function _roundParticleValue(value, precision) {
+        precision = precision || this.options.particleRounding;
+        return Math.round(value / precision) * precision;
     }
 
     /**
@@ -237,25 +238,25 @@ define(function(require, exports, module) {
     /**
      * Helper function for getting the property value.
      */
-    function _getRoundedValue2D(prop, def) {
+    function _getRoundedValue2D(prop, def, precision) {
         if (!prop || !prop.init) {
             return def;
         }
         var value = prop.particle.getPosition();
         return [
-            _roundParticleValue.call(this, value[0]),
-            _roundParticleValue.call(this, value[1])
+            _roundParticleValue.call(this, value[0], precision),
+            _roundParticleValue.call(this, value[1], precision)
         ];
     }
-    function _getRoundedValue3D(prop, def) {
+    function _getRoundedValue3D(prop, def, precision) {
         if (!prop || !prop.init) {
             return def;
         }
         var value = prop.particle.getPosition();
         return [
-            _roundParticleValue.call(this, value[0]),
-            _roundParticleValue.call(this, value[1]),
-            _roundParticleValue.call(this, value[2])
+            _roundParticleValue.call(this, value[0], precision),
+            _roundParticleValue.call(this, value[1], precision),
+            _roundParticleValue.call(this, value[2], precision)
         ];
     }
     function _getOpacityValue() {
@@ -302,7 +303,7 @@ define(function(require, exports, module) {
         // Build fresh spec
         this._initial = false;
         this._spec.opacity = _getOpacityValue.call(this);
-        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined);
+        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
         this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
         this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
         this._spec.transform = Transform.build({
