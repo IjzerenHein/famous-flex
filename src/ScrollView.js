@@ -762,7 +762,7 @@ define(function(require, exports, module) {
         if ((this._scroll.boundsReached === Bounds.BOTH) ||
             (!this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.PREV)) ||
             (this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.NEXT))) {
-            //this._scroll.scrollToSequence = undefined;
+            this._scroll.scrollToSequence = undefined;
             return;
         }
 
