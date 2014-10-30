@@ -14,8 +14,8 @@ to the new state using physics, particles and springs.
 
 ### Demos
 
-- [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
-- [Chat demo](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html)
+- [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-demo))
+- [Chat demo](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-chat))
 
 
 ### Getting started
@@ -29,7 +29,7 @@ to the new state using physics, particles and springs.
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
 
-### Layout controllers
+### Layout controller 	Views
 - [LayoutController](#layoutcontroller)
 - [FlowLayoutController](#flowlayoutcontroller)
 - [ScrollView](#scrollview)
@@ -327,7 +327,7 @@ Documentation: [ScrollView](docs/ScrollView.md)
 ## Standard layouts
 
 |Layout|DataSource|Scrollable|Description|
-|---|---|---|
+|---|---|---|---|
 |[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
 |[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a horizontal or vertical list.|
 |[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|

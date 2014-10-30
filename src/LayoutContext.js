@@ -39,6 +39,21 @@ define(function(require, exports, module) {
     LayoutContext.prototype.direction = undefined;
 
     /**
+     * {Property} {Number} Scrolling offset at which to start laying out next/prev renderables.
+     */
+    LayoutContext.prototype.scrollOffset = undefined;
+
+    /**
+     * {Property} {Number} Top/left boundary to which to layout renderables (default: 0).
+     */
+    LayoutContext.prototype.scrollStart = undefined;
+
+    /**
+     * {Property} {Number} Bottom/right boundary to which to continue laying out renderables.
+     */
+    LayoutContext.prototype.scrollEnd = undefined;
+
+    /**
      * Get the context-node for the next renderable in the data-source. When
      * the end of the data-source is reached, `undefined` is returned.
      * Use this function to enumerate the contents of a data-source that is

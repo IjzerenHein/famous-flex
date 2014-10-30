@@ -10,6 +10,9 @@ renderables in the data-source and set their size, position, tranformation, etc.
 * [class: LayoutContext ⏏](#exp_module_LayoutContext)
   * [layoutContext.size](#module_LayoutContext#size)
   * [layoutContext.direction](#module_LayoutContext#direction)
+  * [layoutContext.scrollOffset](#module_LayoutContext#scrollOffset)
+  * [layoutContext.scrollStart](#module_LayoutContext#scrollStart)
+  * [layoutContext.scrollEnd](#module_LayoutContext#scrollEnd)
   * [layoutContext.next()](#module_LayoutContext#next)
   * [layoutContext.prev()](#module_LayoutContext#prev)
   * [layoutContext.get(node)](#module_LayoutContext#get)
@@ -24,6 +27,18 @@ renderables in the data-source and set their size, position, tranformation, etc.
 <a name="module_LayoutContext#direction"></a>
 ###layoutContext.direction
 {Property} Direction in which to layout the renderables (0 = X, 1 = Y).
+
+<a name="module_LayoutContext#scrollOffset"></a>
+###layoutContext.scrollOffset
+{Property} {Number} Scrolling offset at which to start laying out next/prev renderables.
+
+<a name="module_LayoutContext#scrollStart"></a>
+###layoutContext.scrollStart
+{Property} {Number} Top/left boundary to which to layout renderables (default: 0).
+
+<a name="module_LayoutContext#scrollEnd"></a>
+###layoutContext.scrollEnd
+{Property} {Number} Bottom/right boundary to which to continue laying out renderables.
 
 <a name="module_LayoutContext#next"></a>
 ###layoutContext.next()
