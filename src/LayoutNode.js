@@ -38,6 +38,13 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Called to update the options for the node
+     */
+    LayoutNode.prototype.setOptions = function(options) {
+        // override to implement
+    };
+
+    /**
      * Called when the node is destroyed
      */
     LayoutNode.prototype.destroy = function() {
