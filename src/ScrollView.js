@@ -658,6 +658,7 @@ define(function(require, exports, module) {
 
         //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
         return _roundScrollOffset.call(this, scrollOffset);
+        //return scrollOffset;
     }
 
     /**
@@ -671,7 +672,7 @@ define(function(require, exports, module) {
                 return true;
             }
             height += node.scrollLength;
-        }.bind(this), next);
+        }, next);
         return height;
     }
 
@@ -1000,7 +1001,11 @@ define(function(require, exports, module) {
             var delta = normalizedScrollOffset - scrollOffset;
 
             // Adjust particle
-            _setParticle.call(this, this._scroll.particle.getPosition1D() + delta, undefined, 'normalize');
+            var particleValue = this._scroll.particle.getPosition1D();
+            _setParticle.call(this, particleValue + delta, undefined, 'normalize');
+            /*if (this._originalParticleValue !== particleValue) {
+                _log.call(this, 'particle diff: ', this._originalParticleValue - particleValue);
+            }*/
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1578,7 +1583,7 @@ define(function(require, exports, module) {
                     }
                     else {
                         newSpec._renderedId = newRenderedSpecId++;
-                        _log.call(this, 'new spec rendered: ', newSpec._renderedId);
+                        //_log.call(this, 'new spec rendered: ', newSpec._renderedId);
                         //console.log('new spec rendered');
                     }
                     spec._translatedSpec = newSpec;
@@ -1607,6 +1612,7 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.commit = function commit(context) {
         var size = context.size;
+        //this._originalParticleValue = this._scroll.particle.getPosition1D();
         var scrollOffset = _calcScrollOffset.call(this, true);
 
         // When the size or layout function has changed, reflow the layout
@@ -1675,8 +1681,9 @@ define(function(require, exports, module) {
         var transform = context.transform;
         if (this._layout.capabilities.sequentialScrollingOptimized) {
             var windowOffset = scrollOffset + this._scroll.groupStart;
-            transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
-            transform = Transform.multiply(context.transform, transform);
+            var translate = [0, 0, 0];
+            translate[this._direction] = windowOffset;
+            transform = Transform.thenMove(transform, translate);
         }
 
         // Return the spec
