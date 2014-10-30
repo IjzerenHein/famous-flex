@@ -307,12 +307,18 @@ define(function(require, exports, module) {
         this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
         this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
         this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
-        this._spec.transform = Transform.build({
-            translate: _getTranslateValue.call(this, DEFAULT.translate),
-            skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
-            scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
-            rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
-        });
+        var translate = _getTranslateValue.call(this, DEFAULT.translate);
+        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
+            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
+        }
+        else {
+            this._spec.transform = Transform.build({
+                translate: translate,
+                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
+                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
+                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
+            });
+        }
         //if (this.renderNode._debug) {
             //this.renderNode._debug = false;
             /*console.log(JSON.stringify({
