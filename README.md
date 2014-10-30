@@ -1,13 +1,7 @@
 famous-flex
 ==========
 
-Flexible, animated and plugable layout-controller for famo.us, which:
-
-- Smoothly animates renderables between layouts (using physics)
-- Makes it easy to layout renderables (without having to create lots of modifiers)
-- Is shipped with various commonly used layouts
-- Allows you to easily create custom layouts and layout-helpers
-- Is very good at creating responsive designs
+Flexible and animated ScrollView and layout-controllers for famo.us.
 
 ![Screenshot](screenshot.gif)
 
@@ -18,19 +12,36 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 `FlowLayoutController` the renderables will smoothly transition from the old state
 to the new state using physics, particles and springs.
 
-[View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
+### Demos
+
+- [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html)
+- [Chat demo](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html)
 
 
-### Index
+### Getting started
 
 - [Installation](#installation)
-- [LayoutController](#flowlayoutcontroller)
+
+### Core concepts
+- [Layout controllers](#layout-controllers)
 - [Layout function](#layout-function)
 - [Datasource](#datasource)
-- [Standard layouts](#standard-layouts)
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
+
+### Layout controllers
+- [LayoutController](#layoutcontroller)
 - [FlowLayoutController](#flowlayoutcontroller)
+- [ScrollView](#scrollview)
+
+### [Layouts](#standard-layouts)
+- [GridLayout](docs/layouts/GridLayout.md)
+- [ListLayout](docs/layouts/ListLayout.md)
+- [CollectionLayout](docs/layouts/CollectionLayout.md)
+- [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
+- [NavBarLayout](docs/layouts/NavBarLayout.md)
+
+### Resources
 - [API reference](#api-reference)
 - [Roadmap](#roadmap)
 
@@ -43,25 +54,18 @@ Install using bower or npm:
 
 	npm install famous-flex
 
-If necessary, add to the requirejs paths config:
 
-```javascript
-require.config({
-    paths: {
-        ...
-        'famous-flex': 'node_modules/famous-flex/src',
-        ...
-    }
-});
-```
+## Layout controllers
 
-
-## LayoutController
-
-A `LayoutController` lays out renderables based on:
+A layout-controller lays out renderables based on:
 - a layout-function
 - a data-source containing renderables
 - optional layout-options
+
+Layout-controllers come in three flavours:
+- [LayoutController](#layoutcontroller) (basic lightweight layout-controller)
+- [FlowLayoutController](#flowlayoutcontroller) (animates renderables between layout states)
+- [ScrollView](#scrollview) (scrollable layouts)
 
 Example of laying out renderables using a CollectionLayout:
 
@@ -97,7 +101,8 @@ not added to the render-tree.
 
 Famous-flex comes shipped with various [standard layouts](#standard-layouts), but 
 it is also very easy to create your own layout-functions. 
-View [LayoutContext](docs/LayoutContext.md) for more details on creating layout-functions.
+View [LayoutContext](docs/LayoutContext.md) for more details on creating your own 
+layout-functions.
 
 ```javascript
 /**
@@ -122,11 +127,8 @@ function LayoutFunction(context, options) {
 
 For optimal performance, the layout function is only executed when:
 - A resize occurs
-- `setLayout` is called on the layout-controller
-- `setLayoutOptions` is called on the layout-controller
-- `setDirection` is called on the layout-controller
-- `setDataSource` is called on the layout-controller
-- `reflowLayout` is called on the layout-controller
+- An option is changed on the layout-controller
+- When the content is scrolled
 
 
 ## Datasource
@@ -194,16 +196,6 @@ var layoutController = new LayoutController({
 });
 ```
 
-## Standard layouts
-
-|Layout|DataSource|Description|
-|---|---|---|
-|[GridLayout](docs/layouts/GridLayout.md)|Sequence/Array|Grid-layout with fixed number of rows & columns.|
-|[ListLayout](docs/layouts/ListLayout.md)|Sequence/Array|Lays out renderables in a horizontal or vertical list.|
-|[CollectionLayout](docs/layouts/CollectionLayout.md)|Sequence/Array|Lays out renderables with a specific width & height.|
-|[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|Layout containing a top-header, bottom- footer and content.|
-|[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|Layout containing one or more left and right items and a title.|
-
 
 ## Layout literals
 
@@ -242,11 +234,21 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
+## LayoutController
+
+`LayoutController` is the most lightweight layout-controller and simply lays out the
+renderables in the datasource according to the layout-function. The state (position,
+size, etc..) is updated immediately without any transitions. You should use
+`LayoutController` when you don't need any animations an when you want the layout
+to respond immediately to resizes.
+
+Documentation: [LayoutController](docs/LayoutController.md)
+
 ## FlowLayoutController
 
 `FlowLayoutController` extends `LayoutController` and smoothly animates renderables
 between different layouts. It doesn't matter whether you change a single layout-option 
-or change the whole layout from a CollectionLayout to a ListLayout,  
+or change the whole layout from a CollectionLayout to a ListLayout, 
 `FlowLayoutController` simply calculates the new end-state and transitions the renderables
 from the previous state to the new state.
 
@@ -287,6 +289,51 @@ dataSource[1] = swap;
 flowLC.setDataSource(dataSource);
 ```
 
+Documentation: [FlowLayoutController](docs/FlowLayoutController.md)
+
+
+## ScrollView
+
+`ScrollView` extends `FlowLayoutController` and adds the ability to scroll layouts
+in either horizontal or vertical direction.
+
+```javascript
+var scrollView = require('famous-flex/ScrollView');
+var ListLayout = require('famous-flex/layouts/ListLayout');
+var Utility = require('famous/utilities/Utility');
+
+// create scroll-view
+var scrollView = new ScrollView({
+	layout: ListLayout,
+	layoutOptions: {
+		itemSize: [undefined, 100],
+	},
+	direction: Utility.Direction.X, 
+	dataSource: [
+		new Surface({content: 'surface1'}),
+		new Surface({content: 'surface2'}),
+		new Surface({content: 'surface3'})
+	]
+});
+this.add(scrollView);
+```
+
+The `ScrollView` is designed to have a similar API to the standard famo.us ScrollView,
+making it easier to upgrade existing ScrollViews and add flexible layouts.
+
+Documentation: [ScrollView](docs/ScrollView.md)
+
+
+## Standard layouts
+
+|Layout|DataSource|Scrollable|Description|
+|---|---|---|
+|[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
+|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a horizontal or vertical list.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
+|[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
+|[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
+
 
 ## API reference
 
@@ -294,6 +341,7 @@ flowLC.setDataSource(dataSource);
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables according to a layout function.|
 |[FlowLayoutController](docs/FlowLayoutController.md)|Lays out renderables and smoothly animates between layout states.|
+|[ScrollView](docs/ScrollView.md)|Customizable ScrollView supporting flexible layouts.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 
@@ -306,7 +354,6 @@ can be. But to do this, I need your support and feedback. Let me know which of
 features below are most important to you, by leaving a comment in the corresponding
 issue.
 
-- [Scrolling](https://github.com/IjzerenHein/famous-flex/issues/1) (Scrollview/container supporting layout-functions + smooth transitions)
 - [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
 - [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
