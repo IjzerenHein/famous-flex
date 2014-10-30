@@ -687,32 +687,10 @@ define(function(require, exports, module) {
     function _calcBounds(size, scrollOffset) {
 
         // Local data
-        var prevHeight;
-        var nextHeight;
+        var prevHeight = _calcHeight.call(this, false);
+        var nextHeight = _calcHeight.call(this, true);
 
-        // 1. Check whether primary boundary has been reached
-        if (this.options.alignment) {
-            nextHeight = _calcHeight.call(this, true);
-            prevHeight = _calcHeight.call(this, false);
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
-                this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = -nextHeight;
-                this._scroll.springSource = SpringSource.NEXTBOUNDS;
-                return;
-            }
-        }
-        else {
-            prevHeight = _calcHeight.call(this, false);
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
-                this._scroll.boundsReached = Bounds.PREV;
-                this._scroll.springPosition = prevHeight;
-                this._scroll.springSource = SpringSource.PREVBOUNDS;
-                return;
-            }
-            nextHeight = _calcHeight.call(this, true);
-        }
-
-        // 2. When the rendered height is smaller than the total height,
+        // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
         var totalHeight;
         if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
@@ -723,6 +701,24 @@ define(function(require, exports, module) {
             this._scroll.springPosition = this.options.alignment ? -nextHeight : prevHeight;
             this._scroll.springSource = SpringSource.MINSIZE;
             return;
+        }
+
+        // 2. Check whether primary boundary has been reached
+        if (this.options.alignment) {
+            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
+                this._scroll.boundsReached = Bounds.NEXT;
+                this._scroll.springPosition = -nextHeight;
+                this._scroll.springSource = SpringSource.NEXTBOUNDS;
+                return;
+            }
+        }
+        else {
+            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
+                this._scroll.boundsReached = Bounds.PREV;
+                this._scroll.springPosition = prevHeight;
+                this._scroll.springSource = SpringSource.PREVBOUNDS;
+                return;
+            }
         }
 
         // 3. Check if secondary bounds has been reached
@@ -762,7 +758,7 @@ define(function(require, exports, module) {
         if ((this._scroll.boundsReached === Bounds.BOTH) ||
             (!this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.PREV)) ||
             (this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.NEXT))) {
-            this._scroll.scrollToSequence = undefined;
+            //this._scroll.scrollToSequence = undefined;
             return;
         }
 
