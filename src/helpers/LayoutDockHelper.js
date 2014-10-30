@@ -48,7 +48,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var LayoutUtility = require('famous-flex/LayoutUtility');
+    var LayoutUtility = require('../LayoutUtility');
 
     /**
      * @class
