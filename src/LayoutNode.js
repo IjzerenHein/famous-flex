@@ -48,7 +48,9 @@ define(function(require, exports, module) {
      * Called when the node is destroyed
      */
     LayoutNode.prototype.destroy = function() {
-        // override to implement
+        this.renderNode = undefined;
+        this._spec.renderNode = undefined;
+        this._viewSequence = undefined;
     };
 
     /**
