@@ -351,6 +351,7 @@ define(function(require, exports, module) {
             }
             if (immediate) {
                 prop.particle.setPosition(value);
+                this._endStateReached = false;
             }
             else {
                 this._pe.wake();
