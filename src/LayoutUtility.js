@@ -83,21 +83,6 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Clears the contents of a spec.
-     *
-     * @param {Spec} spec Spec to clear
-     * @return {Spec} spec
-     */
-    LayoutUtility.clearSpec = function(spec) {
-        delete spec.opacity;
-        delete spec.size;
-        delete spec.transform;
-        delete spec.origin;
-        delete spec.align;
-        return spec;
-    };
-
-    /**
      * Compares two arrays for equality.
      */
     function _isEqualArray(a, b) {
