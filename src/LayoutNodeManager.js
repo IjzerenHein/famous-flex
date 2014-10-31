@@ -515,13 +515,7 @@ define(function(require, exports, module) {
      * Resolve id into a context-node.
      */
      function _contextGet(contextNodeOrId) {
-        if (!contextNodeOrId) {
-            return undefined;
-        }
-        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
-            if (!this._nodesById) {
-               return undefined;
-            }
+        if (this._nodesById && ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string'))) {
             var renderNode = this._nodesById[contextNodeOrId];
             if (!renderNode) {
                 return undefined;
@@ -554,13 +548,7 @@ define(function(require, exports, module) {
      * Get render-node by its id.
      */
      function _contextGetRenderNode(contextNodeOrId) {
-        if (!contextNodeOrId) {
-            return undefined;
-        }
-        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
-            if (!this._nodesById) {
-               return undefined;
-            }
+        if (this._nodesById && ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string'))) {
             return this._nodesById[contextNodeOrId];
         }
         else {
