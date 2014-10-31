@@ -159,37 +159,13 @@ define(function(require, exports, module) {
             var spec = node.getSpec();
             if (!spec) {
 
-                // Remove node from linked-list
-                if (node._next) {
-                    node._next._prev = node._prev;
-                }
-                if (node._prev) {
-                    node._prev._next = node._next;
-                }
-                else {
-                    this._first = node._next;
-                }
-
-                // Destroy the node
+                // Destroy node
                 var destroyNode = node;
                 node = node._next;
-                destroyNode.destroy();
-                if (this.verbose) {
-                    LayoutUtility.log(LOG_PREFIX, 'destroying node');
-                }
-
-                // Add node to pool
-                if (this._pool.size < MAX_POOL_SIZE) {
-                    this._pool.size++;
-                    destroyNode._prev = undefined;
-                    destroyNode._next = this._pool.first;
-                    this._pool.first = destroyNode;
-                }
+                _destroyNode.call(this, destroyNode);
 
                 // Mark as modified
                 result.modified = true;
-
-                _checkIntegrity.call(this);
             }
             else {
 
@@ -262,6 +238,39 @@ define(function(require, exports, module) {
         }
         return node;
     };
+
+    /**
+     * Destroys a layout-node
+     */
+    function _destroyNode(node) {
+
+        // Remove node from linked-list
+        if (node._next) {
+            node._next._prev = node._prev;
+        }
+        if (node._prev) {
+            node._prev._next = node._next;
+        }
+        else {
+            this._first = node._next;
+        }
+
+        // Destroy the node
+        node.destroy();
+        if (this.verbose) {
+            LayoutUtility.log(LOG_PREFIX, 'destroying node');
+        }
+
+        // Add node to pool
+        if (this._pool.size < MAX_POOL_SIZE) {
+            this._pool.size++;
+            node._prev = undefined;
+            node._next = this._pool.first;
+            this._pool.first = node;
+        }
+
+        _checkIntegrity.call(this);
+    }
 
     /**
      * Enumates all layout-nodes.
