@@ -31,6 +31,7 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutUtility = require('./LayoutUtility');
     var FlowLayoutController = require('./FlowLayoutController');
+    var LayoutNode = require('./LayoutNode');
     var FlowLayoutNode = require('./FlowLayoutNode');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
@@ -77,6 +78,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `true`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
@@ -92,7 +94,8 @@ define(function(require, exports, module) {
      * @alias module:ScrollView
      */
     function ScrollView(options, createNodeFn) {
-        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+        var layoutManager = new LayoutNodeManager(((options.flow === undefined) || options.flow) ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
+        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, layoutManager);
         if (options) {
             this.setOptions(options);
         }
@@ -927,7 +930,7 @@ define(function(require, exports, module) {
             }
         }.bind(this), false);
         if (normalizedCount) {
-            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
+            //_log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }
         return normalizedScrollOffset;
     }
@@ -958,7 +961,7 @@ define(function(require, exports, module) {
             }
         }.bind(this), true);
         if (normalizedCount) {
-            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
+            //_log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }
         return normalizedScrollOffset;
     }
@@ -1003,9 +1006,6 @@ define(function(require, exports, module) {
             // Adjust particle
             var particleValue = this._scroll.particle.getPosition1D();
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            /*if (this._originalParticleValue !== particleValue) {
-                _log.call(this, 'particle diff: ', this._originalParticleValue - particleValue);
-            }*/
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1554,14 +1554,33 @@ define(function(require, exports, module) {
         // to a sequential position so that the matrix is unchanged and
         // famo.s doesn't have to update the matrix in the DOM.
         if (this._layout.capabilities.sequentialScrollingOptimized) {
-            specs = [];
+
+            // Re-use previous spec array if size is the same
+            if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
+                specs = [];
+                this._cachedSpecs = specs;
+            }
+
+            // Translate all specs back, and instead use the scroll-offset
+            // from the `Group`.
             var scrollOffset = this._scrollOffsetCache;
             var translate = [0, 0, 0];
             translate[this._direction] = -this._scroll.groupStart - scrollOffset;
             for (i = 0; i < this._specs.length; i++) {
                 var spec = this._specs[i];
                 var transform = Transform.thenMove(spec.transform, translate);
-                var newSpec = {};
+
+                // Create or re-use spec
+                var newSpec;
+                if (specs) {
+                    newSpec = {};
+                    specs.push(newSpec);
+                }
+                else {
+                    newSpec = this._cachedSpecs[i];
+                }
+
+                // Update spec
                 newSpec.origin = spec.origin;
                 newSpec.align = spec.align;
                 newSpec.opacity = spec.opacity;
@@ -1569,10 +1588,10 @@ define(function(require, exports, module) {
                 newSpec.transform = transform;
                 newSpec.target = spec.renderNode.render();
                 newSpec.scrollOffset = scrollOffset;
-                specs.push(newSpec);
+                //newSpec.index = i;
 
                 // Show new spec position for debugging purposes
-                if (this.options.debug) {
+                /*if (this.options.debug) {
                     if (spec._translatedSpec) {
                         newSpec._renderedId = spec._translatedSpec._renderedId;
                         if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
@@ -1587,8 +1606,9 @@ define(function(require, exports, module) {
                         //console.log('new spec rendered');
                     }
                     spec._translatedSpec = newSpec;
-                }
+                }*/
             }
+            specs = this._cachedSpecs;
         }
         else {
 
@@ -1598,6 +1618,15 @@ define(function(require, exports, module) {
                 specs[i].target = specs[i].renderNode.render();
             }
         }
+
+        // log time betwen start of commit to end of innerRender
+        /*var now = Date.now();
+        if (now !== this._now) {
+            var diff = now - this._now;
+            if (diff > 2) {
+                console.log('time execution: ' + diff);
+            }
+        }*/
         return specs;
     }
 
@@ -1612,7 +1641,17 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.commit = function commit(context) {
         var size = context.size;
-        //this._originalParticleValue = this._scroll.particle.getPosition1D();
+
+        /*var usedHeap = window.performance.memory.usedJSHeapSize;
+        if (usedHeap !== this._debug.usedHeap) {
+            console.log('used heap changed: ' + usedHeap);
+            this._debug.usedHeap = usedHeap;
+        }*/
+
+        // Log particle/time diff
+        this._now = Date.now();
+
+        // Calculate scroll offset
         var scrollOffset = _calcScrollOffset.call(this, true);
 
         // When the size or layout function has changed, reflow the layout
