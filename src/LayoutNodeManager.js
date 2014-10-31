@@ -61,8 +61,13 @@ define(function(require, exports, module) {
             //start: undefined
         };
         this._pool = {
-            size: 0
-            //first: undefined
+            layoutNodes: {
+                size: 0
+                //first: undefined
+            },
+            contextNodes: {
+                size: 0
+            }
         };
         this.verbose = false;
         //this._first = undefined; // first item in the linked list
@@ -86,6 +91,14 @@ define(function(require, exports, module) {
             node.reset();
             node = node._next;
         }
+
+        // Move all previously allocated context-nodes to the pool
+        if (this._pool.contextNodes.inUseLast) {
+            this._pool.contextNodes.inUseLast._next = this._pool.contextNodes.first;
+        }
+        this._pool.contextNodes.first = this._pool.contextNodes.inUseFirst;
+        this._pool.contextNodes.inUseFirst = undefined;
+        this._pool.contextNodes.inUseLast = undefined;
 
         // Prepare data
         this._nodesById = nodesById;
@@ -221,10 +234,10 @@ define(function(require, exports, module) {
      */
     LayoutNodeManager.prototype.createNode = function(renderNode, spec) {
         var node;
-        if (this._pool.first) {
-            node = this._pool.first;
-            this._pool.first = node._next;
-            this._pool.size--;
+        if (this._pool.layoutNodes.first) {
+            node = this._pool.layoutNodes.first;
+            this._pool.layoutNodes.first = node._next;
+            this._pool.layoutNodes.size--;
             node.constructor.apply(node, arguments);
         }
         else {
@@ -262,14 +275,46 @@ define(function(require, exports, module) {
         }
 
         // Add node to pool
-        if (this._pool.size < MAX_POOL_SIZE) {
-            this._pool.size++;
+        if (this._pool.layoutNodes.size < MAX_POOL_SIZE) {
+            this._pool.layoutNodes.size++;
             node._prev = undefined;
-            node._next = this._pool.first;
-            this._pool.first = node;
+            node._next = this._pool.layoutNodes.first;
+            this._pool.layoutNodes.first = node;
         }
 
         _checkIntegrity.call(this);
+    }
+
+    function _createContextNode(renderNode) {
+        var node;
+        if (this._pool.contextNodes.first) {
+            node = this._pool.contextNodes.first;
+            this._pool.contextNodes.first = node._next;
+            // init
+            node.renderNode = renderNode;
+            node.viewSequence = undefined;
+            node.node = undefined;
+            node.set = undefined;
+            node.index = undefined;
+            node.next = undefined;
+            node.prev = undefined;
+            node.byId = undefined;
+            node.arrayElement = undefined;
+        }
+        else {
+            this._pool.contextNodes.size++;
+            node = {
+                renderNode: renderNode
+            };
+        }
+        // add to in use list
+        if (!this._pool.contextNodes.inUseLast) {
+            this._pool.contextNodes.inUseLast = node;
+        }
+        node._next = this._pool.contextNodes.inUseFirst;
+        this._pool.contextNodes.inUseFirst = node;
+        // done
+        return node;
     }
 
     /**
@@ -480,12 +525,11 @@ define(function(require, exports, module) {
         if (!this._context.reverse) {
             this._contextState.nextSequence = this._contextState.nextSequence.getNext();
         }
-        return {
-            renderNode: renderNode,
-            viewSequence: nextSequence,
-            next: true,
-            index: ++this._contextState.nextGetIndex
-        };
+        var contextNode = _createContextNode.call(this, renderNode);
+        contextNode.viewSequence = nextSequence;
+        contextNode.next = true;
+        contextNode.index = ++this._contextState.nextGetIndex;
+        return contextNode;
     }
 
     /**
@@ -512,12 +556,11 @@ define(function(require, exports, module) {
         if (this._context.reverse) {
             this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
         }
-        return {
-            renderNode: renderNode,
-            viewSequence: prevSequence,
-            prev: true,
-            index: --this._contextState.prevGetIndex
-        };
+        var contextNode = _createContextNode.call(this, renderNode);
+        contextNode.viewSequence = prevSequence;
+        contextNode.prev = true;
+        contextNode.index = --this._contextState.prevGetIndex;
+        return contextNode;
     }
 
     /**
@@ -534,19 +577,17 @@ define(function(require, exports, module) {
             if (renderNode instanceof Array) {
                 var result = [];
                 for (var i = 0 ; i < renderNode.length; i++) {
-                    result.push({
-                        renderNode: renderNode[i],
-                        arrayElement: true
-                    });
+                    var contextNodeElm = _createContextNode.call(this, renderNode[i]);
+                    contextNodeElm.arrayElement = true;
+                    result.push(contextNodeElm);
                 }
                 return result;
             }
 
             // Create context node
-            return {
-                renderNode: renderNode,
-                byId: true
-            };
+            var contextNode = _createContextNode.call(this, renderNode);
+            contextNode.byId = true;
+            return contextNode;
         }
         else {
             return contextNodeOrId;
