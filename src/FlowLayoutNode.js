@@ -152,25 +152,18 @@ define(function(require, exports, module) {
      * Set the properties from a spec.
      */
     FlowLayoutNode.prototype.setSpec = function(spec) {
-        if ((spec.opacity !== undefined) || this._removing) {
-            _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity);
+        var set;
+        if (spec.transform) {
+            set = Transform.interpret(spec.transform);
         }
-        if (spec.size|| this._removing) {
-            _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size);
+        if (!set) {
+            set = {};
         }
-        if (spec.align|| this._removing) {
-            _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align);
-        }
-        if (spec.origin|| this._removing) {
-            _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin);
-        }
-        if (spec.transform || this._removing) {
-            var transform = spec.transform ? Transform.interpret(spec.transform) : {};
-            _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate);
-            _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale);
-            _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew);
-            _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate);
-        }
+        set.opacity = spec.opacity;
+        set.size = spec.size;
+        set.align = spec.align;
+        set.origin = spec.origin;
+        _set.call(this, set, DEFAULT.size);
     };
 
     /**
@@ -408,6 +401,15 @@ define(function(require, exports, module) {
     FlowLayoutNode.prototype.set = function(set, defaultSize) {
         this._removing = false;
         this.scrollLength = set.scrollLength;
+        _set.call(this, set, defaultSize);
+        this._invalidated = true;
+        _verifyIntegrity.call(this);
+    };
+
+    /**
+     * context.set(..)
+     */
+    function _set(set, defaultSize) {
 
         // set opacity
         var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
@@ -456,10 +458,7 @@ define(function(require, exports, module) {
         if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
             _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
         }
-
-        this._invalidated = true;
-        _verifyIntegrity.call(this);
-    };
+    }
 
     module.exports = FlowLayoutNode;
 });
