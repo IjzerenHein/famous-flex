@@ -17,6 +17,7 @@
  * |options|type|description|
  * |---|---|---|
  * |`itemSize`|Size|Size of an item to layout|
+ * |`getItemSize`|Function|Callback to get the size for a renderable, example: `function(renderNode, contextSize)`|
  * |`[gutter]`|Size|Gutter-space between renderables|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
  *
@@ -139,7 +140,9 @@ define(function(require, exports, module) {
          * Helper function to resolving the size of a node.
          */
         function _resolveNodeSize(node) {
-            if ((itemSize[0] === true) || (itemSize[1] === true)) {
+            if (options.getItemSize) {
+                return options.getItemSize(context.getRenderNode(node), size);
+            } else if ((itemSize[0] === true) || (itemSize[1] === true)) {
                 var result = context.resolveSize(node, size);
                 if (itemSize[0] !== true) {
                     result[0] = itemSize[0];
