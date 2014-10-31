@@ -390,12 +390,10 @@ define(function(require, exports, module) {
                 }),
                 endState: new Vector(endState)
             };
-            var springOptions = {};
-            for (var key in this.options.spring) {
-                springOptions[key] = this.options.spring[key];
-            }
-            springOptions.anchor = prop.endState;
-            prop.force = new Spring(springOptions);
+            prop.force = new Spring(this.options.spring);
+            prop.force.setOptions({
+                anchor: prop.endState
+            });
             this._pe.addBody(prop.particle);
             prop.forceId = this._pe.attach(prop.force, prop.particle);
             this._properties[propName] = prop;
