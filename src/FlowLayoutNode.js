@@ -337,32 +337,10 @@ define(function(require, exports, module) {
     /**
      * Helper function to set the property of a node (e.g. opacity, translate, etc..)
      */
-    function _setPropertyValue(propName, endState, defaultValue, immediate) {
-
-        // Check if end-state equals default-value, if so reset it to undefined
-        if ((endState !== undefined) && (defaultValue !== undefined)) {
-            if (Array.isArray(endState) && Array.isArray(defaultValue) && (endState.length === defaultValue.length)) {
-                var same = true;
-                for (var i = 0 ; i < endState.length; i++) {
-                    if (endState[i] !== defaultValue[i]) {
-                        same = false;
-                        break;
-                    }
-                }
-                endState = same ? undefined : endState;
-            }
-            else if (endState === defaultValue) {
-                endState = undefined;
-            }
-        }
+    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
 
         // Get property
-        var prop = this._properties[propName];
-
-        // When property doesn't exist, and no end-state, nothing to do
-        if ((endState === undefined) && (!prop || !prop.init)) {
-            return;
-        }
+        prop = prop || this._properties[propName];
 
         // Update the property
         if (prop && prop.init) {
@@ -375,10 +353,15 @@ define(function(require, exports, module) {
                 value = prop.particle.getPosition();
             }
             prop.endState.set(value);
+            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
+                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
+            }
             if (immediate) {
                 prop.particle.setPosition(value);
             }
-            this._pe.wake();
+            else {
+                this._pe.wake();
+            }
             return;
         }
 
@@ -401,22 +384,79 @@ define(function(require, exports, module) {
         else {
             prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
             prop.endState.set(endState);
-            this._pe.wake();
+            if (!this._initial && !immediate) {
+                this._pe.wake();
+            }
         }
         prop.init = true;
         prop.invalidated = true;
     }
-    FlowLayoutNode.prototype.set = function(set, size) {
+
+    /**
+     * Get value if not equals.
+     */
+    function _getIfNE2D(a1, a2) {
+        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
+    }
+    function _getIfNE3D(a1, a2) {
+        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
+    }
+
+    /**
+     * context.set(..)
+     */
+    FlowLayoutNode.prototype.set = function(set, defaultSize) {
         this._removing = false;
         this.scrollLength = set.scrollLength;
-        _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
-        _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
-        _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);
-        _setPropertyValue.call(this, 'size', set.size, size, this.usesTrueSize);
-        _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate);
-        _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew);
-        _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);
-        _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale);
+
+        // set opacity
+        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
+            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
+        }
+
+        // set align
+        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
+            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
+        }
+
+        // set orgin
+        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
+            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
+        }
+
+        // set size
+        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
+        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
+            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
+        }
+
+        // set translate
+        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
+            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
+        }
+
+        // set scale
+        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
+            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
+        }
+
+        // set rotate
+        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
+            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
+        }
+
+        // set skew
+        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
+            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
+        }
+
         this._invalidated = true;
         _verifyIntegrity.call(this);
     };
