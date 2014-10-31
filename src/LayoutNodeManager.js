@@ -28,7 +28,6 @@
 define(function(require, exports, module) {
 
     // import dependencies
-    var LayoutNode = require('./LayoutNode');
     var LayoutContext = require('./LayoutContext');
     var LayoutUtility = require('./LayoutUtility');
 
@@ -182,6 +181,7 @@ define(function(require, exports, module) {
                 // Add node to pool
                 if (this._pool.size < MAX_POOL_SIZE) {
                     this._pool.size++;
+                    destroyNode._prev = undefined;
                     destroyNode._next = this._pool.first;
                     this._pool.first = destroyNode;
                 }
