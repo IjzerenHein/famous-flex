@@ -300,6 +300,8 @@ define(function(require, exports, module) {
             node.prev = undefined;
             node.byId = undefined;
             node.arrayElement = undefined;
+            node.trueSizeRequested = undefined;
+            node.usesTrueSize = undefined;
         }
         else {
             this._pool.contextNodes.size++;
