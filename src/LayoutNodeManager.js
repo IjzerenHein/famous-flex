@@ -51,6 +51,7 @@ define(function(require, exports, module) {
             getRenderNode: _contextGetRenderNode.bind(this),
             resolveSize: _contextResolveSize.bind(this),
             size: [0, 0]
+            //,cycle: 0
         });
         this._contextState = {
             // enumation state for the context
@@ -126,6 +127,7 @@ define(function(require, exports, module) {
         this._context.scrollOffset = contextData.scrollOffset || 0;
         this._context.scrollStart = contextData.scrollStart || 0;
         this._context.scrollEnd = contextData.scrollEnd || this._context.size[this._context.direction];
+        //this._context.cycle++;
         return this._context;
     };
 
@@ -653,12 +655,47 @@ define(function(require, exports, module) {
 
         // Check if true-size is used and it must be reavaluated
         var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
-        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
+        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
             contextNode.usesTrueSize = true;
+            if (contextNode.renderNode._trueSizeCheck) {
+
+                // Fix for true-size renderables. When true-size is used, the size
+                // is incorrect for one render-cycle due to the fact that Surface.commit
+                // updates the content after asking the DOM for the offsetHeight/offsetWidth.
+                // The code below backs the size up, and re-uses that when this scenario
+                // occurs.
+                if (contextNode.renderNode._backupSize) {
+                    if (configSize[0] === true) {
+                        contextNode.renderNode._backupSize[0] = Math.max(contextNode.renderNode._backupSize[0], size[0]);
+                    }
+                    else {
+                        contextNode.renderNode._backupSize[0] = size[0];
+                    }
+                    if (configSize[1] === true) {
+                        contextNode.renderNode._backupSize[1] = Math.max(contextNode.renderNode._backupSize[1], size[1]);
+                    }
+                    else {
+                        contextNode.renderNode._backupSize[1] = size[1];
+                    }
+                    size = contextNode.renderNode._backupSize;
+                    contextNode.renderNode._backupSize = undefined;
+                }
+                this._trueSizeRequested = true;
+                contextNode.trueSizeRequested = true;
+                //console.log('true size requested on node: ' + JSON.stringify(size));
+            }
+            if (this._reevalTrueSize) {
+                contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
+            }
             //this._trueSizeRequested = true;
-            contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
-            //contextNode.renderNode._size = undefined; // fix for bug #428
         }
+
+        // Backup the size of the node
+        if (!contextNode.renderNode._backupSize) {
+            contextNode.renderNode._backupSize = [0, 0];
+        }
+        contextNode.renderNode._backupSize[0] = size[0];
+        contextNode.renderNode._backupSize[1] = size[1];
 
         // Resolve 'undefined' to parent-size and true to 0
         if ((size[0] === undefined) || (size[0] === true) || (size[1] === undefined) || (size[1] === true)) {
