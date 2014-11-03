@@ -133,7 +133,7 @@ define(function(require, exports, module) {
 
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
-        this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+        //this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
         this._scroll.springForce.setOptions({ anchor: this._scroll.springEndState });
 
         // Setup input event handler
@@ -185,7 +185,7 @@ define(function(require, exports, module) {
         //insertSpec: undefined,
         //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
-        offsetRounding: 1.0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
+        offsetRounding: 0.5,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults
@@ -1000,12 +1000,12 @@ define(function(require, exports, module) {
 
         // Adjust particle and springs
         if (normalizedScrollOffset !== scrollOffset) {
-            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset);
             var delta = normalizedScrollOffset - scrollOffset;
 
             // Adjust particle
             var particleValue = this._scroll.particle.getPosition1D();
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
+            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1545,7 +1545,7 @@ define(function(require, exports, module) {
     /**
      * Inner render function of the Group
      */
-    var newRenderedSpecId = 1;
+    //var newRenderedSpecId = 1;
     function _innerRender() {
         var specs;
         var i;
@@ -1558,17 +1558,16 @@ define(function(require, exports, module) {
             // Re-use previous spec array if size is the same
             if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
                 specs = [];
+                //if (this._cachedSpecs) {
+                    //console.log('specs length: ' + this._specs.length + ', old:' + this._cachedSpecs.length);
+                //}
                 this._cachedSpecs = specs;
             }
 
-            // Translate all specs back, and instead use the scroll-offset
-            // from the `Group`.
-            var scrollOffset = this._scrollOffsetCache;
-            var translate = [0, 0, 0];
-            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+            // Render the specs (and re-use old spec if possible)
+            var spec;
             for (i = 0; i < this._specs.length; i++) {
-                var spec = this._specs[i];
-                var transform = Transform.thenMove(spec.transform, translate);
+                spec = this._specs[i];
 
                 // Create or re-use spec
                 var newSpec;
@@ -1585,10 +1584,29 @@ define(function(require, exports, module) {
                 newSpec.align = spec.align;
                 newSpec.opacity = spec.opacity;
                 newSpec.size = spec.size;
-                newSpec.transform = transform;
+                newSpec.transform = spec.transform;
                 newSpec.target = spec.renderNode.render();
-                newSpec.scrollOffset = scrollOffset;
-                //newSpec.index = i;
+            }
+            specs = this._cachedSpecs;
+
+            // Translate all specs back, and instead use the scroll-offset
+            // from the `Group`.
+            var translate = [0, 0, 0];
+            var scrollOffset = this._scrollOffsetCache;
+            var newScrollOffset = _calcScrollOffset.call(this);
+            if (scrollOffset !== newScrollOffset) {
+                //console.log('scrollOffset: ' + scrollOffset + ', new: ' + newScrollOffset + ', diff: ' + (newScrollOffset - scrollOffset));
+                // Lag correction, when the offset has change in the meantime,
+                // then adjust the offset at the last possible time before rendering.
+                this._scroll.groupStart -= (newScrollOffset - scrollOffset);
+            }
+            scrollOffset = newScrollOffset;
+            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+            for (i = 0; i < specs.length; i++) {
+                spec = specs[i];
+                spec.transform = Transform.thenMove(spec.transform, translate);
+                //spec.scrollOffset = scrollOffset;
+                //spec.index = i;
 
                 // Show new spec position for debugging purposes
                 /*if (this.options.debug) {
@@ -1608,7 +1626,6 @@ define(function(require, exports, module) {
                     spec._translatedSpec = newSpec;
                 }*/
             }
-            specs = this._cachedSpecs;
         }
         else {
 
@@ -1673,6 +1690,12 @@ define(function(require, exports, module) {
                 trueSizeRequested: this._nodes._trueSizeRequested
             };
             this._eventOutput.emit('layoutstart', eventData);
+
+            /*if (size[0] !== this._contextSizeCache[0] ||
+                size[1] !== this._contextSizeCache[1] ||
+                this._isDirty) {
+                this._scroll.groupStart = 0;
+            }*/
 
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
