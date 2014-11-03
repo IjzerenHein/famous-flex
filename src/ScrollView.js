@@ -124,7 +124,8 @@ define(function(require, exports, module) {
 
         // Diagnostics
         this._debug = {
-            layoutCount: 0
+            layoutCount: 0,
+            commitCount: 0
         };
 
         // Create groupt for faster rendering
@@ -133,7 +134,7 @@ define(function(require, exports, module) {
 
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
-        //this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+        this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
         this._scroll.springForce.setOptions({ anchor: this._scroll.springEndState });
 
         // Setup input event handler
@@ -191,7 +192,7 @@ define(function(require, exports, module) {
             // use defaults
         },
         scrollDrag: {
-            strength: 0.001
+            strength: 0.002
         },
         scrollSpring: {
             dampingRatio: 1.0,
@@ -277,7 +278,7 @@ define(function(require, exports, module) {
         if (!this.options.debug) {
             return;
         }
-        var message = this._debug.layoutCount + ': ';
+        var message = this._debug.commitCount + ': ';
         for (var i = 0; i < arguments.length; i++) {
             var arg = arguments[i];
             if ((arg instanceof Object) || (arg instanceof Array)) {
@@ -288,22 +289,6 @@ define(function(require, exports, module) {
             }
         }
         console.log(message);
-    }
-
-    /**
-     * Helper function to aid development and find bugs.
-     */
-    function _verifyIntegrity(phase, scrollOffset) {
-        /*phase = phase ? ' (' + phase + ')' : '';
-        if ((scrollOffset !== undefined) && isNaN(scrollOffset)) {
-            throw 'invalid scrollOffset: ' + scrollOffset + phase;
-        }
-        if (isNaN(this._scroll.particle.getVelocity1D(0))) {
-            throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
-        }
-        if (isNaN(this._scroll.particle.getPosition1D(0))) {
-            throw 'invalid particle position: ' + this._scroll.particle.getPosition1D(0) + phase;
-        }*/
     }
 
     /**
@@ -320,7 +305,7 @@ define(function(require, exports, module) {
                 if (this._scroll.springForceId !== undefined) {
                     this._scroll.pe.detach(this._scroll.springForceId);
                     this._scroll.springForceId = undefined;
-                    _log.call(this, 'disabled spring');
+                    //_log.call(this, 'disabled spring');
                 }
             }
             else {
@@ -329,7 +314,7 @@ define(function(require, exports, module) {
                 }
                 this._scroll.springEndState.set1D(springValue);
                 this._scroll.pe.wake();
-                _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
+                //_log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
             }
         }
     }
@@ -611,6 +596,7 @@ define(function(require, exports, module) {
     function _setParticle(position, velocity, phase) {
         if (position !== undefined) {
             //var oldPosition = this._scroll.particle.getPosition1D();
+            this._scroll.particleValue = position;
             this._scroll.particle.setPosition1D(position);
             //_log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
         }
@@ -626,13 +612,27 @@ define(function(require, exports, module) {
     /**
      * Get the in-use scroll-offset.
      */
-    function _calcScrollOffset(normalize) {
+    function _calcScrollOffset(normalize, refreshParticle) {
 
         // When moving using touch-gestures, make the offset stick to the
         // finger. When the bounds is exceeded, decrease the scroll distance
         // by two.
-        var scrollOffset = this._scroll.particle.getPosition1D();
+        if (refreshParticle || (this._scroll.particleValue === undefined)) {
+            var particleValueTime = Date.now();
+            var particleValue = this._scroll.particle.getPosition1D();
+            /*if (this._scroll.particleValue !== undefined) {
+                var diff = (particleValue - this._scroll.particleValue);
+                if ((this._debug.particleDiff !== undefined) && (Math.abs(diff - this._debug.particleDiff) >= 1)) {
+                    _log.call(this, 'particle speed variation:', (diff - this._debug.particleDiff), ', diff: ', diff, ', timeDiff: ', (particleValueTime - this._scroll.particleValueTime));
+                }
+                this._debug.particleDiff = diff;
+            }*/
+            this._scroll.particleValue = particleValue;
+            this._scroll.particleValueTime = particleValueTime;
+        }
 
+        // do stuff
+        var scrollOffset = this._scroll.particleValue;
         if (this._scroll.scrollDelta || this._scroll.normalizedScrollDelta) {
             scrollOffset += this._scroll.scrollDelta + this._scroll.normalizedScrollDelta;
             if (((this._scroll.boundsReached & Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) ||
@@ -660,8 +660,8 @@ define(function(require, exports, module) {
         }
 
         //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
-        return _roundScrollOffset.call(this, scrollOffset);
-        //return scrollOffset;
+        //return _roundScrollOffset.call(this, scrollOffset);
+        return scrollOffset;
     }
 
     /**
@@ -1003,7 +1003,8 @@ define(function(require, exports, module) {
             var delta = normalizedScrollOffset - scrollOffset;
 
             // Adjust particle
-            var particleValue = this._scroll.particle.getPosition1D();
+            //var particleValue = this._scroll.particle.getPosition1D();
+            var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
             _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
@@ -1448,11 +1449,18 @@ define(function(require, exports, module) {
      * Executes the layout and updates the state of the scrollview.
      */
     function _layout(size, scrollOffset, nested) {
-        _verifyIntegrity.call(this, 'layout', scrollOffset);
 
         // Track the number of times the layout-function was executed
         this._debug.layoutCount++;
         //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
+
+        // Determine start & end
+        var scrollStart = -size[this._direction];
+        var scrollEnd = size[this._direction] * 2;
+        if ((this._scroll.scrollForceCount) || (this._scroll.springPosition !== undefined)) {
+            scrollStart += scrollOffset;
+            scrollEnd += scrollOffset;
+        }
 
         // Prepare for layout
         var layoutContext = this._nodes.prepareForLayout(
@@ -1462,11 +1470,10 @@ define(function(require, exports, module) {
                 direction: this._direction,
                 reverse: this.options.alignment ? true : false,
                 scrollOffset: this.options.alignment ? (scrollOffset + size[this._direction]) : scrollOffset,
-                scrollStart: Math.min(scrollOffset - size[this._direction], -size[this._direction]),
-                scrollEnd: Math.max(scrollOffset + (size[this._direction] * 2), size[this._direction] * 2)
+                scrollStart: scrollStart,
+                scrollEnd: scrollEnd
             }
         );
-        _verifyIntegrity.call(this, 'prepareLayout');
 
         // Layout objects
         if (this._layout.function) {
@@ -1475,23 +1482,18 @@ define(function(require, exports, module) {
                 this._layout.options    // additional layout-options
             );
         }
-        _verifyIntegrity.call(this, 'layout.function', scrollOffset);
 
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
-        _verifyIntegrity.call(this, 'removeNonInvalidatedNodes', scrollOffset);
 
         // Check whether the bounds have been reached
         _calcBounds.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'calcBounds', scrollOffset);
 
         // Update scroll-to spring
         _calcScrollToOffset.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
 
         // When pagination is enabled, snap to page
         _snapToPage.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
 
         // If the bounds have changed, and the scroll-offset would be different
         // than before, then re-layout entirely using the new offset.
@@ -1503,7 +1505,6 @@ define(function(require, exports, module) {
 
         // Calculate the spec-output
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-        _verifyIntegrity.call(this, 'buildSpecAndDestroyUnrenderedNodes', scrollOffset);
         this._specs = result.specs;
         if (result.modified || true) {
             this._eventOutput.emit('reflow', {
@@ -1515,11 +1516,9 @@ define(function(require, exports, module) {
         // top as possible and the layout function will need to process the least amount
         // of renderables.
         scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
-        _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
         // Update spring
         _updateSpring.call(this);
-        _verifyIntegrity.call(this, 'setSpring', scrollOffset);
 
         return scrollOffset;
     }
@@ -1545,7 +1544,6 @@ define(function(require, exports, module) {
     /**
      * Inner render function of the Group
      */
-    //var newRenderedSpecId = 1;
     function _innerRender() {
         var specs;
         var i;
@@ -1558,9 +1556,10 @@ define(function(require, exports, module) {
             // Re-use previous spec array if size is the same
             if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
                 specs = [];
-                //if (this._cachedSpecs) {
+                /*if (this._cachedSpecs) {
                     //console.log('specs length: ' + this._specs.length + ', old:' + this._cachedSpecs.length);
-                //}
+                    //_log.call(this, 'specs length: ', this._specs.length, ', old:', this._cachedSpecs.length);
+                }*/
                 this._cachedSpecs = specs;
             }
 
@@ -1594,37 +1593,18 @@ define(function(require, exports, module) {
             var translate = [0, 0, 0];
             var scrollOffset = this._scrollOffsetCache;
             var newScrollOffset = _calcScrollOffset.call(this);
-            if (scrollOffset !== newScrollOffset) {
+            /*if (scrollOffset !== newScrollOffset) {
                 //console.log('scrollOffset: ' + scrollOffset + ', new: ' + newScrollOffset + ', diff: ' + (newScrollOffset - scrollOffset));
+                _log.call(this, 'scrollOffset: ', scrollOffset, ', new: ', newScrollOffset, ', diff: ', (newScrollOffset - scrollOffset));
                 // Lag correction, when the offset has change in the meantime,
                 // then adjust the offset at the last possible time before rendering.
-                this._scroll.groupStart -= (newScrollOffset - scrollOffset);
-            }
+                //this._scroll.groupStart -= (newScrollOffset - scrollOffset);
+            }*/
             scrollOffset = newScrollOffset;
             translate[this._direction] = -this._scroll.groupStart - scrollOffset;
             for (i = 0; i < specs.length; i++) {
                 spec = specs[i];
                 spec.transform = Transform.thenMove(spec.transform, translate);
-                //spec.scrollOffset = scrollOffset;
-                //spec.index = i;
-
-                // Show new spec position for debugging purposes
-                /*if (this.options.debug) {
-                    if (spec._translatedSpec) {
-                        newSpec._renderedId = spec._translatedSpec._renderedId;
-                        if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
-                            var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-                            _log.call(this, 'spec: ', spec._translatedSpec._renderedId, ', ' + diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-                            //console.log(diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-                        }
-                    }
-                    else {
-                        newSpec._renderedId = newRenderedSpecId++;
-                        //_log.call(this, 'new spec rendered: ', newSpec._renderedId);
-                        //console.log('new spec rendered');
-                    }
-                    spec._translatedSpec = newSpec;
-                }*/
             }
         }
         else {
@@ -1640,8 +1620,9 @@ define(function(require, exports, module) {
         /*var now = Date.now();
         if (now !== this._now) {
             var diff = now - this._now;
-            if (diff > 2) {
-                console.log('time execution: ' + diff);
+            if (diff > 12) {
+                //console.log('time execution: ' + diff);
+                _log.call(this, 'time execution: ', diff);
             }
         }*/
         return specs;
@@ -1659,6 +1640,9 @@ define(function(require, exports, module) {
     ScrollView.prototype.commit = function commit(context) {
         var size = context.size;
 
+        // Update debug info
+        this._debug.commitCount++;
+
         /*var usedHeap = window.performance.memory.usedJSHeapSize;
         if (usedHeap !== this._debug.usedHeap) {
             console.log('used heap changed: ' + usedHeap);
@@ -1666,10 +1650,10 @@ define(function(require, exports, module) {
         }*/
 
         // Log particle/time diff
-        this._now = Date.now();
+        //this._now = Date.now();
 
         // Calculate scroll offset
-        var scrollOffset = _calcScrollOffset.call(this, true);
+        var scrollOffset = _calcScrollOffset.call(this, true, true);
 
         // When the size or layout function has changed, reflow the layout
         if (size[0] !== this._contextSizeCache[0] ||
@@ -1690,12 +1674,6 @@ define(function(require, exports, module) {
                 trueSizeRequested: this._nodes._trueSizeRequested
             };
             this._eventOutput.emit('layoutstart', eventData);
-
-            /*if (size[0] !== this._contextSizeCache[0] ||
-                size[1] !== this._contextSizeCache[1] ||
-                this._isDirty) {
-                this._scroll.groupStart = 0;
-            }*/
 
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
