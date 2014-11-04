@@ -88,8 +88,9 @@ define(function(require, exports, module) {
      *
      * ```JSON
      * [
-     *   ['top': 'header', 50],
-     *   ['bottom': 'footer', 50, 10], // z-index: 10
+     *   ['top', 'header', 50],
+     *   ['bottom', 'footer', 50, 10], // z-index: 10
+     *   ['margins', [10, 5]], // marginate remaining space: 10px top/bottom, 5px left/right
      *   ['fill', 'content']
      * ]
      * ```
@@ -110,6 +111,8 @@ define(function(require, exports, module) {
                 this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
             } else if (rule[0] === 'fill') {
                 this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
+            } else if (rule[0] === 'margins') {
+                this.margins(rule[1]);
             }
         }
     };
@@ -234,6 +237,21 @@ define(function(require, exports, module) {
             size: [this._right - this._left, this._bottom - this._top],
             translate: [this._left, this._top, (z === undefined) ? this._z : z]
         });
+        return this;
+    };
+
+    /**
+     * Applies indent margins to the remaining content.
+     *
+     * @param {Number|Array} margins margins shorthand (e.g. '5', [10, 10], [5, 10, 5, 10])
+     * @return {LayoutDockHelper} this
+     */
+    LayoutDockHelper.prototype.margins = function(margins) {
+        margins = LayoutUtility.normalizeMargins(margins);
+        this._left += margins[3];
+        this._top += margins[0];
+        this._right -= margins[1];
+        this._bottom -= margins[2];
         return this;
     };
 
