@@ -67,12 +67,15 @@ define(function(require, exports, module) {
         var node;
         var nodeSize;
         var itemSize;
+        var getItemSize;
         var lineLength;
         var lineNodes = [];
 
         // Prepare item-size
         if (!options.itemSize) {
             itemSize = [true, true]; // when no item-size specified, use size from renderables
+        } else if (options.itemSize instanceof Function) {
+            getItemSize = options.itemSize;
         } else if ((options.itemSize[0] === undefined) || (options.itemSize[0] === undefined)){
             // resolve 'undefined' into a fixed size
             itemSize = [
@@ -139,20 +142,22 @@ define(function(require, exports, module) {
          * Helper function to resolving the size of a node.
          */
         function _resolveNodeSize(node) {
-            if (options.getItemSize) {
-                return options.getItemSize(context.getRenderNode(node), size);
-            } else if ((itemSize[0] === true) || (itemSize[1] === true)) {
+            var localItemSize = itemSize;
+            if (getItemSize) {
+                localItemSize = getItemSize(context.getRenderNode(node), size);
+            }
+            if ((localItemSize[0] === true) || (localItemSize[1] === true)) {
                 var result = context.resolveSize(node, size);
-                if (itemSize[0] !== true) {
+                if (localItemSize[0] !== true) {
                     result[0] = itemSize[0];
                 }
-                if (itemSize[1] !== true) {
+                if (localItemSize[1] !== true) {
                     result[1] = itemSize[1];
                 }
                 return result;
             }
             else {
-                return itemSize;
+                return localItemSize;
             }
         }
 
