@@ -18,17 +18,14 @@
  * |---|---|---|
  * |`itemSize`|Size|Size of an item to layout|
  * |`[gutter]`|Size|Gutter-space between renderables|
- * |`[justify]`|Bool|Justifies the renderables accross the width & height|
- * |`[justifyHorizontal]`|Bool|Justifies the renderables accross the width|
- * |`[justifyVertical]`|Bool|Justifies the renderables accross the height|
  *
  * Example:
  *
  * ```javascript
- * var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+ * var CoverLayout = require('famous-flex/layouts/CoverLayout');
  *
  * new LayoutController({
- *   layout: CollectionLayout,
+ *   layout: CoverLayout,
  *   layoutOptions: {
  *     itemSize: [100, 100],  // item has width and height of 100 pixels
  *     gutter: [5, 5],        // gutter of 5 pixels in between cells

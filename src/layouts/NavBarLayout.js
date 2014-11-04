@@ -11,7 +11,7 @@
 /*global define*/
 
 /**
- * Navigation-bar layout consisting of optionaly left and right items and a
+ * Navigation-bar layout consisting of optionally left and right items and a
  * title in the middle.
  *
  * When no item-width is specified, the width of the renderable itsself is used.
@@ -42,8 +42,8 @@
  *       new Surface({content: 'left1'})
  *     ],
  *     rightItems: [
- *       new Surface({content: 'rght1'}),
- *       new Surface({content: 'rght2'})
+ *       new Surface({content: 'right1'}),
+ *       new Surface({content: 'right2'})
  *     ]
  *   }
  * })

@@ -16,8 +16,7 @@
  *
  * |options|type|description|
  * |---|---|---|
- * |`itemSize`|Size|Size of an item to layout|
- * |`getItemSize`|Function|Callback to get the size for a renderable, example: `function(renderNode, contextSize)`|
+ * |`itemSize`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
  * |`[gutter]`|Size|Gutter-space between renderables|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
  *

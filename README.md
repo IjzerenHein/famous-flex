@@ -157,9 +157,6 @@ var layoutController = new LayoutController({
 			node = context.next();
 		}
 	},
-	layoutOptions: {
-		cells: [3, 1],
-	},
 	dataSource: [
 		new Surface({content: 'surface1'}),
 		new Surface({content: 'surface2'}),
@@ -175,15 +172,15 @@ to the `context.set()` function:
 ```javascript
 var layoutController = new LayoutController({
 	layout: function (context, options) {
-		node.set('one', {
+		context.set('one', {
 			size: [100, 100],
 			translate: [0, 0, 0]
 		});
-		node.set('two', {
+		context.set('two', {
 			size: [100, 100],
 			translate: [100, 0, 0]
 		});
-		node.set('three', {
+		context.set('three', {
 			size: [100, 100],
 			translate: [200, 0, 0]
 		});
