@@ -1678,7 +1678,9 @@ define(function(require, exports, module) {
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
-            if (this._isDirty) {
+            if (this._isDirty ||
+                (size[0] !== this._contextSizeCache[0]) ||
+                (size[1] !== this._contextSizeCache[1])) {
                 this._nodes.forEach(function(node) {
                     if (node.setDirectionLock) {
                         node.setDirectionLock(this._direction, 0);
