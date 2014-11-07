@@ -208,7 +208,7 @@ define(function(require, exports, module) {
         },
         scrollSpring: {
             dampingRatio: 1.0,
-            period: 400
+            period: 350
         },
         scrollSync: {
             scale: 0.2
