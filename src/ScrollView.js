@@ -88,7 +88,6 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
-     * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollView
@@ -193,7 +192,6 @@ define(function(require, exports, module) {
         //insertSpec: undefined,
         //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
-        offsetRounding: 0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults
@@ -244,7 +242,6 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
-     * @param {Number} [options.offsetRounding] Rounds the calculated scroll-offset to prevent unsharp rendering (default: `1`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollView} this
@@ -311,9 +308,6 @@ define(function(require, exports, module) {
      */
     function _updateSpring() {
         var springValue = this._scroll.scrollForceCount ? undefined : this._scroll.springPosition;
-        if (springValue !== undefined) {
-            springValue = _roundScrollOffset.call(this, springValue);
-        }
         if (this._scroll.springValue !== springValue) {
             this._scroll.springValue = springValue;
             if (springValue === undefined) {
@@ -598,19 +592,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Helper function which rounds the scroll-offset to ensure it reaches an end-state and doesn't
-     * move infinitely.
-     */
-    function _roundScrollOffset(scrollOffset) {
-        if (this.options.offsetRounding) {
-            return Math.round(scrollOffset / this.options.offsetRounding) * this.options.offsetRounding;
-        }
-        else {
-            return scrollOffset;
-        }
-    }
-
-    /**
      * Updates the scroll offset particle.
      */
     function _setParticle(position, velocity, phase) {
@@ -680,7 +661,7 @@ define(function(require, exports, module) {
         }
 
         //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
-        return _roundScrollOffset.call(this, scrollOffset);
+        return scrollOffset;
     }
 
     /**
@@ -920,15 +901,15 @@ define(function(require, exports, module) {
      */
     function _normalizePrevViewSequence(size, scrollOffset) {
         var count = 0;
-        var normalizedCount = 0;
-        var startScrollOffset = scrollOffset;
+        //var normalizedCount = 0;
+        //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
         var normalizeNextPrev = false;
         this._nodes.forEach(function(node) {
             if (normalizeNextPrev) {
                 this._viewSequence = node._viewSequence;
                 normalizedScrollOffset = scrollOffset;
-                normalizedCount = count;
+                //normalizedCount = count;
                 normalizeNextPrev = false;
             }
             if (scrollOffset < 0) {
@@ -946,7 +927,7 @@ define(function(require, exports, module) {
                 else {
                     this._viewSequence = node._viewSequence;
                     normalizedScrollOffset = scrollOffset;
-                    normalizedCount = count;
+                    //normalizedCount = count;
                 }
             }
         }.bind(this), false);
@@ -957,8 +938,8 @@ define(function(require, exports, module) {
     }
     function _normalizeNextViewSequence(size, scrollOffset) {
         var count = 0;
-        var normalizedCount = 0;
-        var startScrollOffset = scrollOffset;
+        //var normalizedCount = 0;
+        //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
         this._nodes.forEach(function(node) {
             if ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0))) {
@@ -974,7 +955,7 @@ define(function(require, exports, module) {
             if (node.scrollLength || this.options.alignment) {
                 this._viewSequence = node._viewSequence;
                 normalizedScrollOffset = scrollOffset;
-                normalizedCount = count;
+                //normalizedCount = count;
             }
             if (!this.options.alignment) {
                 scrollOffset += node.scrollLength;
@@ -1565,22 +1546,10 @@ define(function(require, exports, module) {
      * Inner render function of the Group
      */
     function _innerRender() {
-
-        // Call render on all nodes
         var specs = this._specs;
         for (var i3 = 0, j3 = specs.length; i3 < j3; i3++) {
             specs[i3].target = specs[i3].renderNode.render();
         }
-
-        // log time betwen start of commit to end of innerRender
-        /*var now = Date.now();
-        if (now !== this._now) {
-            var diff = now - this._now;
-            if (diff > 12) {
-                //console.log('time execution: ' + diff);
-                _log.call(this, 'time execution: ', diff);
-            }
-        }*/
         return specs;
     }
 
@@ -1598,9 +1567,6 @@ define(function(require, exports, module) {
 
         // Update debug info
         this._debug.commitCount++;
-
-        // Log particle/time diff
-        //this._now = Date.now();
 
         // Calculate scroll offset
         var scrollOffset = _calcScrollOffset.call(this, true, true);
