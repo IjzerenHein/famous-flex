@@ -189,7 +189,7 @@ define(function(require, exports, module) {
         //insertSpec: undefined,
         //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
-        offsetRounding: 0.5,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
+        offsetRounding: 0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults
@@ -1030,7 +1030,7 @@ define(function(require, exports, module) {
 
             // Adjust group offset
             if (this._layout.capabilities.sequentialScrollingOptimized) {
-                //this._scroll.groupStart -= delta;
+                this._scroll.groupStart -= delta;
             }
         }
         return normalizedScrollOffset;
