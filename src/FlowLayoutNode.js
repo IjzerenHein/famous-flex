@@ -158,7 +158,7 @@ define(function(require, exports, module) {
 
         var oldRemoving = this._removing;
         var oldInvalidated = this._invalidated;
-        this.set(set, DEFAULT.size);
+        this.set(set);
         this._removing = oldRemoving;
         this._invalidated = oldInvalidated;
     };
@@ -238,26 +238,6 @@ define(function(require, exports, module) {
             Math.round(value[1] / precision) * precision,
             Math.round(value[2] / precision) * precision
         ];
-    }
-    function _getTranslateValue(def) {
-        var prop = this._properties.translate;
-        if (!prop || !prop.init) {
-            return def;
-        }
-        var position = prop.particle.getPosition();
-        if (this._lockDirection !== undefined) {
-            var value = position[this._lockDirection];
-            var endState = prop.endState.get()[this._lockDirection];
-            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-            var precision = this.options.particleRounding;
-            position = [
-                Math.round(position[0] / precision) * precision,
-                Math.round(position[1] / precision) * precision,
-                Math.round(position[2] / precision) * precision
-            ];
-            position[this._lockDirection] = Math.round(lockValue / precision) * precision;
-        }
-        return position;
     }
 
     /**
@@ -494,7 +474,7 @@ define(function(require, exports, module) {
         }
 
         // set size
-        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
+        var size = set.size || defaultSize;
         if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
             _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
         }
