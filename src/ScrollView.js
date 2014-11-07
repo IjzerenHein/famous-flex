@@ -136,8 +136,12 @@ define(function(require, exports, module) {
 
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
-        this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
-        this._scroll.frictionForceId = this._scroll.pe.attach(this._scroll.frictionForce, this._scroll.particle);
+        if (!this.options.scrollDrag.disabled) {
+            this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+        }
+        if (!this.options.scrollFriction.disabled) {
+            this._scroll.frictionForceId = this._scroll.pe.attach(this._scroll.frictionForce, this._scroll.particle);
+        }
         this._scroll.springForce.setOptions({ anchor: this._scroll.springEndState });
 
         // Setup input event handler
@@ -196,11 +200,13 @@ define(function(require, exports, module) {
         },
         scrollDrag: {
             forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
-            strength: 0.002
+            strength: 0.001,
+            disabled: true
         },
         scrollFriction: {
             forceFunction: Drag.FORCE_FUNCTIONS.LINEAR,
-            strength: 0.0005
+            strength: 0.0025,
+            disabled: false
         },
         scrollSpring: {
             dampingRatio: 1.0,
@@ -1481,12 +1487,9 @@ define(function(require, exports, module) {
         //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
 
         // Determine start & end
-        var scrollStart = -size[this._direction];
-        var scrollEnd = size[this._direction] * 2;
-        if ((this._scroll.scrollForceCount) || (this._scroll.springPosition !== undefined)) {
-            scrollStart += scrollOffset;
-            scrollEnd += scrollOffset;
-        }
+        var scrollLength = size[this._direction] / 2;
+        var scrollStart = -scrollLength;
+        var scrollEnd = size[this._direction] + scrollLength;
 
         // Prepare for layout
         var layoutContext = this._nodes.prepareForLayout(
