@@ -31,6 +31,7 @@ define(function(require, exports, module) {
         this.renderNode = renderNode;
         this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
         this._spec.renderNode = renderNode; // also store in spec
+        this._specModified = true;
         this._invalidated = false;
         this._removing = false;
         //this.scrollLength = undefined;
@@ -68,10 +69,50 @@ define(function(require, exports, module) {
      * @param {Object} spec
      */
     LayoutNode.prototype.setSpec = function(spec) {
-        this._spec.align = spec.align;
-        this._spec.origin = spec.origin;
-        this._spec.size = spec.size;
-        this._spec.transform = spec.transform;
+        this._specModified = true;
+        if (spec.align) {
+            if (!spec.align) {
+                this._spec.align = [0, 0];
+            }
+            this._spec.align[0] = spec.align[0];
+            this._spec.align[1] = spec.align[1];
+        }
+        else {
+            this._spec.align = undefined;
+        }
+        if (spec.origin) {
+            if (!spec.origin) {
+                this._spec.origin = [0, 0];
+            }
+            this._spec.origin[0] = spec.origin[0];
+            this._spec.origin[1] = spec.origin[1];
+        }
+        else {
+            this._spec.origin = undefined;
+        }
+        if (spec.size) {
+            if (!spec.size) {
+                this._spec.size = [0, 0];
+            }
+            this._spec.size[0] = spec.size[0];
+            this._spec.size[1] = spec.size[1];
+        }
+        else {
+            this._spec.size = undefined;
+        }
+        if (spec.transform) {
+            if (!spec.transform) {
+                this._spec.transform = spec.transform.slice(0);
+            }
+            else {
+                for (var i = 0; i < 16; i++) {
+                    this._spec.transform[0] = spec.transform[0];
+                }
+            }
+        }
+        else {
+            this._spec.transform = undefined;
+        }
         this._spec.opacity = spec.opacity;
     };
 
@@ -82,19 +123,51 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.set = function(set, size) {
         this._invalidated = true;
+        this._specModified = true;
         this._removing = false;
         var spec = this._spec;
         spec.opacity = set.opacity;
-        spec.size = set.size;
-        spec.origin = set.origin;
-        spec.align = set.align;
-        if (set.translate || set.skew || set.rotate || set.scale) {
+        if (set.size) {
+            if (!spec.size) {
+                spec.size = [0, 0];
+            }
+            spec.size[0] = set.size[0];
+            spec.size[1] = set.size[1];
+        }
+        else {
+            spec.size = undefined;
+        }
+        if (set.origin) {
+            if (!spec.origin) {
+                spec.origin = [0, 0];
+            }
+            spec.origin[0] = set.origin[0];
+            spec.origin[1] = set.origin[1];
+        }
+        else {
+            spec.origin = undefined;
+        }
+        if (set.align) {
+            if (!spec.align) {
+                spec.align = [0, 0];
+            }
+            spec.align[0] = set.align[0];
+            spec.align[1] = set.align[1];
+        }
+        else {
+            spec.align = undefined;
+        }
+
+        if (set.skew || set.rotate || set.scale) {
             this._spec.transform = Transform.build({
                 translate: set.translate || [0, 0, 0],
                 skew: set.skew || [0, 0, 0],
                 scale: set.scale || [1, 1, 1],
                 rotate: set.rotate || [0, 0, 0]
             });
+        }
+        else if (set.translate) {
+            this._spec.transform = Transform.translate(set.translate[0], set.translate[1], set.translate[2]);
         }
         else {
             this._spec.transform = undefined;
@@ -106,6 +179,7 @@ define(function(require, exports, module) {
      * Creates the render-spec
      */
     LayoutNode.prototype.getSpec = function() {
+        this._specModified = false;
         return this._invalidated ? this._spec : undefined;
     };
 

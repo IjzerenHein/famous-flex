@@ -65,7 +65,7 @@ define(function(require, exports, module) {
         }
         _verifyIntegrity.call(this);
 
-        this._endStateReached = false;
+        this._specModified = true;
         this._initial = true;
         if (spec) {
             this.setSpec(spec);
@@ -88,6 +88,7 @@ define(function(require, exports, module) {
      */
     var DEFAULT = {
         opacity: 1,
+        opacity1D: [1],
         size: [0, 0],
         origin: [0, 0],
         align: [0, 0],
@@ -125,15 +126,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
-     * move infinitely.
-     */
-    function _roundParticleValue(value, precision) {
-        precision = precision || this.options.particleRounding;
-        return Math.round(value / precision) * precision;
-    }
-
-    /**
      * Sets the configuration options
      */
     FlowLayoutNode.prototype.setOptions = function(options) {
@@ -163,7 +155,12 @@ define(function(require, exports, module) {
         set.size = spec.size;
         set.align = spec.align;
         set.origin = spec.origin;
-        _set.call(this, set, DEFAULT.size);
+
+        var oldRemoving = this._removing;
+        var oldInvalidated = this._invalidated;
+        this.set(set, DEFAULT.size);
+        this._removing = oldRemoving;
+        this._invalidated = oldInvalidated;
     };
 
     /**
@@ -179,7 +176,6 @@ define(function(require, exports, module) {
         }
         this.trueSizeRequested = false;
         this.usesTrueSize = false;
-        _verifyIntegrity.call(this);
     };
 
     /**
@@ -194,12 +190,11 @@ define(function(require, exports, module) {
         }
         else {
             this._pe.sleep();
-            this._endStateReached = true;
+            this._specModified = false;
         }
 
         // Mark for removal
         this._invalidated = false;
-        _verifyIntegrity.call(this);
     };
 
     /**
@@ -232,30 +227,17 @@ define(function(require, exports, module) {
     /**
      * Helper function for getting the property value.
      */
-    function _getRoundedValue2D(prop, def, precision) {
-        if (!prop || !prop.init) {
-            return def;
-        }
-        var value = prop.particle.getPosition();
-        return [
-            _roundParticleValue.call(this, value[0], precision),
-            _roundParticleValue.call(this, value[1], precision)
-        ];
-    }
     function _getRoundedValue3D(prop, def, precision) {
         if (!prop || !prop.init) {
             return def;
         }
+        precision = precision || this.options.particleRounding;
         var value = prop.particle.getPosition();
         return [
-            _roundParticleValue.call(this, value[0], precision),
-            _roundParticleValue.call(this, value[1], precision),
-            _roundParticleValue.call(this, value[2], precision)
+            Math.round(value[0] / precision) * precision,
+            Math.round(value[1] / precision) * precision,
+            Math.round(value[2] / precision) * precision
         ];
-    }
-    function _getOpacityValue() {
-        var prop = this._properties.opacity;
-        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
     }
     function _getTranslateValue(def) {
         var prop = this._properties.translate;
@@ -267,12 +249,13 @@ define(function(require, exports, module) {
             var value = position[this._lockDirection];
             var endState = prop.endState.get()[this._lockDirection];
             var lockValue = value + ((endState - value) * this._lockTransitionable.get());
+            var precision = this.options.particleRounding;
             position = [
-                _roundParticleValue.call(this, position[0]),
-                _roundParticleValue.call(this, position[1]),
-                _roundParticleValue.call(this, position[2])
+                Math.round(position[0] / precision) * precision,
+                Math.round(position[1] / precision) * precision,
+                Math.round(position[2] / precision) * precision
             ];
-            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
+            position[this._lockDirection] = Math.round(lockValue / precision) * precision;
         }
         return position;
     }
@@ -284,7 +267,7 @@ define(function(require, exports, module) {
 
         // When the end state was reached, return the previous spec
         var endStateReached = this._pe.isSleeping();
-        if (this._endStateReached && endStateReached) {
+        if (!this._specModified && endStateReached) {
             if (this._invalidated) {
                 return this._spec;
             }
@@ -292,26 +275,110 @@ define(function(require, exports, module) {
                 return undefined;
             }
         }
-        this._endStateReached = endStateReached;
+        this._initial = false;
+        this._specModified = !endStateReached;
 
         // Build fresh spec
-        this._initial = false;
-        this._spec.opacity = _getOpacityValue.call(this);
-        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
-        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
-        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
-        var translate = _getTranslateValue.call(this, DEFAULT.translate);
-        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
-            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
+        var value;
+        var spec = this._spec;
+        var precision = this.options.particleRounding;
+
+        // opacity
+        var opacity = this._properties.opacity;
+        if (opacity && opacity.init) {
+            spec.opacity = Math.round(Math.max(0,Math.min(1, opacity.particle.getPosition1D())) / precision) * precision;
         }
         else {
-            this._spec.transform = Transform.build({
-                translate: translate,
-                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
-                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
-                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
+            spec.opacity = undefined;
+        }
+
+        // size
+        var size = this._properties.size;
+        if (size && size.init) {
+            value = size.particle.getPosition();
+            if (!spec.size) {
+                spec.size = [0, 0];
+            }
+            spec.size[0] = Math.round(value[0] / 0.1) * 0.1;
+            spec.size[1] = Math.round(value[1] / 0.1) * 0.1;
+        }
+        else {
+            spec.size = undefined;
+        }
+
+        // align
+        var align = this._properties.align;
+        if (align && align.init) {
+            value = align.particle.getPosition();
+            if (!spec.align) {
+                spec.align = [0, 0];
+            }
+            spec.align[0] = Math.round(value[0] / 0.1) * 0.1;
+            spec.align[1] = Math.round(value[1] / 0.1) * 0.1;
+        }
+        else {
+            spec.align = undefined;
+        }
+
+        // origin
+        var origin = this._properties.origin;
+        if (origin && origin.init) {
+            value = origin.particle.getPosition();
+            if (!spec.origin) {
+                spec.origin = [0, 0];
+            }
+            spec.origin[0] = Math.round(value[0] / 0.1) * 0.1;
+            spec.origin[1] = Math.round(value[1] / 0.1) * 0.1;
+        }
+        else {
+            spec.origin = undefined;
+        }
+
+        // translate
+        var translate = this._properties.translate;
+        var translateVal;
+        if (translate && translate.init) {
+            translateVal = translate.particle.getPosition();
+            if (this._lockDirection !== undefined) {
+                value = translateVal[this._lockDirection];
+                var endState = translate.endState.get()[this._lockDirection];
+                var lockValue = value + ((endState - value) * this._lockTransitionable.get());
+                translateVal[0] = Math.round(translateVal[0] / precision) * precision;
+                translateVal[1] = Math.round(translateVal[1] / precision) * precision;
+                translateVal[2] = Math.round(translateVal[2] / precision) * precision;
+                translateVal[this._lockDirection] = Math.round(lockValue / precision) * precision;
+            }
+        }
+        else {
+            translateVal = DEFAULT.translate;
+        }
+
+        // scale, skew, scale
+        var scale = this._properties.scale;
+        var skew = this._properties.skew;
+        var rotate = this._properties.rotate;
+        if (scale || skew || rotate) {
+            spec.transform = Transform.build({
+                translate: translateVal,
+                skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew),
+                scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale),
+                rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate)
             });
         }
+        else if (translate) {
+            if (!spec.transform) {
+                spec.transform = Transform.translate(translateVal[0], translateVal[1], translateVal[2]);
+            }
+            else {
+                spec.transform[12] = translateVal[0];
+                spec.transform[13] = translateVal[1];
+                spec.transform[14] = translateVal[2];
+            }
+        }
+        else {
+            spec.transform = undefined;
+        }
+
         //if (this.renderNode._debug) {
             //this.renderNode._debug = false;
             /*console.log(JSON.stringify({
@@ -322,8 +389,6 @@ define(function(require, exports, module) {
                 transform: this._spec.transform
             }));*/
         //}
-
-        _verifyIntegrity.call(this);
         return this._spec;
     };
 
@@ -345,45 +410,50 @@ define(function(require, exports, module) {
             else if (this._removing) {
                 value = prop.particle.getPosition();
             }
-            prop.endState.set(value);
+            prop.endState.x = value[0];
+            prop.endState.y = (value.length > 1) ? value[1] : 0;
+            prop.endState.z = (value.length > 2) ? value[2] : 0;
             if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
                 immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
             }
             if (immediate) {
-                prop.particle.setPosition(value);
-                this._endStateReached = false;
+                prop.particle.position.x = value[0];
+                prop.particle.position.y = (value.length > 1) ? value[1] : 0;
+                prop.particle.position.z = (value.length > 2) ? value[2] : 0;
             }
             else {
                 this._pe.wake();
             }
             return;
         }
-
-        // Create property if neccesary
-        if (!prop) {
-            prop = {
-                particle: new Particle({
-                    position: (this._initial || immediate) ? endState : defaultValue
-                }),
-                endState: new Vector(endState)
-            };
-            prop.force = new Spring(this.options.spring);
-            prop.force.setOptions({
-                anchor: prop.endState
-            });
-            this._pe.addBody(prop.particle);
-            prop.forceId = this._pe.attach(prop.force, prop.particle);
-            this._properties[propName] = prop;
-        }
         else {
-            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
-            prop.endState.set(endState);
-            if (!this._initial && !immediate) {
-                this._pe.wake();
+
+            // Create property if neccesary
+            if (!prop) {
+                prop = {
+                    particle: new Particle({
+                        position: (this._initial || immediate) ? endState : defaultValue
+                    }),
+                    endState: new Vector(endState)
+                };
+                prop.force = new Spring(this.options.spring);
+                prop.force.setOptions({
+                    anchor: prop.endState
+                });
+                this._pe.addBody(prop.particle);
+                prop.forceId = this._pe.attach(prop.force, prop.particle);
+                this._properties[propName] = prop;
             }
+            else {
+                prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
+                prop.endState.set(endState);
+                if (!this._initial && !immediate) {
+                    this._pe.wake();
+                }
+            }
+            prop.init = true;
+            prop.invalidated = true;
         }
-        prop.init = true;
-        prop.invalidated = true;
     }
 
     /**
@@ -401,21 +471,14 @@ define(function(require, exports, module) {
      */
     FlowLayoutNode.prototype.set = function(set, defaultSize) {
         this._removing = false;
-        this.scrollLength = set.scrollLength;
-        _set.call(this, set, defaultSize);
         this._invalidated = true;
-        _verifyIntegrity.call(this);
-    };
-
-    /**
-     * context.set(..)
-     */
-    function _set(set, defaultSize) {
+        this._specModified = true;
+        this.scrollLength = set.scrollLength;
 
         // set opacity
         var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
         if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
-            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
+            _setPropertyValue.call(this, this._properties.opacity, 'opacity', [opacity], DEFAULT.opacity1D);
         }
 
         // set align
@@ -459,7 +522,7 @@ define(function(require, exports, module) {
         if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
             _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
         }
-    }
+    };
 
     module.exports = FlowLayoutNode;
 });

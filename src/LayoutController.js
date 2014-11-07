@@ -524,23 +524,22 @@ define(function(require, exports, module) {
             // Update output and optionally emit event
             var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
             this._commitOutput.target = result.specs;
-            if (result.modified || true) {
-                this._eventOutput.emit('reflow', {
-                    target: this
-                });
-            }
+            this._eventOutput.emit('reflow', {
+                target: this
+            });
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);
         }
 
         // Render child-nodes every commit
-        for (var i = 0; i < this._commitOutput.target.length; i++) {
-            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
+        var target = this._commitOutput.target;
+        for (var i = 0, j = target.length; i < j; i++) {
+            target[i].target = target[i].renderNode.render();
         }
 
-        // Return
-        if (size) {
+        // Translate dependent on origin
+        if (origin && ((origin[0] !== 0) || (origin[1] !== 0))) {
             transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
         }
         this._commitOutput.size = size;

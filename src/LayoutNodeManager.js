@@ -66,9 +66,7 @@ define(function(require, exports, module) {
                 size: 0
                 //first: undefined
             },
-            contextNodes: {
-                size: 0
-            }
+            resolveSize: [0, 0]
         };
         this.verbose = false;
         //this._first = undefined; // first item in the linked list
@@ -93,42 +91,36 @@ define(function(require, exports, module) {
             node = node._next;
         }
 
-        // Move all previously allocated context-nodes to the pool
-        if (this._pool.contextNodes.inUseLast) {
-            this._pool.contextNodes.inUseLast._next = this._pool.contextNodes.first;
-        }
-        this._pool.contextNodes.first = this._pool.contextNodes.inUseFirst;
-        this._pool.contextNodes.inUseFirst = undefined;
-        this._pool.contextNodes.inUseLast = undefined;
-
         // Prepare data
+        var context = this._context;
         this._nodesById = nodesById;
         this._trueSizeRequested = false;
         this._reevalTrueSize =
-            !this._context.size ||
-            (this._context.size[0] !== contextData.size[0]) ||
-            (this._context.size[1] !== contextData.size[1]);
+            !context.size ||
+            (context.size[0] !== contextData.size[0]) ||
+            (context.size[1] !== contextData.size[1]);
 
         // Prepare context for enumation
-        this._contextState.nextSequence = viewSequence;
-        this._contextState.prevSequence = viewSequence;
-        this._contextState.next = undefined;
-        this._contextState.prev = undefined;
-        this._contextState.nextGetIndex = 0;
-        this._contextState.prevGetIndex = 0;
-        this._contextState.nextSetIndex = 0;
-        this._contextState.prevSetIndex = 0;
+        var contextState = this._contextState;
+        contextState.nextSequence = viewSequence;
+        contextState.prevSequence = viewSequence;
+        contextState.next = undefined;
+        contextState.prev = undefined;
+        contextState.nextGetIndex = 0;
+        contextState.prevGetIndex = 0;
+        contextState.nextSetIndex = 0;
+        contextState.prevSetIndex = 0;
 
         // Prepare content
-        this._context.size[0] = contextData.size[0];
-        this._context.size[1] = contextData.size[1];
-        this._context.direction = contextData.direction;
-        this._context.reverse = contextData.reverse;
-        this._context.scrollOffset = contextData.scrollOffset || 0;
-        this._context.scrollStart = contextData.scrollStart || 0;
-        this._context.scrollEnd = contextData.scrollEnd || this._context.size[this._context.direction];
-        //this._context.cycle++;
-        return this._context;
+        context.size[0] = contextData.size[0];
+        context.size[1] = contextData.size[1];
+        context.direction = contextData.direction;
+        context.reverse = contextData.reverse;
+        context.scrollOffset = contextData.scrollOffset || 0;
+        context.scrollStart = contextData.scrollStart || 0;
+        context.scrollEnd = contextData.scrollEnd || context.size[context.direction];
+        //context.cycle++;
+        return context;
     };
 
     /**
@@ -162,7 +154,7 @@ define(function(require, exports, module) {
      *
      * @return {Array.Spec} array of Specs
      */
-    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function() {
+    LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function(translate) {
         var specs = [];
         var result = {
             specs: specs,
@@ -170,7 +162,7 @@ define(function(require, exports, module) {
         };
         var node = this._first;
         while (node) {
-            var oldEndStateReached = node._endStateReached;
+            var modified = node._specModified;
             var spec = node.getSpec();
             if (!spec) {
 
@@ -185,7 +177,12 @@ define(function(require, exports, module) {
             else {
 
                 // Update stats
-                if (!node._endStateReached || !oldEndStateReached) {
+                if (modified) {
+                    if (spec.transform && translate) {
+                        spec.transform[12] += translate[0];
+                        spec.transform[13] += translate[1];
+                        spec.transform[14] += translate[2];
+                    }
                     result.modified = true;
                 }
 
@@ -285,40 +282,6 @@ define(function(require, exports, module) {
         }
 
         _checkIntegrity.call(this);
-    }
-
-    function _createContextNode(renderNode) {
-        var node;
-        if (this._pool.contextNodes.first) {
-            node = this._pool.contextNodes.first;
-            this._pool.contextNodes.first = node._next;
-            // init
-            node.renderNode = renderNode;
-            node.viewSequence = undefined;
-            node.node = undefined;
-            node.set = undefined;
-            node.index = undefined;
-            node.next = undefined;
-            node.prev = undefined;
-            node.byId = undefined;
-            node.arrayElement = undefined;
-            node.trueSizeRequested = undefined;
-            node.usesTrueSize = undefined;
-        }
-        else {
-            this._pool.contextNodes.size++;
-            node = {
-                renderNode: renderNode
-            };
-        }
-        // add to in use list
-        if (!this._pool.contextNodes.inUseLast) {
-            this._pool.contextNodes.inUseLast = node;
-        }
-        node._next = this._pool.contextNodes.inUseFirst;
-        this._pool.contextNodes.inUseFirst = node;
-        // done
-        return node;
     }
 
     /**
@@ -529,11 +492,12 @@ define(function(require, exports, module) {
         if (!this._context.reverse) {
             this._contextState.nextSequence = this._contextState.nextSequence.getNext();
         }
-        var contextNode = _createContextNode.call(this, renderNode);
-        contextNode.viewSequence = nextSequence;
-        contextNode.next = true;
-        contextNode.index = ++this._contextState.nextGetIndex;
-        return contextNode;
+        return {
+            renderNode: renderNode,
+            viewSequence: nextSequence,
+            next: true,
+            index: ++this._contextState.nextGetIndex
+        };
     }
 
     /**
@@ -560,11 +524,12 @@ define(function(require, exports, module) {
         if (this._context.reverse) {
             this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
         }
-        var contextNode = _createContextNode.call(this, renderNode);
-        contextNode.viewSequence = prevSequence;
-        contextNode.prev = true;
-        contextNode.index = --this._contextState.prevGetIndex;
-        return contextNode;
+        return {
+            renderNode: renderNode,
+            viewSequence: prevSequence,
+            prev: true,
+            index: --this._contextState.prevGetIndex
+        };
     }
 
     /**
@@ -580,18 +545,20 @@ define(function(require, exports, module) {
             // Return array
             if (renderNode instanceof Array) {
                 var result = [];
-                for (var i = 0 ; i < renderNode.length; i++) {
-                    var contextNodeElm = _createContextNode.call(this, renderNode[i]);
-                    contextNodeElm.arrayElement = true;
-                    result.push(contextNodeElm);
+                for (var i = 0, j = renderNode.length; i < j; i++) {
+                    result.push({
+                        renderNode: renderNode[i],
+                        arrayElement: true
+                    });
                 }
                 return result;
             }
 
             // Create context node
-            var contextNode = _createContextNode.call(this, renderNode);
-            contextNode.byId = true;
-            return contextNode;
+            return {
+                renderNode: renderNode,
+                byId: true
+            };
         }
         else {
             return contextNodeOrId;
@@ -614,9 +581,10 @@ define(function(require, exports, module) {
      * Set the node content
      */
     function _contextSet(contextNodeOrId, set) {
-        var contextNode = _contextGet.call(this, contextNodeOrId);
+        var contextNode = this._nodesById ? _contextGet.call(this, contextNodeOrId) : contextNodeOrId;
         if (contextNode) {
-            if (!contextNode.node) {
+            var node = contextNode.node;
+            if (!node) {
                 if (contextNode.next) {
                      if (contextNode.index < this._contextState.nextSetIndex) {
                         LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
@@ -628,12 +596,13 @@ define(function(require, exports, module) {
                      }
                      this._contextState.prevSetIndex = contextNode.index;
                 }
-                contextNode.node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
-                contextNode.node._viewSequence = contextNode.viewSequence;
+                node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
+                node._viewSequence = contextNode.viewSequence;
+                contextNode.node = node;
             }
-            contextNode.node.usesTrueSize = contextNode.usesTrueSize;
-            contextNode.node.trueSizeRequested = contextNode.trueSizeRequested;
-            contextNode.node.set(set, this._context.size);
+            node.usesTrueSize = contextNode.usesTrueSize;
+            node.trueSizeRequested = contextNode.trueSizeRequested;
+            node.set(set, this._context.size);
             contextNode.set = set;
         }
     }
@@ -642,64 +611,70 @@ define(function(require, exports, module) {
      * Resolve the size of the layout-node from the renderable itsself
      */
     function _contextResolveSize(contextNodeOrId, parentSize) {
-        var contextNode = _contextGet.call(this, contextNodeOrId);
+        var contextNode = this._nodesById ? _contextGet.call(this, contextNodeOrId) : contextNodeOrId;
+        var resolveSize = this._pool.resolveSize;
         if (!contextNode) {
-            return [0, 0];
+            resolveSize[0] = 0;
+            resolveSize[1] = 0;
+            return resolveSize;
         }
 
         // Get in use size
-        var size = contextNode.renderNode.getSize();
+        var renderNode = contextNode.renderNode;
+        var size = renderNode.getSize();
         if (!size) {
             return parentSize;
         }
 
         // Check if true-size is used and it must be reavaluated
-        var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
+        var configSize = renderNode.size && (renderNode._trueSizeCheck !== undefined) ? renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
             contextNode.usesTrueSize = true;
-            if (contextNode.renderNode._trueSizeCheck) {
+            if (renderNode._trueSizeCheck) {
 
                 // Fix for true-size renderables. When true-size is used, the size
                 // is incorrect for one render-cycle due to the fact that Surface.commit
                 // updates the content after asking the DOM for the offsetHeight/offsetWidth.
                 // The code below backs the size up, and re-uses that when this scenario
                 // occurs.
-                if (contextNode.renderNode._backupSize) {
+                if (renderNode._backupSize) {
                     if (configSize[0] === true) {
-                        contextNode.renderNode._backupSize[0] = Math.max(contextNode.renderNode._backupSize[0], size[0]);
+                        renderNode._backupSize[0] = Math.max(renderNode._backupSize[0], size[0]);
                     }
                     else {
-                        contextNode.renderNode._backupSize[0] = size[0];
+                        renderNode._backupSize[0] = size[0];
                     }
                     if (configSize[1] === true) {
-                        contextNode.renderNode._backupSize[1] = Math.max(contextNode.renderNode._backupSize[1], size[1]);
+                        renderNode._backupSize[1] = Math.max(renderNode._backupSize[1], size[1]);
                     }
                     else {
-                        contextNode.renderNode._backupSize[1] = size[1];
+                        renderNode._backupSize[1] = size[1];
                     }
-                    size = contextNode.renderNode._backupSize;
-                    contextNode.renderNode._backupSize = undefined;
+                    size = renderNode._backupSize;
+                    renderNode._backupSize = undefined;
                 }
                 this._trueSizeRequested = true;
                 contextNode.trueSizeRequested = true;
                 //console.log('true size requested on node: ' + JSON.stringify(size));
             }
             if (this._reevalTrueSize) {
-                contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
+                renderNode._trueSizeCheck = true; // force request of true-size from DOM
             }
             //this._trueSizeRequested = true;
-        }
 
-        // Backup the size of the node
-        if (!contextNode.renderNode._backupSize) {
-            contextNode.renderNode._backupSize = [0, 0];
+            // Backup the size of the node
+            if (!contextNode.renderNode._backupSize) {
+                renderNode._backupSize = [0, 0];
+            }
+            renderNode._backupSize[0] = size[0];
+            renderNode._backupSize[1] = size[1];
         }
-        contextNode.renderNode._backupSize[0] = size[0];
-        contextNode.renderNode._backupSize[1] = size[1];
 
         // Resolve 'undefined' to parent-size and true to 0
         if ((size[0] === undefined) || (size[0] === true) || (size[1] === undefined) || (size[1] === true)) {
-            size = [size[0], size[1]];
+            resolveSize[0] = size[0];
+            resolveSize[1] = size[1];
+            size = resolveSize;
             if (size[0] === undefined) {
                 size[0] = parentSize[0];
             } else if (size[0] === true) {

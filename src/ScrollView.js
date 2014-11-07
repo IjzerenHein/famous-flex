@@ -109,12 +109,14 @@ define(function(require, exports, module) {
             particle: new Particle(this.options.scrollParticle),
             // drag-force that slows the particle down after a "flick"
             dragForce: new Drag(this.options.scrollDrag),
+            frictionForce: new Drag(this.options.scrollFriction),
             // spring
             springValue: undefined,
             springForce: new Spring(this.options.scrollSpring),
             springEndState: new Vector([0, 0, 0]),
             // group
             groupStart: 0,
+            groupTranslate: [0, 0, 0],
             // delta
             scrollDelta: 0,
             normalizedScrollDelta: 0,
@@ -135,6 +137,7 @@ define(function(require, exports, module) {
         // Configure physics engine with particle and drag
         this._scroll.pe.addBody(this._scroll.particle);
         this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+        this._scroll.frictionForceId = this._scroll.pe.attach(this._scroll.frictionForce, this._scroll.particle);
         this._scroll.springForce.setOptions({ anchor: this._scroll.springEndState });
 
         // Setup input event handler
@@ -192,7 +195,12 @@ define(function(require, exports, module) {
             // use defaults
         },
         scrollDrag: {
+            forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
             strength: 0.002
+        },
+        scrollFriction: {
+            forceFunction: Drag.FORCE_FUNCTIONS.LINEAR,
+            strength: 0.0005
         },
         scrollSpring: {
             dampingRatio: 1.0,
@@ -207,7 +215,8 @@ define(function(require, exports, module) {
         touchMoveDirectionThresshold: undefined, // 0..1
         mouseMove: false,
         scrollCallback: undefined, //function(offset, force)
-        debug: false
+        debug: false,
+        stressTest: 0
     };
 
     var oldSetOptions = ScrollView.prototype.setOptions;
@@ -279,7 +288,7 @@ define(function(require, exports, module) {
             return;
         }
         var message = this._debug.commitCount + ': ';
-        for (var i = 0; i < arguments.length; i++) {
+        for (var i = 0, j = arguments.length; i < j; i++) {
             var arg = arguments[i];
             if ((arg instanceof Object) || (arg instanceof Array)) {
                 message += JSON.stringify(arg);
@@ -587,7 +596,12 @@ define(function(require, exports, module) {
      * move infinitely.
      */
     function _roundScrollOffset(scrollOffset) {
-        return Math.round(scrollOffset / this.options.offsetRounding) * this.options.offsetRounding;
+        if (this.options.offsetRounding) {
+            return Math.round(scrollOffset / this.options.offsetRounding) * this.options.offsetRounding;
+        }
+        else {
+            return scrollOffset;
+        }
     }
 
     /**
@@ -660,23 +674,24 @@ define(function(require, exports, module) {
         }
 
         //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
-        //return _roundScrollOffset.call(this, scrollOffset);
-        return scrollOffset;
+        return _roundScrollOffset.call(this, scrollOffset);
     }
 
     /**
      * Helper function that calculates the next/prev layed out height.
      */
+    var _calcedHeight;
+    function _calcHeightFunc(node) {
+        if ((node.scrollLength === undefined) || node.trueSizeRequested) {
+            _calcedHeight = undefined; // can't determine height
+            return true;
+        }
+        _calcedHeight += node.scrollLength;
+    }
     function _calcHeight(next) {
-        var height = 0;
-        this._nodes.forEach(function(node) {
-            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-                height = undefined; // can't determine height
-                return true;
-            }
-            height += node.scrollLength;
-        }, next);
-        return height;
+        _calcedHeight = 0;
+        this._nodes.forEach(_calcHeightFunc, next);
+        return _calcedHeight;
     }
 
     /**
@@ -929,9 +944,9 @@ define(function(require, exports, module) {
                 }
             }
         }.bind(this), false);
-        if (normalizedCount) {
+        /*if (normalizedCount) {
             //_log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
-        }
+        }*/
         return normalizedScrollOffset;
     }
     function _normalizeNextViewSequence(size, scrollOffset) {
@@ -960,9 +975,9 @@ define(function(require, exports, module) {
                 count++;
             }
         }.bind(this), true);
-        if (normalizedCount) {
+        /*if (normalizedCount) {
             //_log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
-        }
+        }*/
         return normalizedScrollOffset;
     }
     function _normalizeViewSequence(size, scrollOffset) {
@@ -1006,7 +1021,7 @@ define(function(require, exports, module) {
             //var particleValue = this._scroll.particle.getPosition1D();
             var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
+            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1015,7 +1030,7 @@ define(function(require, exports, module) {
 
             // Adjust group offset
             if (this._layout.capabilities.sequentialScrollingOptimized) {
-                this._scroll.groupStart -= delta;
+                //this._scroll.groupStart -= delta;
             }
         }
         return normalizedScrollOffset;
@@ -1087,7 +1102,7 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.getFirstVisibleItem = function() {
         var items = this.getVisibleItems();
-        for (var i = 0; i < items.length; i++) {
+        for (var i = 0, j = items.length; i < j; i++) {
             var item = items[i];
             if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
                 (item.scrollOffset >= 0)) {
@@ -1165,6 +1180,17 @@ define(function(require, exports, module) {
         }
         _scrollToSequence.call(this, viewSequence, amount >= 0);
     }
+
+    /**
+     * Sets the data-source. This function is a shim provided for compatibility with the
+     * stock famo.us ScrollView.
+     *
+     * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
+     * @return {ScrollView} this
+     */
+    ScrollView.prototype.sequenceFrom = function(node) {
+        return this.setDataSource(node);
+    };
 
     /**
      * Scroll to the first page, making it visible.
@@ -1499,17 +1525,8 @@ define(function(require, exports, module) {
         // than before, then re-layout entirely using the new offset.
         var newScrollOffset = _calcScrollOffset.call(this, true);
         if (!nested && (newScrollOffset !== scrollOffset)) {
-            _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
+            //_log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
             return _layout.call(this, size, newScrollOffset, true);
-        }
-
-        // Calculate the spec-output
-        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-        this._specs = result.specs;
-        if (result.modified || true) {
-            this._eventOutput.emit('reflow', {
-                target: this
-            });
         }
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
@@ -1545,75 +1562,11 @@ define(function(require, exports, module) {
      * Inner render function of the Group
      */
     function _innerRender() {
-        var specs;
-        var i;
 
-        // When sequential scrolling is optimized, translate the spec back
-        // to a sequential position so that the matrix is unchanged and
-        // famo.s doesn't have to update the matrix in the DOM.
-        if (this._layout.capabilities.sequentialScrollingOptimized) {
-
-            // Re-use previous spec array if size is the same
-            if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
-                specs = [];
-                /*if (this._cachedSpecs) {
-                    //console.log('specs length: ' + this._specs.length + ', old:' + this._cachedSpecs.length);
-                    //_log.call(this, 'specs length: ', this._specs.length, ', old:', this._cachedSpecs.length);
-                }*/
-                this._cachedSpecs = specs;
-            }
-
-            // Render the specs (and re-use old spec if possible)
-            var spec;
-            for (i = 0; i < this._specs.length; i++) {
-                spec = this._specs[i];
-
-                // Create or re-use spec
-                var newSpec;
-                if (specs) {
-                    newSpec = {};
-                    specs.push(newSpec);
-                }
-                else {
-                    newSpec = this._cachedSpecs[i];
-                }
-
-                // Update spec
-                newSpec.origin = spec.origin;
-                newSpec.align = spec.align;
-                newSpec.opacity = spec.opacity;
-                newSpec.size = spec.size;
-                newSpec.transform = spec.transform;
-                newSpec.target = spec.renderNode.render();
-            }
-            specs = this._cachedSpecs;
-
-            // Translate all specs back, and instead use the scroll-offset
-            // from the `Group`.
-            var translate = [0, 0, 0];
-            var scrollOffset = this._scrollOffsetCache;
-            var newScrollOffset = _calcScrollOffset.call(this);
-            /*if (scrollOffset !== newScrollOffset) {
-                //console.log('scrollOffset: ' + scrollOffset + ', new: ' + newScrollOffset + ', diff: ' + (newScrollOffset - scrollOffset));
-                _log.call(this, 'scrollOffset: ', scrollOffset, ', new: ', newScrollOffset, ', diff: ', (newScrollOffset - scrollOffset));
-                // Lag correction, when the offset has change in the meantime,
-                // then adjust the offset at the last possible time before rendering.
-                //this._scroll.groupStart -= (newScrollOffset - scrollOffset);
-            }*/
-            scrollOffset = newScrollOffset;
-            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
-            for (i = 0; i < specs.length; i++) {
-                spec = specs[i];
-                spec.transform = Transform.thenMove(spec.transform, translate);
-            }
-        }
-        else {
-
-            // Call render on all nodes
-            specs = this._specs;
-            for (i = 0; i < specs.length; i++) {
-                specs[i].target = specs[i].renderNode.render();
-            }
+        // Call render on all nodes
+        var specs = this._specs;
+        for (var i3 = 0, j3 = specs.length; i3 < j3; i3++) {
+            specs[i3].target = specs[i3].renderNode.render();
         }
 
         // log time betwen start of commit to end of innerRender
@@ -1643,12 +1596,6 @@ define(function(require, exports, module) {
         // Update debug info
         this._debug.commitCount++;
 
-        /*var usedHeap = window.performance.memory.usedJSHeapSize;
-        if (usedHeap !== this._debug.usedHeap) {
-            console.log('used heap changed: ' + usedHeap);
-            this._debug.usedHeap = usedHeap;
-        }*/
-
         // Log particle/time diff
         //this._now = Date.now();
 
@@ -1661,6 +1608,7 @@ define(function(require, exports, module) {
             this._isDirty ||
             this._scroll.scrollDirty ||
             this._nodes._trueSizeRequested ||
+            this.options.stressTest ||
             this._scrollOffsetCache !== scrollOffset) {
 
             // Emit start event
@@ -1696,22 +1644,28 @@ define(function(require, exports, module) {
             this._scroll.scrollDirty = false;
 
             // Perform layout
-            scrollOffset = _layout.call(this, size, scrollOffset);
+            var count = this.options.stressTest || 1;
+            for (var i = 0; i < count; i++) {
+                scrollOffset = _layout.call(this, size, scrollOffset);
+            }
             this._scrollOffsetCache = scrollOffset;
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);
         }
-        else {
 
-            // Update output and optionally emit event
-            var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-            this._specs = result.specs;
-            if (result.modified) {
-                this._eventOutput.emit('reflow', {
-                    target: this
-                });
-            }
+        // Update output and optionally emit event
+        var groupTranslate = this._scroll.groupTranslate;
+        groupTranslate[0] = 0;
+        groupTranslate[1] = 0;
+        groupTranslate[2] = 0;
+        groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
+        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._layout.capabilities.sequentialScrollingOptimized ? groupTranslate : undefined);
+        this._specs = result.specs;
+        if (result.modified) {
+            this._eventOutput.emit('reflow', {
+                target: this
+            });
         }
 
         // When renderables are layed out sequentiall (e.g. a ListLayout or
