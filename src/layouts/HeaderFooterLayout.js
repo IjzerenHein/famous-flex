@@ -15,8 +15,8 @@
  *
  * |options|type|description|
  * |---|---|---|
- * |`[headerHeight]`|Number|Height of the header|
- * |`[footerHeight]`|Number|Height of the footer|
+ * |`[headerSize]`|Number|Height of the header|
+ * |`[footerSize]`|Number|Height of the footer|
  *
  * Example:
  *
@@ -26,8 +26,8 @@
  * new LayoutController({
  *   layout: HeaderFooterLayout,
  *   layoutOptions: {
- *     headerHeight: 60,    // header has height of 60 pixels
- *     footerHeight: 20     // footer has height of 20 pixels
+ *     headerSize: 60,    // header has height of 60 pixels
+ *     footerSize: 20     // footer has height of 20 pixels
  *   },
  *   dataSource: {
  *	   header: new Surface({content: 'This is the header surface'}),
@@ -46,8 +46,8 @@ define(function(require, exports, module) {
     // Layout function
     module.exports = function HeaderFooterLayout(context, options) {
         var dock = new LayoutDockHelper(context);
-        dock.top('header', options.headerHeight);
-        dock.bottom('footer', options.footerHeight);
+        dock.top('header', options.headerSize || options.headerHeight);
+        dock.bottom('footer', options.footerSize || options.footerHeight);
         dock.fill('content');
     };
 });
