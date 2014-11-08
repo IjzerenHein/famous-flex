@@ -50,6 +50,12 @@ define(function(require, exports, module) {
         sequentialScrollingOptimized: true
     };
 
+    // Cached data
+    var set = {
+        size: [0, 0],
+        translate: [0, 0, 0]
+    };
+
     // Layout function
     function ListLayout(context, options) {
 
@@ -60,7 +66,6 @@ define(function(require, exports, module) {
         var node;
         var nodeSize;
         var itemSize;
-        var set;
 
         // Determine item-size or use true=size
         if ((options.itemSize === true) || !options.hasOwnProperty('itemSize')) {
@@ -70,6 +75,13 @@ define(function(require, exports, module) {
             itemSize = (options.itemSize === undefined) ? size[direction] : options.itemSize;
         }
 
+        // prepare set
+        set.size[0] = size[0];
+        set.size[1] = size[1];
+        set.translate[0] = 0;
+        set.translate[1] = 0;
+        set.translate[2] = 0;
+
         // Process all next nodes
         while (offset < context.scrollEnd) {
             node = context.next();
@@ -77,15 +89,10 @@ define(function(require, exports, module) {
                 break;
             }
             nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
-            set = {
-                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset, 0] : [offset, 0, 0],
-                scrollLength: nodeSize
-            };
+            set.size[direction] = nodeSize;
+            set.translate[direction] = offset;
+            set.scrollLength = nodeSize;
             context.set(node, set);
-            if (options.callback) {
-                options.callback(context.getRenderNode(node), set, true);
-            }
             offset += nodeSize;
         }
 
@@ -98,15 +105,10 @@ define(function(require, exports, module) {
             }
             nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
             offset -= nodeSize;
-            set = {
-                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset, 0] : [offset, 0, 0],
-                scrollLength: nodeSize
-            };
+            set.size[direction] = nodeSize;
+            set.translate[direction] = offset;
+            set.scrollLength = nodeSize;
             context.set(node, set);
-            if (options.callback) {
-                options.callback(context.getRenderNode(node), set, false);
-            }
         }
     }
 
