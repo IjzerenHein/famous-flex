@@ -12,7 +12,7 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * Flexible ScrollView for famo.us.
+ * Flexible ScrollView drop-in replacement for famo.us.
  *
  * Key features:
  * -    Customizable layout

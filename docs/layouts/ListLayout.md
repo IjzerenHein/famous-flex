@@ -11,7 +11,7 @@ Example:
 ```javascript
 var ListLayout = require('famous-flex/layouts/ListLayout');
 
-new LayoutController({
+var scrollController = new ScrollController({
   layout: ListLayout,
   layoutOptions: {
     itemSize: 40,         // item has height of 40 pixels

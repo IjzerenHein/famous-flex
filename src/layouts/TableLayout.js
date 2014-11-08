@@ -23,9 +23,10 @@
  * Example:
  *
  * ```javascript
- * var TableLayout = require('famous-flex-tablelayout/TableLayout');
+ * var ScrollController = require('famous-flex/ScrollController');
+ * var TableLayout = require('famous-flex/layouts/TableLayout');
  *
- * new LayoutController({
+ * var tableView = new ScrollController({
  *   layout: TableLayout,
  *   layoutOptions: {
  *     isSectionCallback: _isSection,
@@ -39,7 +40,8 @@
  *     _createSection(),
  *     _createCell(),
  *   ]
- * })
+ * });
+ * this.add(tableView);
  *
  * function _createCell() {
  *   return new Surface({

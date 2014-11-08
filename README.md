@@ -227,7 +227,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
-## Scrolling layouts
+## Scrollable layouts
 
 [ScrollController](docs/ScrollController.md) extends `LayoutController` and adds 
 vertical and horizontal scrolling support.
@@ -278,7 +278,7 @@ scrollController.setDataSource(renderables);
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController.|
-|[ScrollView](docs/ScrollView.md)|Flexible ScrollView for famo.us.|
+|[ScrollView](docs/ScrollView.md)|Flexible ScrollView drop-in replacement for famo.us.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 

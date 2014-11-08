@@ -1,6 +1,6 @@
 <a name="module_ScrollView"></a>
 #ScrollView
-Flexible ScrollView for famo.us.
+Flexible ScrollView drop-in replacement for famo.us.
 
 Key features:
 -    Customizable layout
