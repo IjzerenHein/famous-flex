@@ -71,6 +71,7 @@ define(function(require, exports, module) {
         var lineLength;
         var lineNodes = [];
         var hasNext = false;
+        var firstPrev = true;
 
         // Prepare item-size
         if (!options.itemSize) {
@@ -114,16 +115,17 @@ define(function(require, exports, module) {
             // Layout nodes from left to right or top to bottom
             var justifyOffset = justify[lineDirection] ? ((size[lineDirection] - lineSize[lineDirection]) / (lineNodes.length * 2)) : 0;
             var lineOffset = gutter[lineDirection] + justifyOffset;
+            var gutterOffset = (((endReached && next) || (!next && firstPrev && !hasNext))) ? gutter[direction] : 0;
             for (i = 0; i < lineNodes.length; i++) {
                 lineNode = lineNodes[i];
                 var translate = [0, 0, 0];
                 translate[lineDirection] = lineOffset;
-                translate[direction] = next ? (offset + gutter[direction]) : (offset - lineSize[direction]);
+                translate[direction] = next ? (offset + gutter[direction]) : (offset - (lineSize[direction] + gutterOffset));
                 lineNode.set = {
                     size: lineNode.size,
                     translate: translate,
                     // first renderable has scrollLength, others have 0 scrollLength
-                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached && (next || (!next && !hasNext)) ? gutter[direction] : 0)) : 0
+                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + gutterOffset) : 0
                 };
                 lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
             }
@@ -136,8 +138,11 @@ define(function(require, exports, module) {
 
             // Prepare for next line
             lineNodes = [];
-            hasNext = hasNext || next;
-            return lineSize[direction] + gutter[direction];
+            hasNext = next;
+            if (!next) {
+                firstPrev = false;
+            }
+            return lineSize[direction] + gutter[direction] + gutterOffset;
         }
 
         /**
