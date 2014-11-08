@@ -44,6 +44,7 @@ var layoutController = new LayoutController({
   * [layoutDockHelper.bottom([node], [height], [z])](#module_LayoutDockHelper#bottom)
   * [layoutDockHelper.right([node], [width], [z])](#module_LayoutDockHelper#right)
   * [layoutDockHelper.fill(node, [z])](#module_LayoutDockHelper#fill)
+  * [layoutDockHelper.margins(margins)](#module_LayoutDockHelper#margins)
 
 <a name="exp_new_module_LayoutDockHelper"></a>
 ###new LayoutDockHelper(context, [options])
@@ -64,8 +65,9 @@ The object should be an array with the following syntax:
 
 ```JSON
 [
-  ['top': 'header', 50],
-  ['bottom': 'footer', 50, 10], // z-index: 10
+  ['top', 'header', 50],
+  ['bottom', 'footer', 50, 10], // z-index: 10
+  ['margins', [10, 5]], // marginate remaining space: 10px top/bottom, 5px left/right
   ['fill', 'content']
 ]
 ```
@@ -126,5 +128,14 @@ Fills the node to the remaining content.
 
 - node `LayoutNode` | `String` - layout-node to dock  
 - \[z\] `Number` - z-index to use for the node  
+
+**Returns**: `LayoutDockHelper` - this  
+<a name="module_LayoutDockHelper#margins"></a>
+###layoutDockHelper.margins(margins)
+Applies indent margins to the remaining content.
+
+**Params**
+
+- margins `Number` | `Array` - margins shorthand (e.g. '5', [10, 10], [5, 10, 5, 10])  
 
 **Returns**: `LayoutDockHelper` - this  

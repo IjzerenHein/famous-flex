@@ -4,8 +4,8 @@ Three part layout consisting of a top-header, bottom-footer and middle part.
 
 |options|type|description|
 |---|---|---|
-|`[headerHeight]`|Number|Height of the header|
-|`[footerHeight]`|Number|Height of the footer|
+|`[headerSize]`|Number|Height of the header|
+|`[footerSize]`|Number|Height of the footer|
 
 Example:
 
@@ -15,8 +15,8 @@ var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
 new LayoutController({
   layout: HeaderFooterLayout,
   layoutOptions: {
-    headerHeight: 60,    // header has height of 60 pixels
-    footerHeight: 20     // footer has height of 20 pixels
+    headerSize: 60,    // header has height of 60 pixels
+    footerSize: 20     // footer has height of 20 pixels
   },
   dataSource: {
 	   header: new Surface({content: 'This is the header surface'}),

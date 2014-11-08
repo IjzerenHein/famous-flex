@@ -9,7 +9,6 @@ Utility class for famous-flex.
 * [class: LayoutUtility ⏏](#exp_module_LayoutUtility)
   * [LayoutUtility.normalizeMargins(margins)](#module_LayoutUtility.normalizeMargins)
   * [LayoutUtility.cloneSpec(spec)](#module_LayoutUtility.cloneSpec)
-  * [LayoutUtility.clearSpec(spec)](#module_LayoutUtility.clearSpec)
   * [LayoutUtility.isEqualSpec(spec1, spec2)](#module_LayoutUtility.isEqualSpec)
   * [LayoutUtility.getSpecDiffText(spec1, spec2)](#module_LayoutUtility.getSpecDiffText)
   * [LayoutUtility.error(message)](#module_LayoutUtility.error)
@@ -36,15 +35,6 @@ Makes a (shallow) copy of a spec.
 - spec `Spec` - Spec to clone  
 
 **Returns**: `Spec` - cloned spec  
-<a name="module_LayoutUtility.clearSpec"></a>
-###LayoutUtility.clearSpec(spec)
-Clears the contents of a spec.
-
-**Params**
-
-- spec `Spec` - Spec to clear  
-
-**Returns**: `Spec` - spec  
 <a name="module_LayoutUtility.isEqualSpec"></a>
 ###LayoutUtility.isEqualSpec(spec1, spec2)
 Compares two specs for equality.

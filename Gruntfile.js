@@ -24,13 +24,14 @@ module.exports = function(grunt) {
             // core
             { src: 'src/LayoutContext.js', dest: 'docs/LayoutContext.md' },
             { src: 'src/LayoutController.js', dest: 'docs/LayoutController.md' },
-            { src: 'src/FlowLayoutController.js', dest: 'docs/FlowLayoutController.md' },
+            { src: 'src/ScrollController.js', dest: 'docs/ScrollController.md' },
             { src: 'src/ScrollView.js', dest: 'docs/ScrollView.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             // helpers
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' },
             // layouts
             { src: 'src/layouts/CollectionLayout.js', dest: 'docs/layouts/CollectionLayout.md' },
+            { src: 'src/layouts/TableLayout.js', dest: 'docs/layouts/TableLayout.md' },
             { src: 'src/layouts/GridLayout.js', dest: 'docs/layouts/GridLayout.md' },
             { src: 'src/layouts/ListLayout.js', dest: 'docs/layouts/ListLayout.md' },
             { src: 'src/layouts/HeaderFooterLayout.js', dest: 'docs/layouts/HeaderFooterLayout.md' },

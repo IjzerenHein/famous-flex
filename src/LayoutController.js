@@ -32,6 +32,7 @@ define(function(require, exports, module) {
     var LayoutUtility = require('./LayoutUtility');
     var LayoutNodeManager = require('./LayoutNodeManager');
     var LayoutNode = require('./LayoutNode');
+    var FlowLayoutNode = require('./FlowLayoutNode');
     var Transform = require('famous/core/Transform');
     require('./helpers/LayoutDockHelper');
 
@@ -74,12 +75,21 @@ define(function(require, exports, module) {
             this._isDirty = true;
         }.bind(this));
 
-        // Create node manager that manages result LayoutNode instances
-        this._nodes = nodeManager || new LayoutNodeManager(LayoutNode);
-
         // Create options
-        this.options = Object.create({});
+        this.options = Object.create(LayoutController.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
+
+        // Create node manager that manages (Flow)LayoutNode instances
+        if (nodeManager) {
+            this._nodes = nodeManager;
+        } else if (options && options.flow) {
+            this._nodes = new LayoutNodeManager(FlowLayoutNode, _initFlowLayoutNode.bind(this));
+        }
+        else {
+            this._nodes = new LayoutNodeManager(LayoutNode);
+        }
+
+        // Set options
         this.setDirection(undefined);
         if (options) {
             this.setOptions(options);
@@ -87,6 +97,40 @@ define(function(require, exports, module) {
         this._optionsManager.on('change', function() {
             this._isDirty = true;
         }.bind(this));
+    }
+
+    LayoutController.DEFAULT_OPTIONS = {
+        nodeSpring: {
+            dampingRatio: 0.8,
+            period: 300
+        }
+        /*insertSpec: {
+            opacity: undefined,
+            size: undefined,
+            transform: undefined,
+            origin: undefined,
+            align: undefined
+        },
+        removeSpec: {
+            opacity: undefined,
+            size: undefined,
+            transform: undefined,
+            origin: undefined,
+            align: undefined
+        }*/
+    };
+
+    /**
+     * Called whenever a layout-node is created/re-used. Initializes
+     * the node with the `insertSpec` if it has been defined.
+     */
+    function _initFlowLayoutNode(node, spec) {
+        node.setOptions({
+            spring: this.options.nodeSpring
+        });
+        if (!spec && this.options.insertSpec) {
+            node.setSpec(this.options.insertSpec);
+        }
     }
 
     /**
@@ -109,6 +153,11 @@ define(function(require, exports, module) {
         }
         if (options.direction !== undefined) {
             this.setDirection(options.direction);
+        }
+        if (options.nodeSpring && this.options.flow) {
+            this._nodes.forEach(function(node) {
+                node.setOptions({spring: options.nodeSpring});
+            });
         }
         return this;
     };
@@ -530,6 +579,17 @@ define(function(require, exports, module) {
 
             // Emit end event
             this._eventOutput.emit('layoutend', eventData);
+        }
+        else if (this.options.flow) {
+
+            // Update output and optionally emit event
+            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._commitOutput.target = result.specs;
+            if (result.modified) {
+                this._eventOutput.emit('reflow', {
+                    target: this
+                });
+            }
         }
 
         // Render child-nodes every commit

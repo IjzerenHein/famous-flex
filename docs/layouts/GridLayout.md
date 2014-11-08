@@ -17,7 +17,7 @@ new LayoutController({
   layout: GridLayout,
   layoutOptions: {
     cells: [10, 5],    // 10 columns, 5 rows
-    gutter: [20, 20],  // gutter of 20 pixels in between cells
+    gutter: [20, 20]   // gutter of 20 pixels in between cells
   },
   dataSource: [
     new Surface({content: 'item 1'}),
