@@ -70,6 +70,7 @@ define(function(require, exports, module) {
         var getItemSize;
         var lineLength;
         var lineNodes = [];
+        var hasNext = false;
 
         // Prepare item-size
         if (!options.itemSize) {
@@ -122,7 +123,7 @@ define(function(require, exports, module) {
                     size: lineNode.size,
                     translate: translate,
                     // first renderable has scrollLength, others have 0 scrollLength
-                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached ? gutter[direction] : 0)) : 0
+                    scrollLength: (i === 0) ? (lineSize[direction] + gutter[direction] + (endReached && (next || (!next && !hasNext)) ? gutter[direction] : 0)) : 0
                 };
                 lineOffset += lineNode.size[lineDirection] + gutter[lineDirection] + (justifyOffset * 2);
             }
@@ -135,6 +136,7 @@ define(function(require, exports, module) {
 
             // Prepare for next line
             lineNodes = [];
+            hasNext = hasNext || next;
             return lineSize[direction] + gutter[direction];
         }
 
