@@ -131,7 +131,7 @@ define(function(require, exports, module) {
     function _resolveNodeSize(node) {
         var localItemSize = itemSize;
         if (getItemSize) {
-            localItemSize = getItemSize(context.getRenderNode(node), size);
+            localItemSize = getItemSize(node.renderNode, size);
         }
         if ((localItemSize[0] === true) || (localItemSize[1] === true)) {
             var result = context.resolveSize(node, size);

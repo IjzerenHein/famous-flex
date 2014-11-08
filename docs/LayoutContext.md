@@ -3,6 +3,10 @@
 LayoutContext is the interface for a layout-function to access
 renderables in the data-source and set their size, position, tranformation, etc...
 
+The `next`, `prev` and `get` functions return an opaque object which represents
+the renderable that is to be layed out. To access the actual renderable, use the
+`.renderNode` property of this opaque object.
+
 <a name="exp_module_LayoutContext"></a>
 ##class: LayoutContext ⏏
 **Members**
@@ -18,7 +22,6 @@ renderables in the data-source and set their size, position, tranformation, etc.
   * [layoutContext.get(node)](#module_LayoutContext#get)
   * [layoutContext.set(node, set)](#module_LayoutContext#set)
   * [layoutContext.resolveSize(node)](#module_LayoutContext#resolveSize)
-  * [layoutContext.getRenderNode(node)](#module_LayoutContext#getRenderNode)
 
 <a name="module_LayoutContext#size"></a>
 ###layoutContext.size
@@ -172,7 +175,6 @@ var layoutController = new LayoutController({
 <a name="module_LayoutContext#set"></a>
 ###layoutContext.set(node, set)
 Set the size, origin, align, translation, scale, rotate, skew & opacity for a context-node.
-This function should only be called only **once** for a node.
 
 **Overview of all supported properties:**
 
@@ -233,12 +235,3 @@ are layed out as expected.
 - node `Object` | `String` - context-node, node-id or array-element  
 
 **Returns**: `Size` - size of the node  
-<a name="module_LayoutContext#getRenderNode"></a>
-###layoutContext.getRenderNode(node)
-Get the underlying render-node that should be layed out.
-
-**Params**
-
-- node `Object` | `String` - context-node or node-id  
-
-**Returns**: `Renderable` - Renderable or `undefined` if not found  

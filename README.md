@@ -1,7 +1,7 @@
 famous-flex
 ==========
 
-Flexible and animated ScrollView and layout-controllers for famo.us.
+Flexible and scrollable layout-controller for famo.us.
 
 ![Screenshot](screenshot.gif)
 
@@ -9,8 +9,7 @@ Above anything, famous-flex is a concept in which renderables are seperated from
 they are layed-out. This makes it possible to change layouts on the fly and animate
 the renderables from one layout to another. For instance, you can layout a collection
 of renderables using a `GridLayout`, and change that into a `ListLayout`. When using
-`FlowLayoutController` the renderables will smoothly transition from the old state
-to the new state using physics, particles and springs.
+`flow`-mode the renderables will smoothly transition from the old state to the new state using physics, particles and springs.
 
 ### Demos
 
@@ -23,20 +22,17 @@ to the new state using physics, particles and springs.
 - [Installation](#installation)
 
 ### Core concepts
-- [Layout controllers](#layout-controllers)
+- [LayoutController](#layoutcontroller)
 - [Layout function](#layout-function)
 - [Datasource](#datasource)
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
-
-### Layout controller 	Views
-- [LayoutController](#layoutcontroller)
-- [FlowLayoutController](#flowlayoutcontroller)
-- [ScrollView](#scrollview)
+- [Scrollable layouts](#scrollable-layouts)
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
 - [ListLayout](docs/layouts/ListLayout.md)
+- [TableLayout](docs/layouts/TableLayout.md)
 - [CollectionLayout](docs/layouts/CollectionLayout.md)
 - [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
 - [NavBarLayout](docs/layouts/NavBarLayout.md)
@@ -55,17 +51,12 @@ Install using bower or npm:
 	npm install famous-flex
 
 
-## Layout controllers
+## LayoutController
 
-A layout-controller lays out renderables based on:
+[LayoutController](docs/LayoutController.md) lays out renderables based on:
 - a layout-function
 - a data-source containing renderables
 - optional layout-options
-
-Layout-controllers come in three flavours:
-- [LayoutController](#layoutcontroller) (basic lightweight layout-controller)
-- [FlowLayoutController](#flowlayoutcontroller) (animates renderables between layout states)
-- [ScrollView](#scrollview) (scrollable layouts)
 
 Example of laying out renderables using a CollectionLayout:
 
@@ -81,6 +72,8 @@ var layoutController = new LayoutController({
 		gutter: [20, 20],
 		justify: true
 	},
+	flow: true,    // smoothly animates renderables when changing the layout
+	direction: 1,  // 0 = X, 1 = Y, undefined = use default from selected layout-function
 	dataSource: [
 		new Surface({content: 'surface1'}),
 		new Surface({content: 'surface2'}),
@@ -89,6 +82,9 @@ var layoutController = new LayoutController({
 });
 this.add(layoutController); // add layout-controller to the render-tree
 ```
+
+When the `flow` option is enabled, renderables are animated smoothly between
+layout states.
 
 
 ## Layout function
@@ -231,94 +227,37 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
-## LayoutController
+## Scrolling layouts
 
-`LayoutController` is the most lightweight layout-controller and simply lays out the
-renderables in the datasource according to the layout-function. The state (position,
-size, etc..) is updated immediately without any transitions. You should use
-`LayoutController` when you don't need any animations an when you want the layout
-to respond immediately to resizes.
-
-Documentation: [LayoutController](docs/LayoutController.md)
-
-## FlowLayoutController
-
-`FlowLayoutController` extends `LayoutController` and smoothly animates renderables
-between different layouts. It doesn't matter whether you change a single layout-option 
-or change the whole layout from a CollectionLayout to a ListLayout, 
-`FlowLayoutController` simply calculates the new end-state and transitions the renderables
-from the previous state to the new state.
+[ScrollController](docs/ScrollController.md) extends `LayoutController` and adds 
+vertical and horizontal scrolling support.
+[ScrollView](docs/ScrollView.md) extends `ScrollController` and can be used as
+a drop-in replacement for the stock famo.us Scrollview.
 
 ```javascript
-var flowLC = require('famous-flex/FlowLayoutController');
+var ScrollController = require('famous-flex/ScrollController');
 var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
 
-// create collection-layout
-var flowLC = new FlowLayoutController({
+// create scrollable grid
+var scrollController = new ScrollController({
 	layout: CollectionLayout,
 	layoutOptions: {
 		itemSize: [100, 100],
 		gutter: [20, 20],
 		justify: true
 	},
-	dataSource: [
-		new Surface({content: 'surface1'}),
-		new Surface({content: 'surface2'}),
-		new Surface({content: 'surface3'})
-	]
+	direction: 0,
+	mouseMove: true // allow hold and move using the mouse
 });
-this.add(flowLC); // add layout-controller to the render-tree
+this.add(scrollController);
 
-// Change the item-size on the existing collection-layout
-flowLC.setLayoutOptions({
-	itemSize: [200, 200]
-});
-
-// Or just completely change the layout function and direction
-flowLC.setLayout(ListLayout, itemSize: [300]);
-flowLC.setDirection(Utility.Direction.X);
-
-// Change the order of the renderables in the array datasource
-var dataSource = flowLC.getDataSource();
-var swap = dataSource[0];
-dataSource[0] = dataSource[1];
-dataSource[1] = swap;
-flowLC.setDataSource(dataSource);
+// add renderables
+var renderables = [];
+for (var i = 0; i < 50; i++) {
+	renderables.push(new Surface({content: 'my surface'}));
+}
+scrollController.setDataSource(renderables);
 ```
-
-Documentation: [FlowLayoutController](docs/FlowLayoutController.md)
-
-
-## ScrollView
-
-`ScrollView` extends `FlowLayoutController` and adds the ability to scroll layouts
-in either horizontal or vertical direction.
-
-```javascript
-var scrollView = require('famous-flex/ScrollView');
-var ListLayout = require('famous-flex/layouts/ListLayout');
-var Utility = require('famous/utilities/Utility');
-
-// create scroll-view
-var scrollView = new ScrollView({
-	layout: ListLayout,
-	layoutOptions: {
-		itemSize: [undefined, 100],
-	},
-	direction: Utility.Direction.X, 
-	dataSource: [
-		new Surface({content: 'surface1'}),
-		new Surface({content: 'surface2'}),
-		new Surface({content: 'surface3'})
-	]
-});
-this.add(scrollView);
-```
-
-The `ScrollView` is designed to have a similar API to the standard famo.us ScrollView,
-making it easier to upgrade existing ScrollViews and add flexible layouts.
-
-Documentation: [ScrollView](docs/ScrollView.md)
 
 
 ## Standard layouts
@@ -327,6 +266,7 @@ Documentation: [ScrollView](docs/ScrollView.md)
 |---|---|---|---|
 |[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
 |[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a horizontal or vertical list.|
+|[TableLayout](docs/layouts/TableLayout.md)|ViewSequence / Array|Yes|Table-view layout with sticky headers.|
 |[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
@@ -336,9 +276,9 @@ Documentation: [ScrollView](docs/ScrollView.md)
 
 |Class|Description|
 |---|---|
-|[LayoutController](docs/LayoutController.md)|Lays out renderables according to a layout function.|
-|[FlowLayoutController](docs/FlowLayoutController.md)|Lays out renderables and smoothly animates between layout states.|
-|[ScrollView](docs/ScrollView.md)|Customizable ScrollView supporting flexible layouts.|
+|[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
+|[ScrollController](docs/ScrollController.md)|Scrollable LayoutController.|
+|[ScrollView](docs/ScrollView.md)|Flexible ScrollView for famo.us.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 

@@ -15,10 +15,6 @@
  * LayoutController lays out renderables according to a layout-
  * function and a data-source.
  *
- * The LayoutController is the most basic and lightweight version
- * of a controller/view laying out renderables according to a
- * layout-function.
- *
  * @module
  */
 define(function(require, exports, module) {
@@ -43,6 +39,9 @@ define(function(require, exports, module) {
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @alias module:LayoutController
      */
     function LayoutController(options, nodeManager) {
@@ -141,6 +140,8 @@ define(function(require, exports, module) {
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
@@ -377,15 +378,14 @@ define(function(require, exports, module) {
     /**
      * Inserts a renderable into the data-source.
      *
-     * The optional argument `insertSpec` is only used by 'FlowLayoutController' and
-     * `ScrollLayoutController`. When specified, the renderable is inserted using an
-     * animation starting with size, origin, opacity, transform, etc... as specified
-     * in `insertSpec'.
+     * The optional argument `insertSpec` is only used `flow` mode is enabled.
+     * When specified, the renderable is inserted using an animation starting with
+     * size, origin, opacity, transform, etc... as specified in `insertSpec'.
      *
      * @param {Number|String} indexOrId Index (0 = before first, -1 at end), within dataSource array or id (String)
      * @param {Object} renderable Renderable to add to the data-source
      * @param {Spec} [insertSpec] Size, transform, etc.. to start with when inserting
-     * @return {FlowLayoutController} this
+     * @return {LayoutController} this
      */
     LayoutController.prototype.insert = function(indexOrId, renderable, insertSpec) {
 
@@ -452,10 +452,9 @@ define(function(require, exports, module) {
     /**
      * Removes a renderable from the data-source.
      *
-     * The optional argument `removeSpec` is only used by 'FlowLayoutController' and
-     * `ScrollLayoutController`. When specified, the renderable is removed using an
-     * animation ending at the size, origin, opacity, transform, etc... as specified
-     * in `removeSpec'.
+     * The optional argument `removeSpec` is only used `flow` mode is enabled.
+     * When specified, the renderable is removed using an animation ending at
+     * the size, origin, opacity, transform, etc... as specified in `removeSpec'.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
      * @param {Spec} [removeSpec] Size, transform, etc.. to end with when removing

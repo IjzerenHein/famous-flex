@@ -3,10 +3,6 @@
 LayoutController lays out renderables according to a layout-
 function and a data-source.
 
-The LayoutController is the most basic and lightweight version
-of a controller/view laying out renderables according to a
-layout-function.
-
 <a name="exp_module_LayoutController"></a>
 ##class: LayoutController ⏏
 **Members**
@@ -37,6 +33,9 @@ layout-function.
   - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
   - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
+  - \[flow\] `Bool` - Enables flow animations when the layout changes (default: `false`).  
+  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
+  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
 
 <a name="module_LayoutController#setOptions"></a>
 ###layoutController.setOptions(options)
@@ -49,6 +48,8 @@ Patches the LayoutController instance's options with the passed-in ones.
   - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
   - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
+  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
+  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
 
 **Returns**: `LayoutController` - this  
 <a name="module_LayoutController#setDataSource"></a>
@@ -144,10 +145,9 @@ Forces a reflow of the layout the next render cycle.
 ###layoutController.insert(indexOrId, renderable, [insertSpec])
 Inserts a renderable into the data-source.
 
-The optional argument `insertSpec` is only used by 'FlowLayoutController' and
-`ScrollLayoutController`. When specified, the renderable is inserted using an
-animation starting with size, origin, opacity, transform, etc... as specified
-in `insertSpec'.
+The optional argument `insertSpec` is only used `flow` mode is enabled.
+When specified, the renderable is inserted using an animation starting with
+size, origin, opacity, transform, etc... as specified in `insertSpec'.
 
 **Params**
 
@@ -155,15 +155,14 @@ in `insertSpec'.
 - renderable `Object` - Renderable to add to the data-source  
 - \[insertSpec\] `Spec` - Size, transform, etc.. to start with when inserting  
 
-**Returns**: `FlowLayoutController` - this  
+**Returns**: `LayoutController` - this  
 <a name="module_LayoutController#remove"></a>
 ###layoutController.remove(indexOrId, [removeSpec])
 Removes a renderable from the data-source.
 
-The optional argument `removeSpec` is only used by 'FlowLayoutController' and
-`ScrollLayoutController`. When specified, the renderable is removed using an
-animation ending at the size, origin, opacity, transform, etc... as specified
-in `removeSpec'.
+The optional argument `removeSpec` is only used `flow` mode is enabled.
+When specified, the renderable is removed using an animation ending at
+the size, origin, opacity, transform, etc... as specified in `removeSpec'.
 
 **Params**
 

@@ -14,6 +14,10 @@
  * LayoutContext is the interface for a layout-function to access
  * renderables in the data-source and set their size, position, tranformation, etc...
  *
+ * The `next`, `prev` and `get` functions return an opaque object which represents
+ * the renderable that is to be layed out. To access the actual renderable, use the
+ * `.renderNode` property of this opaque object.
+ *
  * @module
  */
 define(function(require, exports, module) {
@@ -193,7 +197,6 @@ define(function(require, exports, module) {
 
     /**
      * Set the size, origin, align, translation, scale, rotate, skew & opacity for a context-node.
-     * This function should only be called only **once** for a node.
      *
      * **Overview of all supported properties:**
      *
@@ -254,16 +257,6 @@ define(function(require, exports, module) {
      * @return {Size} size of the node
      */
     LayoutContext.prototype.resolveSize = function(node) {
-        // dummy implementation, override in constructor
-    };
-
-    /**
-     * Get the underlying render-node that should be layed out.
-     *
-     * @param {Object|String} node context-node or node-id
-     * @return {Renderable} Renderable or `undefined` if not found
-     */
-    LayoutContext.prototype.getRenderNode = function(node) {
         // dummy implementation, override in constructor
     };
 

@@ -48,7 +48,6 @@ define(function(require, exports, module) {
             prev: _contextPrev.bind(this),
             get: _contextGet.bind(this),
             set: _contextSet.bind(this),
-            getRenderNode: _contextGetRenderNode.bind(this),
             resolveSize: _contextResolveSize.bind(this),
             size: [0, 0]
             //,cycle: 0
@@ -562,18 +561,6 @@ define(function(require, exports, module) {
         }
         else {
             return contextNodeOrId;
-        }
-    }
-
-    /**
-     * Get render-node by its id.
-     */
-     function _contextGetRenderNode(contextNodeOrId) {
-        if (this._nodesById && ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string'))) {
-            return this._nodesById[contextNodeOrId];
-        }
-        else {
-            return contextNodeOrId.renderNode;
         }
     }
 

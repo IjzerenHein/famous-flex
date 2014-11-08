@@ -78,7 +78,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `true`).
+     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
@@ -86,11 +86,12 @@ define(function(require, exports, module) {
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
-     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
-     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
+     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
+     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
+     * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
-     * @alias module:ScrollView
+     * @alias module:ScrollController
      */
     function ScrollController(options) {
         var layoutManager = new LayoutNodeManager((options && options.flow) ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
@@ -242,7 +243,8 @@ define(function(require, exports, module) {
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
-     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle (default: `{strength: 0.001}`)
+     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
+     * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollController} this
