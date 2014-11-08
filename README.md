@@ -247,6 +247,7 @@ var scrollController = new ScrollController({
 		justify: true
 	},
 	direction: 0,
+	useContainer: false, // set to true to auto-embed in a ContainerSurface
 	mouseMove: true // allow hold and move using the mouse
 });
 this.add(scrollController);
