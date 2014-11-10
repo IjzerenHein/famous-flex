@@ -121,7 +121,9 @@ define(function(require, exports, module) {
             scrollDelta: 0,
             normalizedScrollDelta: 0,
             scrollForce: 0,
-            scrollForceCount: 0
+            scrollForceCount: 0,
+            // state
+            isScrolling: false
         };
 
         // Diagnostics
@@ -216,10 +218,11 @@ define(function(require, exports, module) {
             scale: 0.2
         },
         paginated: false,
-        //paginationEnergyThresshold: 0.001,
+        paginationEnergyThresshold: 0.005,
         alignment: 0,         // [0: top/left, 1: bottom/right]
         touchMoveDirectionThresshold: undefined, // 0..1
         mouseMove: false,
+        enabled: true, // set to false to disable scrolling
         scrollCallback: undefined, //function(offset, force)
         debug: false,
         stressTest: 0
@@ -365,7 +368,7 @@ define(function(require, exports, module) {
     function _mouseMove(event) {
 
         // Check if any mouse-move is active
-        if (!this._scroll.mouseMove) {
+        if (!this._scroll.mouseMove || !this.options.enabled) {
             return;
         }
 
@@ -480,6 +483,9 @@ define(function(require, exports, module) {
      * Updates the moveOffset so that the scroll-offset on the view is updated.
      */
     function _touchMove(event) {
+        if (!this.options.enabled) {
+            return;
+        }
         //_log.call(this, 'touchMove');
         //this._eventOutput.emit('touchmove', event);
 
@@ -556,7 +562,7 @@ define(function(require, exports, module) {
         }
 
         // Wait for all fingers to be released from the screen before resetting the move-spring
-        if (this._scroll.activeTouches.length) {
+        if (!primaryTouch || this._scroll.activeTouches.length) {
             return;
         }
 
@@ -587,6 +593,9 @@ define(function(require, exports, module) {
      * scroll wheel or a track-pad.
      */
     function _scrollUpdate(event) {
+        if (!this.options.enabled) {
+            return;
+        }
         var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
         if (this.options.scrollCallback) {
             offset = this.options.scrollCallback(offset, 0);
@@ -622,17 +631,7 @@ define(function(require, exports, module) {
         // finger. When the bounds is exceeded, decrease the scroll distance
         // by two.
         if (refreshParticle || (this._scroll.particleValue === undefined)) {
-            var particleValueTime = Date.now();
-            var particleValue = this._scroll.particle.getPosition1D();
-            /*if (this._scroll.particleValue !== undefined) {
-                var diff = (particleValue - this._scroll.particleValue);
-                if ((this._debug.particleDiff !== undefined) && (Math.abs(diff - this._debug.particleDiff) >= 1)) {
-                    _log.call(this, 'particle speed variation:', (diff - this._debug.particleDiff), ', diff: ', diff, ', timeDiff: ', (particleValueTime - this._scroll.particleValueTime));
-                }
-                this._debug.particleDiff = diff;
-            }*/
-            this._scroll.particleValue = particleValue;
-            this._scroll.particleValueTime = particleValueTime;
+            this._scroll.particleValue = this._scroll.particle.getPosition1D();
         }
 
         // do stuff
@@ -654,7 +653,7 @@ define(function(require, exports, module) {
             }
         }
 
-        if (this._scroll.scrollForceCount) {
+        if (this._scroll.scrollForceCount && this._scroll.scrollForce) {
             if (this._scroll.springPosition !== undefined) {
                 scrollOffset = (scrollOffset + this._scroll.scrollForce + this._scroll.springPosition) / 2.0;
             }
@@ -833,7 +832,6 @@ define(function(require, exports, module) {
         // Check whether pagination is active
         if (!this.options.paginated ||
             this._scroll.scrollForceCount ||
-            (Math.abs(this._scroll.particle.getEnergy()) > this.options.paginationEnergyThresshold) ||
             (this._scroll.springPosition !== undefined)) {
             return;
         }
@@ -878,10 +876,20 @@ define(function(require, exports, module) {
             return;
         }
 
+        // When velocity exceeds thresshold, treat as flip to
+        // a certain direction and select that page.
+        var flipToPrev;
+        var flipToNext;
+        if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+            var velocity = this._scroll.particle.getVelocity1D();
+            flipToPrev = velocity > 0;
+            flipToNext = velocity < 0;
+        }
+
         // Determine snap spring-position
         var boundOffset = pageOffset - bound;
         var snapSpringPosition;
-        if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
+        if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
             snapSpringPosition = (scrollOffset - pageOffset) + (this.options.alignment ? size[this._direction] : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
                 //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
@@ -1370,6 +1378,15 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Checks whether scrolling is in progress or not.
+     *
+     * @return {Bool} true when scrolling is active
+     */
+    ScrollController.prototype.isScrolling = function() {
+        return this._scroll.isScrolling;
+    };
+
+    /**
      * Checks whether any boundaries have been reached.
      *
      * @return {ScrollController.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
@@ -1575,6 +1592,8 @@ define(function(require, exports, module) {
         var scrollOffset = _calcScrollOffset.call(this, true, true);
 
         // When the size or layout function has changed, reflow the layout
+        var emitEndScrollingEvent = false;
+        var eventData;
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
@@ -1583,16 +1602,20 @@ define(function(require, exports, module) {
             this.options.stressTest ||
             this._scrollOffsetCache !== scrollOffset) {
 
-            // Emit start event
-            var eventData = {
+            // Prepare event data
+            eventData = {
                 target: this,
                 oldSize: this._contextSizeCache,
                 size: size,
                 oldScrollOffset: this._scrollOffsetCache,
-                scrollOffset: scrollOffset,
-                dirty: this._isDirty,
-                trueSizeRequested: this._nodes._trueSizeRequested
+                scrollOffset: scrollOffset
             };
+
+            // When scroll-offset has changed, emit scroll-start event
+            if (!this._scroll.isScrolling && (this._scrollOffsetCache !== scrollOffset)) {
+                this._scroll.isScrolling = true;
+                this._eventOutput.emit('scrollstart', eventData);
+            }
             this._eventOutput.emit('layoutstart', eventData);
 
             // When the layout has changed, and we are not just scrolling,
@@ -1623,7 +1646,11 @@ define(function(require, exports, module) {
             this._scrollOffsetCache = scrollOffset;
 
             // Emit end event
+            eventData.scrollOffset = this._scrollOffsetCache;
             this._eventOutput.emit('layoutend', eventData);
+        }
+        else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
+            emitEndScrollingEvent = true;
         }
 
         // Update output and optionally emit event
@@ -1638,6 +1665,19 @@ define(function(require, exports, module) {
             this._eventOutput.emit('reflow', {
                 target: this
             });
+        }
+
+        // Emit end scrolling event
+        if (emitEndScrollingEvent) {
+            this._scroll.isScrolling = false;
+            eventData = {
+                target: this,
+                oldSize: size,
+                size: size,
+                oldScrollOffset: scrollOffset,
+                scrollOffset: scrollOffset
+            };
+            this._eventOutput.emit('scrollend', eventData);
         }
 
         // When renderables are layed out sequentiall (e.g. a ListLayout or
