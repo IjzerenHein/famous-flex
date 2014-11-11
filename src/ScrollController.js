@@ -401,7 +401,7 @@ define(function(require, exports, module) {
 
         // Calculate delta and velocity
         var velocity = 0;
-        var diffTime = Date.now() - this._scroll.mouseMove.prevTime;
+        var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
         if (diffTime > 0) {
             var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
             velocity = diffOffset / diffTime;
@@ -546,7 +546,7 @@ define(function(require, exports, module) {
                 var touch = this._scroll.activeTouches[j];
                 if (touch.id === changedTouch.identifier) {
 
-                    // Remove touch
+                    // Remove touch from active-touches
                     this._scroll.activeTouches.splice(j, 1);
 
                     // When a different touch now becomes the primary touch, update
@@ -568,7 +568,7 @@ define(function(require, exports, module) {
 
         // Determine velocity and add to particle
         var velocity = 0;
-        var diffTime = Date.now() - primaryTouch.prevTime;
+        var diffTime = primaryTouch.time - primaryTouch.prevTime;
         if (diffTime > 0) {
             var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
             velocity = diffOffset / diffTime;
@@ -892,7 +892,7 @@ define(function(require, exports, module) {
         if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
             snapSpringPosition = (scrollOffset - pageOffset) + (this.options.alignment ? size[this._direction] : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
-                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                _log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
                 this._scroll.springSource = SpringSource.SNAPPREV;
             }
@@ -900,7 +900,7 @@ define(function(require, exports, module) {
         else {
             snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.alignment ? size[this._direction] : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
-                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                _log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
                 this._scroll.springSource = SpringSource.SNAPNEXT;
             }
