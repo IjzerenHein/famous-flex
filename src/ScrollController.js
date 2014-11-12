@@ -146,10 +146,6 @@ define(function(require, exports, module) {
         }
         this._scroll.springForce.setOptions({ anchor: this._scroll.springEndState });
 
-        // Setup input event handler
-        this._eventInput = new EventHandler();
-        EventHandler.setInputHandler(this, this._eventInput);
-
         // Listen to touch events
         this._eventInput.on('touchstart', _touchStart.bind(this));
         this._eventInput.on('touchmove', _touchMove.bind(this));

@@ -52,6 +52,10 @@ define(function(require, exports, module) {
         this._contextSizeCache = [0, 0];
         this._commitOutput = {};
 
+        // Setup input event handler
+        this._eventInput = new EventHandler();
+        EventHandler.setInputHandler(this, this._eventInput);
+
         // Setup event handlers
         this._eventOutput = new EventHandler();
         EventHandler.setOutputHandler(this, this._eventOutput);
