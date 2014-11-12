@@ -458,7 +458,7 @@ define(function(require, exports, module) {
         // set opacity
         var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
         if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
-            _setPropertyValue.call(this, this._properties.opacity, 'opacity', [opacity, 0], DEFAULT.opacity2D);
+            _setPropertyValue.call(this, this._properties.opacity, 'opacity', (opacity === undefined) ? undefined : [opacity, 0], DEFAULT.opacity2D);
         }
 
         // set align
