@@ -18,6 +18,9 @@
  */
 define(function(require, exports, module) {
 
+    // import dependencies
+    var Utility = require('famous/utilities/Utility');
+
     /**
      * @class
      * @alias module:LayoutUtility
@@ -195,6 +198,29 @@ define(function(require, exports, module) {
             }
         }
         console.log(message);
+    };
+
+    /**
+     * Combines two sets of options into a single set.
+     *
+     * @param {Object} options1 base set of options
+     * @param {Object} options2 set of options to merge into `options1`
+     * @param {Bool} [forceClone] ensures that a clone is returned rather that one of the original options objects
+     * @return {Object} Combined options
+     */
+    LayoutUtility.combineOptions = function(options1, options2, forceClone) {
+        if (options1 && !options2 && !forceClone) {
+            return options1;
+        } else if (!options1 && options2 && !forceClone) {
+            return options2;
+        }
+        var options = Utility.clone(options1 || {});
+        if (options2) {
+            for (var key in options2) {
+                options[key] = options2[key];
+            }
+        }
+        return options;
     };
 
     /**
