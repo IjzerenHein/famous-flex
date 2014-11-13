@@ -89,6 +89,8 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
+     * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function (default: `false`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollController
@@ -218,7 +220,9 @@ define(function(require, exports, module) {
         alignment: 0,         // [0: top/left, 1: bottom/right]
         touchMoveDirectionThresshold: undefined, // 0..1
         mouseMove: false,
-        enabled: true, // set to false to disable scrolling
+        enabled: true,          // set to false to disable scrolling
+        layoutAll: false,       // set to true is you want all renderables layed out/rendered
+        alwaysLayout: false,    // set to true to always call the layout function
         scrollCallback: undefined, //function(offset, force)
         debug: false,
         stressTest: 0
@@ -245,6 +249,8 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
+     * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function (default: `false`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollController} this
      */
@@ -1487,6 +1493,10 @@ define(function(require, exports, module) {
         var scrollLength = size[this._direction] / 2;
         var scrollStart = -scrollLength;
         var scrollEnd = size[this._direction] + scrollLength;
+        if (this.options.layoutAll) {
+            scrollStart = -1000000;
+            scrollEnd = 1000000;
+        }
 
         // Prepare for layout
         var layoutContext = this._nodes.prepareForLayout(
@@ -1596,6 +1606,7 @@ define(function(require, exports, module) {
             this._scroll.scrollDirty ||
             this._nodes._trueSizeRequested ||
             this.options.stressTest ||
+            this.options.alwaysLayout ||
             this._scrollOffsetCache !== scrollOffset) {
 
             // Prepare event data
