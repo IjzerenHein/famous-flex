@@ -17,7 +17,9 @@
  * |options|type|description|
  * |---|---|---|
  * |`cells`|Size|Number of cells: [columns, rows]|
- * |`[gutter]`|Size|Gutter-space between renderables|
+ * |`[margins]`|Array|Margins applied to the outside (e.g. [10, 20, 10, 20])|
+ * |`[innerGutter]`|Size|Gutter-space between renderables. (e.g. [10, 10]|
+ * |`[gutter]`|Size|Gutter-space between renderables (combines insideGutter and margins)|
  *
  * Example:
  *
@@ -43,6 +45,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var Utility = require('famous/utilities/Utility');
+    var LayoutUtility = require('../LayoutUtility');
 
     // Define capabilities of this layout function
     var capabilities = {
@@ -56,10 +59,19 @@ define(function(require, exports, module) {
 
         // Do one-time stuff
         var size = context.size;
-        var gutter = options.gutter || [0, 0];
+        var innerGutter = options.innerGutter || options.gutter || [0, 0];
+        var margins;
+        if (options.margins) {
+            margins = LayoutUtility.normalizeMargins(options.margins);
+        } else if (options.gutter) {
+            margins = [options.gutter[1], options.gutter[0], options.gutter[1], options.gutter[0]];
+        }
+        else {
+            margins = [0, 0, 0, 0];
+        }
         var nodeSize = [
-            ((size[0] - gutter[0]) / options.cells[0]) - gutter[0],
-            ((size[1] - gutter[1]) / options.cells[1]) - gutter[1]
+            (size[0] - (((options.cells[0] - 1) * innerGutter[0]) + margins[1] + margins[3])) / options.cells[0],
+            (size[1] - (((options.cells[1] - 1) * innerGutter[1]) + margins[0] + margins[2])) / options.cells[1]
         ];
 
         // Define size and position of grid-item
@@ -67,8 +79,8 @@ define(function(require, exports, module) {
             context.set(node, {
                 size: nodeSize,
                 translate: [
-                    ((nodeSize[0] + gutter[0]) * col) + gutter[0],
-                    ((nodeSize[1] + gutter[1]) * row) + gutter[1],
+                    ((nodeSize[0] + innerGutter[0]) * col) + margins[3],
+                    ((nodeSize[1] + innerGutter[1]) * row) + margins[0],
                     0
                 ]
             });
