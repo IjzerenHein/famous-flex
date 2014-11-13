@@ -97,9 +97,6 @@ define(function(require, exports, module) {
         if (options) {
             this.setOptions(options);
         }
-        this._optionsManager.on('change', function() {
-            this._isDirty = true;
-        }.bind(this));
     }
 
     LayoutController.DEFAULT_OPTIONS = {
