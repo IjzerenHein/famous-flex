@@ -670,18 +670,20 @@ define(function(require, exports, module) {
     /**
      * Helper function that calculates the next/prev layed out height.
      */
-    var _calcedHeight;
-    function _calcHeightFunc(node) {
-        if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-            _calcedHeight = undefined; // can't determine height
-            return true;
-        }
-        _calcedHeight += node.scrollLength;
-    }
     function _calcHeight(next) {
-        _calcedHeight = 0;
-        this._nodes.forEach(_calcHeightFunc, next);
-        return _calcedHeight;
+        var calcedHeight = 0;
+        var node = this._nodes.getStartEnumNode(next);
+        while (node) {
+            if (!node._invalidated) {
+                break;
+            } else if ((node.scrollLength === undefined) || node.trueSizeRequested) {
+                calcedHeight = undefined;
+                break;
+            }
+            calcedHeight += node.scrollLength;
+            node = next ? node._next : node._prev;
+        }
+        return calcedHeight;
     }
 
     /**
@@ -1054,9 +1056,10 @@ define(function(require, exports, module) {
         var size = this._contextSizeCache;
         var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
         var result = [];
-        this._nodes.forEach(function(node) {
-            if ((node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
-                return true;
+        var node = this._nodes.getStartEnumNode(true);
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
+                break;
             }
             scrollOffset += node.scrollLength;
             if (scrollOffset >= 0) {
@@ -1069,11 +1072,13 @@ define(function(require, exports, module) {
                     scrollLength: node.scrollLength
                 });
             }
-        }.bind(this), true);
+            node = node._next;
+        }
         scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
-        this._nodes.forEach(function(node) {
-            if ((node.scrollLength === undefined) || (scrollOffset < 0)) {
-                return true;
+        node = this._nodes.getStartEnumNode(false);
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset < 0)) {
+                break;
             }
             scrollOffset -= node.scrollLength;
             if (scrollOffset < size[this._direction]) {
@@ -1086,7 +1091,8 @@ define(function(require, exports, module) {
                     scrollLength: node.scrollLength
                 });
             }
-        }.bind(this), false);
+            node = node._prev;
+        }
         return result;
     };
 
@@ -1100,15 +1106,55 @@ define(function(require, exports, module) {
      * @return {Object} item or `undefined`
      */
     ScrollController.prototype.getFirstVisibleItem = function() {
-        var items = this.getVisibleItems();
-        for (var i = 0, j = items.length; i < j; i++) {
-            var item = items[i];
-            if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
-                (item.scrollOffset >= 0)) {
-                return item;
+        var size = this._contextSizeCache;
+        var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+        var node = this._nodes.getStartEnumNode(true);
+        var nodeFoundVisiblePerc;
+        var nodeFoundScrollOffset;
+        var nodeFound;
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
+                break;
             }
+            scrollOffset += node.scrollLength;
+            if (scrollOffset >= 0) {
+                nodeFoundVisiblePerc = node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1;
+                nodeFoundScrollOffset = scrollOffset - node.scrollLength;
+                if ((nodeFoundVisiblePerc >= this.options.visibleItemThresshold) ||
+                    (nodeFoundScrollOffset >= 0)) {
+                    nodeFound = node;
+                    break;
+                }
+            }
+            node = node._next;
         }
-        return items.length ? items[0] : undefined;
+        scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+        node = this._nodes.getStartEnumNode(false);
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset < 0)) {
+                break;
+            }
+            scrollOffset -= node.scrollLength;
+            if (scrollOffset < size[this._direction]) {
+                var visiblePerc = node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1;
+                if ((visiblePerc >= this.options.visibleItemThresshold) ||
+                    (scrollOffset >= 0)) {
+                    nodeFoundVisiblePerc = visiblePerc;
+                    nodeFoundScrollOffset = scrollOffset;
+                    nodeFound = node;
+                    break;
+                }
+            }
+            node = node._prev;
+        }
+        return nodeFound ? {
+            index: nodeFound._viewSequence.getIndex(),
+            viewSequence: nodeFound._viewSequence,
+            renderNode: nodeFound.renderNode,
+            visiblePerc: nodeFoundVisiblePerc,
+            scrollOffset: nodeFoundScrollOffset,
+            scrollLength: nodeFound.scrollLength
+        } : undefined;
     };
 
     /**
@@ -1560,11 +1606,13 @@ define(function(require, exports, module) {
         var oldDirection = this._direction;
         oldSetDirection.call(this, direction);
         if (oldDirection !== this._direction) {
-            this._nodes.forEach(function(node) {
-                if (node.setDirectionLock) {
+            var node = this._nodes.getStartEnumNode();
+            while (node) {
+                if (node._invalidated && node.setDirectionLock) {
                     node.setDirectionLock(this._direction, 0);
                 }
-            }.bind(this));
+                node = node._next;
+            }
         }
     };
 
@@ -1631,11 +1679,13 @@ define(function(require, exports, module) {
             if (this._isDirty ||
                 (size[0] !== this._contextSizeCache[0]) ||
                 (size[1] !== this._contextSizeCache[1])) {
-                this._nodes.forEach(function(node) {
-                    if (node.setDirectionLock) {
+                var node = this._nodes.getStartEnumNode();
+                while (node) {
+                    if (node._invalidated && node.setDirectionLock) {
                         node.setDirectionLock(this._direction, 0);
                     }
-                }.bind(this));
+                    node = node._next;
+                }
             }
 
             // Update state

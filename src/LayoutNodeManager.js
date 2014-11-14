@@ -319,6 +319,22 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Gets start layout-node for enumeration.
+     *
+     * @param {Bool} [next] undefined = all, true = all next, false = all previous
+     * @return {LayoutNode} layout-node or undefined
+     */
+    LayoutNodeManager.prototype.getStartEnumNode = function(next) {
+        if (next === undefined) {
+            return this._first;
+        } else if (next === true) {
+            return (this._contextState.start && this._contextState.startPrev) ? this._contextState.start._next : this._contextState.start;
+        } else if (next === false) {
+            return (this._contextState.start && !this._contextState.startPrev) ? this._contextState.start._prev : this._contextState.start;
+        }
+    };
+
+    /**
      * Checks the integrity of the linked-list.
      */
     function _checkIntegrity() {
