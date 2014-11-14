@@ -257,7 +257,7 @@ define(function(require, exports, module) {
         // When no first section is in the scrollable range, then
         // look back further in search for the that section
         //
-        if (node && !lastSectionBeforeVisibleCell && options.isSectionCallback) {
+        if (!lastSectionBeforeVisibleCell && options.isSectionCallback) {
             node = context.prev();
             while (node && !lastSectionBeforeVisibleCell) {
                 if (options.isSectionCallback && options.isSectionCallback(node.renderNode)) {
