@@ -223,8 +223,7 @@ define(function(require, exports, module) {
         layoutAll: false,       // set to true is you want all renderables layed out/rendered
         alwaysLayout: false,    // set to true to always call the layout function
         scrollCallback: undefined, //function(offset, force)
-        debug: false,
-        stressTest: 0
+        debug: false
     };
 
     var oldSetOptions = ScrollController.prototype.setOptions;
@@ -776,38 +775,42 @@ define(function(require, exports, module) {
         // 2. Find the node to scroll to
         var foundNode;
         var scrollToOffset = 0;
-        this._nodes.forEach(function(node) {
-            if (node.scrollLength === undefined) {
-                return true;
+        var node = this._nodes.getStartEnumNode(true);
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined)) {
+                break;
             }
             if (this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
             if (node._viewSequence === this._scroll.scrollToSequence) {
                 foundNode = node;
-                return true;
+                break;
             }
             if (!this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
-        }.bind(this), true);
+            node = node._next;
+        }
         if (!foundNode) {
             scrollToOffset = 0;
-            this._nodes.forEach(function(node) {
-                if (node.scrollLength === undefined) {
-                    return true;
+            node = this._nodes.getStartEnumNode(false);
+            while (node) {
+                if (!node._invalidated || (node.scrollLength === undefined)) {
+                   break;
                 }
                 if (!this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
                 if (node._viewSequence === this._scroll.scrollToSequence) {
                     foundNode = node;
-                    return true;
+                    break;
                 }
                 if (this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
-            }.bind(this), false);
+                node = node._prev;
+            }
         }
         if (foundNode) {
             this._scroll.springPosition = scrollToOffset;
@@ -827,14 +830,13 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Snaps to a page when paginanation is enabled and the energy of the particle
-     * is below the thesshold.
+     * Snaps to a page when pagination is enabled.
      */
     function _snapToPage(size, scrollOffset) {
 
         // Check whether pagination is active
         if (!this.options.paginated ||
-            this._scroll.scrollForceCount ||
+            this._scroll.scrollForceCount || //don't paginate while moving
             (this._scroll.springPosition !== undefined)) {
             return;
         }
@@ -845,35 +847,44 @@ define(function(require, exports, module) {
         var hasNext;
 
         // Lookup page in previous direction
-        var bound = this.options.alignment ? size[this._direction] : 0;
-        this._nodes.forEach(function(node) {
+        var node = this._nodes.getStartEnumNode(false);
+        while (node) {
+            if (!node._invalidated) {
+                break;
+            }
             if (node.scrollLength !== 0) {
-                if ((pageOffset <= bound) || (node.scrollLength === undefined)) {
-                    return true;
+                if ((pageOffset <= 0) || (node.scrollLength === undefined)) {
+                    break;
                 }
                 hasNext = (pageLength !== undefined);
                 pageLength = node.scrollLength;
                 pageOffset -= node.scrollLength;
             }
-        }, false);
+            node = node._prev;
+        }
 
         // Lookup page in next direction
         if (pageLength === undefined) {
-            this._nodes.forEach(function(node) {
+            node = this._nodes.getStartEnumNode(true);
+            while (node) {
+                if (!node._invalidated) {
+                    break;
+                }
                 if (node.scrollLength !== 0) {
                     if (node.scrollLength === undefined) {
-                        return true;
+                        break;
                     }
                     hasNext = (pageLength !== undefined);
                     if (hasNext) {
-                        if ((pageOffset + pageLength) > bound) {
-                            return true;
+                        if ((pageOffset + pageLength) > 0) {
+                            break;
                         }
                         pageOffset += pageLength;
                     }
                     pageLength = node.scrollLength;
                 }
-            }, true);
+                node = node._next;
+            }
         }
         if (!pageLength) {
             return;
@@ -889,11 +900,11 @@ define(function(require, exports, module) {
             flipToNext = velocity < 0;
         }
 
-        // Determine snap spring-position
-        var boundOffset = pageOffset - bound;
+        // Determine snap spring-position (not quite working properly yet for alignment = 1...)
+        var boundOffset = pageOffset;
         var snapSpringPosition;
         if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
-            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.alignment ? size[this._direction] : 0);
+            snapSpringPosition = (scrollOffset - pageOffset) - (this.options.alignment ? pageLength : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
                 _log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
@@ -901,7 +912,7 @@ define(function(require, exports, module) {
             }
         }
         else {
-            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.alignment ? size[this._direction] : 0);
+            snapSpringPosition = (scrollOffset - (pageOffset + pageLength));
             if (snapSpringPosition !== this._scroll.springPosition) {
                 _log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
@@ -919,18 +930,19 @@ define(function(require, exports, module) {
         //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
         var normalizeNextPrev = false;
-        this._nodes.forEach(function(node) {
+        var node = this._nodes.getStartEnumNode(false);
+        while (node) {
+            if (!node._invalidated) {
+                break;
+            }
             if (normalizeNextPrev) {
                 this._viewSequence = node._viewSequence;
                 normalizedScrollOffset = scrollOffset;
                 //normalizedCount = count;
                 normalizeNextPrev = false;
             }
-            if (scrollOffset < 0) {
-                return true;
-            }
-            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-                return true;
+            if ((node.scrollLength === undefined) || node.trueSizeRequested || (scrollOffset < 0)) {
+                break;
             }
             scrollOffset -= node.scrollLength;
             count++;
@@ -944,7 +956,8 @@ define(function(require, exports, module) {
                     //normalizedCount = count;
                 }
             }
-        }.bind(this), false);
+            node = node._prev;
+        }
         /*if (normalizedCount) {
             //_log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }*/
@@ -955,12 +968,11 @@ define(function(require, exports, module) {
         //var normalizedCount = 0;
         //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
-        this._nodes.forEach(function(node) {
-            if ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0))) {
-                return true;
-            }
-            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-                return true;
+        var node = this._nodes.getStartEnumNode(true);
+        while (node) {
+            if (!node._invalidated || (node.scrollLength === undefined) || node.trueSizeRequested ||
+                ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0)))) {
+                break;
             }
             if (this.options.alignment) {
                 scrollOffset += node.scrollLength;
@@ -975,7 +987,8 @@ define(function(require, exports, module) {
                 scrollOffset += node.scrollLength;
                 count++;
             }
-        }.bind(this), true);
+            node = node._next;
+        }
         /*if (normalizedCount) {
             //_log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
         }*/
@@ -1642,7 +1655,6 @@ define(function(require, exports, module) {
             this._isDirty ||
             this._scroll.scrollDirty ||
             this._nodes._trueSizeRequested ||
-            this.options.stressTest ||
             this.options.alwaysLayout ||
             this._scrollOffsetCache !== scrollOffset) {
 
@@ -1684,10 +1696,7 @@ define(function(require, exports, module) {
             this._scroll.scrollDirty = false;
 
             // Perform layout
-            var count = this.options.stressTest || 1;
-            for (var i = 0; i < count; i++) {
-                scrollOffset = _layout.call(this, size, scrollOffset);
-            }
+            scrollOffset = _layout.call(this, size, scrollOffset);
             this._scrollOffsetCache = scrollOffset;
 
             // Emit end event

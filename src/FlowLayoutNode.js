@@ -258,57 +258,53 @@ define(function(require, exports, module) {
         this._initial = false;
         this._specModified = !endStateReached;
 
+        // Step physics engine when not sleeping
+        if (!endStateReached) {
+            this._pe.step();
+        }
+
         // Build fresh spec
         var value;
         var spec = this._spec;
         var precision = this.options.particleRounding;
 
         // opacity
-        var opacity = this._properties.opacity;
-        if (opacity && opacity.init) {
-            spec.opacity = Math.round(Math.max(0,Math.min(1, opacity.particle.getPosition1D())) / precision) * precision;
+        var prop = this._properties.opacity;
+        if (prop && prop.init) {
+            spec.opacity = Math.round(Math.max(0,Math.min(1, prop.curState.x)) / precision) * precision;
         }
         else {
             spec.opacity = undefined;
         }
 
         // size
-        var size = this._properties.size;
-        if (size && size.init) {
-            value = size.particle.getPosition();
-            if (!spec.size) {
-                spec.size = [0, 0];
-            }
-            spec.size[0] = Math.round(value[0] / 0.1) * 0.1;
-            spec.size[1] = Math.round(value[1] / 0.1) * 0.1;
+        prop = this._properties.size;
+        if (prop && prop.init) {
+            spec.size = spec.size || [0, 0];
+            spec.size[0] = Math.round(prop.curState.x / 0.1) * 0.1;
+            spec.size[1] = Math.round(prop.curState.y / 0.1) * 0.1;
         }
         else {
             spec.size = undefined;
         }
 
         // align
-        var align = this._properties.align;
-        if (align && align.init) {
-            value = align.particle.getPosition();
-            if (!spec.align) {
-                spec.align = [0, 0];
-            }
-            spec.align[0] = Math.round(value[0] / 0.1) * 0.1;
-            spec.align[1] = Math.round(value[1] / 0.1) * 0.1;
+        prop = this._properties.align;
+        if (prop && prop.init) {
+            spec.align = spec.align || [0, 0];
+            spec.align[0] = Math.round(prop.curState.x / 0.1) * 0.1;
+            spec.align[1] = Math.round(prop.curState.y / 0.1) * 0.1;
         }
         else {
             spec.align = undefined;
         }
 
         // origin
-        var origin = this._properties.origin;
-        if (origin && origin.init) {
-            value = origin.particle.getPosition();
-            if (!spec.origin) {
-                spec.origin = [0, 0];
-            }
-            spec.origin[0] = Math.round(value[0] / 0.1) * 0.1;
-            spec.origin[1] = Math.round(value[1] / 0.1) * 0.1;
+        prop = this._properties.origin;
+        if (prop && prop.init) {
+            spec.origin = spec.origin || [0, 0];
+            spec.origin[0] = Math.round(prop.curState.x / 0.1) * 0.1;
+            spec.origin[1] = Math.round(prop.curState.y / 0.1) * 0.1;
         }
         else {
             spec.origin = undefined;
@@ -316,21 +312,31 @@ define(function(require, exports, module) {
 
         // translate
         var translate = this._properties.translate;
-        var translateVal;
+        var translateX;
+        var translateY;
+        var translateZ;
         if (translate && translate.init) {
-            translateVal = translate.particle.getPosition();
+            translateX = translate.curState.x;
+            translateY = translate.curState.y;
+            translateZ = translate.curState.z;
             if (this._lockDirection !== undefined) {
-                value = translateVal[this._lockDirection];
-                var endState = translate.endState.get()[this._lockDirection];
+                value = this._lockDirection ? translateY : translateX;
+                var endState = this._lockDirection ? translate.endState.y : translate.endState.x;
                 var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-                translateVal[0] = Math.round(translateVal[0] / precision) * precision;
-                translateVal[1] = Math.round(translateVal[1] / precision) * precision;
-                translateVal[2] = Math.round(translateVal[2] / precision) * precision;
-                translateVal[this._lockDirection] = Math.round(lockValue / precision) * precision;
+                if (this._lockDirection) {
+                    translateX = Math.round(translateX / precision) * precision;
+                    translateY = Math.round(lockValue / precision) * precision;
+                }
+                else {
+                    translateX = Math.round(lockValue / precision) * precision;
+                    translateY = Math.round(translateY / precision) * precision;
+                }
             }
         }
         else {
-            translateVal = DEFAULT.translate;
+            translateX = 0;
+            translateY = 0;
+            translateZ = 0;
         }
 
         // scale, skew, scale
@@ -339,7 +345,7 @@ define(function(require, exports, module) {
         var rotate = this._properties.rotate;
         if (scale || skew || rotate) {
             spec.transform = Transform.build({
-                translate: translateVal,
+                translate: [translateX, translateY, translateZ],
                 skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew),
                 scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale),
                 rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate)
@@ -347,12 +353,12 @@ define(function(require, exports, module) {
         }
         else if (translate) {
             if (!spec.transform) {
-                spec.transform = Transform.translate(translateVal[0], translateVal[1], translateVal[2]);
+                spec.transform = Transform.translate(translateX, translateY, translateZ);
             }
             else {
-                spec.transform[12] = translateVal[0];
-                spec.transform[13] = translateVal[1];
-                spec.transform[14] = translateVal[2];
+                spec.transform[12] = translateX;
+                spec.transform[13] = translateY;
+                spec.transform[14] = translateZ;
             }
         }
         else {
@@ -390,18 +396,26 @@ define(function(require, exports, module) {
             else if (this._removing) {
                 value = prop.particle.getPosition();
             }
-            prop.endState.x = value[0];
-            prop.endState.y = (value.length > 1) ? value[1] : 0;
-            prop.endState.z = (value.length > 2) ? value[2] : 0;
             if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
                 immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
             }
+            // set new end state (the quick way)
+            prop.endState.x = value[0];
+            prop.endState.y = (value.length > 1) ? value[1] : 0;
+            prop.endState.z = (value.length > 2) ? value[2] : 0;
             if (immediate) {
-                prop.particle.position.x = value[0];
-                prop.particle.position.y = (value.length > 1) ? value[1] : 0;
-                prop.particle.position.z = (value.length > 2) ? value[2] : 0;
+                // set current state (the quick way)
+                prop.curState.x = prop.endState.x;
+                prop.curState.y = prop.endState.y;
+                prop.curState.z = prop.endState.z;
+                // reset velocity (the quick way)
+                prop.velocity.x = 0;
+                prop.velocity.y = 0;
+                prop.velocity.z = 0;
             }
-            else {
+            else if ((prop.endState.x !== prop.curState.x) ||
+                     (prop.endState.y !== prop.curState.y) ||
+                     (prop.endState.z !== prop.curState.z)) {
                 this._pe.wake();
             }
             return;
@@ -416,6 +430,8 @@ define(function(require, exports, module) {
                     }),
                     endState: new Vector(endState)
                 };
+                prop.curState = prop.particle.position;
+                prop.velocity = prop.particle.velocity;
                 prop.force = new Spring(this.options.spring);
                 prop.force.setOptions({
                     anchor: prop.endState
@@ -452,55 +468,63 @@ define(function(require, exports, module) {
     FlowLayoutNode.prototype.set = function(set, defaultSize) {
         this._removing = false;
         this._invalidated = true;
-        this._specModified = true;
         this.scrollLength = set.scrollLength;
+        this._specModified = true;
 
-        // set opacity
-        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
-        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
-            _setPropertyValue.call(this, this._properties.opacity, 'opacity', (opacity === undefined) ? undefined : [opacity, 0], DEFAULT.opacity2D);
+        // opacity
+        var prop = this._properties.opacity;
+        var value = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+        if ((value !== undefined) || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'opacity', (value === undefined) ? undefined : [value, 0], DEFAULT.opacity2D);
         }
 
         // set align
-        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
-        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
-            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
+        prop = this._properties.align;
+        value = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'align', value, DEFAULT.align);
         }
 
         // set orgin
-        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
-        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
-            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
+        prop = this._properties.origin;
+        value = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'origin', value, DEFAULT.origin);
         }
 
         // set size
-        var size = set.size || defaultSize;
-        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
-            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
+        prop = this._properties.size;
+        value = set.size || defaultSize;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'size', value, defaultSize, this.usesTrueSize);
         }
 
         // set translate
-        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
-        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
-            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
+        prop = this._properties.translate;
+        value = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'translate', value, DEFAULT.translate, undefined, true);
         }
 
         // set scale
-        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
-        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
-            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
+        prop = this._properties.scale;
+        value = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'scale', value, DEFAULT.scale);
         }
 
         // set rotate
-        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
-        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
-            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
+        prop = this._properties.rotate;
+        value = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'rotate', value, DEFAULT.rotate);
         }
 
         // set skew
-        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
-        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
-            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
+        prop = this._properties.skew;
+        value = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+        if (value || (prop && prop.init)) {
+            _setPropertyValue.call(this, prop, 'skew', value, DEFAULT.skew);
         }
     };
 

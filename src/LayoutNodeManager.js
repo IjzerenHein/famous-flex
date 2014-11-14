@@ -633,6 +633,7 @@ define(function(require, exports, module) {
         var configSize = renderNode.size && (renderNode._trueSizeCheck !== undefined) ? renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
             contextNode.usesTrueSize = true;
+            var backupSize = renderNode._backupSize;
             if (renderNode._trueSizeCheck) {
 
                 // Fix for true-size renderables. When true-size is used, the size
@@ -640,21 +641,12 @@ define(function(require, exports, module) {
                 // updates the content after asking the DOM for the offsetHeight/offsetWidth.
                 // The code below backs the size up, and re-uses that when this scenario
                 // occurs.
-                if (renderNode._backupSize) {
-                    if (configSize[0] === true) {
-                        renderNode._backupSize[0] = Math.max(renderNode._backupSize[0], size[0]);
-                    }
-                    else {
-                        renderNode._backupSize[0] = size[0];
-                    }
-                    if (configSize[1] === true) {
-                        renderNode._backupSize[1] = Math.max(renderNode._backupSize[1], size[1]);
-                    }
-                    else {
-                        renderNode._backupSize[1] = size[1];
-                    }
-                    size = renderNode._backupSize;
+                if (backupSize) {
+                    backupSize[0] = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
+                    backupSize[1] = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
+                    size = backupSize;
                     renderNode._backupSize = undefined;
+                    backupSize = undefined;
                 }
                 this._trueSizeRequested = true;
                 contextNode.trueSizeRequested = true;
@@ -666,11 +658,12 @@ define(function(require, exports, module) {
             //this._trueSizeRequested = true;
 
             // Backup the size of the node
-            if (!contextNode.renderNode._backupSize) {
+            if (!backupSize) {
                 renderNode._backupSize = [0, 0];
+                backupSize = renderNode._backupSize;
             }
-            renderNode._backupSize[0] = size[0];
-            renderNode._backupSize[1] = size[1];
+            backupSize[0] = size[0];
+            backupSize[1] = size[1];
         }
 
         // Resolve 'undefined' to parent-size and true to 0
