@@ -6,7 +6,8 @@ columns and rows.
 |options|type|description|
 |---|---|---|
 |`cells`|Size|Number of cells: [columns, rows]|
-|`[gutter]`|Size|Gutter-space between renderables|
+|`[margins]`|Array|Margins applied to the outside (e.g. [10, 20, 10, 20])|
+|`[gutter]`|Size|Gutter-space between renderables. (e.g. [10, 10]|
 
 Example:
 
@@ -16,8 +17,9 @@ var GridLayout = require('famous-flex/layouts/GridLayout');
 new LayoutController({
   layout: GridLayout,
   layoutOptions: {
-    cells: [10, 5],    // 10 columns, 5 rows
-    gutter: [20, 20]   // gutter of 20 pixels in between cells
+    cells: [10, 5],            // 10 columns, 5 rows
+    margins: [20, 20, 20, 20], // margins on the outside
+    gutter: [20, 20]           // gutter between cells
   },
   dataSource: [
     new Surface({content: 'item 1'}),

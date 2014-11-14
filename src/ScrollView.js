@@ -15,8 +15,8 @@
  * Flexible ScrollView drop-in replacement for famo.us.
  *
  * Key features:
- * -    Customizable layout
- * -    Insert/remove renderables into the scene using animations/spec
+ * -    Customizable layout (uses ListLayout by default)
+ * -    Insert/remove at any position using animations
  * -    Support for `true` size renderables
  * -    Horizontal/vertical direction
  * -    Top/left or bottom/right alignment
@@ -115,8 +115,6 @@ define(function(require, exports, module) {
      *
      * This function is a shim provided for compatibility with the stock famo.us ScrollView.
      *
-     * @param {number} [node] If specified, returns the position of the node at that index in the
-     * Scrollview instance's currently managed collection.
      * @return {number} The position of either the specified node, or the Scrollview's current Node,
      * in pixels translated.
      */

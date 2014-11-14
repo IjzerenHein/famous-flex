@@ -14,6 +14,7 @@ Utility class for famous-flex.
   * [LayoutUtility.error(message)](#module_LayoutUtility.error)
   * [LayoutUtility.warning(message)](#module_LayoutUtility.warning)
   * [LayoutUtility.log(args)](#module_LayoutUtility.log)
+  * [LayoutUtility.combineOptions(options1, options2, [forceClone])](#module_LayoutUtility.combineOptions)
   * [LayoutUtility.registerHelper(name, Helper)](#module_LayoutUtility.registerHelper)
   * [LayoutUtility.unregisterHelper(name)](#module_LayoutUtility.unregisterHelper)
   * [LayoutUtility.getRegisteredHelper(name)](#module_LayoutUtility.getRegisteredHelper)
@@ -81,6 +82,17 @@ are concatenated to produce a single string which is logged.
 
 - args `String` | `Array` | `Object` - arguments to stringify and concatenate  
 
+<a name="module_LayoutUtility.combineOptions"></a>
+###LayoutUtility.combineOptions(options1, options2, [forceClone])
+Combines two sets of options into a single set.
+
+**Params**
+
+- options1 `Object` - base set of options  
+- options2 `Object` - set of options to merge into `options1`  
+- \[forceClone\] `Bool` - ensures that a clone is returned rather that one of the original options objects  
+
+**Returns**: `Object` - Combined options  
 <a name="module_LayoutUtility.registerHelper"></a>
 ###LayoutUtility.registerHelper(name, Helper)
 Registers a layout-helper so it can be used as a layout-literal for

@@ -1227,17 +1227,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Sets the data-source. This function is a shim provided for compatibility with the
-     * stock famo.us ScrollController.
-     *
-     * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
-     * @return {ScrollController} this
-     */
-    ScrollController.prototype.sequenceFrom = function(node) {
-        return this.setDataSource(node);
-    };
-
-    /**
      * Scroll to the first page, making it visible.
      *
      * NOTE: This function does not work on ViewSequences that have the `loop` property enabled.

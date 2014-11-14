@@ -24,7 +24,6 @@ Inherited from: [LayoutController](./LayoutController.md)
   * [scrollController.getVisibleItems()](#module_ScrollController#getVisibleItems)
   * [scrollController.getFirstVisibleItem()](#module_ScrollController#getFirstVisibleItem)
   * [scrollController.getLastVisibleItem()](#module_ScrollController#getLastVisibleItem)
-  * [scrollController.sequenceFrom(node)](#module_ScrollController#sequenceFrom)
   * [scrollController.goToFirstPage()](#module_ScrollController#goToFirstPage)
   * [scrollController.goToPreviousPage()](#module_ScrollController#goToPreviousPage)
   * [scrollController.goToNextPage()](#module_ScrollController#goToNextPage)
@@ -33,6 +32,7 @@ Inherited from: [LayoutController](./LayoutController.md)
   * [scrollController.scroll(delta)](#module_ScrollController#scroll)
   * [scrollController.canScroll(delta)](#module_ScrollController#canScroll)
   * [scrollController.halt()](#module_ScrollController#halt)
+  * [scrollController.isScrolling()](#module_ScrollController#isScrolling)
   * [scrollController.getBoundsReached()](#module_ScrollController#getBoundsReached)
   * [scrollController.getVelocity()](#module_ScrollController#getVelocity)
   * [scrollController.setVelocity(velocity)](#module_ScrollController#setVelocity)
@@ -60,6 +60,8 @@ Inherited from: [LayoutController](./LayoutController.md)
   - \[scrollSpring\] `Object` - Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)  
   - \[scrollDrag\] `Object` - Drag-force options to apply on the scroll particle  
   - \[scrollFriction\] `Object` - Friction-force options to apply on the scroll particle  
+  - \[layoutAll\] `Bool` - When set to true, always lays out all renderables in the datasource (default: `false`).  
+  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function (default: `false`).  
   - \[visibleItemThresshold\] `Number` - Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).  
   - \[debug\] `Bool` - Logs debug output to the console (default: `false`).  
 
@@ -87,6 +89,8 @@ Patches the ScrollController instance's options with the passed-in ones.
   - \[scrollDrag\] `Object` - Drag-force options to apply on the scroll particle  
   - \[scrollFriction\] `Object` - Friction-force options to apply on the scroll particle  
   - \[visibleItemThresshold\] `Number` - Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).  
+  - \[layoutAll\] `Bool` - When set to true, always lays out all renderables in the datasource (default: `false`).  
+  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function (default: `false`).  
   - \[debug\] `Bool` - Logs debug output to the console (default: `false`).  
 
 **Returns**: `ScrollController` - this  
@@ -99,6 +103,7 @@ following properties. Example:
 ```javascript
 {
   viewSequence: {ViewSequence},
+  index: {Number},
   renderNode: {renderable},
   visiblePerc: {Number} 0..1
 }
@@ -123,16 +128,6 @@ An item is considered to be the last visible item when:
 -    It is the last item before the bottom/right bounds
 
 **Returns**: `Object` - item or `undefined`  
-<a name="module_ScrollController#sequenceFrom"></a>
-###scrollController.sequenceFrom(node)
-Sets the data-source. This function is a shim provided for compatibility with the
-stock famo.us ScrollController.
-
-**Params**
-
-- node `Array` | `ViewSequence` - Either an array of renderables or a Famous viewSequence.  
-
-**Returns**: `ScrollController` - this  
 <a name="module_ScrollController#goToFirstPage"></a>
 ###scrollController.goToFirstPage()
 Scroll to the first page, making it visible.
@@ -195,6 +190,11 @@ the velocity to 0 and cancels any `goToXxx` operation that
 was applied.
 
 **Returns**: `ScrollController` - this  
+<a name="module_ScrollController#isScrolling"></a>
+###scrollController.isScrolling()
+Checks whether scrolling is in progress or not.
+
+**Returns**: `Bool` - true when scrolling is active  
 <a name="module_ScrollController#getBoundsReached"></a>
 ###scrollController.getBoundsReached()
 Checks whether any boundaries have been reached.
