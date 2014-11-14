@@ -96,11 +96,9 @@ define(function(require, exports, module) {
      * @alias module:ScrollController
      */
     function ScrollController(options) {
-        var layoutManager = new LayoutNodeManager((options && options.flow) ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
-        LayoutController.call(this, ScrollController.DEFAULT_OPTIONS, layoutManager);
-        if (options) {
-            this.setOptions(options);
-        }
+        options = LayoutUtility.combineOptions(ScrollController.DEFAULT_OPTIONS, options);
+        var layoutManager = new LayoutNodeManager(options.flow ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
+        LayoutController.call(this, options, layoutManager);
 
         // Scrolling
         this._scroll = {
@@ -124,6 +122,7 @@ define(function(require, exports, module) {
             normalizedScrollDelta: 0,
             scrollForce: 0,
             scrollForceCount: 0,
+            unnormalizedScrollOffset: 0,
             // state
             isScrolling: false
         };
@@ -1021,7 +1020,7 @@ define(function(require, exports, module) {
             //var particleValue = this._scroll.particle.getPosition1D();
             var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
+            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1044,6 +1043,7 @@ define(function(require, exports, module) {
      * ```javascript
      * {
      *   viewSequence: {ViewSequence},
+     *   index: {Number},
      *   renderNode: {renderable},
      *   visiblePerc: {Number} 0..1
      * }
@@ -1051,11 +1051,8 @@ define(function(require, exports, module) {
      * @return {Array} array of items
      */
     ScrollController.prototype.getVisibleItems = function() {
-        var scrollOffset = this._scrollOffsetCache;
         var size = this._contextSizeCache;
-        if (this.options.alignment) {
-            scrollOffset += size[this._direction];
-        }
+        var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
         var result = [];
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
@@ -1064,6 +1061,7 @@ define(function(require, exports, module) {
             scrollOffset += node.scrollLength;
             if (scrollOffset >= 0) {
                 result.push({
+                    index: node._viewSequence.getIndex(),
                     viewSequence: node._viewSequence,
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1,
@@ -1072,7 +1070,7 @@ define(function(require, exports, module) {
                 });
             }
         }.bind(this), true);
-        scrollOffset = this._scrollOffsetCache;
+        scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
         this._nodes.forEach(function(node) {
             if ((node.scrollLength === undefined) || (scrollOffset < 0)) {
                 return true;
@@ -1080,6 +1078,7 @@ define(function(require, exports, module) {
             scrollOffset -= node.scrollLength;
             if (scrollOffset < size[this._direction]) {
                 result.unshift({
+                    index: node._viewSequence.getIndex(),
                     viewSequence: node._viewSequence,
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1,
@@ -1535,13 +1534,14 @@ define(function(require, exports, module) {
         // than before, then re-layout entirely using the new offset.
         var newScrollOffset = _calcScrollOffset.call(this, true);
         if (!nested && (newScrollOffset !== scrollOffset)) {
-            //_log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
+            _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
             return _layout.call(this, size, newScrollOffset, true);
         }
 
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
+        this._scroll.unnormalizedScrollOffset = scrollOffset;
         scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
 
         // Update spring
@@ -1641,7 +1641,6 @@ define(function(require, exports, module) {
             // Update state
             this._contextSizeCache[0] = size[0];
             this._contextSizeCache[1] = size[1];
-            this._scrollOffsetCache = scrollOffset;
             this._isDirty = false;
             this._scroll.scrollDirty = false;
 
