@@ -223,6 +223,7 @@ define(function(require, exports, module) {
         layoutAll: false,       // set to true is you want all renderables layed out/rendered
         alwaysLayout: false,    // set to true to always call the layout function
         scrollCallback: undefined, //function(offset, force)
+        extraBoundsSpace: [1, 1],
         debug: false
     };
 
@@ -1537,9 +1538,8 @@ define(function(require, exports, module) {
         //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
 
         // Determine start & end
-        var scrollLength = size[this._direction] / 2;
-        var scrollStart = -scrollLength;
-        var scrollEnd = size[this._direction] + scrollLength;
+        var scrollStart = 0 - Math.max(this.options.extraBoundsSpace[0], 1);
+        var scrollEnd = size[this._direction] + Math.max(this.options.extraBoundsSpace[1], 1);
         if (this.options.layoutAll) {
             scrollStart = -1000000;
             scrollEnd = 1000000;
