@@ -12,8 +12,8 @@
 /*eslint no-use-before-define:0 */
 
 /**
- * LayoutNodeManager is a private class used internally by the LayoutControllers and
- * ScrollViews. It manages the layout-nodes that are rendered and exposes the layout-context
+ * LayoutNodeManager is a private class used internally by LayoutController, ScrollController
+ * and ScrollView. It manages the layout-nodes that are rendered and exposes the layout-context
  * which is passed along to the layout-function.
  *
  * LayoutNodeManager keeps track of every rendered node through an ordered double-linked
@@ -32,7 +32,6 @@ define(function(require, exports, module) {
     var LayoutUtility = require('./LayoutUtility');
 
     var MAX_POOL_SIZE = 100;
-    var LOG_PREFIX = 'Nodes: ';
 
     /**
      * @class
@@ -67,7 +66,6 @@ define(function(require, exports, module) {
             },
             resolveSize: [0, 0]
         };
-        this.verbose = false;
         //this._first = undefined; // first item in the linked list
         //this._nodesById = undefined;
         //this._trueSizeRequested = false;
@@ -136,9 +134,6 @@ define(function(require, exports, module) {
             // If a node existed, but it is no longer being layed out,
             // then set it to the '_removing' state.
             if (!node._invalidated && !node._removing) {
-                if (this.verbose) {
-                    LayoutUtility.log(LOG_PREFIX, 'removing node');
-                }
                 node.remove(removeSpec);
             }
 
@@ -221,7 +216,6 @@ define(function(require, exports, module) {
             this._first._prev = node;
         }
         this._first = node;
-        _checkIntegrity.call(this);
     };
 
     /**
@@ -268,9 +262,6 @@ define(function(require, exports, module) {
 
         // Destroy the node
         node.destroy();
-        if (this.verbose) {
-            LayoutUtility.log(LOG_PREFIX, 'destroying node');
-        }
 
         // Add node to pool
         if (this._pool.layoutNodes.size < MAX_POOL_SIZE) {
@@ -279,8 +270,6 @@ define(function(require, exports, module) {
             node._next = this._pool.layoutNodes.first;
             this._pool.layoutNodes.first = node;
         }
-
-        _checkIntegrity.call(this);
     }
 
     /**
@@ -337,8 +326,8 @@ define(function(require, exports, module) {
     /**
      * Checks the integrity of the linked-list.
      */
-    function _checkIntegrity() {
-        /*var node = this._first;
+    /*function _checkIntegrity() {
+        var node = this._first;
         var count = 0;
         var prevNode;
         while (node) {
@@ -351,8 +340,8 @@ define(function(require, exports, module) {
             prevNode = node;
             node = node._next;
             count++;
-        }*/
-    }
+        }
+    }*/
 
     /**
      * Creates or gets a layout node.
@@ -382,7 +371,6 @@ define(function(require, exports, module) {
             this._contextState.startPrev = prev;
             this._contextState.prev = prev ? node : undefined;
             this._contextState.next = prev ? undefined : node;
-            _checkIntegrity.call(this);
         }
 
         // Check whether node already exist at the correct position
@@ -403,7 +391,6 @@ define(function(require, exports, module) {
                 if (prevNode._prev) {
                     this._contextState.prev = prevNode._prev;
                 }
-                _checkIntegrity.call(this);
                 return prevNode;
             }
         }
@@ -419,7 +406,6 @@ define(function(require, exports, module) {
                 if (nextNode._next) {
                     this._contextState.next = nextNode._next;
                 }
-                _checkIntegrity.call(this);
                 return nextNode;
             }
         }
@@ -451,7 +437,6 @@ define(function(require, exports, module) {
             }
             node._next = undefined;
             node._prev = undefined;
-            _checkIntegrity.call(this);
         }
 
         // Insert node into the linked list
@@ -478,7 +463,6 @@ define(function(require, exports, module) {
             node._prev = nextNode;
             this._contextState.next = node;
         }
-        _checkIntegrity.call(this);
 
         return node;
     }
