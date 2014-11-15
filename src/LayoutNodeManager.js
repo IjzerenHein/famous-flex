@@ -93,6 +93,7 @@ define(function(require, exports, module) {
         this._nodesById = nodesById;
         this._trueSizeRequested = false;
         this._reevalTrueSize =
+            contextData.reevalTrueSize ||
             !context.size ||
             (context.size[0] !== contextData.size[0]) ||
             (context.size[1] !== contextData.size[1]);
