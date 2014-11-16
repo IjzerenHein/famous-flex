@@ -46,6 +46,7 @@ define(function(require, exports, module) {
 
         if (!this._pe) {
             this._pe = new PhysicsEngine();
+            this._pe.sleep();
         }
 
         this._options = {
@@ -505,7 +506,7 @@ define(function(require, exports, module) {
 
         // set translate
         prop = this._properties.translate;
-        value = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+        value = set.translate;
         if (value || (prop && prop.init)) {
             _setPropertyValue.call(this, prop, 'translate', value, DEFAULT.translate, undefined, true);
         }

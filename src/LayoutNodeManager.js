@@ -220,6 +220,25 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Sets the options for all nodes.
+     *
+     * @param {Object} options node options
+     */
+    LayoutNodeManager.prototype.setNodeOptions = function(options) {
+        this._nodeOptions = options;
+        var node = this._first;
+        while (node) {
+            node.setOptions(options);
+            node = node._next;
+        }
+        node = this._pool.layoutNodes.first;
+        while (node) {
+            node.setOptions(options);
+            node = node._next;
+        }
+    };
+
+    /**
      * Creates a layout-node
      *
      * @param {Object} renderNode render-node for whom to create a layout-node for
@@ -235,6 +254,9 @@ define(function(require, exports, module) {
         }
         else {
             node = new this.LayoutNode(renderNode, spec);
+            if (this._nodeOptions) {
+                node.setOptions(this._nodeOptions);
+            }
         }
         node._prev = undefined;
         node._next = undefined;
@@ -272,41 +294,6 @@ define(function(require, exports, module) {
             this._pool.layoutNodes.first = node;
         }
     }
-
-    /**
-     * Enumates all layout-nodes.
-     *
-     * @param {Function} callback Function that is called every node
-     * @param {Bool} [next] undefined = all, true = all next, false = all previous
-     */
-    LayoutNodeManager.prototype.forEach = function(callback, next) {
-        var node;
-        if (next === undefined) {
-            node = this._first;
-            while (node) {
-                if (callback(node)) {
-                    return;
-                }
-                node = node._next;
-            }
-        } else if (next === true) {
-            node = (this._contextState.start && this._contextState.startPrev) ? this._contextState.start._next : this._contextState.start;
-            while (node) {
-                if (!node._invalidated || callback(node)) {
-                    return;
-                }
-                node = node._next;
-            }
-        } else if (next === false) {
-            node = (this._contextState.start && !this._contextState.startPrev) ? this._contextState.start._prev : this._contextState.start;
-            while (node) {
-                if (!node._invalidated || callback(node)) {
-                    return;
-                }
-                node = node._prev;
-            }
-        }
-    };
 
     /**
      * Gets start layout-node for enumeration.

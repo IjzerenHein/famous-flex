@@ -125,9 +125,6 @@ define(function(require, exports, module) {
      * the node with the `insertSpec` if it has been defined.
      */
     function _initFlowLayoutNode(node, spec) {
-        node.setOptions({
-            spring: this.options.nodeSpring
-        });
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
@@ -157,8 +154,8 @@ define(function(require, exports, module) {
             this.setDirection(options.direction);
         }
         if (options.nodeSpring && this.options.flow) {
-            this._nodes.forEach(function(node) {
-                node.setOptions({spring: options.nodeSpring});
+            this._nodes.setNodeOptions({
+                spring: options.nodeSpring
             });
         }
         return this;

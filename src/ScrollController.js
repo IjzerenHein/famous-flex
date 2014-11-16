@@ -276,18 +276,12 @@ define(function(require, exports, module) {
      * is immediately updated when the user scrolls the view.
      */
     function _initLayoutNode(node, spec) {
-        if (node.setOptions) {
-            node.setOptions({
-                spring: this.options.nodeSpring
-            });
-        }
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
         if (node.setDirectionLock) {
             node.setDirectionLock(this._direction, 1);
         }
-        node._spec._translatedSpec = undefined; // for debugging..
     }
 
     /**
