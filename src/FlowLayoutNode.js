@@ -63,14 +63,12 @@ define(function(require, exports, module) {
                 this._properties[propName].init = false;
             }
         }
-        _verifyIntegrity.call(this);
 
         this._specModified = true;
         this._initial = true;
         if (spec) {
             this.setSpec(spec);
         }
-        _verifyIntegrity.call(this);
     }
     FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
     FlowLayoutNode.prototype.constructor = FlowLayoutNode;
@@ -101,8 +99,8 @@ define(function(require, exports, module) {
     /**
      * Verifies that the integrity of the layout-node is oke.
      */
-    function _verifyIntegrity() {
-        /*var i;
+    /*function _verifyIntegrity() {
+        var i;
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.particle) {
@@ -122,21 +120,24 @@ define(function(require, exports, module) {
                     }
                 }
             }
-        }*/
-    }
+        }
+    }*/
 
     /**
      * Sets the configuration options
      */
     FlowLayoutNode.prototype.setOptions = function(options) {
         this._optionsManager.setOptions(options);
+        var wasSleeping = this._pe.isSleeping();
         for (var propName in this._properties) {
             var prop = this._properties[propName];
             if (prop.force) {
                 prop.force.setOptions(prop.force);
             }
         }
-        _verifyIntegrity.call(this);
+        if (wasSleeping) {
+            this._pe.sleep();
+        }
         return this;
     };
 
@@ -423,6 +424,7 @@ define(function(require, exports, module) {
         else {
 
             // Create property if neccesary
+            var wasSleeping = this._pe.isSleeping();
             if (!prop) {
                 prop = {
                     particle: new Particle({
@@ -443,9 +445,11 @@ define(function(require, exports, module) {
             else {
                 prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
                 prop.endState.set(endState);
-                if (!this._initial && !immediate) {
-                    this._pe.wake();
-                }
+            }
+            if (!this._initial && !immediate) {
+                this._pe.wake();
+            } else if (wasSleeping) {
+                this._pe.sleep(); // nothing has changed, put back to sleep
             }
             prop.init = true;
             prop.invalidated = true;
