@@ -250,15 +250,12 @@ define(function(require, exports, module) {
         // When the end state was reached, return the previous spec
         var endStateReached = this._pe.isSleeping();
         if (!this._specModified && endStateReached) {
-            if (this._invalidated) {
-                return this._spec;
-            }
-            else {
-                return undefined;
-            }
+            this._spec.removed = !this._invalidated;
+            return this._spec;
         }
         this._initial = false;
         this._specModified = !endStateReached;
+        this._spec.removed = false;
 
         // Step physics engine when not sleeping
         if (!endStateReached) {

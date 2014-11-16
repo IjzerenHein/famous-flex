@@ -42,6 +42,7 @@ define(function(require, exports, module) {
     function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
         this.LayoutNode = LayoutNode;
         this._initLayoutNodeFn = initLayoutNodeFn;
+        this._layoutCount = 0;
         this._context = new LayoutContext({
             next: _contextNext.bind(this),
             prev: _contextPrev.bind(this),
@@ -90,6 +91,7 @@ define(function(require, exports, module) {
 
         // Prepare data
         var context = this._context;
+        this._layoutCount++;
         this._nodesById = nodesById;
         this._trueSizeRequested = false;
         this._reevalTrueSize =
@@ -108,6 +110,8 @@ define(function(require, exports, module) {
         contextState.prevGetIndex = 0;
         contextState.nextSetIndex = 0;
         contextState.prevSetIndex = 0;
+        contextState.addCount = 0;
+        contextState.removeCount = 0;
 
         // Prepare content
         context.size[0] = contextData.size[0];
@@ -159,7 +163,8 @@ define(function(require, exports, module) {
         while (node) {
             var modified = node._specModified;
             var spec = node.getSpec();
-            if (!spec) {
+            //if (spec.removed && (!this._contextState.addCount || (this._contextState.removeCount > 5))) {
+            if (spec.removed) {
 
                 // Destroy node
                 var destroyNode = node;
@@ -186,6 +191,8 @@ define(function(require, exports, module) {
                 node = node._next;
             }
         }
+        this._contextState.addCount = 0;
+        this._contextState.removeCount = 0;
         return result;
     };
 
@@ -261,6 +268,7 @@ define(function(require, exports, module) {
         node._prev = undefined;
         node._next = undefined;
         node._viewSequence = undefined;
+        node._layoutCount = 0;
         if (this._initLayoutNodeFn) {
             this._initLayoutNodeFn.call(this, node, spec);
         }
@@ -573,6 +581,10 @@ define(function(require, exports, module) {
                 }
                 node = _contextGetCreateAndOrderNodes.call(this, contextNode.renderNode, contextNode.prev);
                 node._viewSequence = contextNode.viewSequence;
+                node._layoutCount++;
+                if (node._layoutCount === 1) {
+                    this._contextState.addCount++;
+                }
                 contextNode.node = node;
             }
             node.usesTrueSize = contextNode.usesTrueSize;

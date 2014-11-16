@@ -180,7 +180,8 @@ define(function(require, exports, module) {
      */
     LayoutNode.prototype.getSpec = function() {
         this._specModified = false;
-        return this._invalidated ? this._spec : undefined;
+        this._spec.removed = !this._invalidated;
+        return this._spec;
     };
 
     /**
