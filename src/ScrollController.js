@@ -628,6 +628,7 @@ define(function(require, exports, module) {
         // by two.
         if (refreshParticle || (this._scroll.particleValue === undefined)) {
             this._scroll.particleValue = this._scroll.particle.getPosition1D();
+            this._scroll.particleValue = Math.round(this._scroll.particleValue * 1000) / 1000;
         }
 
         // do stuff
@@ -1029,8 +1030,8 @@ define(function(require, exports, module) {
             var delta = normalizedScrollOffset - scrollOffset;
 
             // Adjust particle
-            //var particleValue = this._scroll.particle.getPosition1D();
-            var particleValue = this._scroll.particleValue;
+            var particleValue = this._scroll.particle.getPosition1D();
+            //var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
             //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
