@@ -315,7 +315,7 @@ define(function(require, exports, module) {
                 if (this._scroll.springForceId !== undefined) {
                     this._scroll.pe.detach(this._scroll.springForceId);
                     this._scroll.springForceId = undefined;
-                    _log.call(this, 'disabled spring');
+                    //_log.call(this, 'disabled spring');
                 }
             }
             else {
@@ -324,7 +324,7 @@ define(function(require, exports, module) {
                 }
                 this._scroll.springEndState.set1D(springValue);
                 this._scroll.pe.wake();
-                _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
+                //_log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
             }
         }
     }
@@ -418,11 +418,12 @@ define(function(require, exports, module) {
         // Remove any touches that are no longer active
         var oldTouchesCount = this._scroll.activeTouches.length;
         var i = 0;
+        var j;
         var touchFound;
         while (i < this._scroll.activeTouches.length) {
             var activeTouch = this._scroll.activeTouches[i];
             touchFound = false;
-            for (var j = 0; j < event.touches.length; j++) {
+            for (j = 0; j < event.touches.length; j++) {
                 var touch = event.touches[j];
                 if (touch.identifier === activeTouch.id) {
                     touchFound = true;
@@ -442,7 +443,7 @@ define(function(require, exports, module) {
         for (i = 0; i < event.touches.length; i++) {
             var changedTouch = event.touches[i];
             touchFound = false;
-            for (j = 0; j < this._scroll.activeTouches.length; i++) {
+            for (j = 0; j < this._scroll.activeTouches.length; j++) {
                 if (this._scroll.activeTouches[j].id === changedTouch.identifier) {
                     touchFound = true;
                     break;
@@ -901,7 +902,7 @@ define(function(require, exports, module) {
         if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
             snapSpringPosition = (scrollOffset - pageOffset) - (this.options.alignment ? pageLength : 0);
             if (snapSpringPosition !== this._scroll.springPosition) {
-                _log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
                 this._scroll.springSource = SpringSource.SNAPPREV;
             }
@@ -909,7 +910,7 @@ define(function(require, exports, module) {
         else {
             snapSpringPosition = (scrollOffset - (pageOffset + pageLength));
             if (snapSpringPosition !== this._scroll.springPosition) {
-                _log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
                 this._scroll.springPosition = snapSpringPosition;
                 this._scroll.springSource = SpringSource.SNAPNEXT;
             }
@@ -992,9 +993,10 @@ define(function(require, exports, module) {
     function _normalizeViewSequence(size, scrollOffset) {
 
         // Check whether normalisation is disabled
-        if (this._layout.capabilities && this._layout.capabilities.debug &&
-            (this._layout.capabilities.debug.normalize !== undefined) &&
-            !this._layout.capabilities.debug.normalize) {
+        var caps = this._layout.capabilities;
+        if (caps && caps.debug &&
+            (caps.debug.normalize !== undefined) &&
+            !caps.debug.normalize) {
             return scrollOffset;
         }
 
@@ -1030,7 +1032,7 @@ define(function(require, exports, module) {
             //var particleValue = this._scroll.particle.getPosition1D();
             var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
+            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1038,7 +1040,7 @@ define(function(require, exports, module) {
             }
 
             // Adjust group offset
-            if (this._layout.capabilities.sequentialScrollingOptimized) {
+            if (caps && caps.sequentialScrollingOptimized) {
                 this._scroll.groupStart -= delta;
             }
         }
