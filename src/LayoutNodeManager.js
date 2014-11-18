@@ -625,21 +625,28 @@ define(function(require, exports, module) {
                 // updates the content after asking the DOM for the offsetHeight/offsetWidth.
                 // The code below backs the size up, and re-uses that when this scenario
                 // occurs.
-                if (backupSize) {
-                    backupSize[0] = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
-                    backupSize[1] = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
+                if (backupSize && (configSize !== size)) {
+                    var newWidth = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
+                    var newHeight = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
+                    if ((newWidth !== backupSize[0]) || (newHeight !== backupSize[1])) {
+                        this._trueSizeRequested = true;
+                        contextNode.trueSizeRequested = true;
+                    }
+                    backupSize[0] = newWidth;
+                    backupSize[1] = newHeight;
                     size = backupSize;
                     renderNode._backupSize = undefined;
                     backupSize = undefined;
                 }
-                this._trueSizeRequested = true;
-                contextNode.trueSizeRequested = true;
+                else {
+                    this._trueSizeRequested = true;
+                    contextNode.trueSizeRequested = true;
+                }
                 //console.log('true size requested on node: ' + JSON.stringify(size));
             }
             if (this._reevalTrueSize) {
                 renderNode._trueSizeCheck = true; // force request of true-size from DOM
             }
-            //this._trueSizeRequested = true;
 
             // Backup the size of the node
             if (!backupSize) {
