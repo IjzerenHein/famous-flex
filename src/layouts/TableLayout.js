@@ -125,10 +125,6 @@ define(function(require, exports, module) {
         var lastSectionBeforeVisibleCellScrollLength;
         var firstVisibleCell;
         var lastCellOffsetInFirstVisibleSection;
-        var firstCell;
-        var firstCellOffset;
-        var lastCell;
-        var lastCellOffset;
 
         // init
         context = context_;
@@ -165,19 +161,6 @@ define(function(require, exports, module) {
             nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
 
             //
-            // Detect the first and last cell
-            //
-            if (!firstCell) {
-                firstCell = node;
-                firstCellOffset = offset;
-                if (options.isPullToRefreshCallback && options.isPullToRefreshCallback(node.renderNode)) {
-                    nodeSize = 0;
-                }
-            }
-            lastCell = node;
-            lastCellOffset = offset;
-
-            //
             // Position node
             //
             offset += _setNode(node, offset, nodeSize, nodeSize);
@@ -197,10 +180,6 @@ define(function(require, exports, module) {
             } else if (!firstVisibleCell && (offset >= 0)) {
                 firstVisibleCell = node;
             }
-        }
-        if (!lastCell) {
-            lastCell = context.next();
-            lastCellOffset = offset;
         }
 
         //
@@ -241,16 +220,6 @@ define(function(require, exports, module) {
                 }
                 lastSectionBeforeVisibleCell = undefined;
             }
-
-            //
-            // Detect the first and last cell
-            //
-            firstCell = node;
-            firstCellOffset = offset;
-            if (!lastCell) {
-                lastCell = node;
-                lastCellOffset = offset;
-            }
         }
 
         //
@@ -286,34 +255,6 @@ define(function(require, exports, module) {
             }
             _setNode(lastSectionBeforeVisibleCell, correctedOffset, lastSectionBeforeVisibleCellLength, lastSectionBeforeVisibleCellScrollLength);
         }
-
-        //
-        // Reposition "pull to refresh" renderable at the top
-        //
-        /*if (firstCell && (firstCellOffset > 0) &&
-           options.isPullToRefreshCallback && options.isPullToRefreshCallback(firstCell.renderNode)) {
-            firstCell.set.translate[direction] = 0;
-            firstCell.set.size[direction] = firstCellOffset;
-            context.set(firstCell, {
-                size: firstCell.set.size,
-                translate: firstCell.set.translate,
-                scrollLength: firstCell.set.scrollLength
-            });
-        }
-
-        //
-        // Reposition "pull to refresh" renderable at the bottom
-        //
-        if (lastCell && (lastCellOffset < context.size[direction]) &&
-           options.isPullToRefreshCallback && options.isPullToRefreshCallback(lastCell.renderNode)) {
-            lastCell.set.translate[direction] = lastCellOffset;
-            lastCell.set.size[direction] = context.size[direction] - lastCellOffset;
-            context.set(lastCell, {
-                size: lastCell.set.size,
-                translate: lastCell.set.translate,
-                scrollLength: 0
-            });
-        }*/
     }
 
     TableLayout.Capabilities = capabilities;

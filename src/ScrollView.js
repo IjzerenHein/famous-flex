@@ -18,6 +18,7 @@
  * -    Customizable layout (uses ListLayout by default)
  * -    Insert/remove at any position using animations
  * -    Support for `true` size renderables
+ * -    Pull to refresh
  * -    Horizontal/vertical direction
  * -    Top/left or bottom/right alignment
  * -    Pagination
@@ -53,7 +54,9 @@ define(function(require, exports, module) {
         flow: false,                // allow renderables to flow between layouts when not scrolling
         mouseMove: false,           // allow mouse to hold and move the view
         useContainer: false,        // embeds inside a ContainerSurface for clipping and capturing input events
-        visibleItemThresshold: 0.5  // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
+        visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
+        pullToRefreshHeader: undefined, // assign pull-to-refresh renderable here (renderable must have a size)
+        pullToRefreshFooter: undefined  // assign pull-to-refresh renderable here (renderable must have a size)
         // see ScrollController for all other options
     };
 
@@ -136,6 +139,221 @@ define(function(require, exports, module) {
      * in pixels translated.
      */
     ScrollView.prototype.getPosition = ScrollView.prototype.getOffset;
+
+    /**
+     * Post-layout function that adds the pull-to-refresh renderables.
+     * @private
+     */
+    ScrollView.prototype._postLayout = function(size, scrollOffset) {
+
+        // Exit immediately when pull to refresh is not configured
+        if (!this.options.pullToRefreshHeader && !this.options.pullToRefreshFooter) {
+            return;
+        }
+
+        // Adjust scroll-offset for alignment
+        if (this.options.alignment) {
+            scrollOffset += size[this._direction];
+        }
+
+        // Prepare
+        var prevHeight;
+        var nextHeight;
+        var totalHeight;
+
+        // Show/activate pull to refresh header
+        var pullToRefreshHeader = this.options.pullToRefreshHeader;
+        if (pullToRefreshHeader) {
+
+            // Calculate offset
+            prevHeight = this._calcScrollHeight(false);
+            prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+            var length = pullToRefreshHeader.getSize()[this._direction];
+            var offset = (prevHeight >= 0) ? (scrollOffset - prevHeight) : prevHeight;
+            if (this.options.alignment) {
+                nextHeight = this._calcScrollHeight(true);
+                nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+                totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+                if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+                    offset = Math.round((scrollOffset - size[this._direction]) + nextHeight);
+                }
+            }
+
+            // Determine whether to show or hide the pull-to-refresh node
+            var showing = this._pullToRefreshHeaderVisible;
+            if (!showing) {
+                var visiblePerc = Math.max(Math.min(offset / length, 1), 0);
+                if (visiblePerc) {
+                    if (this._scroll.scrollForceCount) {
+                        showing = true;
+                        this._pullToRefreshHeaderVisiblePerc = visiblePerc;
+                    } else if (this._pullToRefreshHeaderVisiblePerc > 0) {
+                        showing = true;
+                    }
+                }
+                else {
+                    this._pullToRefreshHeaderVisiblePerc = 0;
+                }
+            }
+            else {
+                this._pullToRefreshHeaderVisiblePerc = 1;
+            }
+
+            // Show pull to refresh node
+            if (showing) {
+                var contextNode = {
+                    renderNode: pullToRefreshHeader,
+                    prev: true,
+                    index: --this._nodes._contextState.prevGetIndex
+                };
+                var set = {
+                    size: [size[0], size[1]],
+                    translate: [0, 0, -1e-3], // transform.behind
+                    scrollLength: (this._scroll.scrollForceCount || this._pullToRefreshHeaderVisible) ? length : undefined
+                };
+                set.size[this._direction] = length;
+                this._nodes._context.set(contextNode, set);
+            }
+            if ((this._pullToRefreshHeaderVisiblePerc >= 1) && this._scroll.scrollForceCount && !this._pullToRefreshHeaderVisible) {
+                this._pullToRefreshHeaderVisible = true;
+            }
+        }
+
+        // Show/activate pull to refresh header
+        var pullToRefreshFooter = this.options.pullToRefreshFooter;
+        if (pullToRefreshFooter) {
+            nextHeight = (nextHeight === undefined) ? nextHeight = this._calcScrollHeight(true) : nextHeight;
+            nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+            length = pullToRefreshFooter.getSize()[this._direction];
+            offset = (nextHeight >= 0) ? (scrollOffset + nextHeight) : (size[this._direction] + 1);
+            if (!this.options.alignment) {
+                prevHeight = (prevHeight === undefined) ? this._calcScrollHeight(false) : prevHeight;
+                prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+                totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+                if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+                    offset = Math.round((scrollOffset - prevHeight) + size[this._direction]);
+                }
+            }
+
+            // Determine whether to show or hide the pull-to-refresh node
+            offset = -(offset - size[this._direction]);
+            showing = this._pullToRefreshFooterVisible;
+            if (!showing) {
+                visiblePerc = Math.max(Math.min(offset / length, 1), 0);
+                if (visiblePerc) {
+                    if (this._scroll.scrollForceCount) {
+                        showing = true;
+                        this._pullToRefreshFooterVisiblePerc = visiblePerc;
+                    }
+                    else if (this._pullToRefreshFooterVisiblePerc > 0) {
+                        showing = true;
+                    }
+                }
+                else {
+                    this._pullToRefreshFooterVisiblePerc = 0;
+                }
+            }
+            else {
+                this._pullToRefreshFooterVisiblePerc = 1;
+            }
+
+            // Show pull to refresh node
+            if (showing) {
+                contextNode = {
+                    renderNode: pullToRefreshFooter,
+                    next: true,
+                    index: ++this._nodes._contextState.nextGetIndex
+                };
+                set = {
+                    size: [size[0], size[1]],
+                    translate: [0, 0, -1e-3], // transform.behind
+                    scrollLength: (this._scroll.scrollForceCount || this._pullToRefreshFooterVisible) ? length : undefined
+                };
+                set.translate[this._direction] = size[this._direction] - length;
+                set.size[this._direction] = length;
+                this._nodes._context.set(contextNode, set);
+            }
+            if ((this._pullToRefreshFooterVisiblePerc >= 1) && this._scroll.scrollForceCount && !this._pullToRefreshFooterVisible) {
+                this._pullToRefreshFooterVisible = true;
+            }
+        }
+    };
+
+    /**
+     * Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
+     *
+     * @param {Bool} [footer] set to true to show pull-to-refresh at the end (default: false).
+     */
+    ScrollView.prototype.showPullToRefresh = function(footer) {
+        if (footer) {
+            if (!this._pullToRefreshFooterVisible) {
+                this._pullToRefreshFooterVisible = true;
+                this.reflowLayout();
+            }
+        }
+        else {
+            if (!this._pullToRefreshHeaderVisible) {
+                this._pullToRefreshHeaderVisible = true;
+                this.reflowLayout();
+            }
+        }
+        return this;
+    };
+
+    /**
+     * Hides the pull-to-refresh renderable in case it was visible.
+     */
+    ScrollView.prototype.hidePullToRefresh = function(footer) {
+        if (footer) {
+            if (this._pullToRefreshFooterVisible) {
+                this._pullToRefreshFooterVisible = false;
+                this._pullToRefreshFooterVisiblePerc = 0;
+                this.reflowLayout();
+            }
+        }
+        else {
+            if (this._pullToRefreshHeaderVisible) {
+                this._pullToRefreshHeaderVisible = false;
+                this._pullToRefreshHeaderVisiblePerc = 0;
+                this.reflowLayout();
+            }
+        }
+        return this;
+    };
+
+    /**
+     * Get the visible state of the pull-to-refresh renderable.
+     */
+    ScrollView.prototype.isPullToRefreshVisible = function(footer) {
+        return footer ? this._pullToRefreshFooterVisible : this._pullToRefreshHeaderVisible;
+    };
+
+    /**
+     * Overriden commit, in order to emit pull-to-refresh event after
+     * all the rendering has been done.
+     * @private
+     */
+    ScrollView.prototype.commit = function(context) {
+        var result = ScrollController.prototype.commit.call(this, context);
+
+        // Emit pull to refresh events after the whole commit call has been executed
+        // so that when code is executed in the event, the ScrollView is in a correct state.
+        if (this._pullToRefreshHeaderVisible && !this._cachedPullToRefreshHeaderVisible) {
+            this._eventOutput.emit('refresh', {
+                target: this,
+                footer: false
+            });
+        }
+        this._cachedPullToRefreshHeaderVisible = this._pullToRefreshHeaderVisible;
+        if (this._pullToRefreshFooterVisible && !this._cachedPullToRefreshFooterVisible) {
+            this._eventOutput.emit('refresh', {
+                target: this,
+                footer: true
+            });
+        }
+        this._cachedPullToRefreshFooterVisible = this._pullToRefreshFooterVisible;
+        return result;
+    };
 
     module.exports = ScrollView;
 });

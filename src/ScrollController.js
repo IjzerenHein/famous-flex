@@ -412,8 +412,6 @@ define(function(require, exports, module) {
      * touch gestures.
      */
     function _touchStart(event) {
-        //_log.call(this, 'touchStart');
-        //this._eventOutput.emit('touchstart', event);
 
         // Remove any touches that are no longer active
         var oldTouchesCount = this._scroll.activeTouches.length;
@@ -470,7 +468,6 @@ define(function(require, exports, module) {
             if (this.options.scrollCallback) {
                 this.options.scrollCallback(0, 1);
             }
-            //this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
         }
     }
 
@@ -482,8 +479,6 @@ define(function(require, exports, module) {
         if (!this.options.enabled) {
             return;
         }
-        //_log.call(this, 'touchMove');
-        //this._eventOutput.emit('touchmove', event);
 
         // Process the touch event
         var primaryTouch;
@@ -520,7 +515,6 @@ define(function(require, exports, module) {
             }
             this.updateScrollForce(this._scroll.touchDelta, delta);
             this._scroll.touchDelta = delta;
-            //this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
         }
     }
 
@@ -531,8 +525,6 @@ define(function(require, exports, module) {
      * certain direction.
      */
     function _touchEnd(event) {
-        //_log.call(this, 'touchEnd');
-        //this._eventOutput.emit('touchend', event);
 
         // Remove touch
         var primaryTouch = this._scroll.activeTouches.length ? this._scroll.activeTouches[0] : undefined;
@@ -665,22 +657,25 @@ define(function(require, exports, module) {
 
     /**
      * Helper function that calculates the next/prev layed out height.
+     * @private
      */
-    function _calcHeight(next) {
+    ScrollController.prototype._calcScrollHeight = function(next) {
         var calcedHeight = 0;
         var node = this._nodes.getStartEnumNode(next);
         while (node) {
-            if (!node._invalidated) {
-                break;
-            } else if ((node.scrollLength === undefined) || node.trueSizeRequested) {
-                calcedHeight = undefined;
-                break;
+            if (node._invalidated) {
+                if (node.trueSizeRequested) {
+                    calcedHeight = undefined;
+                    break;
+                }
+                if (node.scrollLength !== undefined) {
+                    calcedHeight += node.scrollLength;
+                }
             }
-            calcedHeight += node.scrollLength;
             node = next ? node._next : node._prev;
         }
         return calcedHeight;
-    }
+    };
 
     /**
      * Normalizes the scroll-offset so that scroll-offset is as close
@@ -694,8 +689,17 @@ define(function(require, exports, module) {
     function _calcBounds(size, scrollOffset) {
 
         // Local data
-        var prevHeight = _calcHeight.call(this, false);
-        var nextHeight = _calcHeight.call(this, true);
+        var prevHeight = this._calcScrollHeight(false);
+        var nextHeight = this._calcScrollHeight(true);
+
+        // 0. Don't set any springs when either next or prev-height could
+        //    not be determined due to true-size renderables.
+        if ((prevHeight === undefined) || (nextHeight === undefined)) {
+            this._scroll.boundsReached = Bounds.NONE;
+            this._scroll.springPosition = undefined;
+            this._scroll.springSource = SpringSource.NONE;
+            return;
+        }
 
         // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
@@ -929,7 +933,7 @@ define(function(require, exports, module) {
         var normalizeNextPrev = false;
         var node = this._nodes.getStartEnumNode(false);
         while (node) {
-            if (!node._invalidated) {
+            if (!node._invalidated || !node._viewSequence) {
                 break;
             }
             if (normalizeNextPrev) {
@@ -967,7 +971,7 @@ define(function(require, exports, module) {
         var normalizedScrollOffset = scrollOffset;
         var node = this._nodes.getStartEnumNode(true);
         while (node) {
-            if (!node._invalidated || (node.scrollLength === undefined) || node.trueSizeRequested ||
+            if (!node._invalidated || (node.scrollLength === undefined) || node.trueSizeRequested || !node._viewSequence ||
                 ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0)))) {
                 break;
             }
@@ -1387,8 +1391,8 @@ define(function(require, exports, module) {
 
         // Calculate height in both directions
         var scrollOffset = _calcScrollOffset.call(this);
-        var prevHeight = _calcHeight.call(this, false);
-        var nextHeight = _calcHeight.call(this, true);
+        var prevHeight = this._calcScrollHeight(false);
+        var nextHeight = this._calcScrollHeight(true);
 
         // When the rendered height is smaller than the total height,
         // then no scrolling whatsover is allowed.
@@ -1563,6 +1567,11 @@ define(function(require, exports, module) {
             );
         }
 
+        // Call post-layout function
+        if (this._postLayout) {
+            this._postLayout(size, scrollOffset);
+        }
+
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
 
@@ -1579,7 +1588,7 @@ define(function(require, exports, module) {
         // than before, then re-layout entirely using the new offset.
         var newScrollOffset = _calcScrollOffset.call(this, true);
         if (!nested && (newScrollOffset !== scrollOffset)) {
-            _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
+            //_log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
             return _layout.call(this, size, newScrollOffset, true);
         }
 
