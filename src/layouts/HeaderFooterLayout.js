@@ -17,6 +17,7 @@
  * |---|---|---|
  * |`[headerSize]`|Number|Height of the header|
  * |`[footerSize]`|Number|Height of the footer|
+ * |`[margins]`|Number/Array|Margins|
  *
  * Example:
  *
@@ -45,7 +46,7 @@ define(function(require, exports, module) {
 
     // Layout function
     module.exports = function HeaderFooterLayout(context, options) {
-        var dock = new LayoutDockHelper(context);
+        var dock = new LayoutDockHelper(context, options);
         dock.top('header', options.headerSize || options.headerHeight);
         dock.bottom('footer', options.footerSize || options.footerHeight);
         dock.fill('content');
