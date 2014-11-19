@@ -413,6 +413,14 @@ define(function(require, exports, module) {
      */
     function _touchStart(event) {
 
+        // Create touch-end event listener
+        if (!this._touchEndEventListener) {
+            this._touchEndEventListener = function(event) {
+                event.target.removeEventListener('touchend', this._touchEndEventListener);
+                _touchEnd.call(this, event);
+            }.bind(this);
+        }
+
         // Remove any touches that are no longer active
         var oldTouchesCount = this._scroll.activeTouches.length;
         var i = 0;
@@ -458,6 +466,10 @@ define(function(require, exports, module) {
                     time: time,
                     prevTime: time
                 });
+
+                // The following listener is automatically removed after touchend is received
+                // and ensures that the scrollview always received touchend.
+                changedTouch.target.addEventListener('touchend', this._touchEndEventListener);
             }
         }
 
@@ -571,9 +583,6 @@ define(function(require, exports, module) {
         // Release scroll force
         this.releaseScrollForce(delta, velocity);
         this._scroll.touchDelta = 0;
-
-        // Emit end event
-        //this._eventOutput.emit('scrollend', primaryTouch);
     }
 
     /**

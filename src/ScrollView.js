@@ -34,6 +34,15 @@ define(function(require, exports, module) {
     var ScrollController = require('./ScrollController');
     var ListLayout = require('./layouts/ListLayout');
 
+    //
+    // Pull to refresh states
+    //
+    var PullToRefreshState = {
+        HIDDEN: 0,
+        SHOWN: 1,
+        HIDDING: 2
+    };
+
     /**
      * @class
      * @extends ScrollController
@@ -42,6 +51,8 @@ define(function(require, exports, module) {
      */
     function ScrollView(options) {
         ScrollController.call(this, LayoutUtility.combineOptions(ScrollView.DEFAULT_OPTIONS, options));
+        this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
+        this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
     }
     ScrollView.prototype = Object.create(ScrollController.prototype);
     ScrollView.prototype.constructor = ScrollView;
@@ -180,7 +191,7 @@ define(function(require, exports, module) {
             }
 
             // Determine whether to show or hide the pull-to-refresh node
-            var showing = this._pullToRefreshHeaderVisible;
+            var showing = (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
             if (!showing) {
                 var visiblePerc = Math.max(Math.min(offset / length, 1), 0);
                 if (visiblePerc) {
@@ -199,6 +210,12 @@ define(function(require, exports, module) {
                 this._pullToRefreshHeaderVisiblePerc = 1;
             }
 
+            // Detect when fully shown
+            if ((this._pullToRefreshHeaderVisiblePerc >= 1) && this._scroll.scrollForceCount &&
+                (this._pullToRefreshHeaderState === PullToRefreshState.HIDDEN)) {
+                this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
+            }
+
             // Show pull to refresh node
             if (showing) {
                 var contextNode = {
@@ -206,16 +223,14 @@ define(function(require, exports, module) {
                     prev: true,
                     index: --this._nodes._contextState.prevGetIndex
                 };
+                var scrollLength = (this._scroll.scrollForceCount || (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN)) ? length : undefined;
                 var set = {
                     size: [size[0], size[1]],
                     translate: [0, 0, -1e-3], // transform.behind
-                    scrollLength: (this._scroll.scrollForceCount || this._pullToRefreshHeaderVisible) ? length : undefined
+                    scrollLength: scrollLength
                 };
                 set.size[this._direction] = length;
                 this._nodes._context.set(contextNode, set);
-            }
-            if ((this._pullToRefreshHeaderVisiblePerc >= 1) && this._scroll.scrollForceCount && !this._pullToRefreshHeaderVisible) {
-                this._pullToRefreshHeaderVisible = true;
             }
         }
 
@@ -234,10 +249,10 @@ define(function(require, exports, module) {
                     offset = Math.round((scrollOffset - prevHeight) + size[this._direction]);
                 }
             }
+            offset = -(offset - size[this._direction]);
 
             // Determine whether to show or hide the pull-to-refresh node
-            offset = -(offset - size[this._direction]);
-            showing = this._pullToRefreshFooterVisible;
+            showing = (this._pullToRefreshFooterState === PullToRefreshState.SHOWN);
             if (!showing) {
                 visiblePerc = Math.max(Math.min(offset / length, 1), 0);
                 if (visiblePerc) {
@@ -257,6 +272,12 @@ define(function(require, exports, module) {
                 this._pullToRefreshFooterVisiblePerc = 1;
             }
 
+            // Detect when fully shown
+            if ((this._pullToRefreshFooterVisiblePerc >= 1) && this._scroll.scrollForceCount &&
+                (this._pullToRefreshFooterState === PullToRefreshState.HIDDEN)) {
+                this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
+            }
+
             // Show pull to refresh node
             if (showing) {
                 contextNode = {
@@ -264,17 +285,15 @@ define(function(require, exports, module) {
                     next: true,
                     index: ++this._nodes._contextState.nextGetIndex
                 };
+                scrollLength = (this._scroll.scrollForceCount || (this._pullToRefreshFooterState === PullToRefreshState.SHOWN)) ? length : undefined;
                 set = {
                     size: [size[0], size[1]],
                     translate: [0, 0, -1e-3], // transform.behind
-                    scrollLength: (this._scroll.scrollForceCount || this._pullToRefreshFooterVisible) ? length : undefined
+                    scrollLength: scrollLength
                 };
                 set.translate[this._direction] = size[this._direction] - length;
                 set.size[this._direction] = length;
                 this._nodes._context.set(contextNode, set);
-            }
-            if ((this._pullToRefreshFooterVisiblePerc >= 1) && this._scroll.scrollForceCount && !this._pullToRefreshFooterVisible) {
-                this._pullToRefreshFooterVisible = true;
             }
         }
     };
@@ -286,15 +305,15 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.showPullToRefresh = function(footer) {
         if (footer) {
-            if (!this._pullToRefreshFooterVisible) {
-                this._pullToRefreshFooterVisible = true;
-                this.reflowLayout();
+            if (this._pullToRefreshFooterState !== PullToRefreshState.SHOWN) {
+                this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
+                this._scroll.scrollDirty = true;
             }
         }
         else {
-            if (!this._pullToRefreshHeaderVisible) {
-                this._pullToRefreshHeaderVisible = true;
-                this.reflowLayout();
+            if (this._pullToRefreshHeaderState !== PullToRefreshState.SHOWN) {
+                this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
+                this._scroll.scrollDirty = true;
             }
         }
         return this;
@@ -305,17 +324,17 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.hidePullToRefresh = function(footer) {
         if (footer) {
-            if (this._pullToRefreshFooterVisible) {
-                this._pullToRefreshFooterVisible = false;
+            if (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) {
+                this._pullToRefreshFooterState = PullToRefreshState.HIDDING;
                 this._pullToRefreshFooterVisiblePerc = 0;
-                this.reflowLayout();
+                this._scroll.scrollDirty = true;
             }
         }
         else {
-            if (this._pullToRefreshHeaderVisible) {
-                this._pullToRefreshHeaderVisible = false;
+            if (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN) {
+                this._pullToRefreshHeaderState = PullToRefreshState.HIDDING;
                 this._pullToRefreshHeaderVisiblePerc = 0;
-                this.reflowLayout();
+                this._scroll.scrollDirty = true;
             }
         }
         return this;
@@ -325,7 +344,7 @@ define(function(require, exports, module) {
      * Get the visible state of the pull-to-refresh renderable.
      */
     ScrollView.prototype.isPullToRefreshVisible = function(footer) {
-        return footer ? this._pullToRefreshFooterVisible : this._pullToRefreshHeaderVisible;
+        return footer ? (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) : (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
     };
 
     /**
@@ -334,24 +353,42 @@ define(function(require, exports, module) {
      * @private
      */
     ScrollView.prototype.commit = function(context) {
+
+        // Must release touch first, prior to detect a new pull to refresh change
+        if ((this._pullToRefreshHeaderState === PullToRefreshState.HIDDING) &&
+            !this._scroll.scrollForceCount) {
+            this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
+            this._scroll.scrollDirty = true;
+        }
+
+        // Must release touch first, prior to detect a new pull to refresh change
+        if ((this._pullToRefreshFooterState === PullToRefreshState.HIDDING) &&
+            (!this._scroll.scrollForceCount)) {
+            this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
+            this._scroll.scrollDirty = true;
+        }
+
+        // Call base class
         var result = ScrollController.prototype.commit.call(this, context);
 
         // Emit pull to refresh events after the whole commit call has been executed
         // so that when code is executed in the event, the ScrollView is in a correct state.
-        if (this._pullToRefreshHeaderVisible && !this._cachedPullToRefreshHeaderVisible) {
+        if ((this._cachedPullToRefreshHeaderState === PullToRefreshState.HIDDEN) &&
+            (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN)) {
             this._eventOutput.emit('refresh', {
                 target: this,
                 footer: false
             });
         }
-        this._cachedPullToRefreshHeaderVisible = this._pullToRefreshHeaderVisible;
-        if (this._pullToRefreshFooterVisible && !this._cachedPullToRefreshFooterVisible) {
+        this._cachedPullToRefreshHeaderState = this._pullToRefreshHeaderState;
+        if ((this._cachedPullToRefreshFooterState === PullToRefreshState.HIDDEN) &&
+            (this._pullToRefreshFooterState === PullToRefreshState.SHOWN)) {
             this._eventOutput.emit('refresh', {
                 target: this,
                 footer: true
             });
         }
-        this._cachedPullToRefreshFooterVisible = this._pullToRefreshFooterVisible;
+        this._cachedPullToRefreshFooterState = this._pullToRefreshFooterState;
         return result;
     };
 
