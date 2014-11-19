@@ -223,7 +223,7 @@ define(function(require, exports, module) {
         layoutAll: false,       // set to true is you want all renderables layed out/rendered
         alwaysLayout: false,    // set to true to always call the layout function
         scrollCallback: undefined, //function(offset, force)
-        extraBoundsSpace: [1, 1],
+        extraBoundsSpace: [100, 100],
         debug: false
     };
 

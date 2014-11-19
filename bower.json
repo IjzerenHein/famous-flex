@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   "authors": [
     "Hein Rutjes <hrutjes@gmail.com>"
   ],
-  "description": "Flexible and scrollable layout-controller for famo.us",
+  "description": "Flexible scrollview and layout-controller for famo.us",
   "keywords": [
     "famo.us",
     "famous",

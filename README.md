@@ -1,7 +1,7 @@
 famous-flex
 ==========
 
-Flexible and scrollable layout-controller for famo.us.
+Flexible scrollview and layout-controller for famo.us.
 
 ![Screenshot](screenshot.gif)
 
