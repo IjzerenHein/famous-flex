@@ -12,7 +12,7 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * Scrollable LayoutController.
+ * Scrollable layout-controller.
  *
  * Key features:
  * -    Customizable layout
