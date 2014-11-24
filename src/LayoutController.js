@@ -448,6 +448,21 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Adds a renderable to the end of a sequential data-source.
+     *
+     * The optional argument `insertSpec` is only used `flow` mode is enabled.
+     * When specified, the renderable is inserted using an animation starting with
+     * size, origin, opacity, transform, etc... as specified in `insertSpec'.
+     *
+     * @param {Object} renderable Renderable to add to the data-source
+     * @param {Spec} [insertSpec] Size, transform, etc.. to start with when inserting
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.push = function(renderable, insertSpec) {
+        return this.insert(-1, renderable, insertSpec);
+    };
+
+    /**
      * Removes a renderable from the data-source.
      *
      * The optional argument `removeSpec` is only used `flow` mode is enabled.
@@ -491,6 +506,27 @@ define(function(require, exports, module) {
             this._isDirty = true;
         }
 
+        return this;
+    };
+
+    /**
+     * Removes all renderables from the data-source.
+     *
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.removeAll = function() {
+        if (this._nodesById) {
+            var dirty = false;
+            for (var key in this._nodesById) {
+                delete this._nodesById[key];
+                dirty = true;
+            }
+            if (dirty) {
+                this._isDirty = true;
+            }
+        } else if (this._dataSource){
+          this.setDataSource([]);
+        }
         return this;
     };
 
