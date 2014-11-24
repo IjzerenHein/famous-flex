@@ -6,6 +6,7 @@ Three part layout consisting of a top-header, bottom-footer and middle part.
 |---|---|---|
 |`[headerSize]`|Number|Height of the header|
 |`[footerSize]`|Number|Height of the footer|
+|`[margins]`|Number/Array|Margins|
 
 Example:
 

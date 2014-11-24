@@ -6,6 +6,7 @@ Key features:
 -    Customizable layout (uses ListLayout by default)
 -    Insert/remove at any position using animations
 -    Support for `true` size renderables
+-    Pull to refresh
 -    Horizontal/vertical direction
 -    Top/left or bottom/right alignment
 -    Pagination
@@ -25,6 +26,9 @@ Inherited from: [ScrollController](./ScrollController.md)
   * [scrollView.goToPage(index)](#module_ScrollView#goToPage)
   * [scrollView.getOffset()](#module_ScrollView#getOffset)
   * [~~ScrollView~getPosition([node])~~](#module_ScrollView..getPosition)
+  * [scrollView.showPullToRefresh([footer])](#module_ScrollView#showPullToRefresh)
+  * [scrollView.hidePullToRefresh()](#module_ScrollView#hidePullToRefresh)
+  * [scrollView.isPullToRefreshVisible()](#module_ScrollView#isPullToRefreshVisible)
 
 <a name="exp_new_module_ScrollView"></a>
 ###new ScrollView(options)
@@ -86,3 +90,19 @@ Scrollview instance's currently managed collection.
 **Scope**: inner function of [ScrollView](#module_ScrollView)  
 **Returns**: `number` - The position of either the specified node, or the Scrollview's current Node,
 in pixels translated.  
+<a name="module_ScrollView#showPullToRefresh"></a>
+###scrollView.showPullToRefresh([footer])
+Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
+
+**Params**
+
+- \[footer\] `Bool` - set to true to show pull-to-refresh at the end (default: false).  
+
+<a name="module_ScrollView#hidePullToRefresh"></a>
+###scrollView.hidePullToRefresh()
+Hides the pull-to-refresh renderable in case it was visible.
+
+<a name="module_ScrollView#isPullToRefreshVisible"></a>
+###scrollView.isPullToRefreshVisible()
+Get the visible state of the pull-to-refresh renderable.
+

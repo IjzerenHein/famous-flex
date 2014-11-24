@@ -21,7 +21,9 @@ function and a data-source.
   * [layoutController.getSpec(node)](#module_LayoutController#getSpec)
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
   * [layoutController.insert(indexOrId, renderable, [insertSpec])](#module_LayoutController#insert)
+  * [layoutController.push(renderable, [insertSpec])](#module_LayoutController#push)
   * [layoutController.remove(indexOrId, [removeSpec])](#module_LayoutController#remove)
+  * [layoutController.removeAll()](#module_LayoutController#removeAll)
   * [layoutController.getSize()](#module_LayoutController#getSize)
 
 <a name="exp_new_module_LayoutController"></a>
@@ -156,6 +158,20 @@ size, origin, opacity, transform, etc... as specified in `insertSpec'.
 - \[insertSpec\] `Spec` - Size, transform, etc.. to start with when inserting  
 
 **Returns**: `LayoutController` - this  
+<a name="module_LayoutController#push"></a>
+###layoutController.push(renderable, [insertSpec])
+Adds a renderable to the end of a sequential data-source.
+
+The optional argument `insertSpec` is only used `flow` mode is enabled.
+When specified, the renderable is inserted using an animation starting with
+size, origin, opacity, transform, etc... as specified in `insertSpec'.
+
+**Params**
+
+- renderable `Object` - Renderable to add to the data-source  
+- \[insertSpec\] `Spec` - Size, transform, etc.. to start with when inserting  
+
+**Returns**: `LayoutController` - this  
 <a name="module_LayoutController#remove"></a>
 ###layoutController.remove(indexOrId, [removeSpec])
 Removes a renderable from the data-source.
@@ -168,6 +184,11 @@ the size, origin, opacity, transform, etc... as specified in `removeSpec'.
 
 - indexOrId `Number` | `String` - Index within dataSource array or id (String)  
 - \[removeSpec\] `Spec` - Size, transform, etc.. to end with when removing  
+
+**Returns**: `LayoutController` - this  
+<a name="module_LayoutController#removeAll"></a>
+###layoutController.removeAll()
+Removes all renderables from the data-source.
 
 **Returns**: `LayoutController` - this  
 <a name="module_LayoutController#getSize"></a>

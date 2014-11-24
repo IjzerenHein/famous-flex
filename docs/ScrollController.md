@@ -1,6 +1,6 @@
 <a name="module_ScrollController"></a>
 #ScrollController
-Scrollable LayoutController.
+Scrollable layout-controller.
 
 Key features:
 -    Customizable layout
