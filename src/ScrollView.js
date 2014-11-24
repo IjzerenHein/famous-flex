@@ -194,7 +194,7 @@ define(function(require, exports, module) {
             var showing = (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
             if (!showing) {
                 var visiblePerc = Math.max(Math.min(offset / length, 1), 0);
-                if (visiblePerc) {
+                if (offset > 0.2) {
                     if (this._scroll.scrollForceCount) {
                         showing = true;
                         this._pullToRefreshHeaderVisiblePerc = visiblePerc;
@@ -214,6 +214,9 @@ define(function(require, exports, module) {
             if ((this._pullToRefreshHeaderVisiblePerc >= 1) && this._scroll.scrollForceCount &&
                 (this._pullToRefreshHeaderState === PullToRefreshState.HIDDEN)) {
                 this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
+                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
+                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
+                }
             }
 
             // Show pull to refresh node
@@ -229,7 +232,7 @@ define(function(require, exports, module) {
                     translate: [0, 0, -1e-3], // transform.behind
                     scrollLength: scrollLength
                 };
-                set.size[this._direction] = length;
+                set.size[this._direction] = (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN) ? length : Math.max(Math.min(offset, length), 0);
                 this._nodes._context.set(contextNode, set);
             }
         }
@@ -255,7 +258,7 @@ define(function(require, exports, module) {
             showing = (this._pullToRefreshFooterState === PullToRefreshState.SHOWN);
             if (!showing) {
                 visiblePerc = Math.max(Math.min(offset / length, 1), 0);
-                if (visiblePerc) {
+                if (offset > 0.2) {
                     if (this._scroll.scrollForceCount) {
                         showing = true;
                         this._pullToRefreshFooterVisiblePerc = visiblePerc;
@@ -276,6 +279,9 @@ define(function(require, exports, module) {
             if ((this._pullToRefreshFooterVisiblePerc >= 1) && this._scroll.scrollForceCount &&
                 (this._pullToRefreshFooterState === PullToRefreshState.HIDDEN)) {
                 this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
+                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
+                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
+                }
             }
 
             // Show pull to refresh node
@@ -292,7 +298,7 @@ define(function(require, exports, module) {
                     scrollLength: scrollLength
                 };
                 set.translate[this._direction] = size[this._direction] - length;
-                set.size[this._direction] = length;
+                set.size[this._direction] = (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) ? length : Math.max(Math.min(offset, length), 0);
                 this._nodes._context.set(contextNode, set);
             }
         }
@@ -307,12 +313,18 @@ define(function(require, exports, module) {
         if (footer) {
             if (this._pullToRefreshFooterState !== PullToRefreshState.SHOWN) {
                 this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
+                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
+                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
+                }
                 this._scroll.scrollDirty = true;
             }
         }
         else {
             if (this._pullToRefreshHeaderState !== PullToRefreshState.SHOWN) {
                 this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
+                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
+                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
+                }
                 this._scroll.scrollDirty = true;
             }
         }
@@ -326,6 +338,9 @@ define(function(require, exports, module) {
         if (footer) {
             if (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) {
                 this._pullToRefreshFooterState = PullToRefreshState.HIDDING;
+                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
+                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
+                }
                 this._pullToRefreshFooterVisiblePerc = 0;
                 this._scroll.scrollDirty = true;
             }
@@ -333,6 +348,9 @@ define(function(require, exports, module) {
         else {
             if (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN) {
                 this._pullToRefreshHeaderState = PullToRefreshState.HIDDING;
+                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
+                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
+                }
                 this._pullToRefreshHeaderVisiblePerc = 0;
                 this._scroll.scrollDirty = true;
             }
@@ -358,6 +376,9 @@ define(function(require, exports, module) {
         if ((this._pullToRefreshHeaderState === PullToRefreshState.HIDDING) &&
             !this._scroll.scrollForceCount) {
             this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
+            if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
+                this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
+            }
             this._scroll.scrollDirty = true;
         }
 
@@ -365,6 +386,9 @@ define(function(require, exports, module) {
         if ((this._pullToRefreshFooterState === PullToRefreshState.HIDDING) &&
             (!this._scroll.scrollForceCount)) {
             this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
+            if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
+                this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
+            }
             this._scroll.scrollDirty = true;
         }
 
