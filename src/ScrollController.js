@@ -227,7 +227,6 @@ define(function(require, exports, module) {
         debug: false
     };
 
-    var oldSetOptions = ScrollController.prototype.setOptions;
     /**
      * Patches the ScrollController instance's options with the passed-in ones.
      *
@@ -254,7 +253,7 @@ define(function(require, exports, module) {
      * @return {ScrollController} this
      */
     ScrollController.prototype.setOptions = function(options) {
-        oldSetOptions.call(this, options);
+        LayoutController.prototype.setOptions.call(this, options);
         if (this._scroll) {
             if (options.scrollSpring) {
                 this._scroll.springForce.setOptions(options.scrollSpring);
@@ -1416,7 +1415,7 @@ define(function(require, exports, module) {
         // Determine the offset that we can scroll
         if ((delta < 0) && (nextHeight !== undefined)) {
             var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
-            return Math.min(nextOffset, delta);
+            return Math.max(nextOffset, delta);
         } else if ((delta > 0) && (prevHeight !== undefined)) {
             var prevOffset = -(scrollOffset - prevHeight);
             return Math.min(prevOffset, delta);
