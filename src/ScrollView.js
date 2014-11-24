@@ -23,6 +23,7 @@
  * -    Top/left or bottom/right alignment
  * -    Pagination
  * -    Option to embed in a ContainerSurface
+ * -    ScrollView linking
  *
  * Inherited from: [ScrollController](./ScrollController.md)
  * @module
@@ -53,6 +54,9 @@ define(function(require, exports, module) {
         ScrollController.call(this, LayoutUtility.combineOptions(ScrollView.DEFAULT_OPTIONS, options));
         this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
         this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
+        this._thisScrollViewDelta = 0;
+        this._leadingScrollViewDelta = 0;
+        this._trailingScrollViewDelta = 0;
     }
     ScrollView.prototype = Object.create(ScrollController.prototype);
     ScrollView.prototype.constructor = ScrollView;
@@ -67,7 +71,9 @@ define(function(require, exports, module) {
         useContainer: false,        // embeds inside a ContainerSurface for clipping and capturing input events
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         pullToRefreshHeader: undefined, // assign pull-to-refresh renderable here (renderable must have a size)
-        pullToRefreshFooter: undefined  // assign pull-to-refresh renderable here (renderable must have a size)
+        pullToRefreshFooter: undefined, // assign pull-to-refresh renderable here (renderable must have a size)
+        leadingScrollView: undefined,
+        trailingScrollView: undefined
         // see ScrollController for all other options
     };
 
@@ -363,6 +369,166 @@ define(function(require, exports, module) {
      */
     ScrollView.prototype.isPullToRefreshVisible = function(footer) {
         return footer ? (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) : (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
+    };
+
+    /**
+     * Delegates any scroll force to leading/trailing scrollviews.
+     */
+    ScrollView.prototype.applyScrollForce = function(delta) {
+        var leadingScrollView = this.options.leadingScrollView;
+        var trailingScrollView = this.options.trailingScrollView;
+        if (!leadingScrollView && !trailingScrollView) {
+            return ScrollController.prototype.applyScrollForce.call(this, delta);
+        }
+        var partialDelta;
+        if (delta < 0) {
+            if (leadingScrollView) {
+                partialDelta = leadingScrollView.canScroll(delta);
+                this._leadingScrollViewDelta += partialDelta;
+                leadingScrollView.applyScrollForce(partialDelta);
+                delta -= partialDelta;
+            }
+            if (trailingScrollView) {
+                partialDelta = this.canScroll(delta);
+                ScrollController.prototype.applyScrollForce.call(this, partialDelta);
+                this._thisScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+                trailingScrollView.applyScrollForce(delta);
+                this._trailingScrollViewDelta += delta;
+            }
+            else {
+                ScrollController.prototype.applyScrollForce.call(this, delta);
+                this._thisScrollViewDelta += delta;
+            }
+        }
+        else {
+            if (trailingScrollView) {
+                partialDelta = trailingScrollView.canScroll(delta);
+                trailingScrollView.applyScrollForce(partialDelta);
+                this._trailingScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+            }
+            if (leadingScrollView) {
+                partialDelta = this.canScroll(delta);
+                ScrollController.prototype.applyScrollForce.call(this, partialDelta);
+                this._thisScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+                leadingScrollView.applyScrollForce(delta);
+                this._leadingScrollViewDelta += delta;
+            }
+            else {
+                ScrollController.prototype.applyScrollForce.call(this, delta);
+                this._thisScrollViewDelta += delta;
+            }
+        }
+        return this;
+    };
+
+    /**
+     * Delegates any scroll force to leading/trailing scrollviews.
+     */
+    ScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
+        var leadingScrollView = this.options.leadingScrollView;
+        var trailingScrollView = this.options.trailingScrollView;
+        if (!leadingScrollView && !trailingScrollView) {
+            return ScrollController.prototype.updateScrollForce.call(this, prevDelta, newDelta);
+        }
+        var partialDelta;
+        var delta = newDelta - prevDelta;
+        if (delta < 0) {
+            if (leadingScrollView) {
+                partialDelta = leadingScrollView.canScroll(delta);
+                leadingScrollView.updateScrollForce(this._leadingScrollViewDelta, this._leadingScrollViewDelta + partialDelta);
+                this._leadingScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+            }
+            if (trailingScrollView && delta) {
+                partialDelta = this.canScroll(delta);
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + partialDelta);
+                this._thisScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+                this._trailingScrollViewDelta += delta;
+                trailingScrollView.updateScrollForce(this._trailingScrollViewDelta, this._trailingScrollViewDelta + delta);
+            }
+            else if (delta) {
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + delta);
+                this._thisScrollViewDelta += delta;
+            }
+        }
+        else {
+            if (trailingScrollView) {
+                partialDelta = trailingScrollView.canScroll(delta);
+                trailingScrollView.updateScrollForce(this._trailingScrollViewDelta, this._trailingScrollViewDelta + partialDelta);
+                this._trailingScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+            }
+            if (leadingScrollView) {
+                partialDelta = this.canScroll(delta);
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + partialDelta);
+                this._thisScrollViewDelta += partialDelta;
+                delta -= partialDelta;
+                leadingScrollView.updateScrollForce(this._leadingScrollViewDelta, this._leadingScrollViewDelta + delta);
+                this._leadingScrollViewDelta += delta;
+            }
+            else {
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + delta);
+                this._thisScrollViewDelta += delta;
+            }
+        }
+        return this;
+    };
+
+    /**
+     * Delegates any scroll force to leading/trailing scrollviews.
+     */
+    ScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+        var leadingScrollView = this.options.leadingScrollView;
+        var trailingScrollView = this.options.trailingScrollView;
+        if (!leadingScrollView && !trailingScrollView) {
+            return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity);
+        }
+        var partialDelta;
+        if (delta < 0) {
+            if (leadingScrollView) {
+                partialDelta = Math.max(this._leadingScrollViewDelta, delta);
+                this._leadingScrollViewDelta -= partialDelta;
+                delta -= partialDelta;
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity);
+            }
+            if (trailingScrollView) {
+                partialDelta = Math.max(this._thisScrollViewDelta, delta);
+                this._thisScrollViewDelta -= partialDelta;
+                delta -= partialDelta;
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                this._trailingScrollViewDelta -= delta;
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0);
+            }
+            else {
+                this._thisScrollViewDelta -= delta;
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+            }
+        }
+        else {
+            if (trailingScrollView) {
+                partialDelta = Math.min(this._trailingScrollViewDelta, delta);
+                this._trailingScrollViewDelta -= partialDelta;
+                delta -= partialDelta;
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity);
+            }
+            if (leadingScrollView) {
+                partialDelta = Math.min(this._thisScrollViewDelta, delta);
+                this._thisScrollViewDelta -= partialDelta;
+                delta -= partialDelta;
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                this._leadingScrollViewDelta -= delta;
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0);
+            }
+            else {
+                this._thisScrollViewDelta -= delta;
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+            }
+        }
+        return this;
     };
 
     /**
