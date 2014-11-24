@@ -90,7 +90,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function (default: `false`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollController
@@ -249,7 +249,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function (default: `false`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollController} this
      */

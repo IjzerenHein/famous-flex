@@ -42,6 +42,7 @@ define(function(require, exports, module) {
      * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @alias module:LayoutController
      */
     function LayoutController(options, nodeManager) {
@@ -103,7 +104,8 @@ define(function(require, exports, module) {
         nodeSpring: {
             dampingRatio: 0.8,
             period: 300
-        }
+        },
+        alwaysLayout: false    // set to true to always call the layout function
         /*insertSpec: {
             opacity: undefined,
             size: undefined,
@@ -140,6 +142,7 @@ define(function(require, exports, module) {
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
@@ -569,7 +572,8 @@ define(function(require, exports, module) {
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
-            this._nodes._trueSizeRequested){
+            this._nodes._trueSizeRequested ||
+            this.options.alwaysLayout){
 
             // Emit start event
             var eventData = {
