@@ -238,7 +238,7 @@ define(function(require, exports, module) {
                     translate: [0, 0, -1e-3], // transform.behind
                     scrollLength: scrollLength
                 };
-                set.size[this._direction] = (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN) ? length : Math.max(Math.min(offset, length), 0);
+                set.size[this._direction] = Math.max(Math.min(offset, length), 0);
                 this._nodes._context.set(contextNode, set);
             }
         }
@@ -304,7 +304,7 @@ define(function(require, exports, module) {
                     scrollLength: scrollLength
                 };
                 set.translate[this._direction] = size[this._direction] - length;
-                set.size[this._direction] = (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) ? length : Math.max(Math.min(offset, length), 0);
+                set.size[this._direction] = Math.max(Math.min(offset, length), 0);
                 this._nodes._context.set(contextNode, set);
             }
         }
