@@ -118,6 +118,7 @@ define(function(require, exports, module) {
         context.size[1] = contextData.size[1];
         context.direction = contextData.direction;
         context.reverse = contextData.reverse;
+        context.alignment = contextData.reverse ? 1 : 0;
         context.scrollOffset = contextData.scrollOffset || 0;
         context.scrollStart = contextData.scrollStart || 0;
         context.scrollEnd = contextData.scrollEnd || context.size[context.direction];
