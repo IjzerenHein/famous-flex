@@ -413,29 +413,15 @@ define(function(require, exports, module) {
             }
 
             // Insert into array
+            var dataSource = this._viewSequence || this._dataSource;
             if (indexOrId === -1) {
-                if (this._viewSequence) {
-                    this._viewSequence.push(renderable);
-                }
-                else {
-                    this._dataSource.push(renderable);
-                }
+                dataSource.push(renderable);
             }
             else if (indexOrId === 0) {
-                if (this._viewSequence) {
-                    this._viewSequence.unshift(renderable);
-                }
-                else {
-                    this._dataSource.unshift(renderable);
-                }
+                dataSource.splice(0, 0, renderable);
             }
             else {
-                // Using insert in this way, only works when the data-source is an array
-                if (!(this._dataSource instanceof Array)) {
-                    LayoutUtility.error('LayoutController.insert(1..n) only works when the dataSource is an array');
-                    return this;
-                }
-                this._dataSource.splice(indexOrId, 0, renderable);
+                dataSource.splice(indexOrId, 0, renderable);
             }
         }
 
