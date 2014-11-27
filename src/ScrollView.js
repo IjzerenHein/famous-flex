@@ -98,7 +98,8 @@ define(function(require, exports, module) {
                 if (!this._pullToRefresh[0]) {
                     this._pullToRefresh[0] = {
                         state: PullToRefreshState.HIDDEN,
-                        prevState: PullToRefreshState.HIDDEN
+                        prevState: PullToRefreshState.HIDDEN,
+                        footer: false
                     };
                 }
                 this._pullToRefresh[0].node = options.pullToRefreshHeader;
@@ -111,7 +112,8 @@ define(function(require, exports, module) {
                 if (!this._pullToRefresh[1]) {
                     this._pullToRefresh[1] = {
                         state: PullToRefreshState.HIDDEN,
-                        prevState: PullToRefreshState.HIDDEN
+                        prevState: PullToRefreshState.HIDDEN,
+                        footer: true
                     };
                 }
                 this._pullToRefresh[1].node = options.pullToRefreshFooter;
@@ -217,6 +219,10 @@ define(function(require, exports, module) {
             }
         }
     }
+
+    /**
+     * Helper function for getting the pull-to-refresh data.
+     */
     function _getPullToRefresh(footer) {
         return this._pullToRefresh ? this._pullToRefresh[footer ? 1 : 0] : undefined;
     }
@@ -251,7 +257,7 @@ define(function(require, exports, module) {
                 var length = pullToRefresh.node.getSize()[this._direction];
                 var pullLength = length * 2;
                 var offset;
-                if (i === 0) {
+                if (!pullToRefresh.footer) {
                     // header
                     prevHeight = this._calcScrollHeight(false);
                     prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
@@ -326,9 +332,9 @@ define(function(require, exports, module) {
                 if (pullToRefresh.state !== PullToRefreshState.HIDDEN) {
                     var contextNode = {
                         renderNode: pullToRefresh.node,
-                        prev: (i === 0),
-                        next: (i === 1),
-                        index: (i === 0) ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
+                        prev: !pullToRefresh.footer,
+                        next: pullToRefresh.footer,
+                        index: !pullToRefresh.footer ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
                     };
                     var scrollLength = (this._scroll.scrollForceCount || (pullToRefresh.state === PullToRefreshState.ACTIVE)) ? length : undefined;
                     var set = {
@@ -337,7 +343,7 @@ define(function(require, exports, module) {
                         scrollLength: scrollLength
                     };
                     set.size[this._direction] = Math.max(Math.min(offset, pullLength), 0);
-                    set.translate[this._direction] = (i === 1) ? (size[this._direction] - length) : 0;
+                    set.translate[this._direction] = pullToRefresh.footer ? (size[this._direction] - length) : 0;
                     this._nodes._context.set(contextNode, set);
                 }
             }
@@ -558,7 +564,7 @@ define(function(require, exports, module) {
                         (pullToRefresh.prevState !== PullToRefreshState.ACTIVE)) {
                         this._eventOutput.emit('refresh', {
                             target: this,
-                            footer: (i === 1)
+                            footer: pullToRefresh.footer
                         });
                     }
                     pullToRefresh.prevState = pullToRefresh.state;
