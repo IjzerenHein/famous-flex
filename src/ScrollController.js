@@ -73,24 +73,18 @@ define(function(require, exports, module) {
     /**
      * @class
      * @extends LayoutController
-     * @param {Object} options Options.
-     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
-     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Object} options Configurable options (see LayoutController for all inherited options).
+     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+     * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollController
@@ -222,7 +216,6 @@ define(function(require, exports, module) {
         enabled: true,          // set to false to disable scrolling
         layoutAll: false,       // set to true is you want all renderables layed out/rendered
         alwaysLayout: false,    // set to true to always call the layout function
-        scrollCallback: undefined, //function(offset, force)
         extraBoundsSpace: [100, 100],
         debug: false
     };
@@ -230,17 +223,11 @@ define(function(require, exports, module) {
     /**
      * Patches the ScrollController instance's options with the passed-in ones.
      *
-     * @param {Object} options An object of configurable options for the ScrollController instance.
-     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
-     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
+     * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+     * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
@@ -248,7 +235,6 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollController} this
      */
@@ -476,9 +462,6 @@ define(function(require, exports, module) {
         if (!oldTouchesCount && this._scroll.activeTouches.length) {
             this.applyScrollForce(0);
             this._scroll.touchDelta = 0;
-            if (this.options.scrollCallback) {
-                this.options.scrollCallback(0, 1);
-            }
         }
     }
 
@@ -521,9 +504,6 @@ define(function(require, exports, module) {
         // Update move offset and emit event
         if (primaryTouch) {
             var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
-            if (this.options.scrollCallback) {
-                delta = this.options.scrollCallback(delta, 2);
-            }
             this.updateScrollForce(this._scroll.touchDelta, delta);
             this._scroll.touchDelta = delta;
         }
@@ -573,13 +553,8 @@ define(function(require, exports, module) {
             velocity = diffOffset / diffTime;
         }
 
-        // Execute callback
-        var delta = this._scroll.touchDelta;
-        if (this.options.scrollCallback) {
-            delta = this.options.scrollCallback(delta, 3, velocity);
-        }
-
         // Release scroll force
+        var delta = this._scroll.touchDelta;
         this.releaseScrollForce(delta, velocity);
         this._scroll.touchDelta = 0;
     }
@@ -593,9 +568,6 @@ define(function(require, exports, module) {
             return;
         }
         var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-        if (this.options.scrollCallback) {
-            offset = this.options.scrollCallback(offset, 0);
-        }
         this.scroll(offset);
     }
 
