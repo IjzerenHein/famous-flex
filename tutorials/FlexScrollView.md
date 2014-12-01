@@ -3,7 +3,7 @@ FlexScrollView
 
 FlexScrollView is a high performance scroll-view for famo.us based on the famous-flex LayoutController technology. The scrollview separates the actual layout algorithm from the scrollview, making it possible to select any layout into the scrollview.
 
-By default FlexScrollView uses the [ListLayout](../docs/ListLayout.md) layout, which supports features such as [sticky headers](#sticky-headers) and [margins & spacing](#margins-spacing).
+By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) layout, which supports features such as [sticky headers](#sticky-headers) and [margins & spacing](#margins--spacing-listlayout).
 
 
 # Index
@@ -11,17 +11,17 @@ By default FlexScrollView uses the [ListLayout](../docs/ListLayout.md) layout, w
 - [Getting started](#getting-started)
 - [API reference](../docs/ScrollView.md)
 - [Flow mode animations](#flow-mode-animations)
+- [Collection layout](#collection-layout)
 - [Pagination](#pagination)
-- [Inserting & removing items](#inserting-removing-items)
+- [Inserting & removing items](#inserting--removing-items)
     - [Auto event piping](#auto-event-piping)
 - [Getting the visible item(s)](#getting-the-visible-items)
 - [Scrolling](#scrolling)
-- [Margins & spacing](#margins-spacing)
-- [Direction & alignment](#direction-alignment)
-- [Clipping & ContainerSurface's](#clipping-containersurfaces)
+- [Margins & spacing](#margins--spacing-listlayout)
+- [Direction & alignment](#direction--alignment)
+- [Clipping & ContainerSurface's](#clipping--containersurfaces)
 - [Pull to refresh](#pull-to-refresh)
-- [Sticky headers](#sticky-headers)
-- [Collection layout](#collection-layout)
+- [Sticky headers](#sticky-headers-listlayout)
 - [Advanced effects](#advanced-effects)
     - [Embedded scrollview linking](#embedded-scrollview-linking)
     - [Embedded scrollview scrolling restrictions](embedded-scrollview-scrolling-restrictions)
@@ -63,6 +63,23 @@ var scrollView = new FlexScrollView({
     nodeSpring: {           // spring-options used when transitioning between states
         dampingRatio: 0.8,  // spring damping ratio
         period: 1000        // duration of the animation
+    }
+});
+```
+
+# Collection layout
+
+Any layout can be selected into the FlexScrollView. Even layouts that do not support scrolling can be selected, in that case scrolling is disabled. For instance, to use the multi-cell CollectionLayout instead of the default ListLayout use:
+
+```javascript
+var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+
+var scrollView = new FlexScrollView({
+    layout: CollectionLayout,
+    layoutOptions: {
+        itemSize: [50, 50],
+        margins: [50, 10, 50, 10],
+        spacing: [10, 10]
     }
 });
 ```

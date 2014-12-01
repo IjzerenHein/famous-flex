@@ -18,7 +18,6 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 
 
 ### Getting started
-
 - [Installation](#installation)
 
 ### Core concepts
@@ -28,8 +27,8 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
 
-### [FlexScrollView](#flexscrollview)
-- [Tutorial](tutorial/FlexScrollView)
+### [FlexScrollView](#flex-scrollview)
+- [Tutorial](tutorials/FlexScrollView.md)
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
@@ -228,7 +227,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
-## FlexScrollView
+## Flex ScrollView
 
 FlexScrollView is a flexible and highly performant scroll-view for famo.us supporting features such as:
 - pull to refresh
@@ -239,9 +238,9 @@ FlexScrollView is a flexible and highly performant scroll-view for famo.us suppo
 - bottom/right alignment
 - all the good stuff you expect from a scrollview and more ;)
 
-It is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherits from [LayoutController](docs/LayoutController.md).
+It is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherited from [LayoutController](docs/LayoutController.md).
 
-### Take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
+### [Full FlexScrollView Tutorial](tutorials/FlexScrollView.md)
 
 ```javascript
 var FlexScrollView = require('famous-flex/ScrollView');
