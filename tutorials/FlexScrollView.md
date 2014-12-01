@@ -3,7 +3,7 @@ FlexScrollView
 
 FlexScrollView is a high performance scroll-view for famo.us based on the famous-flex LayoutController technology. The scrollview separates the actual layout algorithm from the scrollview, making it possible to select any layout into the scrollview.
 
-By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) layout, which supports features such as [sticky headers](#sticky-headers) and [margins & spacing](#margins--spacing-listlayout).
+By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) layout, which supports features such as [sticky headers](#sticky-headers-listlayout) and [margins & spacing](#margins--spacing-listlayout).
 
 
 # Index
@@ -19,12 +19,12 @@ By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) l
 - [Scrolling](#scrolling)
 - [Margins & spacing](#margins--spacing-listlayout)
 - [Direction & alignment](#direction--alignment)
-- [Clipping & ContainerSurface's](#clipping--containersurfaces)
+- [Clipping & ContainerSurfaces](#clipping--containersurfaces)
 - [Pull to refresh](#pull-to-refresh)
 - [Sticky headers](#sticky-headers-listlayout)
 - [Advanced effects](#advanced-effects)
     - [Embedded scrollview linking](#embedded-scrollview-linking)
-    - [Embedded scrollview scrolling restrictions](embedded-scrollview-scrolling-restrictions)
+    - [Embedded scrollview scrolling restrictions](#embedded-scrollview-scrolling-restrictions)
 
 # Getting started
 
@@ -256,7 +256,7 @@ var scrollView = new FlexScrollView({
 ```
 
 
-# Clipping & ContainerSurfaces's
+# Clipping & ContainerSurfaces
 
 When you need to clip the contents of the scrollview so it doesn't overflow, you typically have create a ContainerSurface and embed the scrollview inside it. The FlexScrollView can perform this task for you through the `useContainer` option. When `useContainer` is set to `true`, the scrollview is wrapped inside a ContainerSurface with `overflow: hidden`:
 

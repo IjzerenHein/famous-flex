@@ -240,37 +240,7 @@ FlexScrollView is a flexible and highly performant scroll-view for famo.us suppo
 
 It is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherited from [LayoutController](docs/LayoutController.md).
 
-### [Full FlexScrollView Tutorial](tutorials/FlexScrollView.md)
-
-```javascript
-var FlexScrollView = require('famous-flex/ScrollView');
-//var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
-var RefreshLoader = require('famous-refresh-loader/RefreshLoader');
-
-var scrollView = new FlexScrollView({
-	//layout: CollectionLayout,	  // uncomment to enable collection-layouts
-	layoutOptions: {
-		margins: [10, 20, 10, 20],   // margins supported by ListLayout
-		spacing: [5, 20],			// spacing between list-items
-		isHeaderCallback: function(node) {
-			return node.isHeader;    // see Tutorial for details!
-		}
-	},
-	flow: true,					  // true enables smooth flowing
-	direction: 0,					// 0: horizontal, 1: vertical
-	alignment: 0,					// set to 1 for bottom/right alignment
-	useContainer: false, 			// set to true to auto-embed in a ContainerSurface
-	mouseMove: true, 				// allow hold and move using the mouse
-	autoPipeEvents: true,			// automatically call .pipe when renderable is inserted
-	pullToRefreshHeader: new RefreshLoader() // enable pull to refresh
-});
-this.add(scrollView);
-
-// add renderables
-for (var i = 0; i < 50; i++) {
-	scrollView.push(new Surface({content: 'my surface'}));
-}
-```
+### Take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
 
 
 ## Standard layouts
