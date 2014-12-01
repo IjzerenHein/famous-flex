@@ -43,6 +43,7 @@ define(function(require, exports, module) {
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
+     * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
      * @alias module:LayoutController
      */
     function LayoutController(options, nodeManager) {
@@ -143,6 +144,7 @@ define(function(require, exports, module) {
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
+     * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
@@ -165,6 +167,33 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Helper function to enumerate all the renderables in the datasource
+     */
+    function _forEachRenderable(callback) {
+        var dataSource = this._dataSource;
+        if (dataSource instanceof Array) {
+            for (var i = 0, j = dataSource.length; i < j; i++) {
+                callback(dataSource[i]);
+            }
+        } else if (dataSource instanceof ViewSequence) {
+            var renderable;
+            while (dataSource) {
+                renderable = dataSource.get();
+                if (!renderable) {
+                    break;
+                }
+                callback(renderable);
+                dataSource = dataSource.getNext();
+            }
+        }
+        else {
+            for (var key in dataSource) {
+                callback(dataSource[key]);
+            }
+        }
+    }
+
+    /**
      * Sets the collection of renderables which are layed out according to
      * the layout-function.
      *
@@ -183,6 +212,11 @@ define(function(require, exports, module) {
             this._viewSequence = dataSource;
         } else if (dataSource instanceof Object){
             this._nodesById = dataSource;
+        }
+        if (this.options.autoPipeEvents) {
+            _forEachRenderable.call(this, function(renderable) {
+                renderable.pipe(this);
+            }.bind(this));
         }
         this._isDirty = true;
         return this;
@@ -428,6 +462,11 @@ define(function(require, exports, module) {
         // When a custom insert-spec was specified, store that in the layout-node
         if (insertSpec) {
             this._nodes.insertNode(this._nodes.createNode(renderable, insertSpec));
+        }
+
+        // Auto pipe events
+        if (this.options.autoPipeEvents) {
+            renderable.pipe(this);
         }
 
         // Force a reflow
