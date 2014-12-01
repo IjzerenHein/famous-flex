@@ -1,22 +1,30 @@
 FlexScrollView
 ==========
 
+FlexScrollView is a high performance scroll-view for famo.us based on the famous-flex LayoutController technology. The scrollview separates the actual layout algorithm from the scrollview, making it possible to select any layout into the scrollview.
+
+By default FlexScrollView uses the [ListLayout](../docs/ListLayout.md) layout, which supports features such as [sticky headers](#sticky-headers) and [margins & spacing](#margins-spacing).
+
+
 # Index
 
 - [Getting started](#getting-started)
+- [API reference](../docs/ScrollView.md)
+- [Flow mode animations](#flow-mode-animations)
+- [Pagination](#pagination)
 - [Inserting & removing items](#inserting-removing-items)
     - [Auto event piping](#auto-event-piping)
-- [Getting (visible) items](#getting-visible-items)
-- [Flow mode](#flow-mode)
+- [Getting the visible item(s)](#getting-the-visible-items)
+- [Scrolling](#scrolling)
 - [Margins & spacing](#margins-spacing)
 - [Direction & alignment](#direction-alignment)
-- [Pagination](#pagination)
+- [Clipping & ContainerSurface's](#clipping-containersurfaces)
 - [Pull to refresh](#pull-to-refresh)
 - [Sticky headers](#sticky-headers)
 - [Collection layout](#collection-layout)
-- [Embedded scrollviews](#embedded-scrollviews)
-    - [Scrollview linking](asds)
-    - [Horizontal & vertical scrolling restrictions](asds)
+- [Advanced effects](#advanced-effects)
+    - [Embedded scrollview linking](#embedded-scrollview-linking)
+    - [Embedded scrollview scrolling restrictions](embedded-scrollview-scrolling-restrictions)
 
 # Getting started
 
@@ -35,11 +43,47 @@ var scrollView = new FlexScrollView();
 this.add(scrollView);
 ```
 
+# Flow mode animations
+
+By enabling `flow` mode, renderables are smoothly transitioned to their new state whenever items are inserted, removed or the scrollview is resized.
+
+![FlowMode](flowmode.gif)
+
+The effect as seen above is created by setting the following options:
+
+```javascript
+var scrollView = new FlexScrollView({
+    flow: true,             // enable flow-mode (can only be enabled from the constructor)
+    insertSpec: {           // render-spec used when inserting renderables
+        opacity: 0          // start opacity is 0, causing a fade-in effect,
+        //size: [0, 0],     // uncommented to create a grow-effect
+        //transform: Transform.translate(-300, 0, 0) // uncomment for slide-in effect
+    },
+    //removeSpec: {...},    // render-spec used when removing renderables
+    nodeSpring: {           // spring-options used when transitioning between states
+        dampingRatio: 0.8,  // spring damping ratio
+        period: 1000        // duration of the animation
+    }
+});
+```
+
+
+# Pagination
+
+Pagination causes the scrollview to neatly align the renderables with the edge of the scrollview. This option is disabled by default. To enable it, set the `paginated` option to `true` in the constructor or using `setOptions`:
+
+```javascript
+var scrollView = new FlexScrollView({
+    paginated: true
+});
+```
+
+
 # Inserting & removing items
 
 Inserting & removing items can be done in various ways.
 
-Using the insert/remove functions which supports `autoPipeEvents` and animations through the use of `insertSpec` & `removeSpec`.
+When using the insert/push/remove, you can also specify a render-spec to animate the renderable when inserting/removing (possible when `flow` mode is enabled).
 
 ```javascript
 scrollView.insert(0, new Surface({}));  // insert at the beginning
@@ -52,12 +96,14 @@ scrollView.remove(-1, {opacity: 0});    // remove last item and fade-out
 scrollView.removeAll();                 // removes all items
 ```
 
-or using `setDataSource` or `sequenceFrom`:
+Using `setDataSource` or `sequenceFrom`:
 
 ```javascript
+// Using an array
 scrollView.setDataSource([surface1, surface2, ...]);
 scrollView.sequenceFrom([surface1, surface2, ...]);
 
+// Using a ViewSequence
 var viewSequence = new ViewSequence();
 viewSequence.push(surface1);
 viewSequence.push(surface2);
@@ -68,7 +114,7 @@ scrollView.sequenceFrom(viewSequence);
 
 ## Auto event piping
 
-When inserting renderables, you typically have to pipe the events from the renderable to the scrollview. This step can be done automatically for you by setting the `autoPipeEvents` option.
+When inserting renderables, you typically have to pipe the events from the renderable to the scrollview. This step can be automated by enabling the `autoPipeEvents` option.
 
 ```javascript
 var scrollView = new FlexScrollView({
@@ -81,55 +127,65 @@ scrollView.push(new Surface({
 }));
 ```
 
-**Note**: This only works when using the `insert`, `push`, `remove` and `removeAll` functions, and not when using `setDataSource` or `sequenceFrom`.
 
-# Getting (visible) items
+# Getting the visible item(s)
 
-
-
-
-
-# Embedded scrollviews
-
-## Horizontal & vertical scrolling restrictions
-
-TODO
-
-## Scrollview linking
-
-![Scrollview linking](scrollview-linking.gif)
-
-The example above shows a scrollview embedded inside another scrollview. Whenever the bottom (news) scrollview reaches the top, it delegates the scroll-events to the outer scrollview, creating a seemless scrolling experience. To create this effect, set the `leadingScrollView` or `trailingScrollView` options in the constructor options:
+To get the currently visible items, use the following functions:
 
 ```javascript
-// Create outer scrollview
+var arr = scrollView.getVisibleItems();       // array of completely or partially visible items
+var first = scrollView.getFirstVisibleItem(); // first visible item
+var last = scrollView.getLastVisibleItem();   // last visible item
+
+var index = scrollView.getCurrentIndex();     // quickly get index of first visible item
+```
+
+The result of these functions is an object or array of objects with the following properties:
+
+```javascript
+var item = {
+    index: number,           // index within the data-source
+    renderNode: renderable,  // renderable that was added to the datasource
+    viewSequence: node,      // view-sequence node associated with the renderable
+    visiblePerc: [0..1]      // percentage of how much of the renderable is visible
+};
+```
+
+The `getFirstVisibleItem` and `getLastVisibleItem` functions return the first or last item that is completely visible or the item that is partially visible and satisfies the `visibleItemThresshold` option. By default, this option is set to 0.5, which means that when an item is 50% percent visible, it is considered to be visible.
+
+
+# Scrolling
+
+To scroll the view use the following functions:
+
+```javascript
+scrollView.goToPage(index);              // scrolls to the renderable at the given index
+scrollView.goToFirstPage();              // scrolls to the first renderable
+scrollView.goToLastPage();               // scrolls to the last renderable
+scrollView.goToPreviousPage();           // scrolls to the previous renderable
+scrollView.goToNextPage();               // scrolls to the next renderable
+scrollView.goToRenderNode(renderable);   // scrolls to the given renderable
+
+scrollView.scroll(delta);                // scrolls x pixels in previous or next direction
+var allowedDelta = canScroll(delta);     // tests whether the view can scroll the given delta
+```
+
+By default the FlexScrollView listens to touch-events and mouse-wheel (trackpad) events only. It is also possible to enable scrolling by pressing down on the mouse and moving the mouse. To enable this option use:
+
+```javascript
 var scrollView = new FlexScrollView({
-    autoPipeEvents: true
-});
-scrollView.push(new Surface{
-    size: [undefined, 100],
-    content: 'top surface'
-});
-
-// Add embedded scrollview
-var embeddedScrollView = new FlexScrollView({
-    autoPipeEvents: true,
-    leadingScrollView: scrollView
-});
-scrollView.push(embeddedScrollView, undefined, false); // add, but don't pipe-events!
-embeddedScrollView.push(new Surface{
-    size: [undefined, 100],
-    content: 'top surface'
+    mouseMove: true
 });
 ```
 
-Similarly, this can be done for the bottom part of scrollview. In that case, set the `trailingScrollView` option in the constructor:
+Sometimes it is useful to disable scrolling through user-inputs. To enable or disable scrolling use the `enabled` option:
 
 ```javascript
-var embeddedScrollView = new FlexScrollView({
-    trailingScrollView: scrollView
+scrollView.setOptions({
+    enabled: false   // disables scrolling through touch/trackpad/mouse events
 });
 ```
+
 
 # Margins & Spacing (ListLayout)
 
@@ -153,6 +209,7 @@ scrollView.setLayoutOptions({ margins: 5 }); // set all margins to 5
 scrollView.setLayoutOptions({ margins: [5] }); // set all margins to 5
 scrollView.setLayoutOptions({ margins: [5, 10] }); // set top/bottom to 5, left/right to 10
 ```
+
 
 # Direction & alignment
 
@@ -178,6 +235,17 @@ To set the alignment, use the `alignment` option. The alignment option can have 
 var scrollView = new FlexScrollView({
     direction: Utility.Direction.Y,
     alignment: 1
+});
+```
+
+
+# Clipping & ContainerSurfaces's
+
+When you need to clip the contents of the scrollview so it doesn't overflow, you typically have create a ContainerSurface and embed the scrollview inside it. The FlexScrollView can perform this task for you through the `useContainer` option. When `useContainer` is set to `true`, the scrollview is wrapped inside a ContainerSurface with `overflow: hidden`:
+
+```javascript
+var scrollView = new FlexScrollView({
+    useContainer: true // wraps scrollview inside a ContainerSurface with overflow: hidden
 });
 ```
 
@@ -221,6 +289,7 @@ scrollView.push(_createHeader());
 scrollView.push(new Surface({}));
 ```
 
+
 # Pull to refresh
 
 ![Pull to refresh](pulltorefresh.gif)
@@ -229,6 +298,7 @@ To enable pull to refresh, assign a renderable to the `pullToRefreshHeader` or `
 
 ```javascript
 var scrollView = new FlexScrollView({
+    autoPipeEvents: true,
     pullToRefreshHeader: new Surface({
         size: [undefined, 50], // required
         content: 'pull to refresh header'
@@ -278,7 +348,6 @@ scrollView.hidePullToRefresh(footer);
 scrollView.isPullToRefreshVisible(footer);
 ```
 
-
 To animate your pull to refresh renderable while pulling, create a custom view and implement the `setPullToRefreshStatus` on it. When pulling starts, stops or changes state, the FlexScrollView will call `setPullToRefreshStatus(state)` on the renderable to indicate these state changes.
 
 See [famous-refresh-loader](https://github.com/IjzerenHein/famous-refresh-loader) for an example on how to create a responsive pull to refresh view.
@@ -288,6 +357,7 @@ Using RefreshLoader:
 var RefreshLoader = require('famous-refresh-loader/RefreshLoader');
 
 var scrollView = new FlexScrollView({
+    autoPipeEvents: true,
     pullToRefreshHeader: new RefreshLoader({
         size: [undefined, 60],
         pullToRefresh: true,
@@ -296,5 +366,85 @@ var scrollView = new FlexScrollView({
         particleCount: 8,
         particleSize: 7
     })
+});
+```
+
+
+# Advanced effects
+
+## Embedded scrollview linking
+
+![Scrollview linking](scrollview-linking.gif)
+
+The example above shows a scrollview embedded inside another scrollview. Whenever the bottom (news) scrollview reaches the top, it delegates the scroll-events to the outer scrollview, creating a seemless scrolling experience. To create this effect, set the `leadingScrollView` or `trailingScrollView` options in the constructor:
+
+```javascript
+// Create outer scrollview
+var scrollView = new FlexScrollView({
+    autoPipeEvents: true
+});
+scrollView.push(new Surface{
+    size: [undefined, 100],
+    content: 'top surface'
+});
+
+// Add embedded scrollview
+var embeddedScrollView = new FlexScrollView({
+    autoPipeEvents: true,
+    leadingScrollView: scrollView
+});
+scrollView.push(embeddedScrollView, undefined, false); // add, but don't pipe-events!
+embeddedScrollView.push(new Surface{
+    size: [undefined, 100],
+    content: 'top surface'
+});
+```
+
+Similarly, this can be done for the bottom part of scrollview. In that case, set the `trailingScrollView` option in the constructor:
+
+```javascript
+var embeddedScrollView = new FlexScrollView({
+    trailingScrollView: scrollView
+});
+```
+
+
+## Embedded scrollview scrolling restrictions
+
+![Scrollview restrictions](scrollviewrestrictions.gif)
+
+When inserting a horizontal scrollview inside a vertical scrollview (or vice versa), both scrollview's respond to both vertical and horizontal input events. This is because no-one ever scrolls perfectly horizontal or vertical causing both scrollview's to scroll on their axes. To prevent both  scrollview's from scrolling, you can use the following technique:
+
+```javascript
+// Create vertical and horizontal scrollview and embed
+// one scrollview inside the other one.
+var vertScrollView = new FlexScrollView({
+    touchMoveDirectionThresshold: 0.5
+});
+var horzScrollView = new FlexScrollView({
+    touchMoveDirectionThresshold: 0.5
+});
+horzScrollView.push(vertScrollView);
+
+// When the vertical scrollview starts scrolling, capture all events
+// and disable scrolling on the horizontal scrollview
+vertScrollView.on('scrollstart', function(event) {
+    horzScrollView.setOptions({ enabled: false });
+    vertScrollView.setOptions({ touchMoveDirectionThresshold: undefined });
+});
+vertScrollView.on('scrollend', function(event) {
+    horzScrollView.setOptions({ enabled: true });
+    vertScrollView.setOptions({ touchMoveDirectionThresshold: 0.5 });
+});
+
+// When the horizontal scrollview starts scrolling, capture all events
+// and disable scrolling on the vertical scrollview
+horzScrollView.on('scrollstart', function(event) {
+    vertScrollView.setOptions({ enabled: false });
+    horzScrollView.setOptions({ touchMoveDirectionThresshold: undefined });
+});
+horzScrollView.on('scrollend', function(event) {
+    vertScrollView.setOptions({ enabled: true });
+    horzScrollView.setOptions({ touchMoveDirectionThresshold: 0.5 });
 });
 ```

@@ -27,12 +27,13 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [Datasource](#datasource)
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
-- [Scrollable layouts](#scrollable-layouts)
+
+### [FlexScrollView](#flexscrollview)
+- [Tutorial](tutorial/FlexScrollView)
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
 - [ListLayout](docs/layouts/ListLayout.md)
-- [TableLayout](docs/layouts/TableLayout.md)
 - [CollectionLayout](docs/layouts/CollectionLayout.md)
 - [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
 - [NavBarLayout](docs/layouts/NavBarLayout.md)
@@ -90,14 +91,14 @@ layout states.
 ## Layout function
 
 A layout is represented as a `Function`, which takes a `context` argument and
-an optional `options` argument. The purpose of the function is to lay-out the 
+an optional `options` argument. The purpose of the function is to lay-out the
 renderables in the data-source by calling `context.set()` on a renderable.
-When `context.set()` is not called on a renderable in the data-source then it is 
+When `context.set()` is not called on a renderable in the data-source then it is
 not added to the render-tree.
 
-Famous-flex comes shipped with various [standard layouts](#standard-layouts), but 
-it is also very easy to create your own layout-functions. 
-View [LayoutContext](docs/LayoutContext.md) for more details on creating your own 
+Famous-flex comes shipped with various [standard layouts](#standard-layouts), but
+it is also very easy to create your own layout-functions.
+View [LayoutContext](docs/LayoutContext.md) for more details on creating your own
 layout-functions.
 
 ```javascript
@@ -136,7 +137,7 @@ It can be one of three things:
 - A `ViewSequence`
 - An `Object` with key/value pairs
 
-In case of an `Array` or `ViewSequence`, use `context.next()` in your 
+In case of an `Array` or `ViewSequence`, use `context.next()` in your
 layout-function to enumerate all the renderables in the data-source:
 
 ```javascript
@@ -161,7 +162,7 @@ var layoutController = new LayoutController({
 });
 ```
 
-Sometimes it is easier to identify renderables by an id, rather than a 
+Sometimes it is easier to identify renderables by an id, rather than a
 sequence. In that case use `context.get()` or directly pass the data-source id
 to the `context.set()` function:
 
@@ -193,7 +194,7 @@ var layoutController = new LayoutController({
 ## Layout literals
 
 Layout literals are objects which describe layouts through a definition rather
-than a function. The following example describes the use of a layout literal 
+than a function. The following example describes the use of a layout literal
 using `dock` semantics:
 
 ```javascript
@@ -227,37 +228,49 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
-## Scrollable layouts
+## FlexScrollView
 
-[ScrollController](docs/ScrollController.md) extends `LayoutController` and adds 
-vertical and horizontal scrolling support.
-[ScrollView](docs/ScrollView.md) extends `ScrollController` and can be used as
-a drop-in replacement for the stock famo.us Scrollview.
+FlexScrollView is a flexible and highly performant scroll-view for famo.us supporting features such as:
+- pull to refresh
+- sticky-headers
+- smooth flowing when inserting/removing re-sizing
+- multi-cell layouts (CollectionLayout)
+- margins & spacing
+- bottom/right alignment
+- all the good stuff you expect from a scrollview and more ;)
+
+It is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherits from [LayoutController](docs/LayoutController.md).
+
+### Take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
 
 ```javascript
-var ScrollController = require('famous-flex/ScrollController');
-var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+var FlexScrollView = require('famous-flex/ScrollView');
+//var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
+var RefreshLoader = require('famous-refresh-loader/RefreshLoader');
 
-// create scrollable grid
-var scrollController = new ScrollController({
-	layout: CollectionLayout,
+var scrollView = new FlexScrollView({
+	//layout: CollectionLayout,	  // uncomment to enable collection-layouts
 	layoutOptions: {
-		itemSize: [100, 100],
-		gutter: [20, 20],
-		justify: true
+		margins: [10, 20, 10, 20],   // margins supported by ListLayout
+		spacing: [5, 20],			// spacing between list-items
+		isHeaderCallback: function(node) {
+			return node.isHeader;    // see Tutorial for details!
+		}
 	},
-	direction: 0,
-	useContainer: false, // set to true to auto-embed in a ContainerSurface
-	mouseMove: true // allow hold and move using the mouse
+	flow: true,					  // true enables smooth flowing
+	direction: 0,					// 0: horizontal, 1: vertical
+	alignment: 0,					// set to 1 for bottom/right alignment
+	useContainer: false, 			// set to true to auto-embed in a ContainerSurface
+	mouseMove: true, 				// allow hold and move using the mouse
+	autoPipeEvents: true,			// automatically call .pipe when renderable is inserted
+	pullToRefreshHeader: new RefreshLoader() // enable pull to refresh
 });
-this.add(scrollController);
+this.add(scrollView);
 
 // add renderables
-var renderables = [];
 for (var i = 0; i < 50; i++) {
-	renderables.push(new Surface({content: 'my surface'}));
+	scrollView.push(new Surface({content: 'my surface'}));
 }
-scrollController.setDataSource(renderables);
 ```
 
 
@@ -266,8 +279,7 @@ scrollController.setDataSource(renderables);
 |Layout|DataSource|Scrollable|Description|
 |---|---|---|---|
 |[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
-|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a horizontal or vertical list.|
-|[TableLayout](docs/layouts/TableLayout.md)|ViewSequence / Array|Yes|Table-view layout with sticky headers.|
+|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
 |[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
@@ -278,8 +290,8 @@ scrollController.setDataSource(renderables);
 |Class|Description|
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
-|[ScrollController](docs/ScrollController.md)|Scrollable LayoutController.|
-|[ScrollView](docs/ScrollView.md)|Flexible ScrollView drop-in replacement for famo.us.|
+|[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
+|[FlexScrollView](docs/ScrollView.md)|Customizable scroll-view with pull-to-refrsh and scroll-view linking.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 
