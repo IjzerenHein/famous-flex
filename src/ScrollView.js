@@ -255,7 +255,7 @@ define(function(require, exports, module) {
 
                 // Calculate offset
                 var length = pullToRefresh.node.getSize()[this._direction];
-                var pullLength = length * 2;
+                var pullLength = pullToRefresh.node.getPullToRefreshSize ? pullToRefresh.node.getPullToRefreshSize()[this._direction] : length;
                 var offset;
                 if (!pullToRefresh.footer) {
                     // header
