@@ -336,7 +336,12 @@ define(function(require, exports, module) {
                         next: pullToRefresh.footer,
                         index: !pullToRefresh.footer ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
                     };
-                    var scrollLength = (this._scroll.scrollForceCount || (pullToRefresh.state === PullToRefreshState.ACTIVE)) ? length : undefined;
+                    var scrollLength;
+                    if (pullToRefresh.state === PullToRefreshState.ACTIVE) {
+                        scrollLength = length;
+                    } else if (this._scroll.scrollForceCount) {
+                        scrollLength = Math.min(offset, length);
+                    }
                     var set = {
                         size: [size[0], size[1]],
                         translate: [0, 0, -1e-3], // transform.behind
