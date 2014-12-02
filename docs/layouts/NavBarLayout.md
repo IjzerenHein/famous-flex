@@ -7,7 +7,7 @@ When no item-width is specified, the width of the renderable itsself is used.
 
 |options|type|description|
 |---|---|---|
-|`[margins]`|Margins|Margins to use (see Margins)|
+|`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
 |`[itemWidth]`|Number|Width of the left & right items|
 |`[leftItemWidth]`|Number|Width of the left items|
 |`[rightItemWidth]`|Number|Width of the right items|
@@ -18,7 +18,7 @@ Example:
 ```javascript
 var NavBarLayout = require('famous-flex/layouts/NavBarLayout');
 
-new LayoutController({
+var layout = new LayoutController({
   layout: NavBarLayout,
   layoutOptions: {
     margins: [5, 5, 5, 5], // margins to utilize
@@ -35,6 +35,6 @@ new LayoutController({
       new Surface({content: 'right2'})
     ]
   }
-})
+});
 ```
 

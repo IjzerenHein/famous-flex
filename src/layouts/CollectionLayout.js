@@ -25,9 +25,10 @@
  * Example:
  *
  * ```javascript
+ * var FlexScrollView = require('famous-flex/FlexScrollView');
  * var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
  *
- * scrollView = new FlexScrollView({
+ * var scrollView = new FlexScrollView({
  *   layout: CollectionLayout,
  *   layoutOptions: {
  *     itemSize: [100, 100],    // item has width and height of 100 pixels
@@ -39,7 +40,7 @@
  *     new Surface({content: 'item 2'}),
  *     new Surface({content: 'item 3'})
  *   ]
- * })
+ * });
  * ```
  * @module
  */

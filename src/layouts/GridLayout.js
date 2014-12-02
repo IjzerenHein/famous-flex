@@ -18,7 +18,7 @@
  * |options|type|description|
  * |---|---|---|
  * |`cells`|Size|Number of cells: [columns, rows]|
- * |`[margins]`|Array|Margins applied to the outside (e.g. [10, 20, 10, 20])|
+ * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Size|Spacing between renderables. (e.g. [10, 10]|
  *
  * Example:
@@ -26,7 +26,7 @@
  * ```javascript
  * var GridLayout = require('famous-flex/layouts/GridLayout');
  *
- * new LayoutController({
+ * var layoutController = new LayoutController({
  *   layout: GridLayout,
  *   layoutOptions: {
  *     cells: [10, 5],            // 10 columns, 5 rows
@@ -38,7 +38,7 @@
  *     new Surface({content: 'item 2'}),
  *     new Surface({content: 'item 3'})
  *   ]
- * })
+ * });
  * ```
  * @module
  */

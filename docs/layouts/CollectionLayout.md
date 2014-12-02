@@ -13,9 +13,10 @@ continues at the next column/row.
 Example:
 
 ```javascript
+var FlexScrollView = require('famous-flex/FlexScrollView');
 var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
 
-scrollView = new FlexScrollView({
+var scrollView = new FlexScrollView({
   layout: CollectionLayout,
   layoutOptions: {
     itemSize: [100, 100],    // item has width and height of 100 pixels
@@ -27,6 +28,6 @@ scrollView = new FlexScrollView({
     new Surface({content: 'item 2'}),
     new Surface({content: 'item 3'})
   ]
-})
+});
 ```
 

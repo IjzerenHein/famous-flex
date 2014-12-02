@@ -18,7 +18,7 @@
  *
  * |options|type|description|
  * |---|---|---|
- * |`[margins]`|Margins|Margins to use (see Margins)|
+ * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[itemWidth]`|Number|Width of the left & right items|
  * |`[leftItemWidth]`|Number|Width of the left items|
  * |`[rightItemWidth]`|Number|Width of the right items|
@@ -29,7 +29,7 @@
  * ```javascript
  * var NavBarLayout = require('famous-flex/layouts/NavBarLayout');
  *
- * new LayoutController({
+ * var layout = new LayoutController({
  *   layout: NavBarLayout,
  *   layoutOptions: {
  *     margins: [5, 5, 5, 5], // margins to utilize
@@ -46,7 +46,7 @@
  *       new Surface({content: 'right2'})
  *     ]
  *   }
- * })
+ * });
  * ```
  * @module
  */

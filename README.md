@@ -238,9 +238,9 @@ FlexScrollView is a flexible and highly performant scroll-view for famo.us suppo
 - bottom/right alignment
 - all the good stuff you expect from a scrollview and more ;)
 
-It is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherited from [LayoutController](docs/LayoutController.md).
+[FlexScrollView](docs/FlexScrollView.md) is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherited from [LayoutController](docs/LayoutController.md).
 
-### Take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
+### For a full overview, take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
 
 
 ## Standard layouts

@@ -23,13 +23,17 @@
  * Example:
  *
  * ```javascript
- * var ScrollView = require('famous-flex/ScrollView');
+ * var FlexScrollView = require('famous-flex/FlexScrollView');
  * var ListLayout = require('famous-flex/layouts/ListLayout');
  *
- * var scrollView = new ScrollView({
+ * var scrollView = new FlexScrollView({
  *   layout: ListLayout,
  *   layoutOptions: {
- *     isSectionCallback: _isSection,
+ *     margins: [20, 10, 20, 10],
+ *     spacing: 1,
+ *     isSectionCallback: function(renderNode) {
+ *       return renderNode.isSection;
+ *     },
  *   },
  *   dataSource: [
  *     // first section
@@ -41,7 +45,7 @@
  *     _createCell(),
  *   ]
  * });
- * this.add(tableView);
+ * this.add(scrollView);
  *
  * function _createCell() {
  *   return new Surface({
@@ -57,10 +61,6 @@
  *   });
  *   section.isSection = true; // mark renderNode as section
  *   return section;
- * }
- *
- * function _isSection(renderNode) {
- *   return renderNode.isSection;
  * }
  * ```
  * @module
