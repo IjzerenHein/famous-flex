@@ -357,7 +357,8 @@ define(function(require, exports, module) {
     /**
      * Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
      *
-     * @param {Bool} [footer] set to true to show pull-to-refresh at the end (default: false).
+     * @param {Bool} [footer] set to true to show pull-to-refresh at the footer (default: false).
+     * @return {FlexScrollView} this
      */
     FlexScrollView.prototype.showPullToRefresh = function(footer) {
         var pullToRefresh = _getPullToRefresh.call(this, footer);
@@ -369,6 +370,9 @@ define(function(require, exports, module) {
 
     /**
      * Hides the pull-to-refresh renderable in case it was visible.
+     *
+     * @param {Bool} [footer] set to true to hide the pull-to-refresh at the footer (default: false).
+     * @return {FlexScrollView} this
      */
     FlexScrollView.prototype.hidePullToRefresh = function(footer) {
         var pullToRefresh = _getPullToRefresh.call(this, footer);
@@ -381,6 +385,8 @@ define(function(require, exports, module) {
 
     /**
      * Get the visible state of the pull-to-refresh renderable.
+     *
+     * @param {Bool} [footer] set to true to get the state of the pull-to-refresh footer (default: false).
      */
     FlexScrollView.prototype.isPullToRefreshVisible = function(footer) {
         var pullToRefresh = _getPullToRefresh.call(this, footer);
@@ -389,6 +395,7 @@ define(function(require, exports, module) {
 
     /**
      * Delegates any scroll force to leading/trailing scrollviews.
+     * @private
      */
     FlexScrollView.prototype.applyScrollForce = function(delta) {
         var leadingFlexScrollView = this.options.leadingFlexScrollView;
@@ -442,6 +449,7 @@ define(function(require, exports, module) {
 
     /**
      * Delegates any scroll force to leading/trailing scrollviews.
+     * @private
      */
     FlexScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
         var leadingFlexScrollView = this.options.leadingFlexScrollView;
@@ -496,6 +504,7 @@ define(function(require, exports, module) {
 
     /**
      * Delegates any scroll force to leading/trailing scrollviews.
+     * @private
      */
     FlexScrollView.prototype.releaseScrollForce = function(delta, velocity) {
         var leadingFlexScrollView = this.options.leadingFlexScrollView;

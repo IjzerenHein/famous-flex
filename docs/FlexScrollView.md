@@ -29,11 +29,8 @@ Inherited from: [ScrollController](./ScrollController.md)
   * [flexScrollView.goToPage(index)](#module_FlexScrollView#goToPage)
   * [flexScrollView.getOffset()](#module_FlexScrollView#getOffset)
   * [flexScrollView.showPullToRefresh([footer])](#module_FlexScrollView#showPullToRefresh)
-  * [flexScrollView.hidePullToRefresh()](#module_FlexScrollView#hidePullToRefresh)
-  * [flexScrollView.isPullToRefreshVisible()](#module_FlexScrollView#isPullToRefreshVisible)
-  * [flexScrollView.applyScrollForce()](#module_FlexScrollView#applyScrollForce)
-  * [flexScrollView.updateScrollForce()](#module_FlexScrollView#updateScrollForce)
-  * [flexScrollView.releaseScrollForce()](#module_FlexScrollView#releaseScrollForce)
+  * [flexScrollView.hidePullToRefresh([footer])](#module_FlexScrollView#hidePullToRefresh)
+  * [flexScrollView.isPullToRefreshVisible([footer])](#module_FlexScrollView#isPullToRefreshVisible)
 
 <a name="exp_new_module_FlexScrollView"></a>
 ###new FlexScrollView(options)
@@ -113,25 +110,23 @@ Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
 
 **Params**
 
-- \[footer\] `Bool` - set to true to show pull-to-refresh at the end (default: false).  
+- \[footer\] `Bool` - set to true to show pull-to-refresh at the footer (default: false).  
 
+**Returns**: `FlexScrollView` - this  
 <a name="module_FlexScrollView#hidePullToRefresh"></a>
-###flexScrollView.hidePullToRefresh()
+###flexScrollView.hidePullToRefresh([footer])
 Hides the pull-to-refresh renderable in case it was visible.
 
+**Params**
+
+- \[footer\] `Bool` - set to true to hide the pull-to-refresh at the footer (default: false).  
+
+**Returns**: `FlexScrollView` - this  
 <a name="module_FlexScrollView#isPullToRefreshVisible"></a>
-###flexScrollView.isPullToRefreshVisible()
+###flexScrollView.isPullToRefreshVisible([footer])
 Get the visible state of the pull-to-refresh renderable.
 
-<a name="module_FlexScrollView#applyScrollForce"></a>
-###flexScrollView.applyScrollForce()
-Delegates any scroll force to leading/trailing scrollviews.
+**Params**
 
-<a name="module_FlexScrollView#updateScrollForce"></a>
-###flexScrollView.updateScrollForce()
-Delegates any scroll force to leading/trailing scrollviews.
-
-<a name="module_FlexScrollView#releaseScrollForce"></a>
-###flexScrollView.releaseScrollForce()
-Delegates any scroll force to leading/trailing scrollviews.
+- \[footer\] `Bool` - set to true to get the state of the pull-to-refresh footer (default: false).  
 
