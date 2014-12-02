@@ -200,7 +200,6 @@ define(function(require, exports, module) {
      * This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
      *
      * @deprecated
-     * @method getPosition
      * @param {number} [node] If specified, returns the position of the node at that index in the
      * Scrollview instance's currently managed collection.
      * @return {number} The position of either the specified node, or the Scrollview's current Node,
