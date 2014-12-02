@@ -39,6 +39,8 @@ Inherited from: [ScrollController](./ScrollController.md)
 - options `Object` - Configurable options (see ScrollController for all inherited options).  
   - \[pullToRefreshHeader\] `Renderable` - Pull to refresh renderable that is displayed when pulling down from the top.  
   - \[pullToRefreshFooter\] `Renderable` - Pull to refresh renderable that is displayed when pulling up from the bottom.  
+  - \[leadingScrollView\] `FlexScrollView` - Leading scrollview into which input events are piped (see Tutorial)  
+  - \[trailingScrollView\] `FlexScrollView` - Trailing scrollview into which input events are piped (see Tutorial)  
 
 **Extends**: `ScrollController`  
 <a name="module_FlexScrollView#getPosition"></a>
@@ -65,6 +67,8 @@ Patches the FlexScrollView instance's options with the passed-in ones.
 - options `Object` - Configurable options (see ScrollController for all inherited options).  
   - \[pullToRefreshHeader\] `Renderable` - Pull to refresh renderable that is displayed when pulling down from the top.  
   - \[pullToRefreshFooter\] `Renderable` - Pull to refresh renderable that is displayed when pulling up from the bottom.  
+  - \[leadingScrollView\] `FlexScrollView` - Leading scrollview into which input events are piped (see Tutorial).  
+  - \[trailingScrollView\] `FlexScrollView` - Trailing scrollview into which input events are piped (see Tutorial).  
 
 **Returns**: `FlexScrollView` - this  
 <a name="module_FlexScrollView#sequenceFrom"></a>
