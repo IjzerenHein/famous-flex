@@ -37,7 +37,7 @@ To use the FlexScrollView in your project, install famous-flex using npm or bowe
 To create the FlexScrollView use:
 
 ```javascript
-var FlexScrollView = require('famous-flex/ScrollView');
+var FlexScrollView = require('famous-flex/FlexScrollView');
 
 var scrollView = new FlexScrollView();
 this.add(scrollView);
