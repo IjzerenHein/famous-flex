@@ -17,7 +17,7 @@
  * |---|---|---|
  * |`[itemSize]`|Number/Function|Height or width in pixels of an item (used when renderNode has no size)|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
- * |`[spacing]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
+ * |`[spacing]`|Number|Spacing between items|
  * |`[isSectionCallback]`|Function|Callback that is called in order to check if a render-node is a section rather than a cell.|
  *
  * Example:
