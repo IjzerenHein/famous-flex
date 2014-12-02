@@ -22,12 +22,12 @@ Inherited from: [ScrollController](./ScrollController.md)
 
 * [class: FlexScrollView ⏏](#exp_module_FlexScrollView)
   * [new FlexScrollView(options)](#exp_new_module_FlexScrollView)
+  * [~~flexScrollView.getPosition~~](#module_FlexScrollView#getPosition)
   * [flexScrollView.setOptions(options)](#module_FlexScrollView#setOptions)
   * [flexScrollView.sequenceFrom(node)](#module_FlexScrollView#sequenceFrom)
   * [flexScrollView.getCurrentIndex()](#module_FlexScrollView#getCurrentIndex)
   * [flexScrollView.goToPage(index)](#module_FlexScrollView#goToPage)
   * [flexScrollView.getOffset()](#module_FlexScrollView#getOffset)
-  * [~~FlexScrollView~getPosition([node])~~](#module_FlexScrollView..getPosition)
   * [flexScrollView.showPullToRefresh([footer])](#module_FlexScrollView#showPullToRefresh)
   * [flexScrollView.hidePullToRefresh()](#module_FlexScrollView#hidePullToRefresh)
   * [flexScrollView.isPullToRefreshVisible()](#module_FlexScrollView#isPullToRefreshVisible)
@@ -44,6 +44,21 @@ Inherited from: [ScrollController](./ScrollController.md)
   - \[pullToRefreshFooter\] `Renderable` - Pull to refresh renderable that is displayed when pulling up from the bottom.  
 
 **Extends**: `ScrollController`  
+<a name="module_FlexScrollView#getPosition"></a>
+###~~flexScrollView.getPosition~~
+Returns the position associated with the Scrollview instance's current node
+(generally the node currently at the top).
+
+This function is a shim provided for compatibility with the stock famo.us Scrollview.
+
+**Params**
+
+- \[node\] `number` - If specified, returns the position of the node at that index in the
+Scrollview instance's currently managed collection.  
+
+***Deprecated***  
+**Returns**: `number` - The position of either the specified node, or the Scrollview's current Node,
+in pixels translated.  
 <a name="module_FlexScrollView#setOptions"></a>
 ###flexScrollView.setOptions(options)
 Patches the FlexScrollView instance's options with the passed-in ones.
@@ -59,7 +74,7 @@ Patches the FlexScrollView instance's options with the passed-in ones.
 ###flexScrollView.sequenceFrom(node)
 Sets the data-source (alias for setDataSource).
 
-This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+This function is a shim provided for compatibility with the stock famo.us Scrollview.
 
 **Params**
 
@@ -70,13 +85,13 @@ This function is a shim provided for compatibility with the stock famo.us FlexSc
 ###flexScrollView.getCurrentIndex()
 Returns the index of the first visible renderable.
 
-This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+This function is a shim provided for compatibility with the stock famo.us Scrollview.
 
 **Returns**: `Number` - The current index of the ViewSequence  
 <a name="module_FlexScrollView#goToPage"></a>
 ###flexScrollView.goToPage(index)
 Paginates the Scrollview to an absolute page index. This function is a shim provided
-for compatibility with the stock famo.us FlexScrollView.
+for compatibility with the stock famo.us Scrollview.
 
 **Params**
 
@@ -88,24 +103,8 @@ for compatibility with the stock famo.us FlexScrollView.
 Returns the offset associated with the Scrollview instance's current node
 (generally the node currently at the top).
 
-This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+This function is a shim provided for compatibility with the stock famo.us Scrollview.
 
-**Returns**: `number` - The position of either the specified node, or the Scrollview's current Node,
-in pixels translated.  
-<a name="module_FlexScrollView..getPosition"></a>
-###~~FlexScrollView~getPosition([node])~~
-Returns the position associated with the Scrollview instance's current node
-(generally the node currently at the top).
-
-This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
-
-**Params**
-
-- \[node\] `number` - If specified, returns the position of the node at that index in the
-Scrollview instance's currently managed collection.  
-
-***Deprecated***  
-**Scope**: inner function of [FlexScrollView](#module_FlexScrollView)  
 **Returns**: `number` - The position of either the specified node, or the Scrollview's current Node,
 in pixels translated.  
 <a name="module_FlexScrollView#showPullToRefresh"></a>

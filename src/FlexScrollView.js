@@ -131,7 +131,7 @@ define(function(require, exports, module) {
     /**
      * Sets the data-source (alias for setDataSource).
      *
-     * This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
      * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
      * @return {FlexScrollView} this
@@ -143,7 +143,7 @@ define(function(require, exports, module) {
     /**
      * Returns the index of the first visible renderable.
      *
-     * This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
      * @return {Number} The current index of the ViewSequence
      */
@@ -154,7 +154,7 @@ define(function(require, exports, module) {
 
     /**
      * Paginates the Scrollview to an absolute page index. This function is a shim provided
-     * for compatibility with the stock famo.us FlexScrollView.
+     * for compatibility with the stock famo.us Scrollview.
      *
      * @param {Number} index view-sequence index to go to.
      * @return {FlexScrollView} this
@@ -184,7 +184,7 @@ define(function(require, exports, module) {
      * Returns the offset associated with the Scrollview instance's current node
      * (generally the node currently at the top).
      *
-     * This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
      * @return {number} The position of either the specified node, or the Scrollview's current Node,
      * in pixels translated.
@@ -197,7 +197,7 @@ define(function(require, exports, module) {
      * Returns the position associated with the Scrollview instance's current node
      * (generally the node currently at the top).
      *
-     * This function is a shim provided for compatibility with the stock famo.us FlexScrollView.
+     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
      * @deprecated
      * @param {number} [node] If specified, returns the position of the node at that index in the
