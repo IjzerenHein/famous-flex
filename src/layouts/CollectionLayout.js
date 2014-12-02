@@ -169,8 +169,8 @@ define(function(require, exports, module) {
         direction = context.direction;
         alignment = context.alignment;
         lineDirection = (direction + 1) % 2;
-        if (options.gutter && console.warn) {
-            console.warn('gutter is no longer supported by CollectionLayout, use margins & spacing instead');
+        if ((options.gutter !== undefined) && console.warn) {
+            console.warn('gutter has been deprecated for CollectionLayout, use margins & spacing instead');
         }
         if (options.gutter && !options.margins && !options.spacing) {
             var gutter = Array.isArray(options.gutter) ? options.gutter : [options.gutter, options.gutter];
@@ -179,7 +179,8 @@ define(function(require, exports, module) {
         }
         else {
             margins = LayoutUtility.normalizeMargins(options.margins);
-            spacing = Array.isArray(options.spacing) ? options.spacing : (options.spacing ? [options.spacing, options.spacing] : [0, 0]);
+            spacing = options.spacing || 0;
+            spacing = Array.isArray(spacing) ? spacing : [spacing, spacing];
         }
         margin[0] = margins[direction ? 0 : 3];
         margin[1] = -margins[direction ? 2 : 1];
