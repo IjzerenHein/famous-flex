@@ -8,7 +8,8 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
+/*global define, console*/
+/*eslint no-console: 0*/
 
 /**
  * Lays-out renderables from left to right, in a grid with fixed number of
@@ -18,7 +19,7 @@
  * |---|---|---|
  * |`cells`|Size|Number of cells: [columns, rows]|
  * |`[margins]`|Array|Margins applied to the outside (e.g. [10, 20, 10, 20])|
- * |`[gutter]`|Size|Gutter-space between renderables. (e.g. [10, 10]|
+ * |`[spacing]`|Size|Spacing between renderables. (e.g. [10, 10]|
  *
  * Example:
  *
@@ -30,7 +31,7 @@
  *   layoutOptions: {
  *     cells: [10, 5],            // 10 columns, 5 rows
  *     margins: [20, 20, 20, 20], // margins on the outside
- *     gutter: [20, 20]           // gutter between cells
+ *     spacing: [10, 10]          // spacing between cells
  *   },
  *   dataSource: [
  *     new Surface({content: 'item 1'}),
@@ -59,11 +60,21 @@ define(function(require, exports, module) {
 
         // Do one-time stuff
         var size = context.size;
-        var gutter = options.gutter || [0, 0];
+        if ((options.gutter !== undefined) && console.warn) {
+            console.warn('gutter has been deprecated for GridLayout, use margins & spacing instead');
+        }
+        var spacing;
+        if (options.gutter && !options.spacing) {
+            spacing = options.gutter || 0;
+        }
+        else {
+            spacing = options.spacing || 0;
+        }
+        spacing = Array.isArray(spacing) ? spacing : [spacing, spacing];
         var margins = LayoutUtility.normalizeMargins(options.margins);
         var nodeSize = [
-            (size[0] - (((options.cells[0] - 1) * gutter[0]) + margins[1] + margins[3])) / options.cells[0],
-            (size[1] - (((options.cells[1] - 1) * gutter[1]) + margins[0] + margins[2])) / options.cells[1]
+            (size[0] - (((options.cells[0] - 1) * spacing[0]) + margins[1] + margins[3])) / options.cells[0],
+            (size[1] - (((options.cells[1] - 1) * spacing[1]) + margins[0] + margins[2])) / options.cells[1]
         ];
 
         // Define size and position of grid-item
@@ -71,8 +82,8 @@ define(function(require, exports, module) {
             context.set(node, {
                 size: nodeSize,
                 translate: [
-                    ((nodeSize[0] + gutter[0]) * col) + margins[3],
-                    ((nodeSize[1] + gutter[1]) * row) + margins[0],
+                    ((nodeSize[0] + spacing[0]) * col) + margins[3],
+                    ((nodeSize[1] + spacing[1]) * row) + margins[0],
                     0
                 ]
             });
