@@ -260,7 +260,7 @@ It is based on [ScrollController](docs/ScrollController.md) which implements the
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
-|[FlexScrollView](docs/ScrollView.md)|Customizable scroll-view with pull-to-refrsh and scroll-view linking.|
+|[FlexScrollView](docs/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 

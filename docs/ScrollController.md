@@ -44,24 +44,18 @@ Inherited from: [LayoutController](./LayoutController.md)
 ###new ScrollController(options)
 **Params**
 
-- options `Object` - Options.  
-  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
-  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
-  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
-  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
-  - \[flow\] `Bool` - Enables flow animations when the layout changes (default: `false`).  
-  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
-  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
+- options `Object` - Configurable options (see LayoutController for all inherited options).  
+  - \[useContainer\] `Bool` - Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
+  - \[enabled\] `Bool` - Enables or disabled user input (default: `true`).  
   - \[nodeSpring\] `Object` - Spring options to use when transitioning renderables between scenes  
   - \[scrollParticle\] `Object` - Options for the scroll particle (default: `{}`)  
   - \[scrollSpring\] `Object` - Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)  
   - \[scrollDrag\] `Object` - Drag-force options to apply on the scroll particle  
   - \[scrollFriction\] `Object` - Friction-force options to apply on the scroll particle  
   - \[layoutAll\] `Bool` - When set to true, always lays out all renderables in the datasource (default: `false`).  
-  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function (default: `false`).  
   - \[visibleItemThresshold\] `Number` - Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).  
   - \[debug\] `Bool` - Logs debug output to the console (default: `false`).  
 
@@ -72,17 +66,11 @@ Patches the ScrollController instance's options with the passed-in ones.
 
 **Params**
 
-- options `Object` - An object of configurable options for the ScrollController instance.  
-  - \[layout\] `function` | `Object` - Layout function or layout-literal.  
-  - \[layoutOptions\] `Object` - Options to pass in to the layout-function.  
-  - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
-  - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
-  - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
-  - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
-  - \[useContainer\] `Bool` - Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).  
+- options `Object` - Configurable options (see LayoutController for all inherited options).  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
+  - \[enabled\] `Bool` - Enables or disabled user input (default: `true`).  
   - \[nodeSpring\] `Object` - Spring options to use when transitioning renderables between scenes  
   - \[scrollParticle\] `Object` - Options for the scroll particle (default: `{}`)  
   - \[scrollSpring\] `Object` - Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)  
@@ -90,7 +78,6 @@ Patches the ScrollController instance's options with the passed-in ones.
   - \[scrollFriction\] `Object` - Friction-force options to apply on the scroll particle  
   - \[visibleItemThresshold\] `Number` - Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).  
   - \[layoutAll\] `Bool` - When set to true, always lays out all renderables in the datasource (default: `false`).  
-  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function (default: `false`).  
   - \[debug\] `Bool` - Logs debug output to the console (default: `false`).  
 
 **Returns**: `ScrollController` - this  

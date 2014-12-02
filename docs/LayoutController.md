@@ -38,6 +38,8 @@ function and a data-source.
   - \[flow\] `Bool` - Enables flow animations when the layout changes (default: `false`).  
   - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
   - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
+  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function on every render-cycle (default: `false`).  
+  - \[autoPipeEvents\] `Bool` - When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).  
 
 <a name="module_LayoutController#setOptions"></a>
 ###layoutController.setOptions(options)
@@ -52,6 +54,8 @@ Patches the LayoutController instance's options with the passed-in ones.
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
   - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
   - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
+  - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function on every render-cycle (default: `false`).  
+  - \[autoPipeEvents\] `Bool` - When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).  
 
 **Returns**: `LayoutController` - this  
 <a name="module_LayoutController#setDataSource"></a>

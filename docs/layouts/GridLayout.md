@@ -7,7 +7,7 @@ columns and rows.
 |---|---|---|
 |`cells`|Size|Number of cells: [columns, rows]|
 |`[margins]`|Array|Margins applied to the outside (e.g. [10, 20, 10, 20])|
-|`[gutter]`|Size|Gutter-space between renderables. (e.g. [10, 10]|
+|`[spacing]`|Size|Spacing between renderables. (e.g. [10, 10]|
 
 Example:
 
@@ -19,7 +19,7 @@ new LayoutController({
   layoutOptions: {
     cells: [10, 5],            // 10 columns, 5 rows
     margins: [20, 20, 20, 20], // margins on the outside
-    gutter: [20, 20]           // gutter between cells
+    spacing: [10, 10]          // spacing between cells
   },
   dataSource: [
     new Surface({content: 'item 1'}),

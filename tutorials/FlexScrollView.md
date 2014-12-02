@@ -9,7 +9,7 @@ By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) l
 # Index
 
 - [Getting started](#getting-started)
-- [API reference](../docs/ScrollView.md)
+- [API reference](../docs/FlexScrollView.md)
 - [Flow mode animations](#flow-mode-animations)
 - [Collection layout](#collection-layout)
 - [Pagination](#pagination)

@@ -22,9 +22,11 @@
     "famous",
     "flex",
     "famous-flex",
+    "famousflex",
     "layoutcontroller",
-    "scrolllayoutcontroller",
+    "scrollcontroller",
     "scrollview",
+    "flexscrollview",
     "flex-scrollview"
   ],
   "licenses": [

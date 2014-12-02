@@ -1,26 +1,55 @@
 <a name="module_ListLayout"></a>
 #ListLayout
-Lays out a collection of renderables from top to bottom or left to right.
+Lays out items and optionally sticky sections from top to bottom or left to right.
 
 |options|type|description|
 |---|---|---|
-|`[itemSize]`|Number|Height or width in pixels of the list-item|
+|`[itemSize]`|Number/Function|Height or width in pixels of an item (used when renderNode has no size)|
+|`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
+|`[spacing]`|Number|Spacing between items|
+|`[isSectionCallback]`|Function|Callback that is called in order to check if a render-node is a section rather than a cell.|
 
 Example:
 
 ```javascript
+var ScrollView = require('famous-flex/ScrollView');
 var ListLayout = require('famous-flex/layouts/ListLayout');
 
-var scrollController = new ScrollController({
+var scrollView = new ScrollView({
   layout: ListLayout,
   layoutOptions: {
-    itemSize: 40,         // item has height of 40 pixels
+    isSectionCallback: _isSection,
   },
   dataSource: [
-    new Surface({content: 'item 1'}),
-    new Surface({content: 'item 2'}),
-    new Surface({content: 'item 3'})
+    // first section
+    _createSection(),
+    _createCell(),
+    _createCell(),
+    // second section
+    _createSection(),
+    _createCell(),
   ]
-})
+});
+this.add(tableView);
+
+function _createCell() {
+  return new Surface({
+    size: [undefined, 50],
+    content: 'my cell'
+  });
+}
+
+function _createSection() {
+  var section = new Surface({
+    size: [undefined, 30],
+    content: 'my sticky section'
+  });
+  section.isSection = true; // mark renderNode as section
+  return section;
+}
+
+function _isSection(renderNode) {
+  return renderNode.isSection;
+}
 ```
 
