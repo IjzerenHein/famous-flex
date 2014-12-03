@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -35,7 +35,6 @@
     "package.json"
   ],
   "devDependencies": {
-    "requirejs": "~2.1.11",
-    "famous": "~0.2.0"
+    "famous": "~0.3.1"
   }
 }
