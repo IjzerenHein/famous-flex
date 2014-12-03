@@ -69,7 +69,7 @@ var scrollView = new FlexScrollView({
 
 # Collection layout
 
-Any layout can be selected into the FlexScrollView. Even layouts that do not support scrolling can be selected, in that case scrolling is disabled. For instance, to use the multi-cell CollectionLayout instead of the default ListLayout use:
+Any layout can be selected into the FlexScrollView. Even layouts that do not support scrolling can be selected (in that case scrolling is disabled). For instance, to use the multi-cell CollectionLayout layout use:
 
 ```javascript
 var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
@@ -100,7 +100,7 @@ var scrollView = new FlexScrollView({
 
 Inserting & removing items can be done in various ways.
 
-When using the insert/push/remove, you can also specify a render-spec to animate the renderable when inserting/removing (possible when `flow` mode is enabled).
+When using the insert/push/remove functions, you can specify a render-spec to animate the renderable when inserting/removing (possible when `flow` mode is enabled).
 
 ```javascript
 scrollView.insert(0, new Surface({}));  // insert at the beginning
@@ -126,7 +126,7 @@ viewSequence.push(surface1);
 viewSequence.push(surface2);
 viewSequence.push(...);
 scrollView.setDataSource(viewSequence);
-scrollView.sequenceFrom(viewSequence);
+scrollView.sequenceFrom(viewSequence); // or using sequenceFrom
 ```
 
 ## Auto event piping
@@ -184,7 +184,7 @@ scrollView.goToNextPage();               // scrolls to the next renderable
 scrollView.goToRenderNode(renderable);   // scrolls to the given renderable
 
 scrollView.scroll(delta);                // scrolls x pixels in previous or next direction
-var allowedDelta = canScroll(delta);     // tests whether the view can scroll the given delta
+var delta = scrollView.canScroll(delta); // tests whether the view can scroll the given delta
 ```
 
 By default the FlexScrollView listens to touch-events and mouse-wheel (trackpad) events only. It is also possible to enable scrolling by pressing down on the mouse and moving the mouse. To enable this option use:
@@ -195,7 +195,7 @@ var scrollView = new FlexScrollView({
 });
 ```
 
-Sometimes it is useful to disable scrolling through user-inputs. To enable or disable scrolling use the `enabled` option:
+Sometimes it is useful to disable scrolling (through user-inputs). To enable or disable scrolling use the `enabled` option:
 
 ```javascript
 scrollView.setOptions({
