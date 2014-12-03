@@ -53,7 +53,7 @@ Install using bower or npm:
 
 ## LayoutController
 
-[LayoutController](docs/LayoutController.md) lays out renderables based on:
+[LayoutController](docs/LayoutController.md) is a view that lays out renderables based on:
 - a layout-function
 - a data-source containing renderables
 - optional layout-options
@@ -91,9 +91,9 @@ layout states.
 
 A layout is represented as a `Function`, which takes a `context` argument and
 an optional `options` argument. The purpose of the function is to lay-out the
-renderables in the data-source by calling `context.set()` on a renderable.
-When `context.set()` is not called on a renderable in the data-source then it is
-not added to the render-tree.
+renderables in the data-source by calling `context.set()` on a renderable. The
+renderables can be enumerated by calling `context.next()`, `context.prev()` or
+by using the id of the renderable.
 
 Famous-flex comes shipped with various [standard layouts](#standard-layouts), but
 it is also very easy to create your own layout-functions.
@@ -194,7 +194,7 @@ var layoutController = new LayoutController({
 
 Layout literals are objects which describe layouts through a definition rather
 than a function. The following example describes the use of a layout literal
-using `dock` semantics:
+using `dock` semantics (see [LayoutDockHelper](docs/helpers/LayoutDockHelper.md)):
 
 ```javascript
 var layoutController = new LayoutController({
@@ -229,7 +229,8 @@ Layout helpers are special classes that simplify writing layout functions.
 
 ## Flex ScrollView
 
-FlexScrollView is a flexible and highly performant scroll-view for famo.us supporting features such as:
+FlexScrollView is a flexible and highly performant scroll-view for famo.us supporting
+custom layouts. Key features:
 - pull to refresh
 - sticky-headers
 - smooth flowing when inserting/removing re-sizing
