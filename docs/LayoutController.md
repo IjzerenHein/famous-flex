@@ -3,6 +3,14 @@
 LayoutController lays out renderables according to a layout-
 function and a data-source.
 
+Events:
+
+|event      |description|
+|-----------|-----------|
+|layoutstart|Emitted before the layout function is executed.|
+|layoutend  |Emitted after the layout function has been executed.|
+|reflow     |Emitted after one or more renderables have been changed.|
+
 <a name="exp_module_LayoutController"></a>
 ##class: LayoutController ⏏
 **Members**

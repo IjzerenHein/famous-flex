@@ -23,6 +23,13 @@
  * -    Pagination
  * -    Option to embed in a ContainerSurface
  *
+ * Events:
+ *
+ * |event      |description|
+ * |-----------|-----------|
+ * |scrollstart|Emitted when scrolling starts.|
+ * |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
+ *
  * Inherited from: [LayoutController](./LayoutController.md)
  * @module
  */
