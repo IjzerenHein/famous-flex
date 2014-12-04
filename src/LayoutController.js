@@ -503,6 +503,57 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Helper function for finding the view-sequence node at the given position.
+     */
+    function _getViewSequenceAtIndex(index) {
+        var viewSequence = this._viewSequence;
+        var i = viewSequence ? viewSequence.getIndex() : index;
+        if (index > i) {
+            while (viewSequence) {
+                viewSequence = viewSequence.getNext();
+                if (!viewSequence) {
+                    return undefined;
+                }
+                i = viewSequence.getIndex();
+                if (i === index) {
+                    return viewSequence;
+                } else if (index < i) {
+                    return undefined;
+                }
+            }
+        } else if (index < i) {
+            while (viewSequence) {
+                viewSequence = viewSequence.getPrevious();
+                if (!viewSequence) {
+                    return undefined;
+                }
+                i = viewSequence.getIndex();
+                if (i === index) {
+                    return viewSequence;
+                } else if (index > i) {
+                    return undefined;
+                }
+            }
+        }
+        return viewSequence;
+    }
+
+    /**
+     * Swaps two renderables at the given positions.
+     *
+     * @param {Number} index Index of the renderable to swap
+     * @param {Number} index2 Index of the renderable to swap with
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.swap = function(index, index2) {
+        if (this._viewSequence) {
+            _getViewSequenceAtIndex.call(this, index).swap(_getViewSequenceAtIndex.call(this, index2));
+            this._isDirty = true;
+        }
+        return this;
+    };
+
+    /**
      * Removes a renderable from the data-source.
      *
      * The optional argument `removeSpec` is only used `flow` mode is enabled.
