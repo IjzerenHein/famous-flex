@@ -64,7 +64,7 @@ define(function(require, exports, module) {
     }
     FlexScrollView.prototype = Object.create(ScrollController.prototype);
     FlexScrollView.prototype.constructor = FlexScrollView;
-    FlexScrollView.PullToRefrehState = PullToRefreshState;
+    FlexScrollView.PullToRefreshState = PullToRefreshState;
 
     FlexScrollView.DEFAULT_OPTIONS = {
         layout: ListLayout,         // sequential layout, uses width/height from renderable
@@ -367,7 +367,7 @@ define(function(require, exports, module) {
     FlexScrollView.prototype.showPullToRefresh = function(footer) {
         var pullToRefresh = _getPullToRefresh.call(this, footer);
         if (pullToRefresh) {
-            _setPullToRefreshState(PullToRefreshState.SHOWN, pullToRefresh);
+            _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
             this._scroll.scrollDirty = true;
         }
     };
