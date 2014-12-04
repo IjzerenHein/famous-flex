@@ -324,7 +324,7 @@ var scrollView = new FlexScrollView({
 });
 ```
 
-Whenever the user pulls on header or footer (the pull down height is 2x the height of the renderable), the `refresh` event is emitted:
+Whenever the user pulls on header or footer, the `refresh` event is emitted:
 
 ```javascript
 scrollView.on('refresh', function(event) {
@@ -365,7 +365,8 @@ scrollView.hidePullToRefresh(footer);
 scrollView.isPullToRefreshVisible(footer);
 ```
 
-To animate your pull to refresh renderable while pulling, create a custom view and implement the `setPullToRefreshStatus` on it. When pulling starts, stops or changes state, the FlexScrollView will call `setPullToRefreshStatus(state)` on the renderable to indicate these state changes.
+To animate your pull to refresh renderable while pulling, create a custom view and implement the `setPullToRefreshStatus` on it. When pulling starts, stops or changes state, the FlexScrollView will call `setPullToRefreshStatus(state)` on the renderable to indicate these state changes. Additionally, the
+FlexScrollView asks the renderable for the desired pull length for triggering the refresh (`getPullToRefreshSize`).
 
 See [famous-refresh-loader](https://github.com/IjzerenHein/famous-refresh-loader) for an example on how to create a responsive pull to refresh view.
 
