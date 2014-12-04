@@ -247,6 +247,22 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Pre-allocate layout-nodes ahead of using them.
+     *
+     * @param {Number} count number of nodes to pre-allocate with the given spec
+     * @param {Spec} [spec] render-spec (defined the node properties which to pre-allocate)
+     */
+    LayoutNodeManager.prototype.preallocateNodes = function(count, spec) {
+        var nodes = [];
+        for (var i = 0; i < count ; i++) {
+            nodes.push(this.createNode(undefined, spec));
+        }
+        for (i = 0; i < count ; i++) {
+            _destroyNode.call(this, nodes[i]);
+        }
+    };
+
+    /**
      * Creates a layout-node
      *
      * @param {Object} renderNode render-node for whom to create a layout-node for

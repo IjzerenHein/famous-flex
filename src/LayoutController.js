@@ -52,6 +52,7 @@ define(function(require, exports, module) {
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
+     * @param {Object} [options.preallocateNodes] Optimisation option to improve initial scrolling/animation performance by pre-allocating nodes, e.g.: `{count: 50, spec: {size:[0, 0], transform: Transform.identity}}`.
      * @alias module:LayoutController
      */
     function LayoutController(options, nodeManager) {
@@ -170,6 +171,9 @@ define(function(require, exports, module) {
             this._nodes.setNodeOptions({
                 spring: options.nodeSpring
             });
+        }
+        if (options.preallocateNodes) {
+            this._nodes.preallocateNodes(options.preallocateNodes.count || 0, options.preallocateNodes.spec);
         }
         return this;
     };

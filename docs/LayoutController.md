@@ -48,6 +48,7 @@ Events:
   - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
   - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function on every render-cycle (default: `false`).  
   - \[autoPipeEvents\] `Bool` - When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).  
+  - \[preallocateNodes\] `Object` - Optimisation option to improve initial scrolling/animation performance by pre-allocating nodes, e.g.: `{count: 50, spec: {size:[0, 0], transform: Transform.identity}}`.  
 
 <a name="module_LayoutController#setOptions"></a>
 ###layoutController.setOptions(options)
