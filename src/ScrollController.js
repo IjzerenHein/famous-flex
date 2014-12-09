@@ -1547,8 +1547,8 @@ define(function(require, exports, module) {
         );
 
         // Layout objects
-        if (this._layout.function) {
-            this._layout.function(
+        if (this._layout._function) {
+            this._layout._function(
                 layoutContext,          // context which the layout-function can use
                 this._layout.options    // additional layout-options
             );

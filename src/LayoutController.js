@@ -254,7 +254,7 @@ define(function(require, exports, module) {
 
         // Set new layout funtion
         if (layout instanceof Function) {
-            this._layout.function = layout;
+            this._layout._function = layout;
             this._layout.capabilities = layout.Capabilities;
             this._layout.literal = undefined;
 
@@ -264,13 +264,13 @@ define(function(require, exports, module) {
             this._layout.capabilities = undefined; // todo - derive from literal somehow?
             var helperName = Object.keys(layout)[0];
             var Helper = LayoutUtility.getRegisteredHelper(helperName);
-            this._layout.function = Helper ? function(context, options) {
+            this._layout._function = Helper ? function(context, options) {
                 var helper = new Helper(context, options);
                 helper.parse(layout[helperName]);
             } : undefined;
         }
         else {
-            this._layout.function = undefined;
+            this._layout._function = undefined;
             this._layout.capabilities = undefined;
             this._layout.literal = undefined;
         }
@@ -292,7 +292,7 @@ define(function(require, exports, module) {
      * @return {Function|Object} Layout function or layout literal
      */
     LayoutController.prototype.getLayout = function() {
-        return this._layout.literal || this._layout.function;
+        return this._layout.literal || this._layout._function;
     };
 
     /**
@@ -688,8 +688,8 @@ define(function(require, exports, module) {
             );
 
             // Layout objects
-            if (this._layout.function) {
-                this._layout.function(
+            if (this._layout._function) {
+                this._layout._function(
                     layoutContext,          // context which the layout-function can use
                     this._layout.options    // additional layout-options
                 );
