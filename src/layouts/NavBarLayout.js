@@ -39,11 +39,20 @@
  *     background: new Surface({properties: {backgroundColor: 'black'}}),
  *     title: new Surface({content: 'My title'}),
  *     leftItems:[
- *       new Surface({content: 'left1'})
+ *       new Surface({
+ *         content: 'left1',
+ *         size: [100, undefined] // use fixed width
+ *       })
  *     ],
  *     rightItems: [
- *       new Surface({content: 'right1'}),
- *       new Surface({content: 'right2'})
+ *       new Surface({
+ *         content: 'right1',
+ *         size: [true, undefined] // use actual width of DOM-node
+ *       }),
+ *       new Surface({
+ *         content: 'right2'
+ *         size: [true, undefined] // use actual width of DOM-node
+ *       })
  *     ]
  *   }
  * });
