@@ -30,6 +30,7 @@ Events:
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
   * [layoutController.insert(indexOrId, renderable, [insertSpec])](#module_LayoutController#insert)
   * [layoutController.push(renderable, [insertSpec])](#module_LayoutController#push)
+  * [layoutController.swap(index, index2)](#module_LayoutController#swap)
   * [layoutController.remove(indexOrId, [removeSpec])](#module_LayoutController#remove)
   * [layoutController.removeAll()](#module_LayoutController#removeAll)
   * [layoutController.getSize()](#module_LayoutController#getSize)
@@ -183,6 +184,16 @@ size, origin, opacity, transform, etc... as specified in `insertSpec'.
 
 - renderable `Object` - Renderable to add to the data-source  
 - \[insertSpec\] `Spec` - Size, transform, etc.. to start with when inserting  
+
+**Returns**: `LayoutController` - this  
+<a name="module_LayoutController#swap"></a>
+###layoutController.swap(index, index2)
+Swaps two renderables at the given positions.
+
+**Params**
+
+- index `Number` - Index of the renderable to swap  
+- index2 `Number` - Index of the renderable to swap with  
 
 **Returns**: `LayoutController` - this  
 <a name="module_LayoutController#remove"></a>
