@@ -182,10 +182,11 @@ define(function(require, exports, module) {
      * Helper function to enumerate all the renderables in the datasource
      */
     function _forEachRenderable(callback) {
+    	var i = 0;
         var dataSource = this._dataSource;
         if (dataSource instanceof Array) {
-            for (var i = 0, j = dataSource.length; i < j; i++) {
-                callback(dataSource[i]);
+            for (i = 0, j = dataSource.length; i < j; i++) {
+                callback(dataSource[i], i);
             }
         } else if (dataSource instanceof ViewSequence) {
             var renderable;
@@ -194,13 +195,14 @@ define(function(require, exports, module) {
                 if (!renderable) {
                     break;
                 }
-                callback(renderable);
+                callback(renderable, i);
                 dataSource = dataSource.getNext();
+                i++;
             }
         }
         else {
             for (var key in dataSource) {
-                callback(dataSource[key]);
+                callback(dataSource[key], key);
             }
         }
     }
@@ -234,6 +236,58 @@ define(function(require, exports, module) {
             }.bind(this));
         }
         this._isDirty = true;
+        return this;
+    };
+
+    /**
+     * Helper function to call functions on enumerated renderables in the datasource.
+     */
+    function _recursiveFunction(funcName, funcArguments) {
+        if (this[funcName]) {
+            if (Array.isArray(funcArguments)) {
+                this[funcName].apply(this, funcArguments);
+            } else {
+                this[funcName].call(this, funcArguments);
+            }
+        }
+
+        if (Array.isArray(this)) {
+            for (var i = 0; i < this.length; i++) {
+                _recursiveFunction.call(this[i], funcName, funcArguments);
+            }
+        }
+    }
+
+    /**
+     * Sets the options for each validated renderable in the data-source.
+     * 
+     * @param {Object} options The options to pass to the `setOptions` function for  each renderable.
+     * @param {Function|String|Array.String} [filter=undefined] A key or function to filter renderables with.
+     *            If ommited all renderables are valid;
+     *            In the case of using one or more Strings, valid identifiers are the keys for the `options.dataSource` you provided in the constructor, or through `setDataSource`;
+     *            If using a function, return `true` to accept a key or `false` to reject a key.
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.setDataSourceOptions = function(options, filter) {
+        if (!filter) { // no filter
+            _forEachRenderable.call(this, function(renderable) {
+                _recursiveFunction.call(renderable, 'setOptions', options);
+            }.bind(this));
+        } else if (filter.constructor && filter.call && filter.apply) { // filter function
+            _forEachRenderable.call(this, function(renderable, key) {
+                if (filter.call(renderable, key) === true) {
+                    _recursiveFunction.call(renderable, 'setOptions', options);
+                }
+            }.bind(this));
+        } else if (Array.isArray(filter)) { // multiple string identifiers
+            _forEachRenderable.call(this, function(renderable, key) {
+                if (filter.indexOf(key) > -1) {
+                    _recursiveFunction.call(renderable, 'setOptions', options);
+                }
+            }.bind(this));
+        } else { // single string identifier
+            return this.setDataSourceOptions.call(this, options, [filter]);
+        }
         return this;
     };
 
