@@ -227,7 +227,9 @@ define(function(require, exports, module) {
         }
         if (this.options.autoPipeEvents) {
             _forEachRenderable.call(this, function(renderable) {
-                renderable.pipe(this);
+                if (renderable && renderable.pipe) {
+                    renderable.pipe(this);
+                }
             }.bind(this));
         }
         this._isDirty = true;
@@ -477,7 +479,7 @@ define(function(require, exports, module) {
         }
 
         // Auto pipe events
-        if (this.options.autoPipeEvents) {
+        if (this.options.autoPipeEvents && renderable && renderable.pipe) {
             renderable.pipe(this);
         }
 
