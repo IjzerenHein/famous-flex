@@ -468,7 +468,9 @@ define(function(require, exports, module) {
      * context.set(..)
      */
     FlowLayoutNode.prototype.set = function(set, defaultSize) {
-        this._removing = false;
+        if (defaultSize) {
+            this._removing = false;
+        }
         this._invalidated = true;
         this.scrollLength = set.scrollLength;
         this._specModified = true;
