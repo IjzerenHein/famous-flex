@@ -82,6 +82,7 @@ define(function(require, exports, module) {
      * @extends LayoutController
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
+     * @param {String} [options.useContainerOverflow] Overflow mode that is used when the `useContainer` option is true (default: `hidden`).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
@@ -167,7 +168,7 @@ define(function(require, exports, module) {
         // Embed in container surface if neccesary
         if (this.options.useContainer) {
             this.container = new ContainerSurface({
-                properties: {overflow: 'hidden'}
+                properties: {overflow: this.options.useContainerOverflow}
             });
 
             // Create container surface, which has one child, which just returns
@@ -193,7 +194,8 @@ define(function(require, exports, module) {
         flow: false,
         //insertSpec: undefined,
         //removeSpec: undefined,
-        useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
+        useContainer: false,    // when true embeds inside a ContainerSurface for capturing input events & clipping
+        useContainerOverflow: 'hidden', // overflow mode when useContainer is enabled
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults

@@ -53,6 +53,7 @@ Inherited from: [LayoutController](./LayoutController.md)
 
 - options `Object` - Configurable options (see LayoutController for all inherited options).  
   - \[useContainer\] `Bool` - Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).  
+  - \[useContainerOverflow\] `String` - Overflow mode that is used when the `useContainer` option is true (default: `hidden`).  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
