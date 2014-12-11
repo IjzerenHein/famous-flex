@@ -229,6 +229,7 @@ define(function(require, exports, module) {
             _forEachRenderable.call(this, function(renderable) {
                 if (renderable && renderable.pipe) {
                     renderable.pipe(this);
+                    renderable.pipe(this._eventOutput);
                 }
             }.bind(this));
         }
@@ -481,6 +482,7 @@ define(function(require, exports, module) {
         // Auto pipe events
         if (this.options.autoPipeEvents && renderable && renderable.pipe) {
             renderable.pipe(this);
+            renderable.pipe(this._eventOutput);
         }
 
         // Force a reflow
