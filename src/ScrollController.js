@@ -818,6 +818,9 @@ define(function(require, exports, module) {
                         this._scroll.springPosition = size[this._direction] - scrollToOffset;
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
+                    else {
+                        this._scroll.ensureVisibleSequence = undefined;
+                    }
                 }
                 else {
                     scrollToOffset = -scrollToOffset;
@@ -827,6 +830,9 @@ define(function(require, exports, module) {
                     } else if ((scrollToOffset + foundNode.scrollLength) > size[this._direction]) {
                         this._scroll.springPosition = size[this._direction] - (scrollToOffset + foundNode.scrollLength);
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+                    }
+                    else {
+                        this._scroll.ensureVisibleSequence = undefined;
                     }
                 }
             }
