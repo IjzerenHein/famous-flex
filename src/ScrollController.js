@@ -29,7 +29,7 @@
  * |-----------|-----------|
  * |scrollstart|Emitted when scrolling starts.|
  * |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
- * |pagechange |Emitted as scrolling stops if ScrollController is paginated and visible page has changed.|
+ * |pagechange |Emitted whenever visible page changes and options.paging is set to true.|
  * |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
  *
  * Inherited from: [LayoutController](./LayoutController.md)
@@ -1751,9 +1751,12 @@ define(function(require, exports, module) {
         }
 
         // Set current visible page if not set
-        if (this.options.paginated && this._visibleIndexCache === undefined) {
-            var firstItem = (this.options.alignment == 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-            this._visibleIndexCache = firstItem ? firstItem.viewSequence.getIndex() : 0;
+        if (this.options.paginated && this._visibleSequenceCache === undefined) {
+            var visibleItem = (this.options.alignment === 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+            if (visibleItem) {
+                this._visibleSequenceCache = visibleItem.viewSequence;
+                this._visibleIndexCache = visibleItem.index;
+            }
         }
 
         // When the size or layout function has changed, reflow the layout
@@ -1787,6 +1790,25 @@ define(function(require, exports, module) {
                     this._eventOutput.emit('scrollstart', eventData);
                 }
                 emitScrollEvent = true;
+
+                // Determine whether the currently visible page has changed
+                if (this.options.paginated) {
+                    var item = (this.options.alignment === 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+
+                    if (item && item.viewSequence !== this._visibleSequenceCache) {
+                        pageChangeEventData = {
+                            target: this,
+                            oldViewSequence: this._visibleSequenceCache,
+                            viewSequence: item.viewSequence,
+                            oldIndex: this._visibleIndexCache,
+                            index: item.index
+                        };
+
+                        emitPageChangeEvent = true;
+                        this._visibleSequenceCache = item.viewSequence;
+                        this._visibleIndexCache = item.index;
+                    }
+                }
             }
 
             this._eventOutput.emit('layoutstart', eventData);
@@ -1823,22 +1845,6 @@ define(function(require, exports, module) {
         else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
             emitEndScrollingEvent = true;
 
-            // Determine whether the currently visible page has changed
-            if (this.options.paginated) {
-                var item = (this.options.alignment == 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-                var index = item ? item.viewSequence.getIndex() : 0;
-
-                if (index !== this._visibleIndexCache) {
-                    pageChangeEventData = {
-                        target: this,
-                        oldIndex: this._visibleIndexCache,
-                        index: index
-                    };
-
-                    emitPageChangeEvent = true;
-                    this._visibleIndexCache = index;
-                }
-            }
         }
 
         // Update output and optionally emit event

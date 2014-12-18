@@ -17,7 +17,7 @@ Events:
 |-----------|-----------|
 |scrollstart|Emitted when scrolling starts.|
 |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
-|pagechange |Emitted as scrolling stops if ScrollController is paginated and visible page has changed.|
+|pagechange |Emitted whenever visible page changes and options.paging is set to true.|
 |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
 
 Inherited from: [LayoutController](./LayoutController.md)
