@@ -29,6 +29,7 @@
  * |-----------|-----------|
  * |scrollstart|Emitted when scrolling starts.|
  * |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
+ * |pagechange |Emitted as scrolling stops if ScrollController is paginated and visible page has changed.|
  * |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
  *
  * Inherited from: [LayoutController](./LayoutController.md)
@@ -1749,10 +1750,18 @@ define(function(require, exports, module) {
             this._scrollOffsetCache = scrollOffset;
         }
 
+        // Set current visible page if not set
+        if (this.options.paginated && this._visibleIndexCache === undefined) {
+            var firstItem = this.getFirstVisibleItem();
+            this._visibleIndexCache = firstItem ? firstItem.viewSequence.getIndex() : 0;
+        }
+
         // When the size or layout function has changed, reflow the layout
         var emitEndScrollingEvent = false;
         var emitScrollEvent = false;
+        var emitPageChangeEvent = false;
         var eventData;
+        var pageChangeEventData;
 
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
@@ -1813,6 +1822,23 @@ define(function(require, exports, module) {
         }
         else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
             emitEndScrollingEvent = true;
+
+            // Determine whether the currently visible page has changed
+            if (this.options.paginated) {
+                var item = this.getFirstVisibleItem();
+                var index = item? item.viewSequence.getIndex() : 0;
+
+                if (index !== this._visibleIndexCache) {
+                    pageChangeEventData = {
+                        target: this,
+                        oldIndex: this._visibleIndexCache,
+                        index: index
+                    };
+
+                    emitPageChangeEvent = true;
+                    this._visibleIndexCache = index;
+                }
+            }
         }
 
         // Update output and optionally emit event
@@ -1832,6 +1858,11 @@ define(function(require, exports, module) {
         // Emit scroll event
         if (emitScrollEvent) {
             this._eventOutput.emit('scroll', eventData);
+        }
+
+        // Emit pageChange event
+        if (emitPageChangeEvent) {
+            this._eventOutput.emit('pageChange', pageChangeEventData);
         }
 
         // Emit end scrolling event
