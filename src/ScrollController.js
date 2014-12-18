@@ -28,6 +28,7 @@
  * |event      |description|
  * |-----------|-----------|
  * |scrollstart|Emitted when scrolling starts.|
+ * |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
  * |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
  *
  * Inherited from: [LayoutController](./LayoutController.md)
@@ -1747,7 +1748,9 @@ define(function(require, exports, module) {
 
         // When the size or layout function has changed, reflow the layout
         var emitEndScrollingEvent = false;
+        var emitScrollEvent = false;
         var eventData;
+
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
@@ -1765,11 +1768,15 @@ define(function(require, exports, module) {
                 scrollOffset: scrollOffset
             };
 
-            // When scroll-offset has changed, emit scroll-start event
-            if (!this._scroll.isScrolling && (this._scrollOffsetCache !== scrollOffset)) {
-                this._scroll.isScrolling = true;
-                this._eventOutput.emit('scrollstart', eventData);
+            // When scroll-offset has changed, emit scroll-start and scroll events
+            if (this._scrollOffsetCache !== scrollOffset) {
+                if (!this._scroll.isScrolling) {
+                    this._scroll.isScrolling = true;
+                    this._eventOutput.emit('scrollstart', eventData);
+                }
+                emitScrollEvent = true;
             }
+
             this._eventOutput.emit('layoutstart', eventData);
 
             // When the layout has changed, and we are not just scrolling,
@@ -1817,6 +1824,11 @@ define(function(require, exports, module) {
             this._eventOutput.emit('reflow', {
                 target: this
             });
+        }
+
+        // Emit scroll event
+        if (emitScrollEvent) {
+            this._eventOutput.emit('scroll', eventData);
         }
 
         // Emit end scrolling event

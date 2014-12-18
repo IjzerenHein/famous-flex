@@ -270,7 +270,7 @@ define(function(require, exports, module) {
         // opacity
         var prop = this._properties.opacity;
         if (prop && prop.init) {
-            spec.opacity = Math.round(Math.max(0,Math.min(1, prop.curState.x)) / precision) * precision;
+            spec.opacity = Math.round(Math.max(0, Math.min(1, prop.curState.x)) / precision) * precision;
         }
         else {
             spec.opacity = undefined;
