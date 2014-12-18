@@ -1860,9 +1860,9 @@ define(function(require, exports, module) {
             this._eventOutput.emit('scroll', eventData);
         }
 
-        // Emit pageChange event
+        // Emit pagechange event
         if (emitPageChangeEvent) {
-            this._eventOutput.emit('pageChange', pageChangeEventData);
+            this._eventOutput.emit('pagechange', pageChangeEventData);
         }
 
         // Emit end scrolling event
