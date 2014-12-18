@@ -16,6 +16,7 @@ Events:
 |event      |description|
 |-----------|-----------|
 |scrollstart|Emitted when scrolling starts.|
+|scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
 |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
 
 Inherited from: [LayoutController](./LayoutController.md)
