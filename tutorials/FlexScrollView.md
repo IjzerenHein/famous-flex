@@ -25,6 +25,7 @@ By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) l
 - [Advanced effects](#advanced-effects)
     - [Embedded scrollview linking](#embedded-scrollview-linking)
     - [Embedded scrollview scrolling restrictions](#embedded-scrollview-scrolling-restrictions)
+- [Events](#events)
 
 # Getting started
 
@@ -472,3 +473,32 @@ horzScrollView.on('scrollend', function(event) {
     horzScrollView.setOptions({ touchMoveDirectionThresshold: 0.5 });
 });
 ```
+
+
+# Events
+
+The FlexScrollView emits the following events:
+
+|event        |description|
+|-------------|-----------|
+|`layoutstart`|Emitted before the layout-function is executed.|
+|`layoutend`  |Emitted after the layout-function has been executed.|
+|`reflow`     |Emitted for every render-cycle that items are reflowing into their new state.|
+|`scrollstart`|Emitted when scrolling starts.|
+|`scroll`     |Emitted as the content is being scrolled (once for each frame the visible offset has changed).|
+|`scrollend`  |Emitted after scrolling stops (when the scroll particle settles).|
+
+These events are passed an event object with the following properties:
+
+```javascript
+{
+    target: flexScrollView,
+    oldSize: [100, 100],
+    size: [200, 200],
+    oldScrollOffset: Number,
+    scrollOffset: Number
+}
+```
+
+When a pull-to-refresh header or footer is attached, it also emits the `refresh`
+event (see [Pull to refresh](#pull-to-refresh)).
