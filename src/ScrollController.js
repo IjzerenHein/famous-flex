@@ -1752,7 +1752,7 @@ define(function(require, exports, module) {
 
         // Set current visible page if not set
         if (this.options.paginated && this._visibleIndexCache === undefined) {
-            var firstItem = this.getFirstVisibleItem();
+            var firstItem = (this.options.alignment == 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
             this._visibleIndexCache = firstItem ? firstItem.viewSequence.getIndex() : 0;
         }
 
@@ -1825,8 +1825,8 @@ define(function(require, exports, module) {
 
             // Determine whether the currently visible page has changed
             if (this.options.paginated) {
-                var item = this.getFirstVisibleItem();
-                var index = item? item.viewSequence.getIndex() : 0;
+                var item = (this.options.alignment == 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+                var index = item ? item.viewSequence.getIndex() : 0;
 
                 if (index !== this._visibleIndexCache) {
                     pageChangeEventData = {
