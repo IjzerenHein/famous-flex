@@ -51,6 +51,7 @@ define(function(require, exports, module) {
     var Drag = require('famous/physics/forces/Drag');
     var Spring = require('famous/physics/forces/Spring');
     var ScrollSync = require('famous/inputs/ScrollSync');
+    var ViewSequence = require('famous/core/ViewSequence');
 
     /**
      * Boudary reached detection
@@ -71,6 +72,7 @@ define(function(require, exports, module) {
         PREVBOUNDS: 'prev-bounds', // bottom
         MINSIZE: 'minimal-size',
         GOTOSEQUENCE: 'goto-sequence',
+        ENSUREVISIBLE: 'ensure-visible',
         GOTOPREVDIRECTION: 'goto-prev-direction',
         GOTONEXTDIRECTION: 'goto-next-direction',
         SNAPPREV: 'snap-prev', // paginated: true
@@ -750,7 +752,8 @@ define(function(require, exports, module) {
      * Calculates the scrollto-offset to which the spring is set.
      */
     function _calcScrollToOffset(size, scrollOffset) {
-        if (!this._scroll.scrollToSequence) {
+        var scrollToSequence = this._scroll.scrollToSequence || this._scroll.ensureVisibleSequence;
+        if (!scrollToSequence) {
             return;
         }
 
@@ -758,7 +761,6 @@ define(function(require, exports, module) {
         if ((this._scroll.boundsReached === Bounds.BOTH) ||
             (!this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.PREV)) ||
             (this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.NEXT))) {
-            //this._scroll.scrollToSequence = undefined;
             return;
         }
 
@@ -766,14 +768,16 @@ define(function(require, exports, module) {
         var foundNode;
         var scrollToOffset = 0;
         var node = this._nodes.getStartEnumNode(true);
+        var count = 0;
         while (node) {
+            count++;
             if (!node._invalidated || (node.scrollLength === undefined)) {
                 break;
             }
             if (this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
-            if (node._viewSequence === this._scroll.scrollToSequence) {
+            if (node._viewSequence === scrollToSequence) {
                 foundNode = node;
                 break;
             }
@@ -792,7 +796,7 @@ define(function(require, exports, module) {
                 if (!this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
-                if (node._viewSequence === this._scroll.scrollToSequence) {
+                if (node._viewSequence === scrollToSequence) {
                     foundNode = node;
                     break;
                 }
@@ -802,13 +806,38 @@ define(function(require, exports, module) {
                 node = node._prev;
             }
         }
+
+        // 3. Update springs
         if (foundNode) {
-            this._scroll.springPosition = scrollToOffset;
-            this._scroll.springSource = SpringSource.GOTOSEQUENCE;
+            if (this._scroll.ensureVisibleSequence) {
+                if (this.options.alignment) {
+                    if ((scrollToOffset - foundNode.scrollLength) < 0) {
+                        this._scroll.springPosition = scrollToOffset;
+                        this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+                    } else if (scrollToOffset > size[this._direction]) {
+                        this._scroll.springPosition = size[this._direction] - scrollToOffset;
+                        this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+                    }
+                }
+                else {
+                    scrollToOffset = -scrollToOffset;
+                    if (scrollToOffset < 0) {
+                        this._scroll.springPosition = scrollToOffset;
+                        this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+                    } else if ((scrollToOffset + foundNode.scrollLength) > size[this._direction]) {
+                        this._scroll.springPosition = size[this._direction] - (scrollToOffset + foundNode.scrollLength);
+                        this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+                    }
+                }
+            }
+            else { // scrollToSequence
+                this._scroll.springPosition = scrollToOffset;
+                this._scroll.springSource = SpringSource.GOTOSEQUENCE;
+            }
             return;
         }
 
-        // 3. When node not found, set the spring to a position into that direction
+        // 4. When node not found, keep searching
         if (this._scroll.scrollToDirection) {
             this._scroll.springPosition = scrollOffset - size[this._direction];
             this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
@@ -1188,6 +1217,17 @@ define(function(require, exports, module) {
      */
     function _scrollToSequence(viewSequence, next) {
         this._scroll.scrollToSequence = viewSequence;
+        this._scroll.ensureVisibleSequence = undefined;
+        this._scroll.scrollToDirection = next;
+        this._scroll.scrollDirty = true;
+    }
+
+    /**
+     * Helper function that scrolls the view towards a view-sequence node.
+     */
+    function _ensureVisibleSequence(viewSequence, next) {
+        this._scroll.scrollToSequence = undefined;
+        this._scroll.ensureVisibleSequence = viewSequence;
         this._scroll.scrollToDirection = next;
         this._scroll.scrollDirty = true;
     }
@@ -1255,9 +1295,7 @@ define(function(require, exports, module) {
                 break;
             }
         }
-        this._scroll.scrollToSequence = viewSequence;
-        this._scroll.scrollToDirection = false;
-        this._scroll.scrollDirty = true;
+        _scrollToSequence.call(this, viewSequence, false);
         return this;
     };
 
@@ -1306,9 +1344,7 @@ define(function(require, exports, module) {
                 break;
             }
         }
-        this._scroll.scrollToSequence = viewSequence;
-        this._scroll.scrollToDirection = true;
-        this._scroll.scrollDirty = true;
+        _scrollToSequence.call(this, viewSequence, true);
         return this;
     };
 
@@ -1351,6 +1387,66 @@ define(function(require, exports, module) {
             nextSequence = nextNode ? nextSequence.getNext() : undefined;
             prevSequence = prevNode ? prevSequence.getPrevious() : undefined;
         }
+        return this;
+    };
+
+    /**
+     * Ensures that a render-node is entirely visible.
+     *
+     * When the node is already visible, nothing happens. If the node is not entirely visible
+     * the view is scrolled as much as needed to make it entirely visibl.
+     *
+     * @param {Number|ViewSequence|Renderable} node index, renderNode or ViewSequence
+     * @return {ScrollController} this
+     */
+    ScrollController.prototype.ensureVisible = function(node) {
+
+        // Convert argument into renderNode
+        if (node instanceof ViewSequence) {
+            node = node.get();
+        } else if ((node instanceof Number) || (typeof node === 'number')) {
+            var viewSequence = this._viewSequence;
+            while (viewSequence.getIndex() < node) {
+                viewSequence = viewSequence.getNext();
+                if (!viewSequence) {
+                    return this;
+                }
+            }
+            while (viewSequence.getIndex() > node) {
+                viewSequence = viewSequence.getPrevious();
+                if (!viewSequence) {
+                    return this;
+                }
+            }
+        }
+
+        // Check current node
+        if (this._viewSequence.get() === node) {
+            var next = _calcScrollOffset.call(this) >= 0;
+            _ensureVisibleSequence.call(this, this._viewSequence, next);
+            return this;
+        }
+
+        // Find the sequence-node that we want to scroll to.
+        // We look at both directions at the same time.
+        // The first match that is encountered, that direction is chosen.
+        var nextSequence = this._viewSequence.getNext();
+        var prevSequence = this._viewSequence.getPrevious();
+        while ((nextSequence || prevSequence) && (nextSequence !== this._viewSequence)){
+            var nextNode = nextSequence ? nextSequence.get() : undefined;
+            if (nextNode === node) {
+                _ensureVisibleSequence.call(this, nextSequence, true);
+                break;
+            }
+            var prevNode = prevSequence ? prevSequence.get() : undefined;
+            if (prevNode === node) {
+                _ensureVisibleSequence.call(this, prevSequence, false);
+                break;
+            }
+            nextSequence = nextNode ? nextSequence.getNext() : undefined;
+            prevSequence = prevNode ? prevSequence.getPrevious() : undefined;
+        }
+
         return this;
     };
 
@@ -1413,6 +1509,7 @@ define(function(require, exports, module) {
      */
     ScrollController.prototype.halt = function() {
         this._scroll.scrollToSequence = undefined;
+        this._scroll.ensureVisibleSequence = undefined;
         _setParticle.call(this, undefined, 0, 'halt');
         return this;
     };

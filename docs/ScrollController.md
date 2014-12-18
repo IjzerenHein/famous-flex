@@ -36,6 +36,7 @@ Inherited from: [LayoutController](./LayoutController.md)
   * [scrollController.goToNextPage()](#module_ScrollController#goToNextPage)
   * [scrollController.goToLastPage()](#module_ScrollController#goToLastPage)
   * [scrollController.goToRenderNode(node)](#module_ScrollController#goToRenderNode)
+  * [scrollController.ensureVisible(node)](#module_ScrollController#ensureVisible)
   * [scrollController.scroll(delta)](#module_ScrollController#scroll)
   * [scrollController.canScroll(delta)](#module_ScrollController#canScroll)
   * [scrollController.halt()](#module_ScrollController#halt)
@@ -154,6 +155,18 @@ Scroll to the given renderable in the datasource.
 **Params**
 
 - node `RenderNode` - renderable to scroll to.  
+
+**Returns**: `ScrollController` - this  
+<a name="module_ScrollController#ensureVisible"></a>
+###scrollController.ensureVisible(node)
+Ensures that a render-node is entirely visible.
+
+When the node is already visible, nothing happens. If the node is not entirely visible
+the view is scrolled as much as needed to make it entirely visibl.
+
+**Params**
+
+- node `Number` | `ViewSequence` | `Renderable` - index, renderNode or ViewSequence  
 
 **Returns**: `ScrollController` - this  
 <a name="module_ScrollController#scroll"></a>

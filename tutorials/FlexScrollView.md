@@ -185,6 +185,12 @@ scrollView.goToRenderNode(renderable);   // scrolls to the given renderable
 
 scrollView.scroll(delta);                // scrolls x pixels in previous or next direction
 var delta = scrollView.canScroll(delta); // tests whether the view can scroll the given delta
+
+// `ensureVisible` optionally scrolls the view the least amount to ensure
+// that the given item is fully visible
+scrollView.ensureVisible(index);         // renderable at the given index
+scrollView.ensureVisible(viewSequence);  // view-sequence node
+scrollView.ensureVisible(renderable);    // renderable
 ```
 
 By default the FlexScrollView listens to touch-events and mouse-wheel (trackpad) events only. It is also possible to enable scrolling by pressing down on the mouse and moving the mouse. To enable this option use:
