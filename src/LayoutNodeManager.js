@@ -104,8 +104,7 @@ define(function(require, exports, module) {
         var contextState = this._contextState;
         contextState.nextSequence = viewSequence;
         contextState.prevSequence = viewSequence;
-        contextState.next = undefined;
-        contextState.prev = undefined;
+        contextState.start = undefined;
         contextState.nextGetIndex = 0;
         contextState.prevGetIndex = 0;
         contextState.nextSetIndex = 0;
@@ -354,6 +353,29 @@ define(function(require, exports, module) {
             node = node._next;
             count++;
         }
+    }
+
+    function _checkContextStateIntegrity() {
+        var node = this._contextState.start;
+        while (node) {
+            if (node === this._contextState.next) {
+                break;
+            }
+            if (!node._invalidated) {
+                throw 'WTF';
+            }
+            node = node._next;
+        }
+        node = this._contextState.start;
+        while (node) {
+            if (node === this._contextState.prev) {
+                break;
+            }
+            if (!node._invalidated) {
+                throw 'WTF';
+            }
+            node = node._prev;
+        }
     }*/
 
     /**
@@ -364,7 +386,8 @@ define(function(require, exports, module) {
         // The first time this function is called, the current
         // prev/next position is obtained.
         var node;
-        if (!this._contextState.prev && !this._contextState.next) {
+        var state = this._contextState;
+        if (!state.start) {
             node = this._first;
             while (node) {
                 if (node.renderNode === renderNode) {
@@ -380,46 +403,27 @@ define(function(require, exports, module) {
                 }
                 this._first = node;
             }
-            this._contextState.start = node;
-            this._contextState.startPrev = prev;
-            this._contextState.prev = prev ? node : undefined;
-            this._contextState.next = prev ? undefined : node;
+            state.start = node;
+            state.startPrev = prev;
+            state.prev = node;
+            state.next = node;
+            return node;
         }
 
         // Check whether node already exist at the correct position
         // in the linked-list. If so, return that node immediately
         // and advance the prev/next pointer for the next/prev
         // lookup operation.
-        var prevNode;
-        var nextNode;
         if (prev) {
-            if (this._contextState.prev && (this._contextState.prev.renderNode === renderNode)) {
-                prevNode = this._contextState.prev;
-            }
-            else if (!this._contextState.prev && this._contextState.start && this._contextState.start._prev && (this._contextState.start._prev.renderNode === renderNode)) {
-                prevNode = this._contextState.start._prev;
-                this._contextState.prev = prevNode;
-            }
-            if (prevNode) {
-                if (prevNode._prev) {
-                    this._contextState.prev = prevNode._prev;
-                }
-                return prevNode;
+            if (state.prev._prev && (state.prev._prev.renderNode === renderNode)) {
+                state.prev = state.prev._prev;
+                return state.prev;
             }
         }
         else {
-            if (this._contextState.next && (this._contextState.next.renderNode === renderNode)) {
-                nextNode = this._contextState.next;
-            }
-            else if (!this._contextState.next && this._contextState.start && this._contextState.start._next && (this._contextState.start._next.renderNode === renderNode)) {
-                nextNode = this._contextState.start._next;
-                this._contextState.next = nextNode;
-            }
-            if (nextNode) {
-                if (nextNode._next) {
-                    this._contextState.next = nextNode._next;
-                }
-                return nextNode;
+            if (state.next._next && (state.next._next.renderNode === renderNode)) {
+                state.next = state.next._next;
+                return state.next;
             }
         }
 
@@ -454,27 +458,25 @@ define(function(require, exports, module) {
 
         // Insert node into the linked list
         if (prev) {
-            prevNode = this._contextState.prev || this._contextState.start;
-            if (prevNode._prev) {
-                node._prev = prevNode._prev;
-                prevNode._prev._next = node;
+            if (state.prev._prev) {
+                node._prev = state.prev._prev;
+                state.prev._prev._next = node;
             }
             else {
                 this._first = node;
             }
-            prevNode._prev = node;
-            node._next = prevNode;
-            this._contextState.prev = node;
+            state.prev._prev = node;
+            node._next = state.prev;
+            state.prev = node;
         }
         else {
-            nextNode = this._contextState.next || this._contextState.start;
-            if (nextNode._next) {
-                node._next = nextNode._next;
-                nextNode._next._prev = node;
+            if (state.next._next) {
+                node._next = state.next._next;
+                state.next._next._prev = node;
             }
-            nextNode._next = node;
-            node._prev = nextNode;
-            this._contextState.next = node;
+            state.next._next = node;
+            node._prev = state.next;
+            state.next = node;
         }
 
         return node;
