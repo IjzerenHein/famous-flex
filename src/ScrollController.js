@@ -1745,6 +1745,9 @@ define(function(require, exports, module) {
 
         // Calculate scroll offset
         var scrollOffset = _calcScrollOffset.call(this, true, true);
+        if (this._scrollOffsetCache === undefined) {
+            this._scrollOffsetCache = scrollOffset;
+        }
 
         // When the size or layout function has changed, reflow the layout
         var emitEndScrollingEvent = false;
