@@ -7,7 +7,10 @@
     "url": "git://github.com/IjzerenHein/famous-flex.git"
   },
   "browserify": {
-    "transform": ["browserify-shim"]
+    "transform": [
+      "browserify-shim",
+      "deamdify"
+    ]
   },
   "scripts": {
     "global-no-famous": "browserify global-no-famous.template.js -t browserify-shim -o global-no-famous.js --debug --verbose"
