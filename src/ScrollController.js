@@ -28,8 +28,8 @@
  * |event      |description|
  * |-----------|-----------|
  * |scrollstart|Emitted when scrolling starts.|
- * |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
- * |pagechange |Emitted whenever visible page changes and options.paging is set to true.|
+ * |scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed).|
+ * |pagechange |Emitted whenever the visible page changes.|
  * |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
  *
  * Inherited from: [LayoutController](./LayoutController.md)
@@ -1105,7 +1105,7 @@ define(function(require, exports, module) {
                 break;
             }
             scrollOffset += node.scrollLength;
-            if (scrollOffset >= 0) {
+            if ((scrollOffset >= 0) && node._viewSequence){
                 result.push({
                     index: node._viewSequence.getIndex(),
                     viewSequence: node._viewSequence,
@@ -1124,7 +1124,7 @@ define(function(require, exports, module) {
                 break;
             }
             scrollOffset -= node.scrollLength;
-            if (scrollOffset < size[this._direction]) {
+            if ((scrollOffset < size[this._direction]) && node._viewSequence) {
                 result.unshift({
                     index: node._viewSequence.getIndex(),
                     viewSequence: node._viewSequence,
@@ -1160,7 +1160,7 @@ define(function(require, exports, module) {
                 break;
             }
             scrollOffset += node.scrollLength;
-            if (scrollOffset >= 0) {
+            if ((scrollOffset >= 0) && node._viewSequence) {
                 nodeFoundVisiblePerc = node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1;
                 nodeFoundScrollOffset = scrollOffset - node.scrollLength;
                 if ((nodeFoundVisiblePerc >= this.options.visibleItemThresshold) ||
@@ -1178,7 +1178,7 @@ define(function(require, exports, module) {
                 break;
             }
             scrollOffset -= node.scrollLength;
-            if (scrollOffset < size[this._direction]) {
+            if ((scrollOffset < size[this._direction]) && node._viewSequence) {
                 var visiblePerc = node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1;
                 if ((visiblePerc >= this.options.visibleItemThresshold) ||
                     (scrollOffset >= 0)) {
@@ -1752,21 +1752,10 @@ define(function(require, exports, module) {
             this._scrollOffsetCache = scrollOffset;
         }
 
-        // Set current visible page if not set
-        if (this.options.paginated && this._visibleSequenceCache === undefined) {
-            var visibleItem = (this.options.alignment === 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-            if (visibleItem) {
-                this._visibleSequenceCache = visibleItem.viewSequence;
-                this._visibleIndexCache = visibleItem.index;
-            }
-        }
-
         // When the size or layout function has changed, reflow the layout
         var emitEndScrollingEvent = false;
         var emitScrollEvent = false;
-        var emitPageChangeEvent = false;
         var eventData;
-        var pageChangeEventData;
 
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
@@ -1792,25 +1781,6 @@ define(function(require, exports, module) {
                     this._eventOutput.emit('scrollstart', eventData);
                 }
                 emitScrollEvent = true;
-
-                // Determine whether the currently visible page has changed
-                if (this.options.paginated) {
-                    var item = (this.options.alignment === 1) ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-
-                    if (item && item.viewSequence !== this._visibleSequenceCache) {
-                        pageChangeEventData = {
-                            target: this,
-                            oldViewSequence: this._visibleSequenceCache,
-                            viewSequence: item.viewSequence,
-                            oldIndex: this._visibleIndexCache,
-                            index: item.index
-                        };
-
-                        emitPageChangeEvent = true;
-                        this._visibleSequenceCache = item.viewSequence;
-                        this._visibleIndexCache = item.index;
-                    }
-                }
             }
 
             this._eventOutput.emit('layoutstart', eventData);
@@ -1846,7 +1816,6 @@ define(function(require, exports, module) {
         }
         else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
             emitEndScrollingEvent = true;
-
         }
 
         // Update output and optionally emit event
@@ -1863,14 +1832,25 @@ define(function(require, exports, module) {
             });
         }
 
-        // Emit scroll event
+        // View has been scrolled, emit event
         if (emitScrollEvent) {
             this._eventOutput.emit('scroll', eventData);
         }
 
-        // Emit pagechange event
-        if (emitPageChangeEvent) {
-            this._eventOutput.emit('pagechange', pageChangeEventData);
+        // Check whether the current page has changed
+        if (eventData) { // eventData is only used here to check whether there has been a re-layout
+            var visibleItem = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+            if ((visibleItem && !this._visibleItemCache) || (!visibleItem && this._visibleItemCache) ||
+                (visibleItem && this._visibleItemCache && (visibleItem.renderNode !== this._visibleItemCache.renderNode))) {
+                this._eventOutput.emit('pagechange', {
+                    target: this,
+                    oldViewSequence: this._visibleItemCache ? this._visibleItemCache.viewSequence : undefined,
+                    viewSequence: visibleItem ? visibleItem.viewSequence : visibleItem.index,
+                    oldIndex: this._visibleItemCache ? this._visibleItemCache.index : undefined,
+                    index: visibleItem ? visibleItem.index : undefined
+                });
+                this._visibleItemCache = visibleItem;
+            }
         }
 
         // Emit end scrolling event
