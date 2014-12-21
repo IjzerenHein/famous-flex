@@ -8,10 +8,29 @@
   },
   "browserify": {
     "transform": [
-      "deamdify",
-      "famousify",
-      "brfs"
+      "browserify-shim",
+      "deamdify"
     ]
+  },
+  "scripts": {
+    "global-no-famous": "browserify global-no-famous.template.js -t browserify-shim -o global-no-famous.js --debug --verbose"
+  },
+  "browserify-shim": {
+    "famous/core/OptionsManager": "global:famous.core.OptionsManager",
+    "famous/utilities/Utility": "global:famous.utilities.Utility",
+    "famous/surfaces/ContainerSurface": "global:famous.surfaces.ContainerSurface",
+    "famous/core/EventHandler": "global:famous.core.EventHandler",
+    "famous/core/Transform": "global:famous.core.Transform",
+    "famous/math/Vector": "global:famous.math.Vector",
+    "famous/core/Group": "global:famous.core.Group",
+    "famous/physics/PhysicsEngine": "global:famous.physics.PhysicsEngine",
+    "famous/physics/forces/Drag": "global:famous.physics.forces.Drag",
+    "famous/physics/forces/Spring": "global:famous.physics.forces.Spring",
+    "famous/inputs/ScrollSync": "global:famous.inputs.ScrollSync",
+    "famous/physics/bodies/Particle": "global:famous.physics.bodies.Particle",
+    "famous/transitions/Transitionable": "global:famous.transitions.Transitionable",
+    "famous/core/Entity": "global:famous.core.Entity",
+    "famous/core/ViewSequence": "global:famous.core.ViewSequence"
   },
   "author": {
     "name": "Hein Rutjes <hrutjes@gmail.com>"
@@ -45,8 +64,8 @@
   "devDependencies": {
     "brfs": "latest",
     "browserify": "latest",
+    "browserify-shim": "latest",
     "deamdify": "latest",
-    "famousify": "latest",
     "grunt": "latest",
     "grunt-eslint": "latest",
     "grunt-jscs": "latest",
