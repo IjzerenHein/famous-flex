@@ -486,6 +486,7 @@ The FlexScrollView emits the following events:
 |`reflow`     |Emitted for every render-cycle that items are reflowing into their new state.|
 |`scrollstart`|Emitted when scrolling starts.|
 |`scroll`     |Emitted as the content is being scrolled (once for each frame the visible offset has changed).|
+|`pagechange` |Emitted whenever the visible page changes.|
 |`scrollend`  |Emitted after scrolling stops (when the scroll particle settles).|
 
 These events are passed an event object with the following properties:
