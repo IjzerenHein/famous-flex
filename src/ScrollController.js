@@ -184,9 +184,11 @@ define(function(require, exports, module) {
             });
 
             // Pipe events received in container to this scrollview
-            this.subscribe(this.container);
-            EventHandler.setInputHandler(this.container, this);
-            EventHandler.setOutputHandler(this.container, this);
+            if (!this.options.autoPipeEvents) {
+                this.subscribe(this.container);
+                EventHandler.setInputHandler(this.container, this);
+                EventHandler.setOutputHandler(this.container, this);
+            }
         }
     }
     ScrollController.prototype = Object.create(LayoutController.prototype);
