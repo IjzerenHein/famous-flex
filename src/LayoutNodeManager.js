@@ -182,6 +182,8 @@ define(function(require, exports, module) {
                         spec.transform[12] += translate[0];
                         spec.transform[13] += translate[1];
                         spec.transform[14] += translate[2];
+                        spec.transform[12] = Math.round(spec.transform[12] * 100000) / 100000;
+                        spec.transform[13] = Math.round(spec.transform[13] * 100000) / 100000;
                     }
                     result.modified = true;
                 }
