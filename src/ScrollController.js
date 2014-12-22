@@ -1845,7 +1845,7 @@ define(function(require, exports, module) {
                 this._eventOutput.emit('pagechange', {
                     target: this,
                     oldViewSequence: this._visibleItemCache ? this._visibleItemCache.viewSequence : undefined,
-                    viewSequence: visibleItem ? visibleItem.viewSequence : visibleItem.index,
+                    viewSequence: visibleItem ? visibleItem.viewSequence : undefined,
                     oldIndex: this._visibleItemCache ? this._visibleItemCache.index : undefined,
                     index: visibleItem ? visibleItem.index : undefined
                 });
