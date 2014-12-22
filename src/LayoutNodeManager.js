@@ -667,6 +667,7 @@ define(function(require, exports, module) {
             }
             if (this._reevalTrueSize) {
                 renderNode._trueSizeCheck = true; // force request of true-size from DOM
+                renderNode._sizeDirty = true;
             }
 
             // Backup the size of the node
