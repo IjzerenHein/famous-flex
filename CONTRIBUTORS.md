@@ -1,5 +1,7 @@
 # Contributors
 
-The list is still small but I hope it will grow :)
-
 - Hein Rutjes (IjzerenHein)
+- Jens Zastrow (mcbain)
+- Torsten Freyhall (toostn)
+- Stephan Bijzitter (StephanBijzitter)
+- Jeduan Cornejo (jeduan)
