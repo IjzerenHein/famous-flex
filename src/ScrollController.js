@@ -85,7 +85,7 @@ define(function(require, exports, module) {
      * @class
      * @extends LayoutController
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
-     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
+     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events. Use `true` to let the ScrollController create a new container or use any `ContainerSurface` instance to supply your own  (default: `false`).
      * @param {String} [options.container] Options that are passed to the ContainerSurface in case `useContainer` is true.
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
@@ -171,7 +171,9 @@ define(function(require, exports, module) {
 
         // Embed in container surface if neccesary
         if (this.options.useContainer) {
-            this.container = new ContainerSurface(this.options.container);
+            this.container = this.options.useContainer === true
+            	? new ContainerSurface(this.options.container)
+            	: this.options.useContainer;
 
             // Create container surface, which has one child, which just returns
             // the entity-id of this scrollview. This causes the Commit function
