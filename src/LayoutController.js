@@ -410,8 +410,8 @@ define(function(require, exports, module) {
                 return node;
             }
         }
-        for (var i = 0; i < this._commitOutput.target.length; i++) {
-            var spec = this._commitOutput.target[i];
+        for (var i = 0; i < this._specs.length; i++) {
+            var spec = this._specs[i];
             if (spec.renderNode === node) {
                 return spec;
             }
@@ -738,6 +738,7 @@ define(function(require, exports, module) {
                 });
             }
         }
+        this._specs = this._commitOutput.target;
 
         // Render child-nodes every commit
         var target = this._commitOutput.target;

@@ -1622,6 +1622,31 @@ define(function(require, exports, module) {
         return this;
     };
 
+     /**
+     * Get the spec (size, transform, etc..) for the given renderable or
+     * Id.
+     *
+     * @param {Renderable|String} node Renderabe or Id to look for
+     * @return {Spec} spec or undefined
+     */
+    ScrollController.prototype.getSpec = function(node) {
+        var spec = LayoutController.prototype.getSpec.call(this, node);
+        if (spec && this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized) {
+            spec = {
+                origin: spec.origin,
+                align: spec.align,
+                opacity: spec.opacity,
+                size: spec.size,
+                renderNode: spec.renderNode,
+                transform: spec.transform
+            };
+            var translate = [0, 0, 0];
+            translate[this._direction] = this._scrollOffsetCache + this._scroll.groupStart;
+            spec.transform = Transform.thenMove(spec.transform, translate);
+        }
+        return spec;
+    };
+
     /**
      * Executes the layout and updates the state of the scrollview.
      */
