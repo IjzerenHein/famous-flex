@@ -1824,7 +1824,8 @@ define(function(require, exports, module) {
         groupTranslate[1] = 0;
         groupTranslate[2] = 0;
         groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
-        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(this._layout.capabilities.sequentialScrollingOptimized ? groupTranslate : undefined);
+        var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
+        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
         this._specs = result.specs;
         if (result.modified) {
             this._eventOutput.emit('reflow', {
@@ -1873,7 +1874,7 @@ define(function(require, exports, module) {
         // to the scrollOffset. For layouts that don't layout sequence, disable
         // this behavior as it will be decremental to the performance.
         var transform = context.transform;
-        if (this._layout.capabilities.sequentialScrollingOptimized) {
+        if (sequentialScrollingOptimized) {
             var windowOffset = scrollOffset + this._scroll.groupStart;
             var translate = [0, 0, 0];
             translate[this._direction] = windowOffset;
