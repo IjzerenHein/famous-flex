@@ -48,6 +48,7 @@ define(function(require, exports, module) {
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
+     * @param {Bool} [options.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
@@ -115,7 +116,7 @@ define(function(require, exports, module) {
             dampingRatio: 0.8,
             period: 300
         },
-        alwaysLayout: false    // set to true to always call the layout function
+        reflowOnResize: true
         /*insertSpec: {
             opacity: undefined,
             size: undefined,
@@ -676,6 +677,20 @@ define(function(require, exports, module) {
                 trueSizeRequested: this._nodes._trueSizeRequested
             };
             this._eventOutput.emit('layoutstart', eventData);
+
+            // When the layout has changed, and we are not just scrolling,
+            // disable the locked state of the layout-nodes so that they
+            // can freely transition between the old and new state.
+            if (this.options.flow && (this._isDirty ||
+                (this.options.reflowOnResize &&
+                ((size[0] !== this._contextSizeCache[0]) ||
+                 (size[1] !== this._contextSizeCache[1]))))) {
+                var node = this._nodes.getStartEnumNode();
+                while (node) {
+                    node.releaseLock();
+                    node = node._next;
+                }
+            }
 
             // Update state
             this._contextSizeCache[0] = size[0];

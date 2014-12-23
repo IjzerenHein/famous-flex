@@ -49,13 +49,6 @@ define(function(require, exports, module) {
             this._pe.sleep();
         }
 
-        this._options = {
-            spring: {
-                dampingRatio: 0.8,
-                period: 300
-            }
-        };
-
         if (!this._properties) {
             this._properties = {};
         }
@@ -63,6 +56,14 @@ define(function(require, exports, module) {
             for (var propName in this._properties) {
                 this._properties[propName].init = false;
             }
+        }
+
+        if (!this._lockTransitionable) {
+            this._lockTransitionable = new Transitionable(1);
+        }
+        else {
+            this._lockTransitionable.halt();
+            this._lockTransitionable.reset(1);
         }
 
         this._specModified = true;
@@ -200,30 +201,16 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Locks a property, or a specific array-dimension of the property
-     * fixed to the end-state value. Use this to e.g. lock the x-translation
-     * to a the fixed end-state, so that when scrolling the renderable sticks
-     * to the x-axis and does not feel sluggish.
+     * Temporarily releases the flowing-lock that is applied to the node.
+     * E.g., when changing position, resizing, the lock should be released so that
+     * the renderables can smoothly transition to their new positions.
      */
-    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
-        if (direction === undefined) {
-            this._lockDirection = undefined;
-        }
-        else {
-            this._lockDirection = direction;
-            if (value !== undefined) {
-                if (!this._lockTransitionable) {
-                    this._lockTransitionable = new Transitionable(1);
-                }
-                this._lockTransitionable.halt();
-                this._lockTransitionable.reset(value);
-                if (value !== 1) {
-                    this._lockTransitionable.set(1, {
-                        duration: (1 - value) * 1000
-                    });
-                }
-            }
-        }
+    FlowLayoutNode.prototype.releaseLock = function(duration) {
+        this._lockTransitionable.halt();
+        this._lockTransitionable.reset(0);
+        this._lockTransitionable.set(1, {
+            duration: duration || this.options.spring.period || 1000
+        });
     };
 
     /**
@@ -263,9 +250,9 @@ define(function(require, exports, module) {
         }
 
         // Build fresh spec
-        var value;
         var spec = this._spec;
         var precision = this.options.particleRounding;
+        var lockValue = this._lockTransitionable.get();
 
         // opacity
         var prop = this._properties.opacity;
@@ -280,8 +267,8 @@ define(function(require, exports, module) {
         prop = this._properties.size;
         if (prop && prop.init) {
             spec.size = spec.size || [0, 0];
-            spec.size[0] = Math.round(prop.curState.x / 0.1) * 0.1;
-            spec.size[1] = Math.round(prop.curState.y / 0.1) * 0.1;
+            spec.size[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
+            spec.size[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
         }
         else {
             spec.size = undefined;
@@ -291,8 +278,8 @@ define(function(require, exports, module) {
         prop = this._properties.align;
         if (prop && prop.init) {
             spec.align = spec.align || [0, 0];
-            spec.align[0] = Math.round(prop.curState.x / 0.1) * 0.1;
-            spec.align[1] = Math.round(prop.curState.y / 0.1) * 0.1;
+            spec.align[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
+            spec.align[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
         }
         else {
             spec.align = undefined;
@@ -302,8 +289,8 @@ define(function(require, exports, module) {
         prop = this._properties.origin;
         if (prop && prop.init) {
             spec.origin = spec.origin || [0, 0];
-            spec.origin[0] = Math.round(prop.curState.x / 0.1) * 0.1;
-            spec.origin[1] = Math.round(prop.curState.y / 0.1) * 0.1;
+            spec.origin[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
+            spec.origin[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
         }
         else {
             spec.origin = undefined;
@@ -315,22 +302,9 @@ define(function(require, exports, module) {
         var translateY;
         var translateZ;
         if (translate && translate.init) {
-            translateX = translate.curState.x;
-            translateY = translate.curState.y;
-            translateZ = translate.curState.z;
-            if (this._lockDirection !== undefined) {
-                value = this._lockDirection ? translateY : translateX;
-                var endState = this._lockDirection ? translate.endState.y : translate.endState.x;
-                var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-                if (this._lockDirection) {
-                    translateX = Math.round(translateX / precision) * precision;
-                    translateY = Math.round(lockValue / precision) * precision;
-                }
-                else {
-                    translateX = Math.round(lockValue / precision) * precision;
-                    translateY = Math.round(translateY / precision) * precision;
-                }
-            }
+            translateX = Math.round((translate.curState.x + ((translate.endState.x - translate.curState.x) * lockValue)) / precision) * precision;
+            translateY = Math.round((translate.curState.y + ((translate.endState.y - translate.curState.y) * lockValue)) / precision) * precision;
+            translateZ = Math.round((translate.curState.z + ((translate.endState.z - translate.curState.z) * lockValue)) / precision) * precision;
         }
         else {
             translateX = 0;
@@ -363,17 +337,6 @@ define(function(require, exports, module) {
         else {
             spec.transform = undefined;
         }
-
-        //if (this.renderNode._debug) {
-            //this.renderNode._debug = false;
-            /*console.log(JSON.stringify({
-                opacity: this._spec.opacity,
-                size: this._spec.size,
-                align: this._spec.align,
-                origin: this._spec.origin,
-                transform: this._spec.transform
-            }));*/
-        //}
         return this._spec;
     };
 
@@ -395,9 +358,9 @@ define(function(require, exports, module) {
             else if (this._removing) {
                 value = prop.particle.getPosition();
             }
-            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
-                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
-            }
+            //if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
+            //    immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
+            //}
             // set new end state (the quick way)
             prop.endState.x = value[0];
             prop.endState.y = (value.length > 1) ? value[1] : 0;

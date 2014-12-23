@@ -279,9 +279,6 @@ define(function(require, exports, module) {
         if (!spec && this.options.insertSpec) {
             node.setSpec(this.options.insertSpec);
         }
-        if (node.setDirectionLock) {
-            node.setDirectionLock(this._direction, 1);
-        }
     }
 
     /**
@@ -1701,26 +1698,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Override of the setDirection function to detect whether the
-     * direction has changed. If so, the directionLock on the nodes
-     * is updated.
-     */
-    var oldSetDirection = ScrollController.prototype.setDirection;
-    ScrollController.prototype.setDirection = function(direction) {
-        var oldDirection = this._direction;
-        oldSetDirection.call(this, direction);
-        if (oldDirection !== this._direction) {
-            var node = this._nodes.getStartEnumNode();
-            while (node) {
-                if (node._invalidated && node.setDirectionLock) {
-                    node.setDirectionLock(this._direction, 0);
-                }
-                node = node._next;
-            }
-        }
-    };
-
-    /**
      * Inner render function of the Group
      */
     function _innerRender() {
@@ -1756,7 +1733,6 @@ define(function(require, exports, module) {
         var emitEndScrollingEvent = false;
         var emitScrollEvent = false;
         var eventData;
-
         if (size[0] !== this._contextSizeCache[0] ||
             size[1] !== this._contextSizeCache[1] ||
             this._isDirty ||
@@ -1788,14 +1764,13 @@ define(function(require, exports, module) {
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
-            if (this._isDirty ||
-                (size[0] !== this._contextSizeCache[0]) ||
-                (size[1] !== this._contextSizeCache[1])) {
+            if (this.options.flow && (this._isDirty ||
+                (this.options.reflowOnResize &&
+                ((size[0] !== this._contextSizeCache[0]) ||
+                 (size[1] !== this._contextSizeCache[1]))))) {
                 var node = this._nodes.getStartEnumNode();
                 while (node) {
-                    if (node._invalidated && node.setDirectionLock) {
-                        node.setDirectionLock(this._direction, 0);
-                    }
+                    node.releaseLock();
                     node = node._next;
                 }
             }
