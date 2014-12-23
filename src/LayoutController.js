@@ -158,6 +158,9 @@ define(function(require, exports, module) {
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
+        if ((options.alignment !== undefined) && (options.alignment !== this.options.alignment)) {
+            this._isDirty = true;
+        }
         this._optionsManager.setOptions(options);
         if (options.dataSource) {
             this.setDataSource(options.dataSource);
