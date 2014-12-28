@@ -471,7 +471,18 @@ define(function(require, exports, module) {
                 dataSource.push(renderable);
             }
             else if (indexOrId === 0) {
-                dataSource.splice(0, 0, renderable);
+                if (dataSource === this._viewSequence) {
+                    dataSource.splice(0, 0, renderable);
+                    if (this._viewSequence.getIndex() === 0) {
+                        var nextViewSequence = this._viewSequence.getNext();
+                        if (nextViewSequence && nextViewSequence.get()) {
+                            this._viewSequence = nextViewSequence;
+                        }
+                    }
+                }
+                else {
+                    dataSource.splice(0, 0, renderable);
+                }
             }
             else {
                 dataSource.splice(indexOrId, 0, renderable);
