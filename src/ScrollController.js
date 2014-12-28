@@ -755,8 +755,8 @@ define(function(require, exports, module) {
      * Calculates the scrollto-offset to which the spring is set.
      */
     function _calcScrollToOffset(size, scrollOffset) {
-        var scrollToSequence = this._scroll.scrollToSequence || this._scroll.ensureVisibleSequence;
-        if (!scrollToSequence) {
+        var scrollToRenderNode = this._scroll.scrollToRenderNode || this._scroll.ensureVisibleRenderNode;
+        if (!scrollToRenderNode) {
             return;
         }
 
@@ -780,7 +780,7 @@ define(function(require, exports, module) {
             if (this.options.alignment) {
                 scrollToOffset -= node.scrollLength;
             }
-            if (node._viewSequence === scrollToSequence) {
+            if (node.renderNode === scrollToRenderNode) {
                 foundNode = node;
                 break;
             }
@@ -799,7 +799,7 @@ define(function(require, exports, module) {
                 if (!this.options.alignment) {
                     scrollToOffset += node.scrollLength;
                 }
-                if (node._viewSequence === scrollToSequence) {
+                if (node.renderNode === scrollToRenderNode) {
                     foundNode = node;
                     break;
                 }
@@ -822,7 +822,7 @@ define(function(require, exports, module) {
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
                     else {
-                        this._scroll.ensureVisibleSequence = undefined;
+                        this._scroll.ensureVisibleRenderNode = undefined;
                     }
                 }
                 else {
@@ -835,7 +835,7 @@ define(function(require, exports, module) {
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
                     else {
-                        this._scroll.ensureVisibleSequence = undefined;
+                        this._scroll.ensureVisibleRenderNode = undefined;
                     }
                 }
             }
@@ -1226,7 +1226,8 @@ define(function(require, exports, module) {
      */
     function _scrollToSequence(viewSequence, next) {
         this._scroll.scrollToSequence = viewSequence;
-        this._scroll.ensureVisibleSequence = undefined;
+        this._scroll.scrollToRenderNode = viewSequence.get();
+        this._scroll.ensureVisibleRenderNode = undefined;
         this._scroll.scrollToDirection = next;
         this._scroll.scrollDirty = true;
     }
@@ -1236,7 +1237,8 @@ define(function(require, exports, module) {
      */
     function _ensureVisibleSequence(viewSequence, next) {
         this._scroll.scrollToSequence = undefined;
-        this._scroll.ensureVisibleSequence = viewSequence;
+        this._scroll.scrollToRenderNode = undefined;
+        this._scroll.ensureVisibleRenderNode = viewSequence.get();
         this._scroll.scrollToDirection = next;
         this._scroll.scrollDirty = true;
     }
@@ -1518,7 +1520,8 @@ define(function(require, exports, module) {
      */
     ScrollController.prototype.halt = function() {
         this._scroll.scrollToSequence = undefined;
-        this._scroll.ensureVisibleSequence = undefined;
+        this._scroll.scrollToRenderNode = undefined;
+        this._scroll.ensureVisibleRenderNode = undefined;
         _setParticle.call(this, undefined, 0, 'halt');
         return this;
     };
