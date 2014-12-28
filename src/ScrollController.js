@@ -200,7 +200,9 @@ define(function(require, exports, module) {
         //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for capturing input events & clipping
         container: {
-            overflow: 'hidden' // overflow mode when useContainer is enabled
+            properties: {
+                overflow: 'hidden' // overflow mode when useContainer is enabled
+            }
         },
         visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
