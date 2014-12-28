@@ -1,4 +1,5 @@
 {
+  "main": "src",
   "name": "famous-flex",
   "version": "0.1.3",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
