@@ -663,11 +663,11 @@ define(function(require, exports, module) {
                     this._trueSizeRequested = true;
                     contextNode.trueSizeRequested = true;
                 }
-                //console.log('true size requested on node: ' + JSON.stringify(size));
             }
-            if (this._reevalTrueSize) {
+            if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
                 renderNode._trueSizeCheck = true; // force request of true-size from DOM
                 renderNode._sizeDirty = true;
+                this._trueSizeRequested = true;
             }
 
             // Backup the size of the node
