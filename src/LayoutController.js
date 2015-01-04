@@ -646,7 +646,7 @@ define(function(require, exports, module) {
      * @return {Array.Number} [width, height]
      */
     LayoutController.prototype.getSize = function() {
-        return this.options.size;
+        return this._size || this.options.size;
     };
 
     /**
@@ -712,11 +712,16 @@ define(function(require, exports, module) {
             this._isDirty = false;
 
             // Prepare for layout
+            var scrollEnd;
+            if (this.options.size && (this.options.size[this._direction] === true)) {
+                scrollEnd = 1000000; // calculate scroll-length
+            }
             var layoutContext = this._nodes.prepareForLayout(
                 this._viewSequence,     // first node to layout
                 this._nodesById, {      // so we can do fast id lookups
                     size: size,
-                    direction: this._direction
+                    direction: this._direction,
+                    scrollEnd: scrollEnd
                 }
             );
 
@@ -726,6 +731,22 @@ define(function(require, exports, module) {
                     layoutContext,          // context which the layout-function can use
                     this._layout.options    // additional layout-options
                 );
+            }
+
+            // Calculate scroll-length and use that as the true-size (height)
+            if (scrollEnd) {
+                scrollEnd = 0;
+                node = this._nodes.getStartEnumNode();
+                while (node) {
+                    if (node._invalidated && node.scrollLength) {
+                        scrollEnd += node.scrollLength;
+                    }
+                    node = node._next;
+                }
+                this._size = this._size || [0, 0];
+                this._size[0] = this.options.size[0];
+                this._size[1] = this.options.size[1];
+                this._size[this._direction] = scrollEnd;
             }
 
             // Update output and optionally emit event

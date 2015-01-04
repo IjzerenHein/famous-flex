@@ -634,7 +634,11 @@ define(function(require, exports, module) {
             return parentSize;
         }
 
-        // Check if true-size is used and it must be reavaluated
+        // Check if true-size is used and it must be reavaluated.
+        // This particular piece of code specifically handles true-size Surfaces in famo.us.
+        // It contains portions that ensure that the true-size of a Surface is re-evaluated
+        // and also workaround code that backs up the size of a Surface, so that when the surface
+        // is re-added to the DOM (e.g. when scrolling) it doesn't temporarily have a size of 0.
         var configSize = renderNode.size && (renderNode._trueSizeCheck !== undefined) ? renderNode.size : undefined;
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
             contextNode.usesTrueSize = true;
@@ -677,6 +681,17 @@ define(function(require, exports, module) {
             }
             backupSize[0] = size[0];
             backupSize[1] = size[1];
+        }
+
+        // Ensure re-layout when a child layout-controller is using true-size and it
+        // has ben changed.
+        configSize = renderNode._nodes ? renderNode.options.size : undefined;
+        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
+            if (this._reevalTrueSize || renderNode._nodes._trueSizeRequested) {
+                contextNode.usesTrueSize = true;
+                contextNode.trueSizeRequested = true;
+                this._trueSizeRequested = true;
+            }
         }
 
         // Resolve 'undefined' to parent-size and true to 0
