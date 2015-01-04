@@ -265,11 +265,25 @@ var scrollView = new FlexScrollView({
 
 # Clipping & ContainerSurfaces
 
-When you need to clip the contents of the scrollview so it doesn't overflow, you typically have create a ContainerSurface and embed the scrollview inside it. The FlexScrollView can perform this task for you through the `useContainer` option. When `useContainer` is set to `true`, the scrollview is wrapped inside a ContainerSurface with `overflow: hidden`:
+When you need to clip the contents of the scrollview so it doesn't overflow, you typically have create a ContainerSurface and embed the scrollview inside it. The FlexScrollView can perform this task for you through the `useContainer` option. When `useContainer` is set to `true`, the scrollview is wrapped inside a ContainerSurface with the properties set to `overflow: hidden` by default:
 
 ```javascript
 var scrollView = new FlexScrollView({
-    useContainer: true // wraps scrollview inside a ContainerSurface with overflow: hidden
+    useContainer: true // wraps scrollview inside a ContainerSurface
+});
+```
+
+Use the `container` option to override the options for the ContainerSurface:
+
+```javascript
+var scrollView = new FlexScrollView({
+    useContainer: true,
+    container: { // options passed to the ContainerSurface
+        properties: {
+            overflow: 'hidden',
+            backgroundColor: 'blue'
+        }
+    } 
 });
 ```
 
