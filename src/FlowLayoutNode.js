@@ -216,16 +216,14 @@ define(function(require, exports, module) {
     /**
      * Helper function for getting the property value.
      */
-    function _getRoundedValue3D(prop, def, precision) {
+    function _getRoundedValue3D(prop, def, precision, lockValue) {
         if (!prop || !prop.init) {
             return def;
         }
-        precision = precision || this.options.particleRounding;
-        var value = prop.particle.getPosition();
         return [
-            Math.round(value[0] / precision) * precision,
-            Math.round(value[1] / precision) * precision,
-            Math.round(value[2] / precision) * precision
+            Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / precision) * precision,
+            Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / precision) * precision,
+            Math.round((prop.curState.z + ((prop.endState.z - prop.curState.z) * lockValue)) / precision) * precision
         ];
     }
 
@@ -319,9 +317,9 @@ define(function(require, exports, module) {
         if (scale || skew || rotate) {
             spec.transform = Transform.build({
                 translate: [translateX, translateY, translateZ],
-                skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew),
-                scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale),
-                rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate)
+                skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew, this.options.particleRounding, lockValue),
+                scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale, this.options.particleRounding, lockValue),
+                rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate, this.options.particleRounding, lockValue)
             });
         }
         else if (translate) {
