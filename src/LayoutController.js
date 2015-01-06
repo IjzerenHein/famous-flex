@@ -410,10 +410,12 @@ define(function(require, exports, module) {
                 return node;
             }
         }
-        for (var i = 0; i < this._specs.length; i++) {
-            var spec = this._specs[i];
-            if (spec.renderNode === node) {
-                return spec;
+        if (this._specs) {
+            for (var i = 0; i < this._specs.length; i++) {
+                var spec = this._specs[i];
+                if (spec.renderNode === node) {
+                    return spec;
+                }
             }
         }
         return undefined;
