@@ -653,7 +653,7 @@ define(function(require, exports, module) {
      * Helper function that calculates the next/prev layed out height.
      * @private
      */
-    ScrollController.prototype._calcScrollHeight = function(next) {
+    ScrollController.prototype._calcScrollHeight = function(next, lastNodeOnly) {
         var calcedHeight = 0;
         var node = this._nodes.getStartEnumNode(next);
         while (node) {
@@ -663,7 +663,10 @@ define(function(require, exports, module) {
                     break;
                 }
                 if (node.scrollLength !== undefined) {
-                    calcedHeight += node.scrollLength;
+                    calcedHeight = lastNodeOnly ? node.scrollLength : (calcedHeight + node.scrollLength);
+                    if (!next && lastNodeOnly) {
+                        break;
+                    }
                 }
             }
             node = next ? node._next : node._prev;
@@ -672,19 +675,14 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Normalizes the scroll-offset so that scroll-offset is as close
-     * to 0 as can be. This function modifies the scrollOffset and the
-     * viewSeuqnce so that the least possible view-sequence nodes
-     * need to be rendered.
-     *
-     * I.e., when the scroll-offset is changed, e.g. by scrolling up
-     * or down, then renderables may end-up outside the visible range.
+     * Calculates the scroll boundaries and sets the spring accordingly.
      */
     function _calcBounds(size, scrollOffset) {
 
         // Local data
         var prevHeight = this._calcScrollHeight(false);
         var nextHeight = this._calcScrollHeight(true);
+        var enforeMinSize = this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized;
 
         // 0. Don't set any springs when either next or prev-height could
         //    not be determined due to true-size renderables.
@@ -698,23 +696,36 @@ define(function(require, exports, module) {
         // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
         var totalHeight;
-        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
-            totalHeight = prevHeight + nextHeight;
-        }
-        if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
-            this._scroll.boundsReached = Bounds.BOTH;
-            this._scroll.springPosition = this.options.alignment ? -nextHeight : prevHeight;
-            this._scroll.springSource = SpringSource.MINSIZE;
-            return;
+        if (enforeMinSize) {
+            if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
+                totalHeight = prevHeight + nextHeight;
+            }
+            if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
+                this._scroll.boundsReached = Bounds.BOTH;
+                this._scroll.springPosition = this.options.alignment ? -nextHeight : prevHeight;
+                this._scroll.springSource = SpringSource.MINSIZE;
+                return;
+            }
         }
 
         // 2. Check whether primary boundary has been reached
         if (this.options.alignment) {
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
-                this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = -nextHeight;
-                this._scroll.springSource = SpringSource.NEXTBOUNDS;
-                return;
+            if (enforeMinSize) {
+                if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
+                    this._scroll.boundsReached = Bounds.NEXT;
+                    this._scroll.springPosition = -nextHeight;
+                    this._scroll.springSource = SpringSource.NEXTBOUNDS;
+                    return;
+                }
+            }
+            else {
+                var firstPrevItemHeight = this._calcScrollHeight(false, true);
+                if ((nextHeight !== undefined) && firstPrevItemHeight && ((scrollOffset + nextHeight + size[this._direction]) <= firstPrevItemHeight)) {
+                    this._scroll.boundsReached = Bounds.NEXT;
+                    this._scroll.springPosition = nextHeight - (size[this._direction] - firstPrevItemHeight);
+                    this._scroll.springSource = SpringSource.NEXTBOUNDS;
+                    return;
+                }
             }
         }
         else {
@@ -736,12 +747,12 @@ define(function(require, exports, module) {
             }
         }
         else {
-            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
+            var nextBounds = enforeMinSize ? size[this._direction] : this._calcScrollHeight(true, true);
+            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= nextBounds)){
                 this._scroll.boundsReached = Bounds.NEXT;
-                this._scroll.springPosition = size[this._direction] - nextHeight;
+                this._scroll.springPosition = nextBounds - nextHeight;
                 this._scroll.springSource = SpringSource.NEXTBOUNDS;
                 return;
-
             }
         }
 
@@ -952,10 +963,8 @@ define(function(require, exports, module) {
     /**
      * Normalizes the view-sequence node so that the view-sequence is near to 0.
      */
-    function _normalizePrevViewSequence(size, scrollOffset) {
+    function _normalizePrevViewSequence(scrollOffset) {
         var count = 0;
-        //var normalizedCount = 0;
-        //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
         var normalizeNextPrev = false;
         var node = this._nodes.getStartEnumNode(false);
@@ -966,7 +975,6 @@ define(function(require, exports, module) {
             if (normalizeNextPrev) {
                 this._viewSequence = node._viewSequence;
                 normalizedScrollOffset = scrollOffset;
-                //normalizedCount = count;
                 normalizeNextPrev = false;
             }
             if ((node.scrollLength === undefined) || node.trueSizeRequested || (scrollOffset < 0)) {
@@ -981,20 +989,14 @@ define(function(require, exports, module) {
                 else {
                     this._viewSequence = node._viewSequence;
                     normalizedScrollOffset = scrollOffset;
-                    //normalizedCount = count;
                 }
             }
             node = node._prev;
         }
-        /*if (normalizedCount) {
-            //_log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
-        }*/
         return normalizedScrollOffset;
     }
-    function _normalizeNextViewSequence(size, scrollOffset) {
+    function _normalizeNextViewSequence(scrollOffset) {
         var count = 0;
-        //var normalizedCount = 0;
-        //var startScrollOffset = scrollOffset;
         var normalizedScrollOffset = scrollOffset;
         var node = this._nodes.getStartEnumNode(true);
         while (node) {
@@ -1009,7 +1011,6 @@ define(function(require, exports, module) {
             if (node.scrollLength || this.options.alignment) {
                 this._viewSequence = node._viewSequence;
                 normalizedScrollOffset = scrollOffset;
-                //normalizedCount = count;
             }
             if (!this.options.alignment) {
                 scrollOffset += node.scrollLength;
@@ -1017,9 +1018,6 @@ define(function(require, exports, module) {
             }
             node = node._next;
         }
-        /*if (normalizedCount) {
-            //_log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
-        }*/
         return normalizedScrollOffset;
     }
     function _normalizeViewSequence(size, scrollOffset) {
@@ -1040,19 +1038,19 @@ define(function(require, exports, module) {
         // 1. Normalize in primary direction
         var normalizedScrollOffset = scrollOffset;
         if (this.options.alignment && (scrollOffset < 0)) {
-            normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
+            normalizedScrollOffset = _normalizeNextViewSequence.call(this, scrollOffset);
         }
         else if (!this.options.alignment && (scrollOffset > 0)){
-            normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
+            normalizedScrollOffset = _normalizePrevViewSequence.call(this, scrollOffset);
         }
 
         // 2. Normalize in secondary direction
         if (normalizedScrollOffset === scrollOffset) {
             if (this.options.alignment && (scrollOffset > 0)) {
-                normalizedScrollOffset = _normalizePrevViewSequence.call(this, size, scrollOffset);
+                normalizedScrollOffset = _normalizePrevViewSequence.call(this, scrollOffset);
             }
             else if (!this.options.alignment && (scrollOffset < 0)) {
-                normalizedScrollOffset = _normalizeNextViewSequence.call(this, size, scrollOffset);
+                normalizedScrollOffset = _normalizeNextViewSequence.call(this, scrollOffset);
             }
         }
 
@@ -1064,7 +1062,7 @@ define(function(require, exports, module) {
             var particleValue = this._scroll.particle.getPosition1D();
             //var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
+            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
