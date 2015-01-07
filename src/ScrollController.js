@@ -1851,7 +1851,9 @@ define(function(require, exports, module) {
                     oldViewSequence: this._visibleItemCache ? this._visibleItemCache.viewSequence : undefined,
                     viewSequence: visibleItem ? visibleItem.viewSequence : undefined,
                     oldIndex: this._visibleItemCache ? this._visibleItemCache.index : undefined,
-                    index: visibleItem ? visibleItem.index : undefined
+                    index: visibleItem ? visibleItem.index : undefined,
+                    renderNode: visibleItem ? visibleItem.renderNode : undefined,
+                    oldRenderNode: this._visibleItemCache ? this._visibleItemCache.renderNode : undefined
                 });
                 this._visibleItemCache = visibleItem;
             }
