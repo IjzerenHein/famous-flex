@@ -60,12 +60,16 @@ define(function(require, exports, module) {
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
         scrolling: true,
-        trueSize: true
+        trueSize: true,
+        debug: {
+        	//normalize: false
+        }
     };
 
     // Data
     var size;
     var direction;
+    var alignment;
     var revDirection;
     var node;
     var itemSize;
@@ -94,6 +98,7 @@ define(function(require, exports, module) {
 		//
 		size = context.size;
 		direction = context.direction;
+		alignment = context.alignment;
 		revDirection = direction ? 0 : 1;
 		itemSize = options.itemSize || (size[direction] / 2);
 		diameter = options.diameter || (itemSize * 3);
@@ -105,7 +110,7 @@ define(function(require, exports, module) {
         //
         set.size[0] = size[0];
         set.size[1] = size[1];
-        set.size[revDirection] = size[revDirection] / 2;
+        set.size[revDirection] = size[revDirection];
         set.size[direction] = itemSize;
         set.translate[0] = 0;
         set.translate[1] = 0;
