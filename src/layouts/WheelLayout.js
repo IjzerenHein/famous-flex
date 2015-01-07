@@ -97,6 +97,8 @@ define(function(require, exports, module) {
 		revDirection = direction ? 0 : 1;
 		itemSize = options.itemSize || (size[direction] / 2);
 		diameter = options.diameter || (itemSize * 3);
+		radius = diameter / 2;
+        itemAngle = Math.atan2((itemSize / 2), radius) * 2;
 
 		//
         // reset size & translation
@@ -112,12 +114,6 @@ define(function(require, exports, module) {
         set.rotate[1] = 0;
         set.rotate[2] = 0;
         set.scrollLength = itemSize;
-
-        //
-        // Calculation preparations
-        //
-        radius = diameter / 2;
-        itemAngle = Math.tan((itemSize / 2) / radius) * 2;
 
         //
         // process next nodes
