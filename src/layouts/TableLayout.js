@@ -20,7 +20,7 @@
  */
 define(function(require, exports, module) {
 	if (console.warn) {
-		console.warn('TableLayout has been deprecated, use ListLayout instead');
+		console.warn('TableLayout has been deprecated and will be removed in the future, use ListLayout instead');
 	}
     module.exports = require('./ListLayout');
 });
