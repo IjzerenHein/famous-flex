@@ -224,18 +224,24 @@ define(function(require, exports, module) {
         this._nodesById = undefined;
         if (dataSource instanceof Array) {
             this._viewSequence = new ViewSequence(dataSource);
-        } else if (dataSource instanceof ViewSequence) {
+        } else if ((dataSource instanceof ViewSequence) || dataSource.getNext) {
             this._viewSequence = dataSource;
         } else if (dataSource instanceof Object){
             this._nodesById = dataSource;
         }
         if (this.options.autoPipeEvents) {
-            _forEachRenderable.call(this, function(renderable) {
-                if (renderable && renderable.pipe) {
-                    renderable.pipe(this);
-                    renderable.pipe(this._eventOutput);
-                }
-            }.bind(this));
+            if (this._dataSource.pipe) {
+                this._dataSource.pipe(this);
+                this._dataSource.pipe(this._eventOutput);
+            }
+            else {
+                _forEachRenderable.call(this, function(renderable) {
+                    if (renderable && renderable.pipe) {
+                        renderable.pipe(this);
+                        renderable.pipe(this._eventOutput);
+                    }
+                }.bind(this));
+            }
         }
         this._isDirty = true;
         return this;
