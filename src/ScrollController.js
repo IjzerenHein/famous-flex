@@ -1629,11 +1629,12 @@ define(function(require, exports, module) {
      * Get the spec (size, transform, etc..) for the given renderable or
      * Id.
      *
-     * @param {Renderable|String} node Renderabe or Id to look for
+     * @param {Renderable|String} node Renderabe or Id to look for.
+     * @param {Bool} normalize When set to `true` normalizes the origin/align into the transform translation (default: `false`).
      * @return {Spec} spec or undefined
      */
-    ScrollController.prototype.getSpec = function(node) {
-        var spec = LayoutController.prototype.getSpec.call(this, node);
+    ScrollController.prototype.getSpec = function(node, normalize) {
+        var spec = LayoutController.prototype.getSpec.apply(this, arguments);
         if (spec && this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized) {
             spec = {
                 origin: spec.origin,

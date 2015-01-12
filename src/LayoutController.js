@@ -396,9 +396,10 @@ define(function(require, exports, module) {
      * Id.
      *
      * @param {Renderable|String} node Renderabe or Id to look for
+     * @param {Bool} normalize When set to `true` normalizes the origin/align into the transform translation (default: `false`).
      * @return {Spec} spec or undefined
      */
-    LayoutController.prototype.getSpec = function(node) {
+    LayoutController.prototype.getSpec = function(node, normalize) {
         if (!node) {
             return undefined;
         }
@@ -420,6 +421,20 @@ define(function(require, exports, module) {
             for (var i = 0; i < this._specs.length; i++) {
                 var spec = this._specs[i];
                 if (spec.renderNode === node) {
+                    if (normalize && spec.transform && spec.size && (spec.align || spec.origin)) {
+                        var transform = spec.transform;
+                        if (spec.align && (spec.align[0] || spec.align[1])) {
+                            transform = Transform.thenMove(transform, [spec.align[0] * this._contextSizeCache[0], spec.align[1] * this._contextSizeCache[1], 0]);
+                        }
+                        if (spec.origin && (spec.origin[0] || spec.origin[1])) {
+                            transform = Transform.moveThen([-spec.origin[0] * spec.size[0], -spec.origin[1] * spec.size[1], 0], transform);
+                        }
+                        return {
+                            opacity: spec.opacity,
+                            size: spec.size,
+                            transform: transform
+                        };
+                    }
                     return spec;
                 }
             }
