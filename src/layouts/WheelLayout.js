@@ -17,7 +17,8 @@
  * |options|type|description|
  * |---|---|---|
  * |`itemSize`|Size|Size (width or height) of an item to layout.|
- * |`[diameter]`|Number|Diameter of the wheel in pixels.|
+ * |`[diameter]`|Number|Diameter of the wheel in pixels (default: `3 x itemSize`).|
+ * |`[radialOpacity]`|Number|Opacity (0..1) at the diameter edges of the wheel (default: 1).|
  *
  * Example:
  *
@@ -30,7 +31,8 @@
  * var scrollWheel = new ScrollController({
  *   layout: WheelLayout,
  *   layoutOptions: {
- *     itemSize: 100    // item has height of 100 pixels
+ *     itemSize: 100,      // item has height of 100 pixels
+ *     radialOpacity: 0.5  // make items at the edges more transparent
  *   },
  *   dataSource: [
  *     new Surface({content: 'item 1'}),
@@ -60,16 +62,12 @@ define(function(require, exports, module) {
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
         scrolling: true,
-        trueSize: true,
-        debug: {
-        	//normalize: false
-        }
+        trueSize: true
     };
 
     // Data
     var size;
     var direction;
-    var alignment;
     var revDirection;
     var node;
     var itemSize;
@@ -79,7 +77,9 @@ define(function(require, exports, module) {
     var angle;
     var radius;
     var itemAngle;
+    var radialOpacity;
     var set = {
+        opacity: 1,
         size: [0, 0],
         translate: [0, 0, 0],
         rotate: [0, 0, 0],
@@ -98,16 +98,17 @@ define(function(require, exports, module) {
 		//
 		size = context.size;
 		direction = context.direction;
-		alignment = context.alignment;
 		revDirection = direction ? 0 : 1;
 		itemSize = options.itemSize || (size[direction] / 2);
 		diameter = options.diameter || (itemSize * 3);
 		radius = diameter / 2;
         itemAngle = Math.atan2((itemSize / 2), radius) * 2;
+        radialOpacity = (options.radialOpacity === undefined) ? 1 : options.radialOpacity;
 
 		//
         // reset size & translation
         //
+        set.opacity = 1;
         set.size[0] = size[0];
         set.size[1] = size[1];
         set.size[revDirection] = size[revDirection];
@@ -135,6 +136,7 @@ define(function(require, exports, module) {
 				set.translate[direction] = radius * Math.sin(angle);
 				set.translate[2] = (radius * Math.cos(angle)) - radius;
 				set.rotate[revDirection] = direction ? -angle : angle;
+                set.opacity = 1 - ((Math.abs(angle) / (Math.PI / 2)) * (1 - radialOpacity));
 				context.set(node, set);
 			}
 			offset += itemSize;
@@ -154,6 +156,7 @@ define(function(require, exports, module) {
 				set.translate[direction] = radius * Math.sin(angle);
 				set.translate[2] = (radius * Math.cos(angle)) - radius;
 				set.rotate[revDirection] = direction ? -angle : angle;
+                set.opacity = 1 - ((Math.abs(angle) / (Math.PI / 2)) * (1 - radialOpacity));
 				context.set(node, set);
 			}
 			offset -= itemSize;
