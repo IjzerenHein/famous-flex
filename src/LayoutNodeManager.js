@@ -102,6 +102,7 @@ define(function(require, exports, module) {
 
         // Prepare context for enumation
         var contextState = this._contextState;
+        contextState.startSequence = viewSequence;
         contextState.nextSequence = viewSequence;
         contextState.prevSequence = viewSequence;
         contextState.start = undefined;
@@ -144,6 +145,11 @@ define(function(require, exports, module) {
 
             // Move to next node
             node = node._next;
+        }
+
+        // In case of a VirtualViewSequence, call the cleanup method
+        if (this._contextState.startSequence && this._contextState.startSequence.cleanup) {
+            this._contextState.startSequence.cleanup();
         }
     };
 
