@@ -76,9 +76,7 @@ define(function(require, exports, module) {
         GOTOSEQUENCE: 'goto-sequence',
         ENSUREVISIBLE: 'ensure-visible',
         GOTOPREVDIRECTION: 'goto-prev-direction',
-        GOTONEXTDIRECTION: 'goto-next-direction',
-        SNAPPREV: 'snap-prev', // paginated: true
-        SNAPNEXT: 'snap-next'  // paginated: true
+        GOTONEXTDIRECTION: 'goto-next-direction'
     };
 
     /**
@@ -871,7 +869,7 @@ define(function(require, exports, module) {
     /**
      * Snaps to a page when pagination is enabled.
      */
-    function _snapToPage(size, scrollOffset) {
+    function _snapToPage() {
 
         // Check whether pagination is active
         if (!this.options.paginated ||
@@ -880,82 +878,11 @@ define(function(require, exports, module) {
             return;
         }
 
-        // Local data
-        var pageOffset = scrollOffset;
-        var pageLength;
-        var hasNext;
-
-        // Lookup page in previous direction
-        var node = this._nodes.getStartEnumNode(false);
-        while (node) {
-            if (!node._invalidated) {
-                break;
-            }
-            if (node.scrollLength !== 0) {
-                if ((pageOffset <= 0) || (node.scrollLength === undefined)) {
-                    break;
-                }
-                hasNext = (pageLength !== undefined);
-                pageLength = node.scrollLength;
-                pageOffset -= node.scrollLength;
-            }
-            node = node._prev;
-        }
-
-        // Lookup page in next direction
-        if (pageLength === undefined) {
-            node = this._nodes.getStartEnumNode(true);
-            while (node) {
-                if (!node._invalidated) {
-                    break;
-                }
-                if (node.scrollLength !== 0) {
-                    if (node.scrollLength === undefined) {
-                        break;
-                    }
-                    hasNext = (pageLength !== undefined);
-                    if (hasNext) {
-                        if ((pageOffset + pageLength) > 0) {
-                            break;
-                        }
-                        pageOffset += pageLength;
-                    }
-                    pageLength = node.scrollLength;
-                }
-                node = node._next;
-            }
-        }
-        if (!pageLength) {
-            return;
-        }
-
-        // When velocity exceeds thresshold, treat as flip to
-        // a certain direction and select that page.
-        var flipToPrev;
-        var flipToNext;
-        if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
-            var velocity = this._scroll.particle.getVelocity1D();
-            flipToPrev = velocity > 0;
-            flipToNext = velocity < 0;
-        }
-
-        // Determine snap spring-position (not quite working properly yet for alignment = 1...)
-        var boundOffset = pageOffset;
-        var snapSpringPosition;
-        if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
-            snapSpringPosition = (scrollOffset - pageOffset) - (this.options.alignment ? pageLength : 0);
-            if (snapSpringPosition !== this._scroll.springPosition) {
-                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
-                this._scroll.springPosition = snapSpringPosition;
-                this._scroll.springSource = SpringSource.SNAPPREV;
-            }
-        }
-        else {
-            snapSpringPosition = (scrollOffset - (pageOffset + pageLength));
-            if (snapSpringPosition !== this._scroll.springPosition) {
-                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
-                this._scroll.springPosition = snapSpringPosition;
-                this._scroll.springSource = SpringSource.SNAPNEXT;
+        // When the energy is below the thresshold, paginate to the current page
+        if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
+            var item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+            if (item && item.renderNode) {
+                this.goToRenderNode(item.renderNode);
             }
         }
     }
@@ -1704,7 +1631,7 @@ define(function(require, exports, module) {
         _calcScrollToOffset.call(this, size, scrollOffset);
 
         // When pagination is enabled, snap to page
-        _snapToPage.call(this, size, scrollOffset);
+        _snapToPage.call(this);
 
         // If the bounds have changed, and the scroll-offset would be different
         // than before, then re-layout entirely using the new offset.
