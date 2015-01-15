@@ -43,9 +43,9 @@
  *
  * // Create a container-surface for clipping and give it a nice perspective
  * var container = new ContainerSurface({
- *    properties: {
- *    	  overflow: 'hidden'
- *    }
+ *   properties: {
+ *     overflow: 'hidden'
+ *   }
  * });
  * container.context.setPerspective(1500);
  * container.add(scrollWheel);

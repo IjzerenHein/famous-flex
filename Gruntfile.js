@@ -27,6 +27,7 @@ module.exports = function(grunt) {
             { src: 'src/ScrollController.js', dest: 'docs/ScrollController.md' },
             { src: 'src/FlexScrollView.js', dest: 'docs/FlexScrollView.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
+            { src: 'src/VirtualViewSequence.js', dest: 'docs/VirtualViewSequence.md' },
             // helpers
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' },
             // layouts
@@ -34,7 +35,9 @@ module.exports = function(grunt) {
             { src: 'src/layouts/GridLayout.js', dest: 'docs/layouts/GridLayout.md' },
             { src: 'src/layouts/ListLayout.js', dest: 'docs/layouts/ListLayout.md' },
             { src: 'src/layouts/HeaderFooterLayout.js', dest: 'docs/layouts/HeaderFooterLayout.md' },
-            { src: 'src/layouts/NavBarLayout.js', dest: 'docs/layouts/NavBarLayout.md' }
+            { src: 'src/layouts/NavBarLayout.js', dest: 'docs/layouts/NavBarLayout.md' },
+            { src: 'src/layouts/WheelLayout.js', dest: 'docs/layouts/WheelLayout.md' },
+            { src: 'src/layouts/ProportionalLayout.js', dest: 'docs/layouts/ProportionalLayout.md' }
         ]
       }
     }

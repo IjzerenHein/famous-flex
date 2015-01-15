@@ -32,10 +32,12 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
-- [ListLayout](docs/layouts/ListLayout.md)
-- [CollectionLayout](docs/layouts/CollectionLayout.md)
+- [ProportionalLayout](docs/layouts/ProportionalLayout.md)
 - [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
 - [NavBarLayout](docs/layouts/NavBarLayout.md)
+- [ListLayout](docs/layouts/ListLayout.md) *(scrollable)*	
+- [CollectionLayout](docs/layouts/CollectionLayout.md) *(scrollable)*
+- [WheelLayout](docs/layouts/WheelLayout.md) *(scrollable)*
 
 ### Resources
 - [API reference](#api-reference)
@@ -249,10 +251,13 @@ custom layouts. Key features:
 |Layout|DataSource|Scrollable|Description|
 |---|---|---|---|
 |[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
-|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
-|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
+|[ProportionalLayout](docs/layouts/ProportionalLayout.md)|ViewSequence / Array|No|Lays out renderables sequentially and sizes them proportionally.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
+|*Scrollable layouts:*|
+|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
+|[WheelLayout](docs/layouts/WheelLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
 
 
 ## API reference
@@ -264,6 +269,7 @@ custom layouts. Key features:
 |[FlexScrollView](docs/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
+|[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|
 
 
 ## Roadmap

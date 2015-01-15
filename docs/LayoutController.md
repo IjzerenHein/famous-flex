@@ -26,7 +26,7 @@ Events:
   * [layoutController.getLayoutOptions()](#module_LayoutController#getLayoutOptions)
   * [layoutController.setDirection(direction)](#module_LayoutController#setDirection)
   * [layoutController.getDirection([actual])](#module_LayoutController#getDirection)
-  * [layoutController.getSpec(node)](#module_LayoutController#getSpec)
+  * [layoutController.getSpec(node, normalize)](#module_LayoutController#getSpec)
   * [layoutController.reflowLayout()](#module_LayoutController#reflowLayout)
   * [layoutController.insert(indexOrId, renderable, [insertSpec])](#module_LayoutController#insert)
   * [layoutController.push(renderable, [insertSpec])](#module_LayoutController#push)
@@ -45,6 +45,7 @@ Events:
   - \[dataSource\] `Array` | `ViewSequence` | `Object` - Array, ViewSequence or Object with key/value pairs.  
   - \[direction\] `Utility.Direction` - Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)  
   - \[flow\] `Bool` - Enables flow animations when the layout changes (default: `false`).  
+  - \[reflowOnResize\] `Bool` - Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).  
   - \[insertSpec\] `Spec` - Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).  
   - \[removeSpec\] `Spec` - Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).  
   - \[alwaysLayout\] `Bool` - When set to true, always calls the layout function on every render-cycle (default: `false`).  
@@ -143,13 +144,14 @@ never returns undefined.
 
 **Returns**: `Utility.Direction` - Direction or undefined  
 <a name="module_LayoutController#getSpec"></a>
-###layoutController.getSpec(node)
+###layoutController.getSpec(node, normalize)
 Get the spec (size, transform, etc..) for the given renderable or
 Id.
 
 **Params**
 
 - node `Renderable` | `String` - Renderabe or Id to look for  
+- normalize `Bool` - When set to `true` normalizes the origin/align into the transform translation (default: `false`).  
 
 **Returns**: `Spec` - spec or undefined  
 <a name="module_LayoutController#reflowLayout"></a>

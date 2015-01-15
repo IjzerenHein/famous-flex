@@ -16,8 +16,8 @@ Events:
 |event      |description|
 |-----------|-----------|
 |scrollstart|Emitted when scrolling starts.|
-|scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed)|
-|pagechange |Emitted whenever visible page changes and options.paging is set to true.|
+|scroll     |Emitted as the content scrolls (once for each frame the visible offset has changed).|
+|pagechange |Emitted whenever the visible page changes.|
 |scrollend  |Emitted after scrolling stops (when the scroll particle settles).|
 
 Inherited from: [LayoutController](./LayoutController.md)
@@ -49,6 +49,7 @@ Inherited from: [LayoutController](./LayoutController.md)
   * [scrollController.applyScrollForce(delta)](#module_ScrollController#applyScrollForce)
   * [scrollController.updateScrollForce(prevDelta, newDelta)](#module_ScrollController#updateScrollForce)
   * [scrollController.releaseScrollForce(delta, [velocity])](#module_ScrollController#releaseScrollForce)
+  * [scrollController.getSpec(node, normalize)](#module_ScrollController#getSpec)
 
 <a name="exp_new_module_ScrollController"></a>
 ###new ScrollController(options)
@@ -56,7 +57,7 @@ Inherited from: [LayoutController](./LayoutController.md)
 
 - options `Object` - Configurable options (see LayoutController for all inherited options).  
   - \[useContainer\] `Bool` - Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).  
-  - \[useContainerOverflow\] `String` - Overflow mode that is used when the `useContainer` option is true (default: `hidden`).  
+  - \[container\] `String` - Options that are passed to the ContainerSurface in case `useContainer` is true.  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
@@ -267,3 +268,14 @@ the scroll offset and corresponds to the `touchend` event.
 - \[velocity\] `Number` - Velocity to apply after which the view keeps scrolling  
 
 **Returns**: `ScrollController` - this  
+<a name="module_ScrollController#getSpec"></a>
+###scrollController.getSpec(node, normalize)
+Get the spec (size, transform, etc..) for the given renderable or
+Id.
+
+**Params**
+
+- node `Renderable` | `String` - Renderabe or Id to look for.  
+- normalize `Bool` - When set to `true` normalizes the origin/align into the transform translation (default: `false`).  
+
+**Returns**: `Spec` - spec or undefined  

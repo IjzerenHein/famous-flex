@@ -12,7 +12,7 @@
 /*eslint no-console: 0*/
 
 /**
- * Lays-out renderables sequentially based on size-ratios (similar to the stock famo.us FlexibleLayout).
+ * Lays-out renderables sequentially based on size-ratios (similar to the stock famo.us FlexibleLayout view).
  *
  * |options|type|description|
  * |---|---|---|

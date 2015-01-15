@@ -13,20 +13,42 @@
 
 /**
  * Virtual ViewSequence for famo.us which creates & destroys nodes using a
- * factory for renderables. The factory class should support the following
- * functions:
+ * factory delegate. The factory class should support the following functions:
  * - create()
  * - createNext(prevRenderable)
  * - createPrevious(nextRenderable)
  * - destroy(renderable) (optional)
  *
- * VirtualViewSequence implements the following methods:
- * - getPrevious
- * - getNext
- * - get
- * - getIndex
- * - toString (returns the index)
+ * Example:
  *
+ * ```javascript
+ * var VirtualViewSequence = require('famous-flex/VirtualViewSequence');
+ *
+ * // Factory for creating surfaces
+ * function MyFactory() {}
+ * MyFactory.prototype.create = function(index) {
+ *   var surface = new Surface({
+ *     size: [undefined, 100],
+ *     classes: ['my-surface']
+ *   });
+ *   surface.index = index || 0; // add property to renderable
+ *   return surface;
+ * };
+ * MyFactory.prototype.createNext = function(renderable) {
+ *   return this.create(renderable.index + 1);
+ * };
+ * MyFactory.prototype.createPrevious = function(renderable) {
+ *   return this.create(renderable.index - 1);
+ * };
+ *
+ * // Create infinite scrollview
+ * var viewSequence = new VirtualViewSequence({
+ *   factory: new MyFactory()
+ * });
+ * var scrollView = new FlexScrollView({
+ *   dataSource: viewSequence
+ * });
+ * ```
  * @module
  */
 define(function(require, exports, module) {
@@ -36,6 +58,10 @@ define(function(require, exports, module) {
 
     /**
      * @class
+     * @param {Object} options Configurable options.
+     * @param {Object} options.factory Factory delegate for creating new renderables.
+     * @param {Renderable} [options.value] Renderable for this node (when omitted, `factory.create()` is called)
+     * @param {Number} [options.index] Index of this node (default: 0).
      * @alias module:VirtualViewSequence
      */
     function VirtualViewSequence(options) {
@@ -56,48 +82,11 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Cleans up any untouched nodes.
-     *
-     * @return {VirtualViewSequence} previous node.
-     */
-    VirtualViewSequence.prototype.cleanup = function() {
-        var node = this.prev;
-        while (node) {
-            if (!node.touched) {
-                node.next.prev = undefined;
-                node.next = undefined;
-                if (this._.factory.destroy) {
-                    while (node) {
-                        this._.factory.destroy(node.value);
-                        node = node.prev;
-                    }
-                }
-                break;
-            }
-            node.touched = false;
-            node = node.prev;
-        }
-        node = this.next;
-        while (node) {
-            if (!node.touched) {
-                node.prev.next = undefined;
-                node.prev = undefined;
-                if (this._.factory.destroy) {
-                    while (node) {
-                        this._.factory.destroy(node.value);
-                        node = node.next;
-                    }
-                }
-                break;
-            }
-            node.touched = false;
-            node = node.next;
-        }
-        return this;
-    };
-
-    /**
      * Get previous node.
+     *
+     * When no previous node exists, the factory-delegate function `createPrevious`
+     * is called to construct a renderable for the previous node. When `createPrevious`
+     * returns `undefined`, no previous-node will be created.
      *
      * @return {VirtualViewSequence} previous node.
      */
@@ -123,7 +112,11 @@ define(function(require, exports, module) {
     /**
      * Get next node.
      *
-     * @return {VirtualViewSequence} node.
+     * When no next node exists, the factory-delegate function `createNext`
+     * is called to construct a renderable for the next node. When `createNext`
+     * returns `undefined`, no next-node will be created.
+     *
+     * @return {VirtualViewSequence} next node.
      */
     VirtualViewSequence.prototype.getNext = function() {
         if (this.next) {
@@ -174,7 +167,54 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Cleans up any un-accessed nodes since the previous call to `cleanup`.
+     *
+     * This function cleans up any nodes that have not been accessed
+     * since the last call to `cleanup`. When a node is accessed
+     * through a call to `getNext`, `getPrevious`, `get` or `getIndex`
+     * it is considered `touched` and should not be cleaned up.
+     *
+     * @return {VirtualViewSequence} this.
+     */
+    VirtualViewSequence.prototype.cleanup = function() {
+        var node = this.prev;
+        while (node) {
+            if (!node.touched) {
+                node.next.prev = undefined;
+                node.next = undefined;
+                if (this._.factory.destroy) {
+                    while (node) {
+                        this._.factory.destroy(node.value);
+                        node = node.prev;
+                    }
+                }
+                break;
+            }
+            node.touched = false;
+            node = node.prev;
+        }
+        node = this.next;
+        while (node) {
+            if (!node.touched) {
+                node.prev.next = undefined;
+                node.prev = undefined;
+                if (this._.factory.destroy) {
+                    while (node) {
+                        this._.factory.destroy(node.value);
+                        node = node.next;
+                    }
+                }
+                break;
+            }
+            node.touched = false;
+            node = node.next;
+        }
+        return this;
+    };
+
+    /**
      * Not supported
+     * @private
      */
     VirtualViewSequence.prototype.unshift = function() {
         if (console.error) {
@@ -184,6 +224,7 @@ define(function(require, exports, module) {
 
     /**
      * Not supported
+     * @private
      */
     VirtualViewSequence.prototype.push = function() {
         if (console.error) {
@@ -193,6 +234,7 @@ define(function(require, exports, module) {
 
     /**
      * Not supported
+     * @private
      */
     VirtualViewSequence.prototype.splice = function() {
         if (console.error) {
@@ -202,6 +244,7 @@ define(function(require, exports, module) {
 
     /**
      * Not supported
+     * @private
      */
     VirtualViewSequence.prototype.swap = function() {
         if (console.error) {
