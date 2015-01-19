@@ -10,10 +10,13 @@ ijzerenhein.LayoutNode = require('./src/LayoutNode');
 ijzerenhein.LayoutNodeManager = require('./src/LayoutNodeManager');
 ijzerenhein.LayoutUtility = require('./src/LayoutUtility');
 ijzerenhein.ScrollController = require('./src/ScrollController');
+ijzerenhein.VirtualViewSequence = require('./src/VirtualViewSequence');
 //ijzerenhein.ScrollView = require('./src/ScrollView');
 
-ijzerenhein.layout = ijzerenhein.layout || {};
+ijzerenhein.widgets = ijzerenhein.widgets || {};
+ijzerenhein.widgets.DateWheel = require('./src/widgets/DateWheel');
 
+ijzerenhein.layout = ijzerenhein.layout || {};
 ijzerenhein.layout.CollectionLayout = require('./src/layouts/CollectionLayout');
 ijzerenhein.layout.CoverLayout = require('./src/layouts/CoverLayout');
 ijzerenhein.layout.CubeLayout = require('./src/layouts/CubeLayout');
@@ -21,8 +24,8 @@ ijzerenhein.layout.GridLayout = require('./src/layouts/GridLayout');
 ijzerenhein.layout.HeaderFooterLayout = require('./src/layouts/HeaderFooterLayout');
 ijzerenhein.layout.ListLayout = require('./src/layouts/ListLayout');
 ijzerenhein.layout.NavBarLayout = require('./src/layouts/NavBarLayout');
-//ijzerenhein.layout.TableLayout = require('./src/layouts/TableLayout');
+ijzerenhein.layout.ProportionalLayout = require('./src/layouts/ProportionalLayout');
+ijzerenhein.layout.WheelLayout = require('./src/layouts/WheelLayout');
 
 ijzerenhein.helpers = ijzerenhein.helpers || {};
-
 ijzerenhein.helpers.LayoutDockHelper = require('./src/helpers/LayoutDockHelper');

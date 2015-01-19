@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -46,7 +46,10 @@
     "scrollcontroller",
     "scrollview",
     "flexscrollview",
-    "flex-scrollview"
+    "flex-scrollview",
+    "datewheel",
+    "datepicker",
+    "datetimepicker"
   ],
   "licenses": [
     {
