@@ -190,7 +190,7 @@ var dateWheel = new DateWheel({
 DateWheel is shipped with various components out of the box.
 
 |Component|CSS-class|Description|
-|---|---|
+|---|---|---|
 |`DateWheel.Component.Year`|`.year`|4 digit year component.|
 |`DateWheel.Component.Month`|`.month`|Month component (e.g. 'July').|
 |`DateWheel.Component.FullDay`|`.fullday`|Full day component including year, month & day.|
@@ -206,7 +206,7 @@ DateWheel is shipped with various components out of the box.
 All components share a set of properties which can customized:
 
 |Property|Type|Description|
-|---|---|
+|---|---|---|
 |`sizeRatio`|`Number`|Width-ratio the component occupies in the date-wheel (the sum of all sizeRatio's equals a width of 100%).|
 |`step`|`Number`|The value by which the component is incremented/decremented when scrolling up/down.|
 |`max`|`Number`|The minimum value of the component (e.g. `59` for an Hour component).|
