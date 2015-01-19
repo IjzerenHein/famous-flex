@@ -27,8 +27,11 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [Layout literals](#layout-literals)
 - [Layout helpers](#layout-helpers)
 
-### [FlexScrollView](#flex-scrollview)
-- [Tutorial](tutorials/FlexScrollView.md)
+### Views / widgets
+- [LayoutController](#layoutcontroller) ([API Reference](docs/LayoutController.md))
+- ScrollController ([API Reference](docs/ScrollController.md))
+- [FlexScrollView](#flex-scrollview) ([API Reference](docs/ScrollController.md) | [Tutorial](tutorials/FlexScrollView.md))
+- DateWheel ([API Reference](docs/DateWheel.md))
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
@@ -267,6 +270,7 @@ custom layouts. Key features:
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
 |[FlexScrollView](docs/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
+|[DateWheel](docs/DateWheel.md)|Date(picker) wheel.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 |[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|

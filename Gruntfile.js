@@ -26,6 +26,7 @@ module.exports = function(grunt) {
             { src: 'src/LayoutController.js', dest: 'docs/LayoutController.md' },
             { src: 'src/ScrollController.js', dest: 'docs/ScrollController.md' },
             { src: 'src/FlexScrollView.js', dest: 'docs/FlexScrollView.md' },
+            { src: 'src/widgets/DateWheel.js', dest: 'docs/widgets/DateWheel.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             { src: 'src/VirtualViewSequence.js', dest: 'docs/VirtualViewSequence.md' },
             // helpers
