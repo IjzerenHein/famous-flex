@@ -48,7 +48,7 @@ this.add(scrollView);
 
 By enabling `flow` mode, renderables are smoothly transitioned to their new state whenever items are inserted, removed or the scrollview is resized.
 
-![FlowMode](flowmode.gif)
+![FlowMode](FlexScrollView/flowmode.gif)
 
 The effect as seen above is created by setting the following options:
 
@@ -213,7 +213,7 @@ scrollView.setOptions({
 
 # Margins & Spacing (ListLayout)
 
-![Margins & Spacing](margins-spacing.gif)
+![Margins & Spacing](FlexScrollView/margins-spacing.gif)
 
 Margins and spacing are part of the ListLayout that is selected into the scrollview by default. They can be set in the constructor or by using the `setLayoutOptions()` function:
 
@@ -283,14 +283,14 @@ var scrollView = new FlexScrollView({
             overflow: 'hidden',
             backgroundColor: 'blue'
         }
-    } 
+    }
 });
 ```
 
 
 # Sticky headers (ListLayout)
 
-![Sticky Headers](stickyheaders.gif)
+![Sticky Headers](FlexScrollView/stickyheaders.gif)
 
 To enable sticky headers, set the `isHeaderCallback` layout-option to a function which returns `true` when a renderable is a section:
 
@@ -330,7 +330,7 @@ scrollView.push(new Surface({}));
 
 # Pull to refresh
 
-![Pull to refresh](pulltorefresh.gif)
+![Pull to refresh](FlexScrollView/pulltorefresh.gif)
 
 To enable pull to refresh, assign a renderable to the `pullToRefreshHeader` or `pullToRefreshFooter` option:
 
@@ -413,7 +413,7 @@ var scrollView = new FlexScrollView({
 
 ## Embedded scrollview linking
 
-![Scrollview linking](scrollview-linking.gif)
+![Scrollview linking](FlexScrollView/scrollview-linking.gif)
 
 The example above shows a scrollview embedded inside another scrollview. Whenever the bottom (news) scrollview reaches the top, it delegates the scroll-events to the outer scrollview, creating a seemless scrolling experience. To create this effect, set the `leadingScrollView` or `trailingScrollView` options in the constructor:
 
@@ -450,7 +450,7 @@ var embeddedScrollView = new FlexScrollView({
 
 ## Embedded scrollview scrolling restrictions
 
-![Scrollview restrictions](scrollviewrestrictions.gif)
+![Scrollview restrictions](FlexScrollView/scrollviewrestrictions.gif)
 
 When inserting a horizontal scrollview inside a vertical scrollview (or vice versa), both scrollview's respond to both vertical and horizontal input events. This is because no-one ever scrolls perfectly horizontal or vertical causing both scrollview's to scroll on their axes. To prevent both  scrollview's from scrolling, you can use the following technique:
 
