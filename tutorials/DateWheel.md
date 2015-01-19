@@ -1,7 +1,7 @@
 DateWheel
 ==========
 
-DateWheel is date/time (picker) wheel based on the famous-flex LayoutController technology. It combines one or more
+DateWheel is a date/time (picker) wheel based on the famous-flex LayoutController technology. It combines one or more
 ScrollControllers using the WheelLayout layout to form a single date/time picker control.
 
 ![Margins & Spacing](DateWheel/datewheel.gif)
@@ -14,7 +14,7 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
 - [Events](#events)
 - [Customizing the appearance](#customizing-the-appearance)
     - [CSS classes](#css-classes)
-    - [Internationalisation & custom formatting](#internationalisation-custom-formatting)
+    - [Internationalisation & custom formatting](#internationalisation--custom-formatting)
 - [Components](#components)
     - [Customizing components](#customizing-components)
 - [Advanced topics](#advanced-topics)
@@ -117,7 +117,7 @@ var dateWheel = new DateWheel({
     wheelOptions: {        // layout-options that are passed to the `WheelLayout`
         itemSize: 50,      // height of single item on the date-wheel
         diameter: 200,     // diameter of the wheel in pixels
-        radialOpacity: 0.5 //
+        radialOpacity: 0.5 // opacity at the top & bottom edges of the wheels
     },
     components: [
         // use `sizeRatio' to define the width of each component
@@ -212,8 +212,8 @@ All components share a set of properties which can customized:
 |`max`|`Number`|The minimum value of the component (e.g. `59` for an Hour component).|
 |`min`|`Number`|The maximum value of the component (e.g. `0`).|
 |`loop`|`Bool`|When set to `true` causes the component to loop when min/max is reached (default: `true`).|
-|`format`|`Function`|Function that formats the component into a string (see [Internationalisation & custom formatting](internationalisation-custom-formatting)).|
-|`create`|`Function`|Function that creates the renderable for an item (see [Using custom renderables](using-custom-renderables)).|
+|`format`|`Function`|Function that formats the component into a string (see [Internationalisation & custom formatting](#internationalisation--custom-formatting)).|
+|`create`|`Function`|Function that creates the renderable for an item (see [Using custom renderables](#using-custom-renderables)).|
 
 Example:
 
