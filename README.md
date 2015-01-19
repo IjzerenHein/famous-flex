@@ -31,7 +31,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [LayoutController](#layoutcontroller) ([API Reference](docs/LayoutController.md))
 - ScrollController ([API Reference](docs/ScrollController.md))
 - [FlexScrollView](#flex-scrollview) ([API Reference](docs/ScrollController.md) | [Tutorial](tutorials/FlexScrollView.md))
-- DateWheel ([API Reference](docs/widgets/DateWheel.md))
+- DateWheel ([API Reference](docs/widgets/DateWheel.md) | [Tutorial](tutorials/DateWheel.md))
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
