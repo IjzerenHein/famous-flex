@@ -284,7 +284,7 @@ define(function(require, exports, module) {
     /**
      * Helper function for logging debug statements to the console.
      */
-    function _log(args) {
+    /*function _log(args) {
         if (!this.options.debug) {
             return;
         }
@@ -299,7 +299,7 @@ define(function(require, exports, module) {
             }
         }
         console.log(message);
-    }
+    }*/
 
     /**
      * Sets the value for the spring, or set to `undefined` to disable the spring
