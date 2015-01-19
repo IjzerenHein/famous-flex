@@ -755,6 +755,7 @@ define(function(require, exports, module) {
                     this._layout.options    // additional layout-options
                 );
             }
+            this._nodes.removeVirtualViewSequenceNodes();
 
             // Calculate scroll-length and use that as the true-size (height)
             if (scrollEnd) {

@@ -858,11 +858,24 @@ define(function(require, exports, module) {
         // 4. When node not found, keep searching
         if (this._scroll.scrollToDirection) {
             this._scroll.springPosition = scrollOffset - size[this._direction];
-            this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
+            this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
+
         }
         else {
             this._scroll.springPosition = scrollOffset + size[this._direction];
-            this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
+            this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
+        }
+
+        // 5. In case of a VirtualViewSequnce, make sure all the view-sequence nodes are touched, so
+        //    that they are not cleaned up.
+        if (this._viewSequence.cleanup) {
+            var viewSequence = this._viewSequence;
+            while (viewSequence.get() !== scrollToRenderNode) {
+                viewSequence = this._scroll.scrollToDirection ? viewSequence.getNext() : viewSequence.getPrevious();
+                if (!viewSequence) {
+                    break;
+                }
+            }
         }
     }
 
@@ -1649,6 +1662,9 @@ define(function(require, exports, module) {
 
         // Update spring
         _updateSpring.call(this);
+
+        // Cleanup any nodes in case of a VirtualViewSequence
+        this._nodes.removeVirtualViewSequenceNodes();
 
         return scrollOffset;
     }

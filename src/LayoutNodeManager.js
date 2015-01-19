@@ -146,8 +146,12 @@ define(function(require, exports, module) {
             // Move to next node
             node = node._next;
         }
+    };
 
-        // In case of a VirtualViewSequence, call the cleanup method
+    /**
+     * Cleans up any unaccessed virtual nodes that have been created by a VirtualViewSequence.
+     */
+    LayoutNodeManager.prototype.removeVirtualViewSequenceNodes = function() {
         if (this._contextState.startSequence && this._contextState.startSequence.cleanup) {
             this._contextState.startSequence.cleanup();
         }
