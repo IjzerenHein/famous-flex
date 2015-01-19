@@ -1,8 +1,10 @@
 DateWheel
 ==========
 
-DateWheel is date/time (picker) wheel view based on the famous-flex LayoutController technology. It combines one or more
+DateWheel is date/time (picker) wheel based on the famous-flex LayoutController technology. It combines one or more
 ScrollControllers using the WheelLayout layout to form a single date/time picker control.
+
+![Margins & Spacing](DateWheel/datewheel.gif)
 
 # Index
 
@@ -141,8 +143,8 @@ var dateWheel = new DateWheel({
 ```
 
 Each item in the DateWheel is assigned the class `item` and a class which
-corresponds to the component (see [Components](#components)).
-To for instance, set the line-height and font-size for all components, use:
+corresponds to the component (e.g. `year`, `hour`, `weekday`, ...).
+To for instance set the line-height and font-size for all components, use:
 
 ```css
 .famous-flex-datewheel .item {
