@@ -24,7 +24,7 @@
  *
  * var dateWheel = new DateWheel({
  *   date: new Date(),        // initial date
- *   wheelOptions: {
+ *   wheelLayout: {
  *     itemSize: 100,         // height of an item on the date/wheel
  *     diameter: 300,         // diameter of the wheel (undefined = 3 x itemSize)
  *     radialOpacity: 0       // opacity at the top and bottom diameter edge
@@ -67,6 +67,7 @@ define(function(require, exports, module) {
     var ProportionalLayout = require('../layouts/ProportionalLayout');
     var VirtualViewSequence = require('../VirtualViewSequence');
     var DateComponents = require('./DateComponents');
+    var LayoutUtility = require('famous-flex/LayoutUtility');
 
     /**
      * @class
@@ -74,8 +75,8 @@ define(function(require, exports, module) {
      * @param {Object} options Configurable options.
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
      * @param {Array} [options.components] Date/time components that are displayed.
-     * @param {Object} [options.wheelOptions] Layout-options that are passed to the WheelLayout.
-     * @param {Object} [options.scrollSpring] Spring-options that are passed to the underlying ScrollControllers.
+     * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
+     * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
      * @alias module:DateWheel
      */
@@ -94,13 +95,18 @@ define(function(require, exports, module) {
 
     DateWheel.DEFAULT_OPTIONS = {
         perspective: 1000,
-        wheelOptions: {
+        wheelLayout: {
             itemSize: 100,
             diameter: 500
         },
-        scrollSpring: {
-            dampingRatio: 1.0,
-            period: 800
+        scrollView: {
+            enabled: true,
+            paginated: true,
+            mouseMove: true,
+            scrollSpring: {
+                dampingRatio: 1.0,
+                period: 800
+            }
         },
         container: {
             classes: ['famous-flex-datewheel']
@@ -118,8 +124,8 @@ define(function(require, exports, module) {
      * @param {Object} options Configurable options (see ScrollController for all inherited options).
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
      * @param {Array} [options.components] Date/time components that are displayed.
-     * @param {Object} [options.wheelOptions] Layout-options that are passed to the WheelLayout.
-     * @param {Object} [options.scrollSpring] Spring-options that are passed to the underlying ScrollControllers.
+     * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
+     * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
      * @return {DateWheel} this
      */
     DateWheel.prototype.setOptions = function(options) {
@@ -133,16 +139,15 @@ define(function(require, exports, module) {
         if (options.components) {
             _createComponents.call(this);
         }
-        if (options.wheelOptions !== undefined) {
-            for (var i = 0; i < this.components.length; i++) {
-                this.components[i].scrollView.setLayoutOptions(options.wheelOptions);
+        var i;
+        if (options.wheelLayout !== undefined) {
+            for (i = 0; i < this.scrollWheels.length; i++) {
+                this.scrollWheels[i].scrollView.setLayoutOptions(options.wheelLayout);
             }
         }
-        if (options.scrollSpring !== undefined) {
-            for (var j = 0; j < this.components.length; j++) {
-                this.components[j].scrollView.setOptions({
-                    scrollSpring: options.scrollSpring
-                });
+        if (options.scrollView !== undefined) {
+            for (i = 0; i < this.scrollWheels.length; i++) {
+                this.scrollWheels[i].scrollView.setOptions(options.scrollView);
             }
         }
         return this;
@@ -252,7 +257,6 @@ define(function(require, exports, module) {
         });
         this.container.add(this.layout);
         this.add(this.container);
-        this.components = [];
     }
 
     /**
@@ -306,18 +310,17 @@ define(function(require, exports, module) {
                 factory: component,
                 value: component.create(this._date)
             });
-            var scrollView = new ScrollController({
-                layout: WheelLayout,
-                layoutOptions: this.options.wheelOptions,
-                flow: false,
-                scrollSpring: this.options.scrollSpring,
-                direction: Utility.Direction.Y,
-                dataSource: viewSequence,
-                mouseMove: true,
-                autoPipeEvents: true,
-                paginated: true,
-                debug: true
-            });
+            var options = LayoutUtility.combineOptions(
+                this.options.scrollView, {
+                    layout: WheelLayout,
+                    layoutOptions: this.options.wheelLayout,
+                    flow: false,
+                    direction: Utility.Direction.Y,
+                    dataSource: viewSequence,
+                    autoPipeEvents: true
+                }
+            );
+            var scrollView = new ScrollController(options);
             scrollView.on('scrollstart', _scrollWheelScrollStart.bind(this));
             scrollView.on('scrollend', _scrollWheelScrollEnd.bind(this));
             scrollView.on('pagechange', _scrollWheelPageChange.bind(this));

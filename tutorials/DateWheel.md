@@ -4,12 +4,12 @@ DateWheel
 DateWheel is a date/time (picker) wheel based on the famous-flex LayoutController technology. It combines one or more
 ScrollControllers using the WheelLayout layout to form a single date/time picker control.
 
-![Margins & Spacing](DateWheel/datewheel.gif)
+![Screenshot](DateWheel/datewheel.gif)
 
 # Index
 
 - [Getting started](#getting-started)
-- [API reference](../docs/widgets/DateView.md)
+- [API reference](../docs/widgets/DateWheel.md)
 - [Getting and setting the selected date](#getting-and-setting-the-selected-date)
 - [Events](#events)
 - [Customizing the appearance](#customizing-the-appearance)
@@ -17,6 +17,7 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
     - [Internationalisation & custom formatting](#internationalisation--custom-formatting)
 - [Components](#components)
     - [Customizing components](#customizing-components)
+- [Disabling user-input](#disabling-user-input)
 - [Advanced topics](#advanced-topics)
     - [Using custom renderables](#using-custom-renderables)
 
@@ -35,7 +36,7 @@ var DateWheel = require('famous-flex/widgets/DateWheel');
 
 var dateWheel = new DateWheel({
   date: new Date(),        // initial date
-  wheelOptions: {
+  wheelLayout: {           // layout-options that are passed to the `WheelLayout`
     itemSize: 100,         // height of an item on the date/wheel
     diameter: 300,         // diameter of the wheel (undefined = 3 x itemSize)
   },
@@ -114,7 +115,7 @@ or using `setOptions`:
 ```javascript
 var dateWheel = new DateWheel({
     perspective: 2000,     // perspective used for the wheel layout
-    wheelOptions: {        // layout-options that are passed to the `WheelLayout`
+    wheelLayout: {         // layout-options that are passed to the `WheelLayout`
         itemSize: 50,      // height of single item on the date-wheel
         diameter: 200,     // diameter of the wheel in pixels
         radialOpacity: 0.5 // opacity at the top & bottom edges of the wheels
@@ -173,14 +174,14 @@ var moment = require('moment/moment');
 
 var dateWheel = new DateWheel({
     components: [
-    new DateWheel.Component.Year(),
-    new DateWheel.Component.Month({
-        // uses momentjs to format the full month in the current locale
-        format: function(date) {
-            return moment(date).format('MMMM');
-        }
-    }),
-    new DateWheel.Component.Day(),
+        new DateWheel.Component.Year(),
+        new DateWheel.Component.Month({
+            // uses momentjs to format the full month in the current locale
+            format: function(date) {
+                return moment(date).format('MMMM');
+            }
+        }),
+        new DateWheel.Component.Day(),
     ]
 });
 ```
@@ -237,6 +238,21 @@ var dateWheel = new DateWheel({
     ]
 });
 ```
+
+# Disabling user-input
+
+To disable user scrolling (e.g. in order to build a clock), set the `enabled` option of the underlying
+scroll-controllers to `false`, like this:
+
+```javascript
+var dateWheel = new DateWheel({
+    scrollView: {
+        enabled: false
+    }
+});
+```
+
+You can use this method to override any of the default options of the underlying ScrollControllers.
 
 # Advanced topics
 

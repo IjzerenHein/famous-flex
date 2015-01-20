@@ -12,7 +12,7 @@ var DateWheel = require('famous-flex/widgets/DateWheel');
 
 var dateWheel = new DateWheel({
   date: new Date(),        // initial date
-  wheelOptions: {
+  wheelLayout: {
     itemSize: 100,         // height of an item on the date/wheel
     diameter: 300,         // diameter of the wheel (undefined = 3 x itemSize)
     radialOpacity: 0       // opacity at the top and bottom diameter edge
@@ -60,8 +60,8 @@ CSS:
 - options `Object` - Configurable options.  
   - \[perspective\] `Number` - Perspective to use when rendering the wheel.  
   - \[components\] `Array` - Date/time components that are displayed.  
-  - \[wheelOptions\] `Object` - Layout-options that are passed to the WheelLayout.  
-  - \[scrollSpring\] `Object` - Spring-options that are passed to the underlying ScrollControllers.  
+  - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
+  - \[scrollView\] `Object` - Options that are passed to the underlying ScrollControllers.  
   - \[container\] `Object` - Container-options that are passed to the underlying ContainerSurface.  
 
 **Extends**: `View`  
@@ -74,8 +74,8 @@ Patches the DateWheel instance's options with the passed-in ones.
 - options `Object` - Configurable options (see ScrollController for all inherited options).  
   - \[perspective\] `Number` - Perspective to use when rendering the wheel.  
   - \[components\] `Array` - Date/time components that are displayed.  
-  - \[wheelOptions\] `Object` - Layout-options that are passed to the WheelLayout.  
-  - \[scrollSpring\] `Object` - Spring-options that are passed to the underlying ScrollControllers.  
+  - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
+  - \[scrollView\] `Object` - Options that are passed to the underlying ScrollControllers.  
 
 **Returns**: `DateWheel` - this  
 <a name="module_DateWheel#setDate"></a>
