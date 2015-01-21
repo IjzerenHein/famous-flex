@@ -330,7 +330,7 @@ define(function(require, exports, module) {
      */
     function _clickItem(scrollWheel, event) {
         if (scrollWheel && event && event.target) {
-            scrollWheel.scrollController.goToRenderNode(event.target);
+            //scrollWheel.scrollController.goToRenderNode(event.target);
         }
     }
 

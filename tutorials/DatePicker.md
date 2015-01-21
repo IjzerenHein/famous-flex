@@ -19,6 +19,7 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
 - [Components](#components)
     - [Customizing components](#customizing-components)
 - [Disabling user-input](#disabling-user-input)
+- [Disabling item looping](#disabling-item-looping)
 - [Advanced topics](#advanced-topics)
     - [Using custom renderables](#using-custom-renderables)
 
@@ -278,6 +279,25 @@ var datePicker = new DatePicker({
         enabled: false
     }
 });
+```
+
+# Disabling item looping
+
+By default, components such as `Hour`, `Minute`, `Month` are round robined when they reach the
+start or end. To disable this "looping" behavior, set the `loop` option for the component to `false`.
+
+![Screenshot](DatePicker/datepicker-noloop.gif)
+
+```javascript
+var datePicker = new DatePicker();
+datePicker.setComponents([
+    new DatePicker.Component.Hour({
+        loop: false
+    }),
+    new DatePicker.Component.Minute({
+        loop: false
+    })
+]);
 ```
 
 You can use this method to override any of the default options of the underlying ScrollControllers.

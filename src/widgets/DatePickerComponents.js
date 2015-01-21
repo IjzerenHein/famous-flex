@@ -62,7 +62,8 @@ define(function(require, exports, module) {
         return 'overide to implement';
     };
     Base.prototype.createNext = function(renderable) {
-        return this.create(this.getNext(renderable.date));
+        var date = this.getNext(renderable.date);
+        return date ? this.create(date) : undefined;
     };
     Base.prototype.getNext = function(date) {
         date = new Date(date.getTime());
@@ -77,12 +78,13 @@ define(function(require, exports, module) {
         return date;
     };
     Base.prototype.createPrevious = function(renderable) {
-        return this.create(this.getPrevious(renderable.date));
+        var date = this.getPrevious(renderable.date);
+        return date ? this.create(date) : undefined;
     };
     Base.prototype.getPrevious = function(date) {
         date = new Date(date.getTime());
         var newVal = this.getComponent(date) - this.step;
-        if ((this.lowerBound !== undefined) && (newVal < newVal)) {
+        if ((this.lowerBound !== undefined) && (newVal < this.lowerBound)) {
             if (!this.loop) {
                 return undefined;
             }
