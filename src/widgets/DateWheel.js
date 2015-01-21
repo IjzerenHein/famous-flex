@@ -46,11 +46,9 @@
  *
  * ```css
  * .famous-flex-datewheel .item > div {
- *   position: relative;
- *   top: 50%;
- *   transform: translateY(-50%);
  *   text-align: center;
  *   font-size: 40px;
+ *   line-height: 60px; // this should equal the WheelLayout itemSize
  * }
  * ```
  * @module
@@ -76,6 +74,7 @@ define(function(require, exports, module) {
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
      * @param {Array} [options.components] Date/time components that are displayed.
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
+     * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
      * @alias module:DateWheel
@@ -86,6 +85,7 @@ define(function(require, exports, module) {
         this._date = new Date((options && options.date) ? options.date.getTime() : undefined);
         _createLayout.call(this);
         _createComponents.call(this);
+        _createOverlay.call(this);
 
         this.setOptions(this.options);
     }
@@ -94,7 +94,7 @@ define(function(require, exports, module) {
     DateWheel.Component = DateComponents;
 
     DateWheel.DEFAULT_OPTIONS = {
-        perspective: 1000,
+        perspective: 500,
         wheelLayout: {
             itemSize: 100,
             diameter: 500
@@ -115,7 +115,8 @@ define(function(require, exports, module) {
             new DateWheel.Component.FullDay(),
             new DateWheel.Component.Hour(),
             new DateWheel.Component.Minute()
-        ]
+        ],
+        overlay: {}
     };
 
     /**
@@ -124,6 +125,7 @@ define(function(require, exports, module) {
      * @param {Object} options Configurable options (see ScrollController for all inherited options).
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
      * @param {Array} [options.components] Date/time components that are displayed.
+     * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
      * @return {DateWheel} this
@@ -149,6 +151,9 @@ define(function(require, exports, module) {
             for (i = 0; i < this.scrollWheels.length; i++) {
                 this.scrollWheels[i].scrollView.setOptions(options.scrollView);
             }
+        }
+        if (options.overlay || (options.wheelLayout !== undefined)) {
+            _createOverlay.call(this);
         }
         return this;
     };
@@ -337,6 +342,41 @@ define(function(require, exports, module) {
         this.layout.setLayoutOptions({
             ratios: sizeRatios
         });
+    }
+
+    /**
+     * Positions the overlay elements: top, middle & bottom.
+     */
+    function OverlayLayout(context, options) {
+        var height = (context.size[1] - options.itemSize) / 2;
+        context.set('top', {
+            size: [context.size[0], height],
+            translate: [0, 0, 1]
+        });
+        context.set('middle', {
+            size: [context.size[0], context.size[1] - (height * 2)],
+            translate: [0, height, 1]
+        });
+        context.set('bottom', {
+            size: [context.size[0], height],
+            translate: [0, context.size[1] - height, 1]
+        });
+    }
+
+    /**
+     * Creates/updates the overlay
+     */
+    function _createOverlay() {
+        if (!this.overlay) {
+            this.overlay = new LayoutController({
+                layout: OverlayLayout
+            });
+            this.add(this.overlay);
+        }
+        this.overlay.setLayoutOptions({
+            itemSize: this.options.wheelLayout.itemSize
+        });
+        this.overlay.setDataSource(this.options.overlay);
     }
 
     module.exports = DateWheel;
