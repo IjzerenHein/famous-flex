@@ -12,7 +12,7 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * Date/time wheel (slot-machine layout) for famo.us.
+ * Date/time picker (slot-machine/wheel layout) for famo.us.
  *
  * This component can be used as a date/time picker, a clock or
  * any other application which requires a date/time wheel.
@@ -20,9 +20,9 @@
  * Example:
  *
  * ```javascript
- * var DateWheel = require('famous-flex/widgets/DateWheel');
+ * var DatePicker = require('famous-flex/widgets/DatePicker');
  *
- * var dateWheel = new DateWheel({
+ * var datePicker = new DatePicker({
  *   date: new Date(),        // initial date
  *   wheelLayout: {
  *     itemSize: 100,         // height of an item on the date/wheel
@@ -30,14 +30,14 @@
  *     radialOpacity: 0       // opacity at the top and bottom diameter edge
  *   },
  *   components: [
- *     new DateWheel.Component.FullDay(),  // full-day component (year + month + day)
- *     new DateWheel.Component.Hour(),     // hour component (0..23)
- *     new DateWheel.Component.Minute()    // minute compoent (0..59)
+ *     new DatePicker.Component.FullDay(),  // full-day component (year + month + day)
+ *     new DatePicker.Component.Hour(),     // hour component (0..23)
+ *     new DatePicker.Component.Minute()    // minute compoent (0..59)
  *   ]
  * });
- * this.add(dateWheel); // add to the render-tree
+ * this.add(datePicker); // add to the render-tree
  *
- * dateWheel.on('datechange', function(event) {
+ * datePicker.on('datechange', function(event) {
  *   console.log('new date selected: ' + event.date.toLocaleString());
  * });
  * ```
@@ -45,7 +45,7 @@
  * CSS:
  *
  * ```css
- * .famous-flex-datewheel .item > div {
+ * .famous-flex-datepicker .item > div {
  *   text-align: center;
  *   font-size: 40px;
  *   line-height: 60px; // this should equal the WheelLayout itemSize
@@ -77,9 +77,9 @@ define(function(require, exports, module) {
      * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
-     * @alias module:DateWheel
+     * @alias module:DatePicker
      */
-    function DateWheel(options) {
+    function DatePicker(options) {
         View.apply(this, arguments);
 
         this._date = new Date((options && options.date) ? options.date.getTime() : undefined);
@@ -89,11 +89,11 @@ define(function(require, exports, module) {
 
         this.setOptions(this.options);
     }
-    DateWheel.prototype = Object.create(View.prototype);
-    DateWheel.prototype.constructor = DateWheel;
-    DateWheel.Component = DateComponents;
+    DatePicker.prototype = Object.create(View.prototype);
+    DatePicker.prototype.constructor = DatePicker;
+    DatePicker.Component = DateComponents;
 
-    DateWheel.DEFAULT_OPTIONS = {
+    DatePicker.DEFAULT_OPTIONS = {
         perspective: 500,
         wheelLayout: {
             itemSize: 100,
@@ -109,18 +109,18 @@ define(function(require, exports, module) {
             }
         },
         container: {
-            classes: ['famous-flex-datewheel']
+            classes: ['famous-flex-datepicker']
         },
         components: [
-            new DateWheel.Component.FullDay(),
-            new DateWheel.Component.Hour(),
-            new DateWheel.Component.Minute()
+            new DatePicker.Component.FullDay(),
+            new DatePicker.Component.Hour(),
+            new DatePicker.Component.Minute()
         ],
         overlay: {}
     };
 
     /**
-     * Patches the DateWheel instance's options with the passed-in ones.
+     * Patches the DatePicker instance's options with the passed-in ones.
      *
      * @param {Object} options Configurable options (see ScrollController for all inherited options).
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
@@ -128,9 +128,9 @@ define(function(require, exports, module) {
      * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
-     * @return {DateWheel} this
+     * @return {DatePicker} this
      */
-    DateWheel.prototype.setOptions = function(options) {
+    DatePicker.prototype.setOptions = function(options) {
         View.prototype.setOptions.call(this, options);
         if (!this.layout) {
             return this;
@@ -162,9 +162,9 @@ define(function(require, exports, module) {
      * Set the selected date.
      *
      * @param {Date} date Selected date/time.
-     * @return {DateWheel} this
+     * @return {DatePicker} this
      */
-    DateWheel.prototype.setDate = function(date) {
+    DatePicker.prototype.setDate = function(date) {
         this._date.setTime(date.getTime());
         _setDateToScrollWheels.call(this, this._date);
         return this;
@@ -175,7 +175,7 @@ define(function(require, exports, module) {
      *
      * @return {Date} selected date
      */
-    DateWheel.prototype.getDate = function() {
+    DatePicker.prototype.getDate = function() {
         return this._date;
     };
 
@@ -379,5 +379,5 @@ define(function(require, exports, module) {
         this.overlay.setDataSource(this.options.overlay);
     }
 
-    module.exports = DateWheel;
+    module.exports = DatePicker;
 });

@@ -14,7 +14,7 @@ ijzerenhein.VirtualViewSequence = require('./src/VirtualViewSequence');
 //ijzerenhein.ScrollView = require('./src/ScrollView');
 
 ijzerenhein.widgets = ijzerenhein.widgets || {};
-ijzerenhein.widgets.DateWheel = require('./src/widgets/DateWheel');
+ijzerenhein.widgets.DatePicker = require('./src/widgets/DatePicker');
 
 ijzerenhein.layout = ijzerenhein.layout || {};
 ijzerenhein.layout.CollectionLayout = require('./src/layouts/CollectionLayout');

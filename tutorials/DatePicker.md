@@ -1,15 +1,15 @@
-DateWheel
+DatePicker
 ==========
 
-DateWheel is a date/time (picker) wheel based on the famous-flex LayoutController technology. It combines one or more
+DatePicker is a date/time picker-wheel based on the famous-flex LayoutController technology. It combines one or more
 ScrollControllers using the WheelLayout layout to form a single date/time picker control.
 
-![Screenshot](DateWheel/datewheel.gif)
+![Screenshot](DatePicker/datewheel.gif)
 
 # Index
 
 - [Getting started](#getting-started)
-- [API reference](../docs/widgets/DateWheel.md)
+- [API reference](../docs/widgets/DatePicker.md)
 - [Getting and setting the selected date](#getting-and-setting-the-selected-date)
 - [Events](#events)
 - [Customizing the appearance](#customizing-the-appearance)
@@ -23,36 +23,36 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
 
 # Getting started
 
-To use the DateWheel in your project, install famous-flex using npm or bower:
+To use the DatePicker in your project, install famous-flex using npm or bower:
 
     npm install famous-flex
 
     bower install famous-flex
 
-To create the DateWheel use:
+To create the DatePicker use:
 
 ```javascript
-var DateWheel = require('famous-flex/widgets/DateWheel');
+var DatePicker = require('famous-flex/widgets/DatePicker');
 
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
   date: new Date(),        // initial date
   wheelLayout: {           // layout-options that are passed to the `WheelLayout`
     itemSize: 100,         // height of an item on the date/wheel
     diameter: 300,         // diameter of the wheel (undefined = 3 x itemSize)
   },
   components: [
-    new DateWheel.Component.FullDay(),  // full-day component (year + month + day)
-    new DateWheel.Component.Hour(),     // hour component (0..23)
-    new DateWheel.Component.Minute()    // minute compoent (0..59)
+    new DatePicker.Component.FullDay(),  // full-day component (year + month + day)
+    new DatePicker.Component.Hour(),     // hour component (0..23)
+    new DatePicker.Component.Minute()    // minute compoent (0..59)
   ]
 });
-this.add(dateWheel); // add to the render-tree
+this.add(datePicker); // add to the render-tree
 ```
 
 Specify your preferred style for an item in the CSS-file:
 
 ```css
-.famous-flex-datewheel .item > div {
+.famous-flex-datepicker .item > div {
     text-align: center;
     font-size: 40px;
     /* align inner div vertically */
@@ -68,14 +68,14 @@ To get and set the date, use `getDate` and `setDate`:
 
 ```javascript
 // To set the initial date, specify it in the constructor
-dateWheel = new DateWheel({
+datePicker = new DatePicker({
     date: new Date(), // specify initial date
     ...
 });
 
 // Get and set the date
-dateWheel.setDate(new Date());
-var date = dateWheel.getDate();
+datePicker.setDate(new Date());
+var date = datePicker.getDate();
 ```
 
 # Events
@@ -95,13 +95,13 @@ To capture the newly selected date/time, use either `datechange` or
 ```javascript
 // The `datechange` event is emitted immediately after the date
 // has been changed.
-dateWheel.on('datechange', function(event) {
+datePicker.on('datechange', function(event) {
     console.log('date-changed to: ' + event.date.toString());
 });
 
-// The `scrollend` event is emitted after all scroll-wheel
+// The `scrollend` event is emitted after all date-wheel
 // components have come to a halt.
-dateWheel.on('scrollend', function(event) {
+datePicker.on('scrollend', function(event) {
     console.log('scrolling has ended: ' + event.date.toString());
 });
 
@@ -109,11 +109,11 @@ dateWheel.on('scrollend', function(event) {
 
 # Customizing the appearance
 
-The options for the DateWheel can be specified in the constructor
+The options for the DatePicker can be specified in the constructor
 or using `setOptions`:
 
 ```javascript
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     perspective: 2000,     // perspective used for the wheel layout
     wheelLayout: {         // layout-options that are passed to the `WheelLayout`
         itemSize: 50,      // height of single item on the date-wheel
@@ -122,33 +122,33 @@ var dateWheel = new DateWheel({
     },
     components: [
         // use `sizeRatio' to define the width of each component
-        new DateWheel.Component.Hour({sizeRatio: 5}),   // 50% width
-        new DateWheel.Component.Minute({sizeRatio: 2}), // 20% width
-        new DateWheel.Component.Second({sizeRatio: 3}), // 30% width
+        new DatePicker.Component.Hour({sizeRatio: 5}),   // 50% width
+        new DatePicker.Component.Minute({sizeRatio: 2}), // 20% width
+        new DatePicker.Component.Second({sizeRatio: 3}), // 30% width
     ]
 });
 ```
 
 ## CSS classes
 
-At the topmost level, the DateWheel consists of a ContainerSurface using
-the class `famous-flex-datewheel`. This class can be modified, by specifying
+At the topmost level, the DatePicker consists of a ContainerSurface using
+the class `famous-flex-datepicker`. This class can be modified, by specifying
 the `container` option in the constructor:
 
 ```javascript
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     container: {
-        classes: ['famous-flex-datewheel'] // specify your custom class(es) here
+        classes: ['famous-flex-datepicker'] // specify your custom class(es) here
     }
 });
 ```
 
-Each item in the DateWheel is assigned the class `item` and a class which
+Each item in the DatePicker is assigned the class `item` and a class which
 corresponds to the component (e.g. `year`, `hour`, `weekday`, ...).
 To for instance set the line-height and font-size for all components, use:
 
 ```css
-.famous-flex-datewheel .item {
+.famous-flex-datepicker .item {
     text-align: center;
     font-size: 40px;
     line-height: 100px;
@@ -158,7 +158,7 @@ To for instance set the line-height and font-size for all components, use:
 To customize a specific component, use its css-class:
 
 ```css
-.famous-flex-datewheel .year {
+.famous-flex-datepicker .year {
     text-align: left;
 }
 ```
@@ -172,35 +172,35 @@ formatting library of your choice. The following example uses [momentjs](http://
 ```javascript
 var moment = require('moment/moment');
 
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     components: [
-        new DateWheel.Component.Year(),
-        new DateWheel.Component.Month({
+        new DatePicker.Component.Year(),
+        new DatePicker.Component.Month({
             // uses momentjs to format the full month in the current locale
             format: function(date) {
                 return moment(date).format('MMMM');
             }
         }),
-        new DateWheel.Component.Day(),
+        new DatePicker.Component.Day(),
     ]
 });
 ```
 
 # Components
 
-DateWheel is shipped with various components out of the box.
+DatePicker is shipped with various components out of the box.
 
 |Component|CSS-class|Description|
 |---|---|---|
-|`DateWheel.Component.Year`|`.year`|4 digit year component.|
-|`DateWheel.Component.Month`|`.month`|Month component (e.g. 'July').|
-|`DateWheel.Component.FullDay`|`.fullday`|Full day component including year, month & day.|
-|`DateWheel.Component.WeekDay`|`.weekday`|Day of the week (e.g. 'Monday').|
-|`DateWheel.Component.Day`|`.day`|1 or 2 digit day of the month (e.g. 31).|
-|`DateWheel.Component.Hour`|`.hour`|2 digit hour component.|
-|`DateWheel.Component.Minute`|`.minute`|2 digit minute component.|
-|`DateWheel.Component.Second`|`.second`|2 digit second component.|
-|`DateWheel.Component.Millisecond`|`.millisecond`|3 digit millisecond component.|
+|`DatePicker.Component.Year`|`.year`|4 digit year component.|
+|`DatePicker.Component.Month`|`.month`|Month component (e.g. 'July').|
+|`DatePicker.Component.FullDay`|`.fullday`|Full day component including year, month & day.|
+|`DatePicker.Component.WeekDay`|`.weekday`|Day of the week (e.g. 'Monday').|
+|`DatePicker.Component.Day`|`.day`|1 or 2 digit day of the month (e.g. 31).|
+|`DatePicker.Component.Hour`|`.hour`|2 digit hour component.|
+|`DatePicker.Component.Minute`|`.minute`|2 digit minute component.|
+|`DatePicker.Component.Second`|`.second`|2 digit second component.|
+|`DatePicker.Component.Millisecond`|`.millisecond`|3 digit millisecond component.|
 
 ## Customizing components
 
@@ -208,7 +208,7 @@ All components share a set of properties which can customized:
 
 |Property|Type|Description|
 |---|---|---|
-|`sizeRatio`|`Number`|Width-ratio the component occupies in the date-wheel (the sum of all sizeRatio's equals a width of 100%).|
+|`sizeRatio`|`Number`|Width-ratio the component occupies in the date-picker (the sum of all sizeRatio's equals a width of 100%).|
 |`step`|`Number`|The value by which the component is incremented/decremented when scrolling up/down.|
 |`max`|`Number`|The minimum value of the component (e.g. `59` for an Hour component).|
 |`min`|`Number`|The maximum value of the component (e.g. `0`).|
@@ -219,19 +219,19 @@ All components share a set of properties which can customized:
 Example:
 
 ```javascript
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     components: [
-        new DateWheel.Component.FullDay({
+        new DatePicker.Component.FullDay({
             sizeRatio: 5,   // occupy 50% width
             format: function (date) {
                 // format the date the way you want
                 return date.toLocaleDateString();
             }
         }),
-        new DateWheel.Component.Hour({
+        new DatePicker.Component.Hour({
             sizeRatio: 2.5  // occupy 25% width
         }),
-        new DateWheel.Component.Minute({
+        new DatePicker.Component.Minute({
             step: 15,       // Select increments of 15 minutes
             sizeRatio: 2.5  // occupy 25% width
         })
@@ -245,7 +245,7 @@ To disable user scrolling (e.g. in order to build a clock), set the `enabled` op
 scroll-controllers to `false`, like this:
 
 ```javascript
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     scrollView: {
         enabled: false
     }
@@ -272,9 +272,9 @@ function createRenderable(date) {
     return surface;
 }
 
-var dateWheel = new DateWheel({
+var datePicker = new DatePicker({
     components: [
-        new DateWheel.Component.FullDay({
+        new DatePicker.Component.FullDay({
             create: createRenderable
         });
     ]
