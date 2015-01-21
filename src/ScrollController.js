@@ -890,7 +890,7 @@ define(function(require, exports, module) {
         if (this._viewSequence.cleanup) {
             var viewSequence = this._viewSequence;
             while (viewSequence.get() !== scrollToRenderNode) {
-                viewSequence = this._scroll.scrollToDirection ? viewSequence.getNext() : viewSequence.getPrevious();
+                viewSequence = this._scroll.scrollToDirection ? viewSequence.getNext(true) : viewSequence.getPrevious(true);
                 if (!viewSequence) {
                     break;
                 }

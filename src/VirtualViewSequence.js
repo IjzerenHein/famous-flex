@@ -90,10 +90,13 @@ define(function(require, exports, module) {
      *
      * @return {VirtualViewSequence} previous node.
      */
-    VirtualViewSequence.prototype.getPrevious = function() {
+    VirtualViewSequence.prototype.getPrevious = function(noCreate) {
         if (this.prev) {
             this.prev.touched = true;
             return this.prev;
+        }
+        if (noCreate) {
+            return undefined;
         }
         var value = this._.factory.createPrevious(this.get());
         if (!value) {
@@ -118,10 +121,13 @@ define(function(require, exports, module) {
      *
      * @return {VirtualViewSequence} next node.
      */
-    VirtualViewSequence.prototype.getNext = function() {
+    VirtualViewSequence.prototype.getNext = function(noCreate) {
         if (this.next) {
             this.next.touched = true;
             return this.next;
+        }
+        if (noCreate) {
+            return undefined;
         }
         var value = this._.factory.createNext(this.get());
         if (!value) {
