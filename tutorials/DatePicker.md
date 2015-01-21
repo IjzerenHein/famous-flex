@@ -6,6 +6,9 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
 
 ![Screenshot](DatePicker/datepicker.gif)
 
+[View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-datepicker/master/dist/index.html)
+
+
 # Index
 
 - [Getting started](#getting-started)
@@ -22,6 +25,7 @@ ScrollControllers using the WheelLayout layout to form a single date/time picker
 - [Disabling item looping](#disabling-item-looping)
 - [Advanced topics](#advanced-topics)
     - [Using custom renderables](#using-custom-renderables)
+
 
 # Getting started
 
@@ -61,6 +65,7 @@ Specify your preferred style for an item in the CSS-file:
 }
 ```
 
+
 # Getting and setting the selected date
 
 To get and set the date, use `getDate` and `setDate`:
@@ -76,6 +81,7 @@ datePicker = new DatePicker({
 datePicker.setDate(new Date());
 var date = datePicker.getDate();
 ```
+
 
 # Events
 
@@ -103,8 +109,8 @@ datePicker.on('datechange', function(event) {
 datePicker.on('scrollend', function(event) {
     console.log('scrolling has ended: ' + event.date.toString());
 });
-
 ```
+
 
 # Customizing the appearance
 
@@ -127,6 +133,7 @@ datePicker.setComponents([
     new DatePicker.Component.Second({sizeRatio: 3}), // 30% width
 ]);
 ```
+
 
 ## CSS classes
 
@@ -162,6 +169,7 @@ To customize a specific component, use its css-class:
 }
 ```
 
+
 ## Internationalisation & custom formatting
 
 By default the `Month` and `WeekDay` components are formatted in English.
@@ -183,6 +191,7 @@ datePicker.setComponents([
     new DatePicker.Component.Day()
 ]);
 ```
+
 
 ## Adding overlay renderables
 
@@ -218,6 +227,7 @@ CSS:
 }
 ```
 
+
 # Components
 
 DatePicker is shipped with various components out of the box.
@@ -233,6 +243,7 @@ DatePicker is shipped with various components out of the box.
 |`DatePicker.Component.Minute`|`.minute`|2 digit minute component.|
 |`DatePicker.Component.Second`|`.second`|2 digit second component.|
 |`DatePicker.Component.Millisecond`|`.millisecond`|3 digit millisecond component.|
+
 
 ## Customizing components
 
@@ -268,6 +279,7 @@ datePicker.setComponents([
 ]);
 ```
 
+
 # Disabling user-input
 
 To disable user scrolling (e.g. to build a clock), set the `enabled` option of the underlying
@@ -280,6 +292,9 @@ var datePicker = new DatePicker({
     }
 });
 ```
+
+You can use this method to override any of the default options of the underlying ScrollControllers.
+
 
 # Disabling item looping
 
@@ -300,7 +315,6 @@ datePicker.setComponents([
 ]);
 ```
 
-You can use this method to override any of the default options of the underlying ScrollControllers.
 
 # Advanced topics
 

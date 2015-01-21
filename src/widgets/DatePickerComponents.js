@@ -43,6 +43,7 @@ define(function(require, exports, module) {
      */
     function Base(options) {
         this._eventOutput = new EventHandler();
+        this._pool = [];
         EventHandler.setOutputHandler(this, this._eventOutput);
         if (options) {
             for (var key in options) {
@@ -103,16 +104,24 @@ define(function(require, exports, module) {
     };
     Base.prototype.create = function(date) {
         date = date || new Date();
-        var surface = new Surface({
-            classes: this.classes,
-            content: '<div>' + this.format(date) + '</div>'
-        });
+        var surface;
+        if (this._pool.length) {
+            surface = this._pool[0];
+            this._pool.splice(0, 1);
+        }
+        else {
+            surface = new Surface({
+                classes: this.classes
+            });
+            this.installClickHandler(surface);
+        }
+        surface.setContent('<div>' + this.format(date) + '</div>');
         surface.date = date;
-        this.installClickHandler(surface);
         return surface;
     };
     Base.prototype.destroy = function(renderable) {
-        // perform any cleanup here if neccesary
+        // push the renderable into the pool for re-use
+        this._pool.push(renderable);
     };
 
     /**
