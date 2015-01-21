@@ -107,12 +107,14 @@ var datePicker = new DatePicker({...});
 datePicker.setOverlay({
   top: new Surface({
     properties: {
+      pointerEvents: 'none',
       backgroundColor: 'rgba(255, 255, 255, 0.5)',
       borderBottom: '1px solid #777777'
     }
   }),
   bottom: new Surface({
     properties: {
+      pointerEvents: 'none',
       backgroundColor: 'rgba(255, 255, 255, 0.5)',
       borderTop: '1px solid #777777'
     }

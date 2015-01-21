@@ -517,3 +517,5 @@ These events are passed an event object with the following properties:
 
 When a pull-to-refresh header or footer is attached, it also emits the `refresh`
 event (see [Pull to refresh](#pull-to-refresh)).
+
+*© 2014 - 2015 IjzerenHein*
