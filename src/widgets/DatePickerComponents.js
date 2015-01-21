@@ -20,6 +20,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var Surface = require('famous/core/Surface');
+    var EventHandler = require('famous/core/EventHandler');
 
     /**
      * Helper functions for formatting values with X decimal places.
@@ -41,6 +42,8 @@ define(function(require, exports, module) {
      * Base component class
      */
     function Base(options) {
+        this._eventOutput = new EventHandler();
+        EventHandler.setOutputHandler(this, this._eventOutput);
         if (options) {
             for (var key in options) {
                 this[key] = options[key];
@@ -88,6 +91,14 @@ define(function(require, exports, module) {
         this.setComponent(date, newVal);
         return date;
     };
+    Base.prototype.installClickHandler = function(renderable) {
+        renderable.on('click', function(event) {
+            this._eventOutput.emit('click', {
+                target: renderable,
+                event: event
+            });
+        }.bind(this));
+    };
     Base.prototype.create = function(date) {
         date = date || new Date();
         var surface = new Surface({
@@ -95,6 +106,7 @@ define(function(require, exports, module) {
             content: '<div>' + this.format(date) + '</div>'
         });
         surface.date = date;
+        this.installClickHandler(surface);
         return surface;
     };
     Base.prototype.destroy = function(renderable) {

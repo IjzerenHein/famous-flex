@@ -12,7 +12,7 @@
 /*eslint no-use-before-define:0, no-console:0 */
 
 /**
- * Date/time picker (slot-machine/wheel layout) for famo.us.
+ * Date/time picker wheel for famo.us.
  *
  * This component can be used as a date/time picker, a clock or
  * any other application which requires a date/time wheel.
@@ -28,13 +28,13 @@
  *     itemSize: 100,         // height of an item on the date/wheel
  *     diameter: 300,         // diameter of the wheel (undefined = 3 x itemSize)
  *     radialOpacity: 0       // opacity at the top and bottom diameter edge
- *   },
- *   components: [
- *     new DatePicker.Component.FullDay(),  // full-day component (year + month + day)
- *     new DatePicker.Component.Hour(),     // hour component (0..23)
- *     new DatePicker.Component.Minute()    // minute compoent (0..59)
- *   ]
+ *   });
  * });
+ * datePicker.setComponents([
+ *   new DatePicker.Component.FullDay(),  // full-day component (year + month + day)
+ *   new DatePicker.Component.Hour(),     // hour component (0..23)
+ *   new DatePicker.Component.Minute()    // minute compoent (0..59)
+ * ]);
  * this.add(datePicker); // add to the render-tree
  *
  * datePicker.on('datechange', function(event) {
@@ -64,7 +64,7 @@ define(function(require, exports, module) {
     var WheelLayout = require('../layouts/WheelLayout');
     var ProportionalLayout = require('../layouts/ProportionalLayout');
     var VirtualViewSequence = require('../VirtualViewSequence');
-    var DateComponents = require('./DateComponents');
+    var DatePickerComponents = require('./DatePickerComponents');
     var LayoutUtility = require('famous-flex/LayoutUtility');
 
     /**
@@ -72,26 +72,29 @@ define(function(require, exports, module) {
      * @extends View
      * @param {Object} options Configurable options.
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
-     * @param {Array} [options.components] Date/time components that are displayed.
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
-     * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
+     * @param {Array} [components] Date/time components (see `setComponents`).
+     * @param {Object} [overlay] Overlay renderables (see `setOverlay`).
      * @alias module:DatePicker
      */
-    function DatePicker(options) {
+    function DatePicker(options, components, overlay) {
         View.apply(this, arguments);
 
         this._date = new Date((options && options.date) ? options.date.getTime() : undefined);
+        this._components = components || [];
+        this._overlay = overlay || {};
+
         _createLayout.call(this);
-        _createComponents.call(this);
-        _createOverlay.call(this);
+        _updateComponents.call(this);
+        _updateOverlay.call(this);
 
         this.setOptions(this.options);
     }
     DatePicker.prototype = Object.create(View.prototype);
     DatePicker.prototype.constructor = DatePicker;
-    DatePicker.Component = DateComponents;
+    DatePicker.Component = DatePickerComponents;
 
     DatePicker.DEFAULT_OPTIONS = {
         perspective: 500,
@@ -111,13 +114,7 @@ define(function(require, exports, module) {
         },
         container: {
             classes: ['famous-flex-datepicker']
-        },
-        components: [
-            new DatePicker.Component.FullDay(),
-            new DatePicker.Component.Hour(),
-            new DatePicker.Component.Minute()
-        ],
-        overlay: {}
+        }
     };
 
     /**
@@ -125,7 +122,6 @@ define(function(require, exports, module) {
      *
      * @param {Object} options Configurable options (see ScrollController for all inherited options).
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
-     * @param {Array} [options.components] Date/time components that are displayed.
      * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
@@ -139,13 +135,15 @@ define(function(require, exports, module) {
         if (options.perspective !== undefined) {
             this.container.context.setPerspective(options.perspective);
         }
-        if (options.components) {
-            _createComponents.call(this);
-        }
         var i;
         if (options.wheelLayout !== undefined) {
             for (i = 0; i < this.scrollWheels.length; i++) {
                 this.scrollWheels[i].scrollController.setLayoutOptions(options.wheelLayout);
+            }
+            if (this.overlayLC) {
+                this.overlayLC.setLayoutOptions({
+                    itemSize: this.options.wheelLayout.itemSize
+                });
             }
         }
         if (options.scrollController !== undefined) {
@@ -153,10 +151,70 @@ define(function(require, exports, module) {
                 this.scrollWheels[i].scrollController.setOptions(options.scrollController);
             }
         }
-        if (options.overlay || (options.wheelLayout !== undefined)) {
-            _createOverlay.call(this);
-        }
         return this;
+    };
+
+    /**
+     * Sets the components for the date-picker.
+     *
+     * @param {Array} components Array of DatePicker.Component objects.
+     * @return {DatePicker} this
+     */
+    DatePicker.prototype.setComponents = function(components) {
+        this._components = components;
+        _updateComponents.call(this);
+        return this;
+    };
+
+    /**
+     * Get the components for the date-picker.
+     *
+     * @return {Array} components
+     */
+    DatePicker.prototype.getComponents = function() {
+        return this._components;
+    };
+
+    /**
+     * Sets the `top`, `middle` & `bottom` renderables that are displayed in
+     * front of the datepicker.
+     *
+     * Example:
+     *
+     * ```javascript
+     * var datePicker = new DatePicker({...});
+     * datePicker.setOverlay({
+     *   top: new Surface({
+     *     properties: {
+     *       backgroundColor: 'rgba(255, 255, 255, 0.5)',
+     *       borderBottom: '1px solid #777777'
+     *     }
+     *   }),
+     *   bottom: new Surface({
+     *     properties: {
+     *       backgroundColor: 'rgba(255, 255, 255, 0.5)',
+     *       borderTop: '1px solid #777777'
+     *     }
+     *   })
+     * });
+     * ```
+     *
+     * @param {Object} overlay `top`, `middle` and `bottom` renderables
+     * @return {DatePicker} this
+     */
+    DatePicker.prototype.setOverlay = function(overlay) {
+        this._overlay = overlay;
+        _updateOverlay.call(this);
+        return this;
+    };
+
+    /**
+     * Get the overlay renderables for the date-picker.
+     *
+     * @return {Object} overlay renderables
+     */
+    DatePicker.prototype.getOverlay = function() {
+        return this._overlay;
     };
 
     /**
@@ -266,6 +324,15 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Called whenever an item is clicked, causes the scrollwheel to scroll to that item.
+     */
+    function _clickItem(scrollWheel, event) {
+        if (scrollWheel && event && event.target) {
+            scrollWheel.scrollController.goToRenderNode(event.target);
+        }
+    }
+
+    /**
      * Emit scrollstart event when a wheel starts scrolling
      */
     function _scrollWheelScrollStart() {
@@ -304,14 +371,13 @@ define(function(require, exports, module) {
     /**
      * Updates the date/time components
      */
-    function _createComponents() {
+    function _updateComponents() {
         this.scrollWheels = [];
         this._scrollingCount = 0;
         var dataSource = [];
         var sizeRatios = [];
-
-        for (var i = 0; i < this.options.components.length; i++) {
-            var component = this.options.components[i];
+        for (var i = 0; i < this._components.length; i++) {
+            var component = this._components[i];
             var viewSequence = new VirtualViewSequence({
                 factory: component,
                 value: component.create(this._date)
@@ -330,11 +396,13 @@ define(function(require, exports, module) {
             scrollController.on('scrollstart', _scrollWheelScrollStart.bind(this));
             scrollController.on('scrollend', _scrollWheelScrollEnd.bind(this));
             scrollController.on('pagechange', _scrollWheelPageChange.bind(this));
-            this.scrollWheels.push({
+            var scrollWheel = {
                 component: component,
                 scrollController: scrollController,
                 viewSequence: viewSequence
-            });
+            };
+            this.scrollWheels.push(scrollWheel);
+            component.on('click', _clickItem.bind(this, scrollWheel));
             dataSource.push(scrollController);
             sizeRatios.push(component.sizeRatio);
         }
@@ -367,17 +435,17 @@ define(function(require, exports, module) {
     /**
      * Creates/updates the overlay
      */
-    function _createOverlay() {
-        if (!this.overlay) {
-            this.overlay = new LayoutController({
+    function _updateOverlay() {
+        if (!this.overlayLC) {
+            this.overlayLC = new LayoutController({
                 layout: OverlayLayout
             });
-            this.add(this.overlay);
+            this.add(this.overlayLC);
         }
-        this.overlay.setLayoutOptions({
+        this.overlayLC.setLayoutOptions({
             itemSize: this.options.wheelLayout.itemSize
         });
-        this.overlay.setDataSource(this.options.overlay);
+        this.overlayLC.setDataSource(this._overlay);
     }
 
     module.exports = DatePicker;
