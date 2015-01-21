@@ -80,12 +80,22 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Pagination modes
+     */
+    var PaginationMode = {
+        PAGE: 0,
+        SCROLL: 1
+    };
+
+    /**
      * @class
      * @extends LayoutController
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
      * @param {String} [options.container] Options that are passed to the ContainerSurface in case `useContainer` is true.
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
+     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
@@ -191,6 +201,7 @@ define(function(require, exports, module) {
     ScrollController.prototype = Object.create(LayoutController.prototype);
     ScrollController.prototype.constructor = ScrollController;
     ScrollController.Bounds = Bounds;
+    ScrollController.PaginationMode = PaginationMode;
 
     ScrollController.DEFAULT_OPTIONS = {
         flow: false,
@@ -224,7 +235,8 @@ define(function(require, exports, module) {
             scale: 0.2
         },
         paginated: false,
-        paginationEnergyThresshold: 0.005,
+        paginationMode: PaginationMode.PAGE,
+        paginationEnergyThresshold: 0.01,
         alignment: 0,         // [0: top/left, 1: bottom/right]
         touchMoveDirectionThresshold: undefined, // 0..1
         mouseMove: false,
@@ -240,6 +252,8 @@ define(function(require, exports, module) {
      *
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
+     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
@@ -897,11 +911,31 @@ define(function(require, exports, module) {
         }
 
         // When the energy is below the thresshold, paginate to the current page
-        if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
-            var item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-            if (item && item.renderNode) {
-                this.goToRenderNode(item.renderNode);
-            }
+        var item;
+        switch (this.options.paginationMode) {
+            case PaginationMode.SCROLL:
+                if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
+                    item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+                    if (item && item.renderNode) {
+                        this.goToRenderNode(item.renderNode);
+                    }
+                }
+                break;
+            case PaginationMode.PAGE:
+                item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+                if (item) {
+                    if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+                        var velocity = this._scroll.particle.getVelocity1D();
+                        if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
+                            this.goToRenderNode(item._node._next.renderNode);
+                        } else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
+                            this.goToRenderNode(item._node._prev.renderNode);
+                        }
+                    } else if (item.renderNode) {
+                        this.goToRenderNode(item.renderNode);
+                    }
+                }
+                break;
         }
     }
 
@@ -1054,7 +1088,8 @@ define(function(require, exports, module) {
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1,
                     scrollOffset: scrollOffset - node.scrollLength,
-                    scrollLength: node.scrollLength
+                    scrollLength: node.scrollLength,
+                    _node: node
                 });
             }
             node = node._next;
@@ -1073,7 +1108,8 @@ define(function(require, exports, module) {
                     renderNode: node.renderNode,
                     visiblePerc: node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1,
                     scrollOffset: scrollOffset,
-                    scrollLength: node.scrollLength
+                    scrollLength: node.scrollLength,
+                    _node: node
                 });
             }
             node = node._prev;
@@ -1090,7 +1126,7 @@ define(function(require, exports, module) {
      *
      * @return {Object} item or `undefined`
      */
-    ScrollController.prototype.getFirstVisibleItem = function() {
+    ScrollController.prototype.getFirstVisibleItem = function(includeNode) {
         var size = this._contextSizeCache;
         var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
         var node = this._nodes.getStartEnumNode(true);
@@ -1138,7 +1174,8 @@ define(function(require, exports, module) {
             renderNode: nodeFound.renderNode,
             visiblePerc: nodeFoundVisiblePerc,
             scrollOffset: nodeFoundScrollOffset,
-            scrollLength: nodeFound.scrollLength
+            scrollLength: nodeFound.scrollLength,
+            _node: nodeFound
         } : undefined;
     };
 
@@ -1633,6 +1670,7 @@ define(function(require, exports, module) {
                 this._layout.options    // additional layout-options
             );
         }
+        this._scroll.unnormalizedScrollOffset = scrollOffset;
 
         // Call post-layout function
         if (this._postLayout) {
@@ -1662,7 +1700,6 @@ define(function(require, exports, module) {
         // Normalize scroll offset so that the current viewsequence node is as close to the
         // top as possible and the layout function will need to process the least amount
         // of renderables.
-        this._scroll.unnormalizedScrollOffset = scrollOffset;
         scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
 
         // Update spring

@@ -102,7 +102,7 @@ define(function(require, exports, module) {
         scrollController: {
             enabled: true,
             paginated: true,
-            paginationMode: ScrollController.PaginationMode.LOOSE,
+            paginationMode: ScrollController.PaginationMode.SCROLL,
             mouseMove: true,
             scrollSpring: {
                 dampingRatio: 1.0,

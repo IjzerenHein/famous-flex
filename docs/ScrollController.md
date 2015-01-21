@@ -59,6 +59,8 @@ Inherited from: [LayoutController](./LayoutController.md)
   - \[useContainer\] `Bool` - Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).  
   - \[container\] `String` - Options that are passed to the ContainerSurface in case `useContainer` is true.  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
+  - \[paginationEnergyThresshold\] `Number` - Thresshold after which pagination kicks in (default: `0.01`).  
+  - \[paginationMode\] `PaginationMode` - Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
   - \[enabled\] `Bool` - Enables or disabled user input (default: `true`).  
@@ -80,6 +82,8 @@ Patches the ScrollController instance's options with the passed-in ones.
 
 - options `Object` - Configurable options (see LayoutController for all inherited options).  
   - \[paginated\] `Bool` - Enabled pagination when set to `true` (default: `false`).  
+  - \[paginationEnergyThresshold\] `Number` - Thresshold after which pagination kicks in (default: `0.01`).  
+  - \[paginationMode\] `PaginationMode` - Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).  
   - \[alignment\] `Number` - Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).  
   - \[mouseMove\] `Bool` - Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).  
   - \[enabled\] `Bool` - Enables or disabled user input (default: `true`).  
