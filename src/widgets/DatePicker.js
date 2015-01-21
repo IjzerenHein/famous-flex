@@ -75,7 +75,7 @@ define(function(require, exports, module) {
      * @param {Array} [options.components] Date/time components that are displayed.
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
-     * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
+     * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
      * @alias module:DatePicker
      */
@@ -99,9 +99,10 @@ define(function(require, exports, module) {
             itemSize: 100,
             diameter: 500
         },
-        scrollView: {
+        scrollController: {
             enabled: true,
             paginated: true,
+            paginationMode: ScrollController.PaginationMode.LOOSE,
             mouseMove: true,
             scrollSpring: {
                 dampingRatio: 1.0,
@@ -127,7 +128,7 @@ define(function(require, exports, module) {
      * @param {Array} [options.components] Date/time components that are displayed.
      * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
-     * @param {Object} [options.scrollView] Options that are passed to the underlying ScrollControllers.
+     * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @return {DatePicker} this
      */
     DatePicker.prototype.setOptions = function(options) {
@@ -144,12 +145,12 @@ define(function(require, exports, module) {
         var i;
         if (options.wheelLayout !== undefined) {
             for (i = 0; i < this.scrollWheels.length; i++) {
-                this.scrollWheels[i].scrollView.setLayoutOptions(options.wheelLayout);
+                this.scrollWheels[i].scrollController.setLayoutOptions(options.wheelLayout);
             }
         }
-        if (options.scrollView !== undefined) {
+        if (options.scrollController !== undefined) {
             for (i = 0; i < this.scrollWheels.length; i++) {
-                this.scrollWheels[i].scrollView.setOptions(options.scrollView);
+                this.scrollWheels[i].scrollController.setOptions(options.scrollController);
             }
         }
         if (options.overlay || (options.wheelLayout !== undefined)) {
@@ -186,7 +187,7 @@ define(function(require, exports, module) {
         for (var i = 0; i < this.scrollWheels.length; i++) {
             var scrollWheel = this.scrollWheels[i];
             var component = scrollWheel.component;
-            var item = scrollWheel.scrollView.getFirstVisibleItem();
+            var item = scrollWheel.scrollController.getFirstVisibleItem();
             if (item && item.viewSequence) {
                 var viewSequence = item.viewSequence;
                 var renderNode = item.viewSequence.get();
@@ -208,7 +209,7 @@ define(function(require, exports, module) {
 
                 // Scroll to the item
                 if (!steps) {
-                    scrollWheel.scrollView.goToRenderNode(renderNode);
+                    scrollWheel.scrollController.goToRenderNode(renderNode);
                 }
                 else {
                     while (currentValue !== destValue) {
@@ -219,10 +220,10 @@ define(function(require, exports, module) {
                         }
                         currentValue = component.getComponent(renderNode.date);
                         if (steps > 0) {
-                            scrollWheel.scrollView.goToNextPage();
+                            scrollWheel.scrollController.goToNextPage();
                         }
                         else {
-                            scrollWheel.scrollView.goToPreviousPage();
+                            scrollWheel.scrollController.goToPreviousPage();
                         }
                     }
                 }
@@ -238,7 +239,7 @@ define(function(require, exports, module) {
         for (var i = 0; i < this.scrollWheels.length; i++) {
             var scrollWheel = this.scrollWheels[i];
             var component = scrollWheel.component;
-            var item = scrollWheel.scrollView.getFirstVisibleItem();
+            var item = scrollWheel.scrollController.getFirstVisibleItem();
             if (item && item.renderNode) {
                 component.setComponent(date, component.getComponent(item.renderNode.date));
             }
@@ -316,7 +317,7 @@ define(function(require, exports, module) {
                 value: component.create(this._date)
             });
             var options = LayoutUtility.combineOptions(
-                this.options.scrollView, {
+                this.options.scrollController, {
                     layout: WheelLayout,
                     layoutOptions: this.options.wheelLayout,
                     flow: false,
@@ -325,16 +326,16 @@ define(function(require, exports, module) {
                     autoPipeEvents: true
                 }
             );
-            var scrollView = new ScrollController(options);
-            scrollView.on('scrollstart', _scrollWheelScrollStart.bind(this));
-            scrollView.on('scrollend', _scrollWheelScrollEnd.bind(this));
-            scrollView.on('pagechange', _scrollWheelPageChange.bind(this));
+            var scrollController = new ScrollController(options);
+            scrollController.on('scrollstart', _scrollWheelScrollStart.bind(this));
+            scrollController.on('scrollend', _scrollWheelScrollEnd.bind(this));
+            scrollController.on('pagechange', _scrollWheelPageChange.bind(this));
             this.scrollWheels.push({
                 component: component,
-                scrollView: scrollView,
+                scrollController: scrollController,
                 viewSequence: viewSequence
             });
-            dataSource.push(scrollView);
+            dataSource.push(scrollController);
             sizeRatios.push(component.sizeRatio);
         }
 

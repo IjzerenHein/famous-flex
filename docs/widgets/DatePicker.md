@@ -60,7 +60,7 @@ CSS:
   - \[components\] `Array` - Date/time components that are displayed.  
   - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
   - \[overlay\] `Object` - Overlay renderables (`top`, `middle` & `bottom`).  
-  - \[scrollView\] `Object` - Options that are passed to the underlying ScrollControllers.  
+  - \[scrollController\] `Object` - Options that are passed to the underlying ScrollControllers.  
   - \[container\] `Object` - Container-options that are passed to the underlying ContainerSurface.  
 
 **Extends**: `View`  
@@ -75,7 +75,7 @@ Patches the DatePicker instance's options with the passed-in ones.
   - \[components\] `Array` - Date/time components that are displayed.  
   - \[overlay\] `Object` - Overlay renderables (`top`, `middle` & `bottom`).  
   - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
-  - \[scrollView\] `Object` - Options that are passed to the underlying ScrollControllers.  
+  - \[scrollController\] `Object` - Options that are passed to the underlying ScrollControllers.  
 
 **Returns**: `DatePicker` - this  
 <a name="module_DatePicker#setDate"></a>

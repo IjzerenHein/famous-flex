@@ -241,12 +241,12 @@ var datePicker = new DatePicker({
 
 # Disabling user-input
 
-To disable user scrolling (e.g. in order to build a clock), set the `enabled` option of the underlying
+To disable user scrolling (e.g. to build a clock), set the `enabled` option of the underlying
 scroll-controllers to `false`, like this:
 
 ```javascript
 var datePicker = new DatePicker({
-    scrollView: {
+    scrollController: {
         enabled: false
     }
 });
