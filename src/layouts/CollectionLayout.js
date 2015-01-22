@@ -213,8 +213,8 @@ define(function(require, exports, module) {
         //
         // Process all next nodes
         //
-        offset = context.scrollOffset + margin[alignment];
-        bound = context.scrollEnd + margin[alignment];
+        offset = context.scrollOffset + (alignment ? 0 : margin[alignment]);
+        bound = context.scrollEnd + (alignment ? 0 : margin[alignment]);
         lineOffset = 0;
         lineNodes = [];
         while (offset < bound) {
@@ -235,8 +235,8 @@ define(function(require, exports, module) {
         //
         // Process previous nodes
         //
-        offset = context.scrollOffset + margin[alignment];
-        bound = context.scrollStart + margin[alignment];
+        offset = context.scrollOffset + (alignment ? margin[alignment] : 0);
+        bound = context.scrollStart + (alignment ? margin[alignment] : 0);
         lineOffset = 0;
         lineNodes = [];
         while (offset > bound) {
