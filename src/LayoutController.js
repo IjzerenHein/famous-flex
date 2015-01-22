@@ -165,8 +165,10 @@ define(function(require, exports, module) {
         if (options.dataSource) {
             this.setDataSource(options.dataSource);
         }
-        if (options.layout || options.layoutOptions) {
+        if (options.layout) {
             this.setLayout(options.layout, options.layoutOptions);
+        } else if (options.layoutOptions) {
+            this.setLayoutOptions(options.layoutOptions);
         }
         if (options.direction !== undefined) {
             this.setDirection(options.direction);
