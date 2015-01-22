@@ -15,7 +15,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 
 - [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-demo))
 - [Chat demo](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-chat))
-- [DatePicker demo](https://rawgit.com/IjzerenHein/famous-flex-datepicker/master/dist/index.html)
+- [DatePicker demo](https://rawgit.com/IjzerenHein/famous-flex-datepicker/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-datepicker))
 
 ### Getting started
 - [Installation](#installation)
