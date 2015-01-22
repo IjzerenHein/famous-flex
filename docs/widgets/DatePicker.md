@@ -33,7 +33,7 @@ datePicker.on('datechange', function(event) {
 CSS:
 
 ```css
-.famous-flex-datepicker .item > div {
+.famous-flex-datepicker .item {
   text-align: center;
   font-size: 40px;
   line-height: 60px; // this should equal the WheelLayout itemSize

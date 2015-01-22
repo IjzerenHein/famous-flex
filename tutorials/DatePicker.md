@@ -58,7 +58,7 @@ this.add(datePicker); // add to the render-tree
 Specify your preferred style for an item in the CSS-file:
 
 ```css
-.famous-flex-datepicker .item > div {
+.famous-flex-datepicker .item {
     text-align: center;
     font-size: 40px;
     line-height: 60px; /* this should equal the WheelLayout itemSize */

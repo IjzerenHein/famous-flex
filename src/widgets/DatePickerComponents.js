@@ -115,7 +115,7 @@ define(function(require, exports, module) {
             });
             this.installClickHandler(surface);
         }
-        surface.setContent('<div>' + this.format(date) + '</div>');
+        surface.setContent(this.format(date));
         surface.date = date;
         return surface;
     };
