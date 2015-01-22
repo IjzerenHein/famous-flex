@@ -96,6 +96,25 @@ var scrollView = new FlexScrollView({
 });
 ```
 
+Pagination modes:
+
+![FlowMode](FlexScrollView/PaginationMode.PAGE.gif) ![FlowMode](FlexScrollView/PaginationMode.SCROLL.gif)
+
+|mode                   |description|
+|-----------------------|-----------|
+|`PaginationMode.PAGE`|Paginates to the page immediately after the last touch/mouse event. **(default)**|
+|`PaginationMode.SCROLL`|Scrolls the view but only paginates when the energy of the scroll-particle is below a certain thresshold.|
+
+To change the pagination-mode or thresshold use:
+
+```javascript
+var scrollView = new FlexScrollView({
+    paginated: true,
+    paginationMode: FlexScrollView.PaginationMode.SCROLL,
+    paginationEnergyThresshold: 0.01
+});
+```
+
 
 # Inserting & removing items
 
