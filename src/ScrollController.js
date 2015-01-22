@@ -923,17 +923,8 @@ define(function(require, exports, module) {
                 break;
             case PaginationMode.PAGE:
                 item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-                if (item) {
-                    if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
-                        var velocity = this._scroll.particle.getVelocity1D();
-                        if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
-                            this.goToRenderNode(item._node._next.renderNode);
-                        } else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
-                            this.goToRenderNode(item._node._prev.renderNode);
-                        }
-                    } else if (item.renderNode) {
-                        this.goToRenderNode(item.renderNode);
-                    }
+                if (item && item.renderNode) {
+                    this.goToRenderNode(item.renderNode);
                 }
                 break;
         }
@@ -1558,6 +1549,9 @@ define(function(require, exports, module) {
      */
     ScrollController.prototype.applyScrollForce = function(delta) {
         this.halt();
+        if (this._scroll.scrollForceCount === 0) {
+            this._scroll.scrollForceStartItem = this.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+        }
         this._scroll.scrollForceCount++;
         this._scroll.scrollForce += delta;
         return this;
@@ -1599,6 +1593,24 @@ define(function(require, exports, module) {
             this._scroll.pe.wake();
             this._scroll.scrollForce = 0;
             this._scroll.scrollDirty = true;
+            if (this._scroll.scrollForceStartItem && this.options.paginated && (this.options.paginationMode === PaginationMode.PAGE)) {
+                var item = this.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+                if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
+                    this.goToRenderNode(item.renderNode);
+                }
+                else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+                    velocity = velocity || 0;
+                    if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
+                        this.goToRenderNode(item._node._next.renderNode);
+                    } else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
+                        this.goToRenderNode(item._node._prev.renderNode);
+                    }
+                }
+                else {
+                    this.goToRenderNode(item.renderNode);
+                }
+            }
+            this._scroll.scrollForceStartItem = undefined;
         }
         else {
             this._scroll.scrollForce -= delta;
