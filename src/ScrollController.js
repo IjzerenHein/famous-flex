@@ -239,6 +239,7 @@ define(function(require, exports, module) {
         paginationEnergyThresshold: 0.01,
         alignment: 0,         // [0: top/left, 1: bottom/right]
         touchMoveDirectionThresshold: undefined, // 0..1
+        touchMoveNoVelocityDuration: 100,
         mouseMove: false,
         enabled: true,          // set to false to disable scrolling
         layoutAll: false,       // set to true is you want all renderables layed out/rendered
@@ -408,7 +409,7 @@ define(function(require, exports, module) {
         // Calculate delta and velocity
         var velocity = 0;
         var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
-        if (diffTime > 0) {
+        if ((diffTime > 0) && ((Date.now() - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
@@ -579,7 +580,7 @@ define(function(require, exports, module) {
         // Determine velocity and add to particle
         var velocity = 0;
         var diffTime = primaryTouch.time - primaryTouch.prevTime;
-        if (diffTime > 0) {
+        if ((diffTime > 0) && ((Date.now() - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
