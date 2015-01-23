@@ -59,7 +59,7 @@ define(function(require, exports, module) {
     function GridLayout(context, options) {
 
         // Do one-time stuff
-        var size = context.size;
+        var revDirection = context.direction ? 0 : 1;
         if ((options.gutter !== undefined) && console.warn) {
             console.warn('gutter has been deprecated for GridLayout, use margins & spacing instead');
         }
@@ -73,46 +73,25 @@ define(function(require, exports, module) {
         spacing = Array.isArray(spacing) ? spacing : [spacing, spacing];
         var margins = LayoutUtility.normalizeMargins(options.margins);
         var nodeSize = [
-            (size[0] - (((options.cells[0] - 1) * spacing[0]) + margins[1] + margins[3])) / options.cells[0],
-            (size[1] - (((options.cells[1] - 1) * spacing[1]) + margins[0] + margins[2])) / options.cells[1]
+            (context.size[0] - (((options.cells[0] - 1) * spacing[0]) + margins[1] + margins[3])) / options.cells[0],
+            (context.size[1] - (((options.cells[1] - 1) * spacing[1]) + margins[0] + margins[2])) / options.cells[1]
         ];
 
-        // Define size and position of grid-item
-        function _layoutNode(node, col, row) {
-            context.set(node, {
-                size: nodeSize,
-                translate: [
-                    ((nodeSize[0] + spacing[0]) * col) + margins[3],
-                    ((nodeSize[1] + spacing[1]) * row) + margins[0],
-                    0
-                ]
-            });
-        }
-
         // Create rows & columns
-        var row;
-        var col;
-        var node;
-        if (context.direction === Utility.Direction.Y) {
-            for (col = 0; col < options.cells[0]; col++) {
-                for (row = 0; row < options.cells[1]; row++) {
-                    node = context.next();
-                    if (!node) {
-                        return;
-                    }
-                    _layoutNode(node, col, row);
+        for (var a = 0; a < options.cells[revDirection]; a++) {
+            for (var b = 0; b < options.cells[context.direction]; b++) {
+                var node = context.alignment ? context.prev() : context.next();
+                if (!node) {
+                    return;
                 }
-            }
-        }
-        else {
-            for (row = 0; row < options.cells[1]; row++) {
-                for (col = 0; col < options.cells[0]; col++) {
-                    node = context.next();
-                    if (!node) {
-                        return;
-                    }
-                    _layoutNode(node, col, row);
-                }
+                context.set(node, {
+                    size: nodeSize,
+                    translate: [
+                        ((nodeSize[0] + spacing[0]) * (revDirection ? b : a)) + margins[3],
+                        ((nodeSize[1] + spacing[1]) * (revDirection ? a : b)) + margins[0],
+                        0
+                    ]
+                });
             }
         }
     }
