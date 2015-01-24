@@ -11,7 +11,7 @@
 /*global define*/
 
 /**
- * Tab-bar layout.
+ * Tab-bar layout supporting both horizontal (default) and vertical orientation.
  *
  * |options|type|description|
  * |---|---|---|
@@ -19,36 +19,36 @@
  * |`[spacing]`|Number|Space in between items|
  * |`[itemSize]`|Number|Width or height of the item (when omitted, the size of the renderable is used)|
  *
+ * The size of an item can be configured through the `itemSize` option:
+ *
+ * |itemSize|description|
+ * |---|---|---|
+ * |`undefined`|When itemSize is undefined or omitted, all items are spread out equally around the full size.|
+ * |`Number`|Size of the items.|
+ * |`true`|Use the size of the renderable.|
+ *
  * Example:
  *
  * ```javascript
  * var TabBarLayout = require('famous-flex/layouts/TabBarLayout');
  *
  * var layout = new LayoutController({
- *   layout: NavBarLayout,
+ *   layout: TabBarLayout,
  *   layoutOptions: {
+ *     itemSize: undefined,   // undefined = fill equally to full width
  *     margins: [5, 5, 5, 5], // margins to utilize
  *     spacing: 10            // space in between items
  *   },
  *   dataSource: {
  *     background: new Surface({properties: {backgroundColor: 'black'}}),
- *     title: new Surface({content: 'My title'}),
- *     leftItems:[
- *       new Surface({
- *         content: 'left1',
- *         size: [100, undefined] // use fixed width
- *       })
+ *     items: [
+ *       new Surface({ content: 'one' }),
+ *       new Surface({ content: 'two' }),
+ *       new Surface({ content: 'three' })
  *     ],
- *     rightItems: [
- *       new Surface({
- *         content: 'right1',
- *         size: [true, undefined] // use actual width of DOM-node
- *       }),
- *       new Surface({
- *         content: 'right2'
- *         size: [true, undefined] // use actual width of DOM-node
- *       })
- *     ]
+ *     selectedItemOverlay: {
+ *       new Surface({ properties: {borderBottom: '4px solid blue'}})
+ *     }
  *   }
  * });
  * ```
@@ -99,7 +99,7 @@ define(function(require, exports, module) {
         set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
         set.translate[0] = 0;
         set.translate[1] = 0;
-        set.translate[2] = 0;
+        set.translate[2] = 0.001;
         set.translate[revDirection] = margins[direction ? 3 : 0];
         set.align[0] = 0;
         set.align[1] = 0;
@@ -110,51 +110,57 @@ define(function(require, exports, module) {
         // out equally over the full width/height, taking into
         // account margins & spacing
         offset = direction ? margins[0] : margins[3];
-        if (options.itemSize === undefined) {
-            sizeLeft = size[direction] - (offset + (direction ? margins[2] : margins[1]));
-            sizeLeft -= ((items.length - 1) * spacing);
-            for (var i = 0; i < items.length; i++) {
+        sizeLeft = size[direction] - (offset + (direction ? margins[2] : margins[1]));
+        sizeLeft -= ((items.length - 1) * spacing);
+        for (var i = 0; i < items.length; i++) {
 
-                // Calculate item size
+            // Calculate item size
+            if (options.itemSize === undefined) {
                 nodeSize = Math.round(sizeLeft / (items.length - i));
-
-                // Position item
-                set.size[direction] = nodeSize;
-                set.translate[direction] = offset;
-                context.set(items[i], set);
-                offset += nodeSize + spacing;
-                sizeLeft -= (nodeSize + spacing);
-
-                // Place selected item overlay
-                if (i === options.selectedItemIndex) {
-                    set.translate[direction] += (nodeSize / 2);
-                    set.origin[direction] = 0.5;
-                    context.set('selectedItemOverlay', set);
-                    set.origin[direction] = 0;
-                }
             }
-        }
-        else {
-            for (i = 0; i < items.length; i++) {
-
-                // Get item size
+            else {
                 nodeSize = (options.itemSize === true) ? context.resolveSize(items[i], size)[direction] : options.itemSize;
+            }
 
-                // Position item
-                set.size[direction] = nodeSize;
-                set.translate[direction] = offset;
-                context.set(items[i], set);
-                offset += nodeSize + spacing;
+            // Calculate length used
+            set.scrollLength = nodeSize;
+            if (i === 0) {
+                set.scrollLength += direction ? margins[0] : margins[3];
+            }
+            if (i === (items.length - 1)) {
+                set.scrollLength += direction ? margins[2] : margins[1];
+            }
+            else {
+                set.scrollLength += spacing;
+            }
 
-                // Place selected item overlay
-                if (i === options.selectedItemIndex) {
-                    set.translate[direction] += (nodeSize / 2);
-                    set.origin[direction] = 0.5;
-                    context.set('selectedItemOverlay', set);
-                    set.origin[direction] = 0;
-                }
+            // Position item
+            set.size[direction] = nodeSize;
+            set.translate[direction] = offset;
+            context.set(items[i], set);
+            offset += nodeSize + spacing;
+            sizeLeft -= (nodeSize + spacing);
+            if (i === (items.length - 1)) {
+                offset += direction ? margins[2] : margins[1];
+            }
+
+            // Place selected item overlay
+            if (i === options.selectedItemIndex) {
+                set.scrollLength = 0;
+                set.translate[direction] += (nodeSize / 2);
+                set.translate[2] = 0.002;
+                set.origin[direction] = 0.5;
+                context.set('selectedItemOverlay', set);
+                set.origin[direction] = 0;
+                set.translate[2] = 0.001;
             }
         }
+
+        // Set background
+        set.size[direction] = offset;
+        set.translate[direction] = 0;
+        set.translate[2] = 0;
+        context.set('background', set);
     }
 
     NavBarLayout.Capabilities = capabilities;

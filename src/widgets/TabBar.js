@@ -75,7 +75,7 @@ define(function(require, exports, module) {
             autoPipeEvents: true,
             layout: TabBarLayout,
             flow: true,
-            relowOnResize: false,
+            reflowOnResize: false,
             nodeSpring: {
                 dampingRatio: 0.8,
                 period: 300
@@ -167,9 +167,30 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Sets the tabs for the tab-bar.
+     * Sets the background renderable.
      *
-     * @param {Number} index Array of tab-renderables.
+     * @param {Renderable} background Background renderable.
+     * @return {TabBar} this
+     */
+    TabBar.prototype.setBackground = function(background) {
+        this._dataSource.background = background;
+        _updateDataSource.call(this);
+        return this;
+    };
+
+    /**
+     * Get the renderable that is shown behind the tabbar items.
+     *
+     * @return {Renderable} Background renderable.
+     */
+    TabBar.prototype.getBackground = function() {
+        return this._dataSource.background;
+    };
+
+    /**
+     * Sets the index of the selected tab.
+     *
+     * @param {Number} index selected index.
      * @return {TabBar} this
      */
     TabBar.prototype.setSelectedItemIndex = function(index) {
@@ -178,9 +199,9 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the tabs for the tab-bar.
+     * Get the index of the selected tab-item.
      *
-     * @return {Array} tabs
+     * @return {Number} selected index
      */
     TabBar.prototype.getSelectedItemIndex = function() {
         return this._selectedItemIndex;
