@@ -70,17 +70,23 @@ define(function(require, exports, module) {
             margins: [0, 0, 0, 0],
             spacing: 0,
             selectedItemIndex: 0
+        },
+        layoutController: {
+            autoPipeEvents: true,
+            layout: TabBarLayout,
+            flow: true,
+            relowOnResize: false,
+            nodeSpring: {
+                dampingRatio: 0.8,
+                period: 300
+            }
         }
     };
 
     function _createLayout() {
-        this.layout = new LayoutController({
-            layout: TabBarLayout,
-            layoutOptions: this.options.tabBarLayout,
-            flow: true,
-            reflowOnResize: false
-        });
+        this.layout = new LayoutController(this.options.layoutController);
         this.add(this.layout);
+        this.layout.pipe(this._eventOutput);
     }
 
     function _setSelectedItem(index) {

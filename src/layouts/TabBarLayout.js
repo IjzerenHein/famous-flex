@@ -77,7 +77,9 @@ define(function(require, exports, module) {
     var sizeLeft;
     var set = {
         size: [0, 0],
-        translate: [0, 0, 0]
+        translate: [0, 0, 0],
+        align: [0, 0],
+        origin: [0, 0]
     };
     var nodeSize;
     var offset;
@@ -89,7 +91,7 @@ define(function(require, exports, module) {
         size = context.size;
         direction = context.direction;
         revDirection = direction ? 0 : 1;
-        spacing = context.spacing || 0;
+        spacing = options.spacing || 0;
         items = context.get('items');
         margins = LayoutUtility.normalizeMargins(options.margins);
         set.size[0] = context.size[0];
@@ -99,33 +101,59 @@ define(function(require, exports, module) {
         set.translate[1] = 0;
         set.translate[2] = 0;
         set.translate[revDirection] = margins[direction ? 3 : 0];
+        set.align[0] = 0;
+        set.align[1] = 0;
+        set.origin[0] = 0;
+        set.origin[1] = 0;
 
         // When no item-size specified, spread all items
         // out equally over the full width/height, taking into
         // account margins & spacing
+        offset = direction ? margins[0] : margins[3];
         if (options.itemSize === undefined) {
-            offset = direction ? margins[0] : margins[3];
             sizeLeft = size[direction] - (offset + (direction ? margins[2] : margins[1]));
             sizeLeft -= ((items.length - 1) * spacing);
             for (var i = 0; i < items.length; i++) {
 
-                // Position item
+                // Calculate item size
                 nodeSize = Math.round(sizeLeft / (items.length - i));
+
+                // Position item
                 set.size[direction] = nodeSize;
                 set.translate[direction] = offset;
                 context.set(items[i], set);
-
-                if (i === options.selectedItemIndex) {
-                    context.set('selectedItemOverlay', set);
-                }
-
-                // Prepare for next item
                 offset += nodeSize + spacing;
                 sizeLeft -= (nodeSize + spacing);
+
+                // Place selected item overlay
+                if (i === options.selectedItemIndex) {
+                    set.translate[direction] += (nodeSize / 2);
+                    set.origin[direction] = 0.5;
+                    context.set('selectedItemOverlay', set);
+                    set.origin[direction] = 0;
+                }
             }
         }
         else {
-            // TODO
+            for (i = 0; i < items.length; i++) {
+
+                // Get item size
+                nodeSize = (options.itemSize === true) ? context.resolveSize(items[i], size)[direction] : options.itemSize;
+
+                // Position item
+                set.size[direction] = nodeSize;
+                set.translate[direction] = offset;
+                context.set(items[i], set);
+                offset += nodeSize + spacing;
+
+                // Place selected item overlay
+                if (i === options.selectedItemIndex) {
+                    set.translate[direction] += (nodeSize / 2);
+                    set.origin[direction] = 0.5;
+                    context.set('selectedItemOverlay', set);
+                    set.origin[direction] = 0;
+                }
+            }
         }
     }
 
