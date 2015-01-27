@@ -138,10 +138,13 @@ define(function(require, exports, module) {
             set.size[direction] = nodeSize;
             set.translate[direction] = offset;
             context.set(items[i], set);
-            offset += nodeSize + spacing;
+            offset += nodeSize;
             sizeLeft -= (nodeSize + spacing);
             if (i === (items.length - 1)) {
                 offset += direction ? margins[2] : margins[1];
+            }
+            else {
+                offset += spacing;
             }
 
             // Place selected item overlay
@@ -157,6 +160,7 @@ define(function(require, exports, module) {
         }
 
         // Set background
+        set.scrollLength = 0;
         set.size[direction] = offset;
         set.translate[direction] = 0;
         set.translate[2] = 0;
