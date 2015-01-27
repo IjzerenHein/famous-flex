@@ -1,0 +1,27 @@
+/* widgets */
+.ff-widget {
+  -font-family: "Courier New";
+}
+
+/* tabbar common */
+.ff-tabbar.item {
+  text-align: center;
+  white-space: nowrap;
+  color: black;
+}
+.ff-tabbar.item > div {
+  /* align vertically */
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -o-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+.ff-tabbar.item {
+  color: black;
+}
+.ff-tabbar.selectedItemOverlay {
+  border-bottom: 4px solid #1185c3;
+}
