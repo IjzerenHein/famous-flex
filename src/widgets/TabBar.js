@@ -52,13 +52,23 @@ define(function(require, exports, module) {
     function TabBar(options) {
         View.apply(this, arguments);
 
+        // init
         this._selectedItemIndex = -1;
         if (options && options.classes) {
             this.classes = this.classes.concat(options.classes);
         }
 
-        _createLayout.call(this);
-        _createRenderables.call(this);
+        // create TabBar layout
+        this.layout = new LayoutController(this.options.layoutController);
+        this.add(this.layout);
+        this.layout.pipe(this._eventOutput);
+
+        // create initial renderables
+        this._renderables = {
+            items: [],
+            background: this.createRenderable('background'),
+            selectedItemOverlay: this.createRenderable('selectedItemOverlay')
+        };
 
         this.setOptions(this.options);
     }
@@ -69,8 +79,7 @@ define(function(require, exports, module) {
     TabBar.DEFAULT_OPTIONS = {
         tabBarLayout: {
             margins: [0, 0, 0, 0],
-            spacing: 0,
-            selectedItemIndex: 0
+            spacing: 0
         },
         layoutController: {
             autoPipeEvents: true,
@@ -84,21 +93,6 @@ define(function(require, exports, module) {
         }
     };
 
-    function _createLayout() {
-        this.layout = new LayoutController(this.options.layoutController);
-        this.add(this.layout);
-        this.layout.pipe(this._eventOutput);
-    }
-
-    function _createRenderables() {
-        this.renderables = {
-            items: [],
-            background: this.createRenderable('background'),
-            selectedItemOverlay: this.  createRenderable('selectedItemOverlay')
-        };
-        this.layout.setDataSource(this.renderables);
-    }
-
     /**
      * Helper function that is called whenever a new item is selected
      */
@@ -109,22 +103,16 @@ define(function(require, exports, module) {
             this.layout.setLayoutOptions({
                 selectedItemIndex: index
             });
-            var item = this.renderables.items[index];
             if (oldIndex >= 0) {
-                var oldItem = this.renderables.items[oldIndex];
-                if (oldItem && oldItem.removeClass) {
-                    oldItem.removeClass('selected');
-                }
+                this.updateRenderableState('item', this._renderables.items[oldIndex], 'selected', false);
             }
-            if (item && item.addClass) {
-                item.addClass('selected');
-            }
+            this.updateRenderableState('item', this._renderables.items[index], 'selected', true);
             if (oldIndex >= 0) {
                 this._eventOutput.emit('tabchange', {
                     target: this,
                     index: index,
                     oldIndex: oldIndex,
-                    item: item
+                    item: this._renderables.items[index]
                 });
             }
         }
@@ -155,6 +143,26 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Adds or removes a state to or from a renderable.
+     *
+     * @param {String} id id of the renderable
+     * @param {Renderable} renderable Renderable to update.
+     * @param {String} state State to add or remove.
+     * @param {Bool} value true = add, false = remove.
+     * @return {TabBar} this
+     */
+    TabBar.prototype.updateRenderableState = function(id, renderable, state, value) {
+        if (renderable) {
+            if (value && renderable.addClass) {
+                renderable.addClass(state);
+            } else if (!value && renderable.removeClass) {
+                renderable.removeClass(state);
+            }
+        }
+        return this;
+    };
+
+    /**
      * Patches the TabBar instance's options with the passed-in ones.
      *
      * @param {Object} options Configurable options.
@@ -180,8 +188,8 @@ define(function(require, exports, module) {
      * @return {TabBar} this
      */
     TabBar.prototype.setRenderable = function(id, renderable) {
-        this.renderables[id] = renderable;
-        this.layout.setDataSource(this.renderables);
+        this._renderables[id] = renderable;
+        this.layout.setDataSource(this._renderables);
         return this;
     };
 
@@ -191,7 +199,7 @@ define(function(require, exports, module) {
      * @return {Renderable} Background renderable.
      */
     TabBar.prototype.getRenderable = function(id) {
-        return this.renderables[id];
+        return this._renderables[id];
     };
 
     /**
@@ -203,17 +211,17 @@ define(function(require, exports, module) {
     TabBar.prototype.setItems = function(items) {
         var currentIndex = this._selectedItemIndex;
         this._selectedItemIndex = -1;
-        this.renderables.items = [];
+        this._renderables.items = [];
         if (items) {
             for (var i = 0; i < items.length; i++) {
                 var renderable = this.createRenderable('item', items[i]);
                 renderable.on('click', _setSelectedItem.bind(this, i));
-                this.renderables.items.push(renderable);
+                this._renderables.items.push(renderable);
             }
         }
-        this.layout.setDataSource(this.renderables);
-        if (this.renderables.items.length) {
-            _setSelectedItem.call(this, Math.max(Math.min(currentIndex, this.renderables.items.length - 1), 0));
+        this.layout.setDataSource(this._renderables);
+        if (this._renderables.items.length) {
+            _setSelectedItem.call(this, Math.max(Math.min(currentIndex, this._renderables.items.length - 1), 0));
         }
         return this;
     };
@@ -224,7 +232,7 @@ define(function(require, exports, module) {
      * @return {Array} tab-item renderables
      */
     TabBar.prototype.getItems = function() {
-        return this.renderables.items;
+        return this._renderables.items;
     };
 
     /**
