@@ -26,9 +26,11 @@ module.exports = function(grunt) {
             { src: 'src/LayoutController.js', dest: 'docs/LayoutController.md' },
             { src: 'src/ScrollController.js', dest: 'docs/ScrollController.md' },
             { src: 'src/FlexScrollView.js', dest: 'docs/FlexScrollView.md' },
-            { src: 'src/widgets/DatePicker.js', dest: 'docs/widgets/DatePicker.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             { src: 'src/VirtualViewSequence.js', dest: 'docs/VirtualViewSequence.md' },
+            // widgets
+            { src: 'src/widgets/DatePicker.js', dest: 'docs/widgets/DatePicker.md' },
+            { src: 'src/widgets/TabBar.js', dest: 'docs/widgets/TabBar.md' },
             // helpers
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' },
             // layouts
@@ -38,7 +40,8 @@ module.exports = function(grunt) {
             { src: 'src/layouts/HeaderFooterLayout.js', dest: 'docs/layouts/HeaderFooterLayout.md' },
             { src: 'src/layouts/NavBarLayout.js', dest: 'docs/layouts/NavBarLayout.md' },
             { src: 'src/layouts/WheelLayout.js', dest: 'docs/layouts/WheelLayout.md' },
-            { src: 'src/layouts/ProportionalLayout.js', dest: 'docs/layouts/ProportionalLayout.md' }
+            { src: 'src/layouts/ProportionalLayout.js', dest: 'docs/layouts/ProportionalLayout.md' },
+            { src: 'src/layouts/TabBarLayout.js', dest: 'docs/layouts/TabBarLayout.md' }
         ]
       }
     }

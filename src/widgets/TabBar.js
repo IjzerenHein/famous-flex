@@ -14,23 +14,41 @@
 /**
  * TabBar widget for famo.us.
  *
- * Example:
- *
  * ```javascript
  * var TabBar = require('famous-flex/widgets/TabBar');
  *
  * var tabBar = new TabBar({
- *   layoutOptions: {
- *   });
+ *   classes: ['black']
  * });
- * tabBar.setTabs([
+ * tabBar.setItems([
+ *   'one',
+ *   'two',
+ *   'three'
  * ]);
  * this.add(tabBar); // add to the render-tree
  *
  * tabBar.on('tabchange', function(event) {
- *   console.log('new tab selected');
+ *   console.log('new tab selected: ' + event.index);
  * });
  * ```
+ *
+ * The surfaces that are created, use the the css-classes `ff-widget` and `ff-tabbar`.
+ * You can add additional css-classes by using the `classes` option in the constructor.
+ *
+ * Example css styles for a black theme:
+ *
+ * ```css
+ * .ff-tabbar.background.black {
+ *   background-color: #101010;
+ * }
+ * .ff-tabbar.item.black {
+ *   color: #f7f3f7;
+ * }
+ * .ff-tabbar.selectedItemOverlay.black {
+ *   border-bottom: 6px solid #30b6e7;
+ * }
+ * ```
+ *
  * @module
  */
 define(function(require, exports, module) {
@@ -47,6 +65,8 @@ define(function(require, exports, module) {
      * @param {Object} options Configurable options.
      * @param {Object} [options.tabBarLayout] Layout-options that are passed to the TabBarLayout.
      * @param {Object} [options.layoutController] Options that are passed to the underlying layout-controller.
+     * @param {Array.String} [options.classes] Css-classes that are added to the surfaces that are created.
+     * @param {Function} [options.createRenderable] Overridable function that is called when a renderable is created.
      * @alias module:TabBar
      */
     function TabBar(options) {
@@ -54,9 +74,9 @@ define(function(require, exports, module) {
 
         // init
         this._selectedItemIndex = -1;
-        if (options && options.classes) {
-            this.classes = this.classes.concat(options.classes);
-        }
+        options = options || {};
+        this.classes = options.classes ? this.classes.concat(options.classes) : this.classes;
+        this.createRenderable = options.createRenderable || this.createRenderable;
 
         // create TabBar layout
         this.layout = new LayoutController(this.options.layoutController);
@@ -103,10 +123,12 @@ define(function(require, exports, module) {
             this.layout.setLayoutOptions({
                 selectedItemIndex: index
             });
-            if (oldIndex >= 0) {
-                this.updateRenderableState('item', this._renderables.items[oldIndex], 'selected', false);
+            if ((oldIndex >= 0) && this._renderables.items[oldIndex].removeClass){
+                this._renderables.items[oldIndex].removeClass('selected');
             }
-            this.updateRenderableState('item', this._renderables.items[index], 'selected', true);
+            if (this._renderables.items[index].addClass) {
+                this._renderables.items[index].addClass('selected');
+            }
             if (oldIndex >= 0) {
                 this._eventOutput.emit('tabchange', {
                     target: this,
@@ -121,12 +143,52 @@ define(function(require, exports, module) {
     /**
      * Creates a new renderable for the given renderable-id.
      *
+     * You should never call this function explicitely. This function is called
+     * internally when a surface/renderable needs to be created, for instance for the
+     * background or a tab-item. It is exposed for the purpose of overring it and being able to use
+     * custom renderables for the widget. The following ids are supported:
+     *
+     * |id|description|
+     * |---|---|
+     * |`background`|Background renderable.|
+     * |`item`|Number|Tab-item renderable.|
+     * |`selectedItemOverlay`|Renderable that is displayed on top of the selected tab-item.|
+     *
+     * To override this function, specify the `createRenderable` option in the constructor:
+     *
+     * ```javascript
+     * var tabBar = new TabBar({
+     *   createRenderable: function (id, data){
+     *     if (id === 'item') {
+     *       return new Surface({
+     *         content: '<div><div class="icon ion-' + data.icon + '"></div>' + data.text + '</div>',
+     *         properties: {
+     *           color: 'white'
+     *         }
+     *       });
+     *     } else if (if === 'selectedItemOverlay') {
+     *       // do not create item-overlay surface
+     *       return undefined;
+     *     }
+     *     else {
+     *       // use standard behavior for all other ids
+     *       return TabBar.prototype.createRenderable.call(this, id, data);
+     *     }
+     *   }
+     * });
+     * tabBar.setItems([
+     *   {icon: 'flag', text: 'Flag'},
+     *   {icon: 'map', text: 'Map'},
+     *   {icon: 'gear-a', text: 'Settings'}
+     * ]);
+     * ```
+     *
      * @param {String} id id of the renderable to create.
      * @param {String|Object|Renderable} [data] data-content passed to the renderable.
      * @return {TabBar} this
      */
     TabBar.prototype.createRenderable = function(id, data) {
-        if ((data !== undefined) && (data instanceof Function)) {
+        if ((data !== undefined) && (data instanceof Object)) {
             return data;
         }
         var surface = new Surface({
@@ -143,30 +205,11 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Adds or removes a state to or from a renderable.
-     *
-     * @param {String} id id of the renderable
-     * @param {Renderable} renderable Renderable to update.
-     * @param {String} state State to add or remove.
-     * @param {Bool} value true = add, false = remove.
-     * @return {TabBar} this
-     */
-    TabBar.prototype.updateRenderableState = function(id, renderable, state, value) {
-        if (renderable) {
-            if (value && renderable.addClass) {
-                renderable.addClass(state);
-            } else if (!value && renderable.removeClass) {
-                renderable.removeClass(state);
-            }
-        }
-        return this;
-    };
-
-    /**
      * Patches the TabBar instance's options with the passed-in ones.
      *
      * @param {Object} options Configurable options.
      * @param {Object} [options.tabBarLayout] Layout-options that are passed to the TabBarLayout.
+     * @param {Object} [options.layoutController] Options that are passed to the underlying layout-controller.
      * @return {TabBar} this
      */
     TabBar.prototype.setOptions = function(options) {
@@ -177,33 +220,47 @@ define(function(require, exports, module) {
         if (options.tabBarLayout !== undefined) {
             this.layout.setLayoutOptions(options.tabBarLayout);
         }
+        if (options.layoutController) {
+            this.layout.setOptions(options.layoutController);
+        }
         return this;
-    };
-
-    /**
-     * Sets the renderable with the given id.
-     *
-     * @param {String} id id of the renderable
-     * @param {Renderable} renderable Renderable to update.
-     * @return {TabBar} this
-     */
-    TabBar.prototype.setRenderable = function(id, renderable) {
-        this._renderables[id] = renderable;
-        this.layout.setDataSource(this._renderables);
-        return this;
-    };
-
-    /**
-     * Get the renderable with the given id.
-     *
-     * @return {Renderable} Background renderable.
-     */
-    TabBar.prototype.getRenderable = function(id) {
-        return this._renderables[id];
     };
 
     /**
      * Sets the items for the tab-bar.
+     *
+     * Example 1:
+     *
+     * ```javascript
+     * var tabBar = new TabBar();
+     * tabBar.setItems([
+     *   'one',
+     *   'two',
+     *   'three'
+     * ]);
+     *```
+     *
+     * Example using Ionic icons:
+     *
+     * ```javascript
+     * var tabBar = new TabBar();
+     * tabBar.setItems([
+     *   '<div class="icon ion-flag"></div>Flag',
+     *   '<div class="icon ion-map"></div>Map',
+     *   '<div class="icon ion-gear-a"></div>Settings'
+     * ]);
+     *```
+     *
+     * CSS:
+     *
+     * ```css
+     * .ff-tabbar.item {
+     *   font-size: 12px;
+     * }
+     * .ff-tabbar.item .icon {
+     *   font-size: 24px;
+     * }
+     * ```
      *
      * @param {Array} items Array of tab-item renderables.
      * @return {TabBar} this
@@ -215,7 +272,9 @@ define(function(require, exports, module) {
         if (items) {
             for (var i = 0; i < items.length; i++) {
                 var renderable = this.createRenderable('item', items[i]);
-                renderable.on('click', _setSelectedItem.bind(this, i));
+                if (renderable.on) {
+                    renderable.on('click', _setSelectedItem.bind(this, i));
+                }
                 this._renderables.items.push(renderable);
             }
         }
@@ -236,13 +295,23 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Get the spec (size, transform, etc..) of the given tab-item.
+     *
+     * @param {Number} index Index of the tab-item.
+     * @return {Spec} item spec
+     */
+    TabBar.prototype.getItemSpec = function(index, normalize) {
+        return this.layout.getSpec(this._renderables.items[index], normalize);
+    };
+
+    /**
      * Sets the index of the selected tab.
      *
      * @param {Number} index selected index.
      * @return {TabBar} this
      */
     TabBar.prototype.setSelectedItemIndex = function(index) {
-        _setSelectedItem(index);
+        _setSelectedItem.call(this, index);
         return this;
     };
 

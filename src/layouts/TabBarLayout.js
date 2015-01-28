@@ -17,15 +17,15 @@
  * |---|---|---|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number|Space in between items|
- * |`[itemSize]`|Number|Width or height of the item (when omitted, the size of the renderable is used)|
+ * |`[itemSize]`|Number/Bool|Width or height of the item (see below)|
  *
- * The size of an item can be configured through the `itemSize` option:
+ * `itemSize` can have of the following values:
  *
  * |itemSize|description|
  * |---|---|---|
- * |`undefined`|When itemSize is undefined or omitted, all items are spread out equally around the full size.|
- * |`Number`|Size of the items.|
- * |`true`|Use the size of the renderable.|
+ * |`undefined`|When itemSize is undefined or omitted, all items are spread out equally over the full size.|
+ * |`Number`|Size of the item.|
+ * |`true`|Use the size of the renderable (calls `getSize` on the item).|
  *
  * Example:
  *
