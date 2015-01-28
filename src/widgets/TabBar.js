@@ -197,8 +197,8 @@ define(function(require, exports, module) {
         });
         surface.addClass(id);
         if (id === 'item') {
-            if (this.options.size && ((this.options.size[0] === true) || (this.options.size[1] === true))) {
-                surface.setSize(this.options.size);
+            if (this.options.tabBarLayout && this.options.tabBarLayout.itemSize && (this.options.tabBarLayout.itemSize === true)) {
+                surface.setSize(this.layout.getDirection() ? [undefined, true] : [true, undefined]);
             }
         }
         return surface;
@@ -322,6 +322,15 @@ define(function(require, exports, module) {
      */
     TabBar.prototype.getSelectedItemIndex = function() {
         return this._selectedItemIndex;
+    };
+
+    /**
+     * Get the size of the widget.
+     *
+     * @return {Array} size.
+     */
+    TabBar.prototype.getSize = function() {
+        return this.options.size || (this.layout ? this.layout.getSize() : View.prototype.getSize.call(this));
     };
 
     module.exports = TabBar;

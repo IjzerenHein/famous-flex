@@ -161,7 +161,7 @@ define(function(require, exports, module) {
 
         // Set background
         set.scrollLength = 0;
-        set.size[direction] = offset;
+        set.size[direction] = size[direction];
         set.translate[direction] = 0;
         set.translate[2] = 0;
         context.set('background', set);
