@@ -21,6 +21,8 @@
     "famous/surfaces/ContainerSurface": "global:famous.surfaces.ContainerSurface",
     "famous/core/EventHandler": "global:famous.core.EventHandler",
     "famous/core/Transform": "global:famous.core.Transform",
+    "famous/core/View": "global:famous.core.View",
+    "famous/core/Surface": "global:famous.core.Surface",
     "famous/math/Vector": "global:famous.math.Vector",
     "famous/core/Group": "global:famous.core.Group",
     "famous/physics/PhysicsEngine": "global:famous.physics.PhysicsEngine",

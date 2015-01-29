@@ -65,7 +65,7 @@ define(function(require, exports, module) {
     var ProportionalLayout = require('../layouts/ProportionalLayout');
     var VirtualViewSequence = require('../VirtualViewSequence');
     var DatePickerComponents = require('./DatePickerComponents');
-    var LayoutUtility = require('famous-flex/LayoutUtility');
+    var LayoutUtility = require('../LayoutUtility');
 
     /**
      * @class
