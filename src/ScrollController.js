@@ -427,9 +427,9 @@ define(function(require, exports, module) {
 
         // Create touch-end event listener
         if (!this._touchEndEventListener) {
-            this._touchEndEventListener = function(event) {
-                event.target.removeEventListener('touchend', this._touchEndEventListener);
-                _touchEnd.call(this, event);
+            this._touchEndEventListener = function(event2) {
+                event2.target.removeEventListener('touchend', this._touchEndEventListener);
+                _touchEnd.call(this, event2);
             }.bind(this);
         }
 

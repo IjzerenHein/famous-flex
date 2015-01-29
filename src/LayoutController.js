@@ -279,8 +279,8 @@ define(function(require, exports, module) {
             this._layout.capabilities = undefined; // todo - derive from literal somehow?
             var helperName = Object.keys(layout)[0];
             var Helper = LayoutUtility.getRegisteredHelper(helperName);
-            this._layout._function = Helper ? function(context, options) {
-                var helper = new Helper(context, options);
+            this._layout._function = Helper ? function(context, options2) {
+                var helper = new Helper(context, options2);
                 helper.parse(layout[helperName]);
             } : undefined;
         }
