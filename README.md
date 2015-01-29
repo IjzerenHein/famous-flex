@@ -1,7 +1,7 @@
 famous-flex
 ==========
 
-Flexible scrollview, date-picker & layout-controller for famo.us.
+Flexible scrollview, date-picker, tab-bar & layout-controller for famo.us.
 
 ![Screenshot](screenshot.gif)
 
@@ -16,6 +16,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-demo))
 - [Chat demo](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-chat))
 - [DatePicker demo](https://rawgit.com/IjzerenHein/famous-flex-datepicker/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-datepicker))
+- [TabBar demo](https://rawgit.com/IjzerenHein/famous-flex-tabbar/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-tabbar))
 
 ### Getting started
 - [Installation](#installation)
@@ -30,14 +31,16 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 ### Views / widgets
 - [LayoutController](#layoutcontroller) ([API Reference](docs/LayoutController.md))
 - ScrollController ([API Reference](docs/ScrollController.md))
-- [FlexScrollView](#flex-scrollview) ([API Reference](docs/ScrollController.md) | [Tutorial](tutorials/FlexScrollView.md))
+- [FlexScrollView](#flex-scrollview) ([API Reference](docs/FlexScrollView.md) | [Tutorial](tutorials/FlexScrollView.md))
 - DatePicker ([API Reference](docs/widgets/DatePicker.md) | [Tutorial](tutorials/DatePicker.md))
+- TabBar ([API Reference](docs/widgets/TabBar.md) | [Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md))
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
 - [ProportionalLayout](docs/layouts/ProportionalLayout.md)
 - [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
 - [NavBarLayout](docs/layouts/NavBarLayout.md)
+- [TabBarLayout](docs/layouts/TabBarLayout.md)
 - [ListLayout](docs/layouts/ListLayout.md) *(scrollable)*	
 - [CollectionLayout](docs/layouts/CollectionLayout.md) *(scrollable)*
 - [WheelLayout](docs/layouts/WheelLayout.md) *(scrollable)*
@@ -257,6 +260,7 @@ custom layouts. Key features:
 |[ProportionalLayout](docs/layouts/ProportionalLayout.md)|ViewSequence / Array|No|Lays out renderables sequentially and sizes them proportionally.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
+|[TabBarLayout](docs/layouts/TabBarLayout.md)|Id-based|No|Tab-bar layout.|
 |*Scrollable layouts:*|
 |[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
 |[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
@@ -271,6 +275,7 @@ custom layouts. Key features:
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
 |[FlexScrollView](docs/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
 |[DatePicker](docs/widgets/DatePicker.md)|Date/time picker wheel.|
+|[TabBar](docs/widgets/TabBar.md)|TabBar widget.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 |[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|
