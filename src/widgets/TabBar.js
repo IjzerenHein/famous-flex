@@ -18,7 +18,12 @@
  * var TabBar = require('famous-flex/widgets/TabBar');
  *
  * var tabBar = new TabBar({
- *   classes: ['black']
+ *   classes: ['black'],
+ *   renderables: {
+ *     background: true,
+ *     selectedItemOverlay: true,
+ *     spacers: true
+ *   }
  * });
  * tabBar.setItems([
  *   'one',
@@ -47,6 +52,14 @@
  * .ff-tabbar.selectedItemOverlay.black {
  *   border-bottom: 6px solid #30b6e7;
  * }
+ * .ff-tabbar.spacer.black:after {
+ *   content: "";
+ *   background-color: #333333;
+ *   width: 100%;
+ *   top: 10px;
+ *   bottom: 10px;
+ *   position: absolute;
+ * }
  * ```
  *
  * @module
@@ -66,6 +79,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.tabBarLayout] Layout-options that are passed to the TabBarLayout.
      * @param {Object} [options.layoutController] Options that are passed to the underlying layout-controller.
      * @param {Array.String} [options.classes] Css-classes that are added to the surfaces that are created.
+     * @param {Object} [options.renderables] Options that specify which renderables should be created.
      * @param {Function} [options.createRenderable] Overridable function that is called when a renderable is created.
      * @alias module:TabBar
      */
@@ -76,7 +90,6 @@ define(function(require, exports, module) {
         this._selectedItemIndex = -1;
         options = options || {};
         this.classes = options.classes ? this.classes.concat(options.classes) : this.classes;
-        this.createRenderable = options.createRenderable || this.createRenderable;
 
         // create TabBar layout
         this.layout = new LayoutController(this.options.layoutController);
@@ -86,8 +99,9 @@ define(function(require, exports, module) {
         // create initial renderables
         this._renderables = {
             items: [],
-            background: this.createRenderable('background'),
-            selectedItemOverlay: this.createRenderable('selectedItemOverlay')
+            spacers: [],
+            background: this.options.renderables.background ? _createRenderable.call(this, 'background') : undefined,
+            selectedItemOverlay: this.options.renderables.selectedItemOverlay ? _createRenderable.call(this, 'selectedItemOverlay') : undefined
         };
 
         this.setOptions(this.options);
@@ -100,6 +114,12 @@ define(function(require, exports, module) {
         tabBarLayout: {
             margins: [0, 0, 0, 0],
             spacing: 0
+        },
+        renderables: {
+            //item: true, // items are always created and can't be disabled
+            background: false,
+            selectedItemOverlay: false,
+            spacer: false
         },
         layoutController: {
             autoPipeEvents: true,
@@ -143,51 +163,14 @@ define(function(require, exports, module) {
     /**
      * Creates a new renderable for the given renderable-id.
      *
-     * You should never call this function explicitely. This function is called
-     * internally when a surface/renderable needs to be created, for instance for the
-     * background or a tab-item. It is exposed for the purpose of overring it and being able to use
-     * custom renderables for the widget. The following ids are supported:
-     *
-     * |id|description|
-     * |---|---|
-     * |`background`|Background renderable.|
-     * |`item`|Number|Tab-item renderable.|
-     * |`selectedItemOverlay`|Renderable that is displayed on top of the selected tab-item.|
-     *
-     * To override this function, specify the `createRenderable` option in the constructor:
-     *
-     * ```javascript
-     * var tabBar = new TabBar({
-     *   createRenderable: function (id, data){
-     *     if (id === 'item') {
-     *       return new Surface({
-     *         content: '<div><div class="icon ion-' + data.icon + '"></div>' + data.text + '</div>',
-     *         properties: {
-     *           color: 'white'
-     *         }
-     *       });
-     *     } else if (if === 'selectedItemOverlay') {
-     *       // do not create item-overlay surface
-     *       return undefined;
-     *     }
-     *     else {
-     *       // use standard behavior for all other ids
-     *       return TabBar.prototype.createRenderable.call(this, id, data);
-     *     }
-     *   }
-     * });
-     * tabBar.setItems([
-     *   {icon: 'flag', text: 'Flag'},
-     *   {icon: 'map', text: 'Map'},
-     *   {icon: 'gear-a', text: 'Settings'}
-     * ]);
-     * ```
-     *
-     * @param {String} id id of the renderable to create.
-     * @param {String|Object|Renderable} [data] data-content passed to the renderable.
-     * @return {TabBar} this
      */
-    TabBar.prototype.createRenderable = function(id, data) {
+    function _createRenderable (id, data) {
+        if (this.options.createRenderable) {
+            var renderable = this.options.createRenderable.call(this, id, data);
+            if (renderable) {
+                return renderable;
+            }
+        }
         if ((data !== undefined) && (data instanceof Object)) {
             return data;
         }
@@ -202,7 +185,7 @@ define(function(require, exports, module) {
             }
         }
         return surface;
-    };
+    }
 
     /**
      * Patches the TabBar instance's options with the passed-in ones.
@@ -269,13 +252,18 @@ define(function(require, exports, module) {
         var currentIndex = this._selectedItemIndex;
         this._selectedItemIndex = -1;
         this._renderables.items = [];
+        this._renderables.spacers = [];
         if (items) {
             for (var i = 0; i < items.length; i++) {
-                var renderable = this.createRenderable('item', items[i]);
-                if (renderable.on) {
-                    renderable.on('click', _setSelectedItem.bind(this, i));
+                var item = _createRenderable.call(this, 'item', items[i]);
+                if (item.on) {
+                    item.on('click', _setSelectedItem.bind(this, i));
                 }
-                this._renderables.items.push(renderable);
+                this._renderables.items.push(item);
+                if (this.options.renderables.spacer && (i < (items.length - 1))) {
+                    var spacer = _createRenderable.call(this, 'spacer', ' ');
+                    this._renderables.spacers.push(spacer);
+                }
             }
         }
         this.layout.setDataSource(this._renderables);

@@ -36,7 +36,7 @@
  *   layout: TabBarLayout,
  *   layoutOptions: {
  *     itemSize: undefined,   // undefined = fill equally to full width
- *     margins: [5, 5, 5, 5], // margins to utilize
+ *     margins: [5, 1, 5, 1], // margins to utilize
  *     spacing: 10            // space in between items
  *   },
  *   dataSource: {
@@ -45,6 +45,10 @@
  *       new Surface({ content: 'one' }),
  *       new Surface({ content: 'two' }),
  *       new Surface({ content: 'three' })
+ *     ],
+ *     spacers: [ // spacers in between the items
+ *       new Surface({properties: {backgroundColor: 'gray'}}),
+ *       new Surface({properties: {backgroundColor: 'gray'}})
  *     ],
  *     selectedItemOverlay: {
  *       new Surface({ properties: {borderBottom: '4px solid blue'}})
@@ -72,6 +76,7 @@ define(function(require, exports, module) {
     var direction;
     var revDirection;
     var items;
+    var spacers;
     var margins;
     var spacing;
     var sizeLeft;
@@ -93,6 +98,7 @@ define(function(require, exports, module) {
         revDirection = direction ? 0 : 1;
         spacing = options.spacing || 0;
         items = context.get('items');
+        spacers = context.get('spacers');
         margins = LayoutUtility.normalizeMargins(options.margins);
         set.size[0] = context.size[0];
         set.size[1] = context.size[1];
@@ -140,12 +146,6 @@ define(function(require, exports, module) {
             context.set(items[i], set);
             offset += nodeSize;
             sizeLeft -= (nodeSize + spacing);
-            if (i === (items.length - 1)) {
-                offset += direction ? margins[2] : margins[1];
-            }
-            else {
-                offset += spacing;
-            }
 
             // Place selected item overlay
             if (i === options.selectedItemIndex) {
@@ -156,6 +156,19 @@ define(function(require, exports, module) {
                 context.set('selectedItemOverlay', set);
                 set.origin[direction] = 0;
                 set.translate[2] = 0.001;
+            }
+
+            // Position spacer (optional)
+            if (i < (items.length - 1)) {
+                if (spacers && (i < spacers.length)) {
+                    set.size[direction] = spacing;
+                    set.translate[direction] = offset;
+                    context.set(spacers[i], set);
+                }
+                offset += spacing;
+            }
+            else {
+                offset += direction ? margins[2] : margins[1];
             }
         }
 
