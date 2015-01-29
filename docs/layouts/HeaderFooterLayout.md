@@ -1,5 +1,5 @@
 <a name="module_HeaderFooterLayout"></a>
-#HeaderFooterLayout
+##HeaderFooterLayout
 Three part layout consisting of a top-header, bottom-footer and middle part.
 
 |options|type|description|

@@ -1,5 +1,5 @@
 <a name="module_GridLayout"></a>
-#GridLayout
+##GridLayout
 Lays-out renderables from left to right, in a grid with fixed number of
 columns and rows.
 

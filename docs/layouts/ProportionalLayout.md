@@ -1,5 +1,5 @@
 <a name="module_ProportionalLayout"></a>
-#ProportionalLayout
+##ProportionalLayout
 Lays-out renderables sequentially based on size-ratios (similar to the stock famo.us FlexibleLayout view).
 
 |options|type|description|
