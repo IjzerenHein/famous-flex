@@ -145,7 +145,7 @@ define(function(require, exports, module) {
             set.translate[direction] = offset;
             context.set(items[i], set);
             offset += nodeSize;
-            sizeLeft -= (nodeSize + spacing);
+            sizeLeft -= nodeSize;
 
             // Place selected item overlay
             if (i === options.selectedItemIndex) {
