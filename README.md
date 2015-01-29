@@ -29,9 +29,9 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [Layout helpers](#layout-helpers)
 
 ### Views / widgets
-- [LayoutController](#layoutcontroller) ([API Reference](docs/LayoutController.md))
+- LayoutController ([API Reference](docs/LayoutController.md))
 - ScrollController ([API Reference](docs/ScrollController.md))
-- [FlexScrollView](#flex-scrollview) ([API Reference](docs/FlexScrollView.md) | [Tutorial](tutorials/FlexScrollView.md))
+- FlexScrollView ([API Reference](docs/FlexScrollView.md) | [Tutorial](tutorials/FlexScrollView.md))
 - DatePicker ([API Reference](docs/widgets/DatePicker.md) | [Tutorial](tutorials/DatePicker.md))
 - TabBar ([API Reference](docs/widgets/TabBar.md) | [Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md))
 
@@ -46,7 +46,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [WheelLayout](docs/layouts/WheelLayout.md) *(scrollable)*
 
 ### Resources
-- [API reference](#api-reference)
+- [Documentation](#documentation)
 - [Roadmap](#roadmap)
 
 
@@ -235,23 +235,6 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutDockHelper](docs/helpers/LayoutDockHelper.md)|`dock`|Layout renderables using docking semantics.|
 
 
-## Flex ScrollView
-
-FlexScrollView is a flexible and highly performant scroll-view for famo.us supporting
-custom layouts. Key features:
-- pull to refresh
-- sticky-headers
-- smooth flowing when inserting/removing re-sizing
-- multi-cell layouts (CollectionLayout)
-- margins & spacing
-- bottom/right alignment
-- all the good stuff you expect from a scrollview and more ;)
-
-[FlexScrollView](docs/FlexScrollView.md) is based on [ScrollController](docs/ScrollController.md) which implements the core functionality of the scroll-view, which is turn is inherited from [LayoutController](docs/LayoutController.md).
-
-### For a full overview, take the [FlexScrollView Tutorial](tutorials/FlexScrollView.md)
-
-
 ## Standard layouts
 
 |Layout|DataSource|Scrollable|Description|
@@ -267,15 +250,15 @@ custom layouts. Key features:
 |[WheelLayout](docs/layouts/WheelLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
 
 
-## API reference
+## Documentation
 
 |Class|Description|
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
-|[FlexScrollView](docs/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
-|[DatePicker](docs/widgets/DatePicker.md)|Date/time picker wheel.|
-|[TabBar](docs/widgets/TabBar.md)|TabBar widget.|
+|[FlexScrollView](docs/FlexScrollView.md) ([Tutorial](tutorials/FlexScrollView.md))|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
+|[DatePicker](docs/widgets/DatePicker.md) ([Tutorial](tutorials/DatePicker.md))|Date/time picker wheel.|
+|[TabBar](docs/widgets/TabBar.md) ([Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md))|TabBar widget.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 |[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|
