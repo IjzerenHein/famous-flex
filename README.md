@@ -1,7 +1,7 @@
 famous-flex
 ==========
 
-Flexible scrollview, date-picker, tab-bar & layout-controller for famo.us.
+Animatable layouts, FlexScrollView & widgets for famo.us.
 
 ![Screenshot](screenshot.gif)
 
@@ -275,6 +275,7 @@ issue.
 - [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
 - [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
+- [New widgets](https://github.com/IjzerenHein/famous-flex/issues/49) (Suggestions for new widgets)
 
 
 ## Contribute

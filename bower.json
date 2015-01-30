@@ -24,7 +24,8 @@
     "flex-scrollview",
     "datewheel",
     "datepicker",
-    "datetimepicker"
+    "datetimepicker",
+    "tabbar"
   ],
   "license": "MIT",
   "ignore": [
