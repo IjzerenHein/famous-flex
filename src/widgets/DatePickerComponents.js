@@ -102,22 +102,26 @@ define(function(require, exports, module) {
             });
         }.bind(this));
     };
+    Base.prototype.createRenderable = function(classes, data) {
+        return new Surface({
+            classes: classes,
+            content: '<div>' + data + '</div>'
+        });
+    };
     Base.prototype.create = function(date) {
         date = date || new Date();
-        var surface;
+        var renderable;
         if (this._pool.length) {
-            surface = this._pool[0];
+            renderable = this._pool[0];
             this._pool.splice(0, 1);
+            renderable.setContent(this.format(date));
         }
         else {
-            surface = new Surface({
-                classes: this.classes
-            });
-            this.installClickHandler(surface);
+            renderable = this.createRenderable(this.classes, this.format(date));
+            this.installClickHandler(renderable);
         }
-        surface.setContent(this.format(date));
-        surface.date = date;
-        return surface;
+        renderable.date = date;
+        return renderable;
     };
     Base.prototype.destroy = function(renderable) {
         // push the renderable into the pool for re-use

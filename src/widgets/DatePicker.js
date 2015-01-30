@@ -45,10 +45,9 @@
  * CSS:
  *
  * ```css
- * .famous-flex-datepicker .item {
- *   text-align: center;
- *   font-size: 40px;
- *   line-height: 60px; // this should equal the WheelLayout itemSize
+ * .ff-datepicker .item {
+ *   color: blue;
+ *   font-size: 30px;
  * }
  * ```
  * @module
@@ -57,6 +56,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var View = require('famous/core/View');
+    var Surface = require('famous/core/Surface');
     var Utility = require('famous/utilities/Utility');
     var ContainerSurface = require('famous/surfaces/ContainerSurface');
     var LayoutController = require('../LayoutController');
@@ -75,25 +75,36 @@ define(function(require, exports, module) {
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
-     * @param {Array} [components] Date/time components (see `setComponents`).
-     * @param {Object} [overlay] Overlay renderables (see `setOverlay`).
+     * @param {Array.String} [options.classes] Css-classes that are added to the surfaces that are created.
+     * @param {Object} [options.renderables] Options that specify which renderables should be created.
+     * @param {Function} [options.createRenderable] Overridable function that is called when a renderable is created.
      * @alias module:DatePicker
      */
-    function DatePicker(options, components, overlay) {
+    function DatePicker(options) {
         View.apply(this, arguments);
 
-        this._date = new Date((options && options.date) ? options.date.getTime() : undefined);
-        this._components = components || [];
-        this._overlay = overlay || {};
+        // Init
+        options = options || {};
+        this._date = new Date(options.date ? options.date.getTime() : undefined);
+        this._components = [];
+        this.classes = options.classes ? this.classes.concat(options.classes) : this.classes;
 
         _createLayout.call(this);
         _updateComponents.call(this);
-        _updateOverlay.call(this);
+
+        // create overlay layout + renderables
+        this._overlayRenderables = {
+            top: this.options.renderables.top ? _createRenderable.call(this, 'top') : undefined,
+            middle: this.options.renderables.middle ? _createRenderable.call(this, 'middle') : undefined,
+            bottom: this.options.renderables.bottom ? _createRenderable.call(this, 'bottom') : undefined
+        };
+        _createOverlay.call(this);
 
         this.setOptions(this.options);
     }
     DatePicker.prototype = Object.create(View.prototype);
     DatePicker.prototype.constructor = DatePicker;
+    DatePicker.prototype.classes = ['ff-widget', 'ff-datepicker'];
     DatePicker.Component = DatePickerComponents;
 
     DatePicker.DEFAULT_OPTIONS = {
@@ -101,6 +112,12 @@ define(function(require, exports, module) {
         wheelLayout: {
             itemSize: 100,
             diameter: 500
+        },
+        renderables: {
+            background: false,
+            top: false,
+            middle: false,
+            bottom: false
         },
         scrollController: {
             enabled: true,
@@ -111,18 +128,43 @@ define(function(require, exports, module) {
                 dampingRatio: 1.0,
                 period: 800
             }
-        },
-        container: {
-            classes: ['famous-flex-datepicker']
         }
     };
+
+    /**
+     * Creates a new renderable for the given renderable-id.
+     *
+     */
+    function _createRenderable (id, data) {
+        if (this.options.createRenderable) {
+            var renderable = this.options.createRenderable.call(this, id, data);
+            if (renderable) {
+                return renderable;
+            }
+        }
+        if ((data !== undefined) && (data instanceof Object)) {
+            return data;
+        }
+        var surface = new Surface({
+            classes: this.classes,
+            content: data ? ('<div>' + data + '</div>') : undefined
+        });
+        if (Array.isArray(id)) {
+            for (var i = 0; i < id.length; i++) {
+                surface.addClass(id[i]);
+            }
+        }
+        else {
+            surface.addClass(id);
+        }
+        return surface;
+    }
 
     /**
      * Patches the DatePicker instance's options with the passed-in ones.
      *
      * @param {Object} options Configurable options (see ScrollController for all inherited options).
      * @param {Number} [options.perspective] Perspective to use when rendering the wheel.
-     * @param {Object} [options.overlay] Overlay renderables (`top`, `middle` & `bottom`).
      * @param {Object} [options.wheelLayout] Layout-options that are passed to the WheelLayout.
      * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @return {DatePicker} this
@@ -140,11 +182,9 @@ define(function(require, exports, module) {
             for (i = 0; i < this.scrollWheels.length; i++) {
                 this.scrollWheels[i].scrollController.setLayoutOptions(options.wheelLayout);
             }
-            if (this.overlayLC) {
-                this.overlayLC.setLayoutOptions({
-                    itemSize: this.options.wheelLayout.itemSize
-                });
-            }
+            this.overlay.setLayoutOptions({
+                itemSize: this.options.wheelLayout.itemSize
+            });
         }
         if (options.scrollController !== undefined) {
             for (i = 0; i < this.scrollWheels.length; i++) {
@@ -173,50 +213,6 @@ define(function(require, exports, module) {
      */
     DatePicker.prototype.getComponents = function() {
         return this._components;
-    };
-
-    /**
-     * Sets the `top`, `middle` & `bottom` renderables that are displayed in
-     * front of the datepicker.
-     *
-     * Example:
-     *
-     * ```javascript
-     * var datePicker = new DatePicker({...});
-     * datePicker.setOverlay({
-     *   top: new Surface({
-     *     properties: {
-     *       pointerEvents: 'none',
-     *       backgroundColor: 'rgba(255, 255, 255, 0.5)',
-     *       borderBottom: '1px solid #777777'
-     *     }
-     *   }),
-     *   bottom: new Surface({
-     *     properties: {
-     *       pointerEvents: 'none',
-     *       backgroundColor: 'rgba(255, 255, 255, 0.5)',
-     *       borderTop: '1px solid #777777'
-     *     }
-     *   })
-     * });
-     * ```
-     *
-     * @param {Object} overlay `top`, `middle` and `bottom` renderables
-     * @return {DatePicker} this
-     */
-    DatePicker.prototype.setOverlay = function(overlay) {
-        this._overlay = overlay;
-        _updateOverlay.call(this);
-        return this;
-    };
-
-    /**
-     * Get the overlay renderables for the date-picker.
-     *
-     * @return {Object} overlay renderables
-     */
-    DatePicker.prototype.getOverlay = function() {
-        return this._overlay;
     };
 
     /**
@@ -314,6 +310,7 @@ define(function(require, exports, module) {
         this.container = new ContainerSurface(
             this.options.container
         );
+        this.container.setClasses(this.classes);
         this.layout = new LayoutController({
             layout: ProportionalLayout,
             layoutOptions: {
@@ -380,6 +377,7 @@ define(function(require, exports, module) {
         var sizeRatios = [];
         for (var i = 0; i < this._components.length; i++) {
             var component = this._components[i];
+            component.createRenderable = _createRenderable.bind(this);
             var viewSequence = new VirtualViewSequence({
                 factory: component,
                 value: component.create(this._date)
@@ -435,19 +433,17 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Creates/updates the overlay
+     * Creates the overlay LayoutController
      */
-    function _updateOverlay() {
-        if (!this.overlayLC) {
-            this.overlayLC = new LayoutController({
-                layout: OverlayLayout
-            });
-            this.add(this.overlayLC);
-        }
-        this.overlayLC.setLayoutOptions({
-            itemSize: this.options.wheelLayout.itemSize
+    function _createOverlay() {
+        this.overlay = new LayoutController({
+            layout: OverlayLayout,
+            layoutOptions: {
+                itemSize: this.options.wheelLayout.itemSize
+            },
+            dataSource: this._overlayRenderables
         });
-        this.overlayLC.setDataSource(this._overlay);
+        this.add(this.overlay);
     }
 
     module.exports = DatePicker;
