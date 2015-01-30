@@ -29,11 +29,11 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [Layout helpers](#layout-helpers)
 
 ### Views / widgets
-- LayoutController ([API Reference](docs/LayoutController.md))
-- ScrollController ([API Reference](docs/ScrollController.md))
-- FlexScrollView ([API Reference](docs/FlexScrollView.md) | [Tutorial](tutorials/FlexScrollView.md))
-- DatePicker ([API Reference](docs/widgets/DatePicker.md) | [Tutorial](tutorials/DatePicker.md))
-- TabBar ([API Reference](docs/widgets/TabBar.md) | [Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md))
+- [LayoutController](docs/LayoutController.md)
+- [ScrollController](docs/ScrollController.md)
+- [FlexScrollView](docs/FlexScrollView.md) [(Tutorial)](tutorials/FlexScrollView.md)
+- [DatePicker](docs/widgets/DatePicker.md) [(Tutorial)](tutorials/DatePicker.md)
+- [TabBar](docs/widgets/TabBar.md) [(Tutorial)](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md)
 
 ### [Layouts](#standard-layouts)
 - [GridLayout](docs/layouts/GridLayout.md)
