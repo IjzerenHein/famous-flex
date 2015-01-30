@@ -32,7 +32,7 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [LayoutController](docs/LayoutController.md)
 - [ScrollController](docs/ScrollController.md)
 - [FlexScrollView](docs/FlexScrollView.md) [(Tutorial)](tutorials/FlexScrollView.md)
-- [DatePicker](docs/widgets/DatePicker.md) [(Tutorial)](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/TabBar.md)
+- [DatePicker](docs/widgets/DatePicker.md) [(Tutorial)](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md)
 - [TabBar](docs/widgets/TabBar.md) [(Tutorial)](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md)
 
 ### [Layouts](#standard-layouts)
@@ -257,7 +257,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
 |[FlexScrollView](docs/FlexScrollView.md) ([Tutorial](tutorials/FlexScrollView.md))|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
-|[DatePicker](docs/widgets/DatePicker.md) ([Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/DatePicker.md))|Date/time picker wheel.|
+|[DatePicker](docs/widgets/DatePicker.md) ([Tutorial](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md))|Date/time picker wheel.|
 |[TabBar](docs/widgets/TabBar.md) ([Tutorial](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md))|TabBar widget.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
