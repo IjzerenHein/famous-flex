@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
   "author": {
     "name": "Hein Rutjes <hrutjes@gmail.com>"
   },
-  "description": "Flexible scrollview and layout-controller for famo.us",
+  "description": "Animatable layouts, FlexScrollView & widgets for famo.us",
   "keywords": [
     "famo.us",
     "famous",
@@ -52,7 +52,8 @@
     "datewheel",
     "datepicker",
     "datetimepicker",
-    "tabbar"
+    "tabbar",
+    "widgets"
   ],
   "licenses": [
     {
