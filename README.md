@@ -272,10 +272,10 @@ can be. But to do this, I need your support and feedback. Let me know which of
 features below are most important to you, by leaving a comment in the corresponding
 issue.
 
-- [Effects](https://github.com/IjzerenHein/famous-flex/issues/2) (Apply after-effects on the renderables)
 - [AutoLayout](https://github.com/IjzerenHein/famous-flex/issues/3) (Cassowary constraints)
 - [Drag & drop](https://github.com/IjzerenHein/famous-flex/issues/5) (Drag & drop renderables in a layout)
 - [New widgets](https://github.com/IjzerenHein/famous-flex/issues/49) (Suggestions for new widgets)
+- [New Layouts](https://github.com/IjzerenHein/famous-flex/issues/50) (Suggestions for new layouts)
 
 
 ## Contribute
