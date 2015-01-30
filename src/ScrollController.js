@@ -347,7 +347,7 @@ define(function(require, exports, module) {
     function _mouseDown(event) {
 
         // Check whether mouse-scrolling is enabled
-        if (!this.options.mouseMove || !this.options.enabled) {
+        if (!this.options.mouseMove) {
             return;
         }
 
@@ -431,11 +431,6 @@ define(function(require, exports, module) {
                 event2.target.removeEventListener('touchend', this._touchEndEventListener);
                 _touchEnd.call(this, event2);
             }.bind(this);
-        }
-
-        // Ignore the touch when not enabled
-        if (!this.options.enabled) {
-            return;
         }
 
         // Remove any touches that are no longer active
