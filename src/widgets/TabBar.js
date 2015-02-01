@@ -19,7 +19,7 @@
  *
  * var tabBar = new TabBar({
  *   classes: ['black'],
- *   renderables: {
+ *   createRenderables: {
  *     background: true,
  *     selectedItemOverlay: true,
  *     spacers: true
@@ -79,8 +79,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.tabBarLayout] Layout-options that are passed to the TabBarLayout.
      * @param {Object} [options.layoutController] Options that are passed to the underlying layout-controller.
      * @param {Array.String} [options.classes] Css-classes that are added to the surfaces that are created.
-     * @param {Object} [options.renderables] Options that specify which renderables should be created.
-     * @param {Function} [options.createRenderable] Overridable function that is called when a renderable is created.
+     * @param {Object} [options.createRenderables] Options that specify which renderables should be created.
      * @alias module:TabBar
      */
     function TabBar(options) {
@@ -100,8 +99,8 @@ define(function(require, exports, module) {
         this._renderables = {
             items: [],
             spacers: [],
-            background: this.options.renderables.background ? _createRenderable.call(this, 'background') : undefined,
-            selectedItemOverlay: this.options.renderables.selectedItemOverlay ? _createRenderable.call(this, 'selectedItemOverlay') : undefined
+            background: _createRenderable.call(this, 'background'),
+            selectedItemOverlay: _createRenderable.call(this, 'selectedItemOverlay')
         };
 
         this.setOptions(this.options);
@@ -115,8 +114,8 @@ define(function(require, exports, module) {
             margins: [0, 0, 0, 0],
             spacing: 0
         },
-        renderables: {
-            //item: true, // items are always created and can't be disabled
+        createRenderables: {
+            item: true,
             background: false,
             selectedItemOverlay: false,
             spacer: false
@@ -165,11 +164,11 @@ define(function(require, exports, module) {
      *
      */
     function _createRenderable (id, data) {
-        if (this.options.createRenderable) {
-            var renderable = this.options.createRenderable.call(this, id, data);
-            if (renderable) {
-                return renderable;
-            }
+        var option = this.options.createRenderables[id];
+        if (option instanceof Function) {
+            return option.call(this, id, data);
+        } else if (!option) {
+            return undefined;
         }
         if ((data !== undefined) && (data instanceof Object)) {
             return data;
@@ -260,9 +259,11 @@ define(function(require, exports, module) {
                     item.on('click', _setSelectedItem.bind(this, i));
                 }
                 this._renderables.items.push(item);
-                if (this.options.renderables.spacer && (i < (items.length - 1))) {
+                if ((i < (items.length - 1))) {
                     var spacer = _createRenderable.call(this, 'spacer', ' ');
-                    this._renderables.spacers.push(spacer);
+                    if (spacer) {
+                        this._renderables.spacers.push(spacer);
+                    }
                 }
             }
         }
