@@ -76,8 +76,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollController] Options that are passed to the underlying ScrollControllers.
      * @param {Object} [options.container] Container-options that are passed to the underlying ContainerSurface.
      * @param {Array.String} [options.classes] Css-classes that are added to the surfaces that are created.
-     * @param {Object} [options.renderables] Options that specify which renderables should be created.
-     * @param {Function} [options.createRenderable] Overridable function that is called when a renderable is created.
+     * @param {Object} [options.createRenderables] Options that specify which renderables should be created.
      * @alias module:DatePicker
      */
     function DatePicker(options) {
@@ -94,9 +93,9 @@ define(function(require, exports, module) {
 
         // create overlay layout + renderables
         this._overlayRenderables = {
-            top: this.options.renderables.top ? _createRenderable.call(this, 'top') : undefined,
-            middle: this.options.renderables.middle ? _createRenderable.call(this, 'middle') : undefined,
-            bottom: this.options.renderables.bottom ? _createRenderable.call(this, 'bottom') : undefined
+            top: _createRenderable.call(this, 'top'),
+            middle: _createRenderable.call(this, 'middle'),
+            bottom: _createRenderable.call(this, 'bottom')
         };
         _createOverlay.call(this);
 
@@ -113,8 +112,8 @@ define(function(require, exports, module) {
             itemSize: 100,
             diameter: 500
         },
-        renderables: {
-            background: false,
+        createRenderables: {
+            item: true,
             top: false,
             middle: false,
             bottom: false
@@ -136,11 +135,11 @@ define(function(require, exports, module) {
      *
      */
     function _createRenderable (id, data) {
-        if (this.options.createRenderable) {
-            var renderable = this.options.createRenderable.call(this, id, data);
-            if (renderable) {
-                return renderable;
-            }
+        var option = this.options.createRenderables[Array.isArray(id) ? id[0] : id];
+        if (option instanceof Function) {
+            return option.call(this, id, data);
+        } else if (!option) {
+            return undefined;
         }
         if ((data !== undefined) && (data instanceof Object)) {
             return data;
