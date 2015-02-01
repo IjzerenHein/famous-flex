@@ -7,7 +7,7 @@ var TabBar = require('famous-flex/widgets/TabBar');
 
 var tabBar = new TabBar({
   classes: ['black'],
-  renderables: {
+  createRenderables: {
     background: true,
     selectedItemOverlay: true,
     spacers: true
@@ -74,8 +74,7 @@ Example css styles for a black theme:
 | \[options.tabBarLayout\] | <code>Object</code> | Layout-options that are passed to the TabBarLayout. |
 | \[options.layoutController\] | <code>Object</code> | Options that are passed to the underlying layout-controller. |
 | \[options.classes\] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
-| \[options.renderables\] | <code>Object</code> | Options that specify which renderables should be created. |
-| \[options.createRenderable\] | <code>function</code> | Overridable function that is called when a renderable is created. |
+| \[options.createRenderables\] | <code>Object</code> | Options that specify which renderables should be created. |
 
 <a name="module_TabBar--TabBar#setOptions"></a>
 ####tabBar.setOptions(options) ⇒ <code>TabBar</code>

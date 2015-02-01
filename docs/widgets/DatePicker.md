@@ -33,23 +33,20 @@ datePicker.on('datechange', function(event) {
 CSS:
 
 ```css
-.famous-flex-datepicker .item {
-  text-align: center;
-  font-size: 40px;
-  line-height: 60px; // this should equal the WheelLayout itemSize
+.ff-datepicker .item {
+  color: blue;
+  font-size: 30px;
 }
 ```
 
 
 * [DatePicker](#module_DatePicker)
   * [class: DatePicker](#exp_module_DatePicker--DatePicker) ⇐ <code>View</code> ⏏
-    * [new DatePicker(options, [components], [overlay])](#new_module_DatePicker--DatePicker_new)
+    * [new DatePicker(options)](#new_module_DatePicker--DatePicker_new)
     * _instance_
       * [.setOptions(options)](#module_DatePicker--DatePicker#setOptions) ⇒ <code>DatePicker</code>
       * [.setComponents(components)](#module_DatePicker--DatePicker#setComponents) ⇒ <code>DatePicker</code>
       * [.getComponents()](#module_DatePicker--DatePicker#getComponents) ⇒ <code>Array</code>
-      * [.setOverlay(overlay)](#module_DatePicker--DatePicker#setOverlay) ⇒ <code>DatePicker</code>
-      * [.getOverlay()](#module_DatePicker--DatePicker#getOverlay) ⇒ <code>Object</code>
       * [.setDate(date)](#module_DatePicker--DatePicker#setDate) ⇒ <code>DatePicker</code>
       * [.getDate()](#module_DatePicker--DatePicker#getDate) ⇒ <code>Date</code>
 
@@ -57,7 +54,7 @@ CSS:
 ###class: DatePicker ⇐ <code>View</code> ⏏
 **Extends:** <code>View</code>  
 <a name="new_module_DatePicker--DatePicker_new"></a>
-####new DatePicker(options, [components], [overlay])
+####new DatePicker(options)
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | options | <code>Object</code> | Configurable options. |
@@ -65,8 +62,8 @@ CSS:
 | \[options.wheelLayout\] | <code>Object</code> | Layout-options that are passed to the WheelLayout. |
 | \[options.scrollController\] | <code>Object</code> | Options that are passed to the underlying ScrollControllers. |
 | \[options.container\] | <code>Object</code> | Container-options that are passed to the underlying ContainerSurface. |
-| \[components\] | <code>Array</code> | Date/time components (see `setComponents`). |
-| \[overlay\] | <code>Object</code> | Overlay renderables (see `setOverlay`). |
+| \[options.classes\] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
+| \[options.createRenderables\] | <code>Object</code> | Options that specify which renderables should be created. |
 
 <a name="module_DatePicker--DatePicker#setOptions"></a>
 ####datePicker.setOptions(options) ⇒ <code>DatePicker</code>
@@ -76,7 +73,6 @@ Patches the DatePicker instance's options with the passed-in ones.
 | ----- | ---- | ----------- |
 | options | <code>Object</code> | Configurable options (see ScrollController for all inherited options). |
 | \[options.perspective\] | <code>Number</code> | Perspective to use when rendering the wheel. |
-| \[options.overlay\] | <code>Object</code> | Overlay renderables (`top`, `middle` & `bottom`). |
 | \[options.wheelLayout\] | <code>Object</code> | Layout-options that are passed to the WheelLayout. |
 | \[options.scrollController\] | <code>Object</code> | Options that are passed to the underlying ScrollControllers. |
 
@@ -95,43 +91,6 @@ Sets the components for the date-picker.
 Get the components for the date-picker.
 
 **Returns**: <code>Array</code> - components  
-<a name="module_DatePicker--DatePicker#setOverlay"></a>
-####datePicker.setOverlay(overlay) ⇒ <code>DatePicker</code>
-Sets the `top`, `middle` & `bottom` renderables that are displayed in
-front of the datepicker.
-
-Example:
-
-```javascript
-var datePicker = new DatePicker({...});
-datePicker.setOverlay({
-  top: new Surface({
-    properties: {
-      pointerEvents: 'none',
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      borderBottom: '1px solid #777777'
-    }
-  }),
-  bottom: new Surface({
-    properties: {
-      pointerEvents: 'none',
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      borderTop: '1px solid #777777'
-    }
-  })
-});
-```
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| overlay | <code>Object</code> | `top`, `middle` and `bottom` renderables |
-
-**Returns**: <code>DatePicker</code> - this  
-<a name="module_DatePicker--DatePicker#getOverlay"></a>
-####datePicker.getOverlay() ⇒ <code>Object</code>
-Get the overlay renderables for the date-picker.
-
-**Returns**: <code>Object</code> - overlay renderables  
 <a name="module_DatePicker--DatePicker#setDate"></a>
 ####datePicker.setDate(date) ⇒ <code>DatePicker</code>
 Set the selected date.
