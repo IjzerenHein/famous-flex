@@ -99,6 +99,7 @@ define(function(require, exports, module) {
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
+     * @param {Bool} [options.overscroll] Enables or disables overscroll (default: `true`).
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
@@ -234,6 +235,7 @@ define(function(require, exports, module) {
         scrollSync: {
             scale: 0.2
         },
+        overscroll: true,
         paginated: false,
         paginationMode: PaginationMode.PAGE,
         paginationEnergyThresshold: 0.01,
@@ -257,7 +259,8 @@ define(function(require, exports, module) {
      * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
-     * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
+     * @param {Bool} [options.enabled] Enables or disables user input (default: `true`).
+     * @param {Bool} [options.overscroll] Enables or disables overscroll (default: `true`).
      * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
@@ -655,6 +658,15 @@ define(function(require, exports, module) {
             }
             else {
                 scrollOffset += this._scroll.scrollForce;
+            }
+        }
+
+        // Prevent the scroll position from exceeding the bounds when overscroll is disabled
+        if (!this.options.overscroll) {
+            if ((this._scroll.boundsReached === Bounds.BOTH) ||
+                ((this._scroll.boundsReached === Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) ||
+                ((this._scroll.boundsReached === Bounds.NEXT) && (scrollOffset < this._scroll.springPosition))) {
+                scrollOffset = this._scroll.springPosition;
             }
         }
 
