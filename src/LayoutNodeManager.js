@@ -623,6 +623,7 @@ define(function(require, exports, module) {
             node.set(set, this._context.size);
             contextNode.set = set;
         }
+        return set;
     }
 
     /**
