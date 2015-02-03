@@ -229,6 +229,15 @@ scrollView.setOptions({
 });
 ```
 
+By default, the scroll-view uses an overscroll effect when the bounds are reached.
+To disable overscroll use:
+
+```javascript
+scrollView.setOptions({
+    overscroll: false   // disable overscroll
+});
+```
+
 
 # Margins & Spacing (ListLayout)
 
