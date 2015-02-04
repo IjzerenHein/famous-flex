@@ -13,7 +13,7 @@
     ]
   },
   "scripts": {
-    "global-no-famous": "browserify global-no-famous.template.js -t browserify-shim -o global-no-famous.js --debug --verbose"
+    "global-no-famous": "browserify ./dist/famous-flex-global.template.js -t browserify-shim -o ./dist/famous-flex-global.js --debug --verbose"
   },
   "browserify-shim": {
     "famous/core/OptionsManager": "global:famous.core.OptionsManager",

@@ -11,6 +11,9 @@
     "Hein Rutjes <hrutjes@gmail.com>"
   ],
   "description": "Animatable layouts, FlexScrollView & widgets for famo.us",
+  "main": [
+    "dist/famous-flex-global.js"
+  ],
   "keywords": [
     "famo.us",
     "famous",
