@@ -37,8 +37,7 @@
     "examples",
     "docs",
     "Gruntfile.js",
-    "CONTRIBUTORS.md",
-    "package.json"
+    "CONTRIBUTORS.md"
   ],
   "devDependencies": {
     "famous": "~0.3.4"
