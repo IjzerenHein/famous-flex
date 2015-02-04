@@ -11,6 +11,9 @@
     "Hein Rutjes <hrutjes@gmail.com>"
   ],
   "description": "Animatable layouts, FlexScrollView & widgets for famo.us",
+  "main": [
+    "dist/famous-flex-global.js"
+  ],
   "keywords": [
     "famo.us",
     "famous",
@@ -37,8 +40,7 @@
     "examples",
     "docs",
     "Gruntfile.js",
-    "CONTRIBUTORS.md",
-    "package.json"
+    "CONTRIBUTORS.md"
   ],
   "devDependencies": {
     "famous": "~0.3.4"
