@@ -6,6 +6,7 @@
     "type": "git",
     "url": "git://github.com/IjzerenHein/famous-flex.git"
   },
+  "main": "dist/famous-flex-global.template.js",
   "browserify": {
     "transform": [
       "browserify-shim",
@@ -80,6 +81,7 @@
   },
   "files": [
     "src",
+    "dist/famous-flex-global.template.js",
     "LICENSE"
   ]
 }
