@@ -61,6 +61,9 @@ module.exports = function(grunt) {
             { src: 'src/layouts/TabBarLayout.js', dest: 'docs/layouts/TabBarLayout.md' }
         ]
       }
+    },
+    exec: {
+      'global-no-famous': 'npm run-script global-no-famous'
     }
   });
 
@@ -69,7 +72,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jscs');
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
+  grunt.loadNpmTasks('grunt-exec');
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs', 'csslint', 'jsdoc2md']);
+  grunt.registerTask('default', ['eslint', 'jscs', 'csslint', 'jsdoc2md', 'exec:global-no-famous']);
 };

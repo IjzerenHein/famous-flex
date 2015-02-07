@@ -77,6 +77,7 @@
     "grunt": "latest",
     "grunt-contrib-csslint": "^0.4.0",
     "grunt-eslint": "latest",
+    "grunt-exec": "^0.4.6",
     "grunt-jscs": "latest",
     "grunt-jsdoc-to-markdown": "latest"
   },
