@@ -1797,6 +1797,9 @@ define(function(require, exports, module) {
                 }
                 emitScrollEvent = true;
             }
+            else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
+                emitEndScrollingEvent = true;
+            }
 
             this._eventOutput.emit('layoutstart', eventData);
 
