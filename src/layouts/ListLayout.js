@@ -129,7 +129,8 @@ define(function(require, exports, module) {
         //
         if ((options.itemSize === true) || !options.hasOwnProperty('itemSize')) {
             itemSize = true;
-        } else if (options.itemSize instanceof Function) {
+        }
+        else if (options.itemSize instanceof Function) {
             getItemSize = options.itemSize;
         }
         else {
@@ -184,10 +185,12 @@ define(function(require, exports, module) {
                     lastSectionBeforeVisibleCellOffset = offset - nodeSize;
                     lastSectionBeforeVisibleCellLength = nodeSize;
                     lastSectionBeforeVisibleCellScrollLength = nodeSize;
-                } else if (lastCellOffsetInFirstVisibleSection === undefined) {
+                }
+                else if (lastCellOffsetInFirstVisibleSection === undefined) {
                     lastCellOffsetInFirstVisibleSection = offset - nodeSize;
                 }
-            } else if (!firstVisibleCell && (offset >= 0)) {
+            }
+            else if (!firstVisibleCell && (offset >= 0)) {
                 firstVisibleCell = node;
             }
         }
@@ -239,7 +242,8 @@ define(function(require, exports, module) {
                     lastSectionBeforeVisibleCellLength = nodeSize;
                     lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
                 }
-            } else if ((offset + nodeSize) >= 0) {
+            }
+            else if ((offset + nodeSize) >= 0) {
                 firstVisibleCell = node;
                 if (lastSectionBeforeVisibleCell) {
                     lastCellOffsetInFirstVisibleSection = offset + nodeSize;

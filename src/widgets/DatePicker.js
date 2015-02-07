@@ -138,7 +138,8 @@ define(function(require, exports, module) {
         var option = this.options.createRenderables[Array.isArray(id) ? id[0] : id];
         if (option instanceof Function) {
             return option.call(this, id, data);
-        } else if (!option) {
+        }
+        else if (!option) {
             return undefined;
         }
         if ((data !== undefined) && (data instanceof Object)) {
@@ -325,9 +326,9 @@ define(function(require, exports, module) {
      * Called whenever an item is clicked, causes the scrollwheel to scroll to that item.
      */
     function _clickItem(scrollWheel, event) {
-        if (scrollWheel && event && event.target) {
-            //scrollWheel.scrollController.goToRenderNode(event.target);
-        }
+        /*if (scrollWheel && event && event.target) {
+            scrollWheel.scrollController.goToRenderNode(event.target);
+        }*/
     }
 
     /**

@@ -103,15 +103,20 @@ define(function(require, exports, module) {
             var value = (rule.length >= 3) ? rule[2] : undefined;
             if (rule[0] === 'top') {
                 this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-            } else if (rule[0] === 'left') {
+            }
+            else if (rule[0] === 'left') {
                 this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-            } else if (rule[0] === 'right') {
+            }
+            else if (rule[0] === 'right') {
                 this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-            } else if (rule[0] === 'bottom') {
+            }
+            else if (rule[0] === 'bottom') {
                 this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-            } else if (rule[0] === 'fill') {
+            }
+            else if (rule[0] === 'fill') {
                 this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
-            } else if (rule[0] === 'margins') {
+            }
+            else if (rule[0] === 'margins') {
                 this.margins(rule[1]);
             }
         }

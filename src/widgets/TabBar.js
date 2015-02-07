@@ -167,7 +167,8 @@ define(function(require, exports, module) {
         var option = this.options.createRenderables[id];
         if (option instanceof Function) {
             return option.call(this, id, data);
-        } else if (!option) {
+        }
+        else if (!option) {
             return undefined;
         }
         if ((data !== undefined) && (data instanceof Object)) {

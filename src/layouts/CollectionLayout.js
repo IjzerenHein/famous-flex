@@ -197,9 +197,11 @@ define(function(require, exports, module) {
         //
         if (!options.itemSize) {
             itemSize = [true, true]; // when no item-size specified, use size from renderables
-        } else if (options.itemSize instanceof Function) {
+        }
+        else if (options.itemSize instanceof Function) {
             getItemSize = options.itemSize;
-        } else if ((options.itemSize[0] === undefined) || (options.itemSize[0] === undefined)){
+        }
+        else if ((options.itemSize[0] === undefined) || (options.itemSize[0] === undefined)){
             // resolve 'undefined' into a fixed size
             itemSize = [
                 (options.itemSize[0] === undefined) ? size[0] : options.itemSize[0],
