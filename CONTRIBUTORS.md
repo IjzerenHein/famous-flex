@@ -5,3 +5,5 @@
 - Torsten Freyhall (toostn)
 - Stephan Bijzitter (StephanBijzitter)
 - Jeduan Cornejo (jeduan)
+- Sidney Bofah (SidneyS)
+- Avi Haiat (thaiat)
