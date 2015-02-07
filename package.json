@@ -75,6 +75,7 @@
     "browserify-shim": "latest",
     "deamdify": "latest",
     "grunt": "latest",
+    "grunt-contrib-csslint": "^0.4.0",
     "grunt-eslint": "latest",
     "grunt-jscs": "latest",
     "grunt-jsdoc-to-markdown": "latest"

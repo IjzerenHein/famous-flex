@@ -15,6 +15,23 @@ module.exports = function(grunt) {
             config: '.jscsrc'
         }
     },
+    csslint: {
+      strict: {
+        options: {
+          import: 2
+        },
+        src: ['src/*.css', 'src/**/*.css']
+      },
+      lax: {
+        options: {
+          import: false
+        },
+        src: ['src/*.css', 'src/**/*.css']
+      },
+      options: {
+        csslintrc: '.csslintrc'
+      }
+    },
     jsdoc2md: {
       separateOutputFilePerInput: {
         options: {
@@ -50,8 +67,9 @@ module.exports = function(grunt) {
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-jscs');
+  grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs', 'jsdoc2md']);
+  grunt.registerTask('default', ['eslint', 'jscs', 'csslint', 'jsdoc2md']);
 };
