@@ -853,7 +853,8 @@ define(function(require, exports, module) {
                     if ((scrollToOffset - foundNode.scrollLength) < 0) {
                         this._scroll.springPosition = scrollToOffset;
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
-                    } else if (scrollToOffset > size[this._direction]) {
+                    }
+                    else if (scrollToOffset > size[this._direction]) {
                         this._scroll.springPosition = size[this._direction] - scrollToOffset;
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
@@ -866,7 +867,8 @@ define(function(require, exports, module) {
                     if (scrollToOffset < 0) {
                         this._scroll.springPosition = scrollToOffset;
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
-                    } else if ((scrollToOffset + foundNode.scrollLength) > size[this._direction]) {
+                    }
+                    else if ((scrollToOffset + foundNode.scrollLength) > size[this._direction]) {
                         this._scroll.springPosition = size[this._direction] - (scrollToOffset + foundNode.scrollLength);
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
@@ -1394,7 +1396,8 @@ define(function(require, exports, module) {
         // Convert argument into renderNode
         if (node instanceof ViewSequence) {
             node = node.get();
-        } else if ((node instanceof Number) || (typeof node === 'number')) {
+        }
+        else if ((node instanceof Number) || (typeof node === 'number')) {
             var viewSequence = this._viewSequence;
             while (viewSequence.getIndex() < node) {
                 viewSequence = viewSequence.getNext();
@@ -1483,7 +1486,8 @@ define(function(require, exports, module) {
         if ((delta < 0) && (nextHeight !== undefined)) {
             var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
             return Math.max(nextOffset, delta);
-        } else if ((delta > 0) && (prevHeight !== undefined)) {
+        }
+        else if ((delta > 0) && (prevHeight !== undefined)) {
             var prevOffset = -(scrollOffset - prevHeight);
             return Math.min(prevOffset, delta);
         }
@@ -1610,7 +1614,8 @@ define(function(require, exports, module) {
                     velocity = velocity || 0;
                     if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
                         this.goToRenderNode(item._node._next.renderNode);
-                    } else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
+                    }
+                    else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
                         this.goToRenderNode(item._node._prev.renderNode);
                     }
                 }

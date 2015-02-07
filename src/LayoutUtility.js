@@ -45,13 +45,17 @@ define(function(require, exports, module) {
     LayoutUtility.normalizeMargins = function(margins) {
         if (!margins) {
             return [0, 0, 0, 0];
-        } else if (!Array.isArray(margins)) {
+        }
+        else if (!Array.isArray(margins)) {
             return [margins, margins, margins, margins];
-        } else if (margins.length === 0) {
+        }
+        else if (margins.length === 0) {
             return [0, 0, 0, 0];
-        } else if (margins.length === 1) {
+        }
+        else if (margins.length === 1) {
             return [margins[0], margins[0], margins[0], margins[0]];
-        } else if (margins.length === 2) {
+        }
+        else if (margins.length === 2) {
             return [margins[0], margins[1], margins[0], margins[1]];
         }
         else {
@@ -211,7 +215,8 @@ define(function(require, exports, module) {
     LayoutUtility.combineOptions = function(options1, options2, forceClone) {
         if (options1 && !options2 && !forceClone) {
             return options1;
-        } else if (!options1 && options2 && !forceClone) {
+        }
+        else if (!options1 && options2 && !forceClone) {
             return options2;
         }
         var options = Utility.clone(options1 || {});

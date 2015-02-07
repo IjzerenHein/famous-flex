@@ -340,9 +340,11 @@ define(function(require, exports, module) {
     LayoutNodeManager.prototype.getStartEnumNode = function(next) {
         if (next === undefined) {
             return this._first;
-        } else if (next === true) {
+        }
+        else if (next === true) {
             return (this._contextState.start && this._contextState.startPrev) ? this._contextState.start._next : this._contextState.start;
-        } else if (next === false) {
+        }
+        else if (next === false) {
             return (this._contextState.start && !this._contextState.startPrev) ? this._contextState.start._prev : this._contextState.start;
         }
     };
@@ -604,7 +606,8 @@ define(function(require, exports, module) {
                         LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
                      }
                      this._contextState.nextSetIndex = contextNode.index;
-                } else if (contextNode.prev) {
+                }
+                else if (contextNode.prev) {
                      if (contextNode.index > this._contextState.prevSetIndex) {
                         LayoutUtility.error('Nodes must be layed out in the same order as they were requested!');
                      }
@@ -712,14 +715,16 @@ define(function(require, exports, module) {
             size = resolveSize;
             if (size[0] === undefined) {
                 size[0] = parentSize[0];
-            } else if (size[0] === true) {
+            }
+            else if (size[0] === true) {
                 size[0] = 0;
                 this._trueSizeRequested = true;
                 contextNode.trueSizeRequested = true;
             }
             if (size[1] === undefined) {
                 size[1] = parentSize[1];
-            } else if (size[1] === true) {
+            }
+            else if (size[1] === true) {
                 size[1] = 0;
                 this._trueSizeRequested = true;
                 contextNode.trueSizeRequested = true;

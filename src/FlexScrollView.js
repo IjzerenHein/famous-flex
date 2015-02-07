@@ -342,7 +342,8 @@ define(function(require, exports, module) {
                     var scrollLength;
                     if (pullToRefresh.state === PullToRefreshState.ACTIVE) {
                         scrollLength = length;
-                    } else if (this._scroll.scrollForceCount) {
+                    }
+                    else if (this._scroll.scrollForceCount) {
                         scrollLength = Math.min(offset, length);
                     }
                     var set = {

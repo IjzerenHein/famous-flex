@@ -407,7 +407,8 @@ define(function(require, exports, module) {
             }
             if (!this._initial && !immediate) {
                 this._pe.wake();
-            } else if (wasSleeping) {
+            }
+            else if (wasSleeping) {
                 this._pe.sleep(); // nothing has changed, put back to sleep
             }
             prop.init = true;

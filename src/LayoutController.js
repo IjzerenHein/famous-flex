@@ -97,7 +97,8 @@ define(function(require, exports, module) {
         // Create node manager that manages (Flow)LayoutNode instances
         if (nodeManager) {
             this._nodes = nodeManager;
-        } else if (options && options.flow) {
+        }
+        else if (options && options.flow) {
             this._nodes = new LayoutNodeManager(FlowLayoutNode, _initFlowLayoutNode.bind(this));
         }
         else {
@@ -167,7 +168,8 @@ define(function(require, exports, module) {
         }
         if (options.layout) {
             this.setLayout(options.layout, options.layoutOptions);
-        } else if (options.layoutOptions) {
+        }
+        else if (options.layoutOptions) {
             this.setLayoutOptions(options.layoutOptions);
         }
         if (options.direction !== undefined) {
@@ -193,7 +195,8 @@ define(function(require, exports, module) {
             for (var i = 0, j = dataSource.length; i < j; i++) {
                 callback(dataSource[i]);
             }
-        } else if (dataSource instanceof ViewSequence) {
+        }
+        else if (dataSource instanceof ViewSequence) {
             var renderable;
             while (dataSource) {
                 renderable = dataSource.get();
@@ -226,9 +229,11 @@ define(function(require, exports, module) {
         this._nodesById = undefined;
         if (dataSource instanceof Array) {
             this._viewSequence = new ViewSequence(dataSource);
-        } else if ((dataSource instanceof ViewSequence) || dataSource.getNext) {
+        }
+        else if ((dataSource instanceof ViewSequence) || dataSource.getNext) {
             this._viewSequence = dataSource;
-        } else if (dataSource instanceof Object){
+        }
+        else if (dataSource instanceof Object){
             this._nodesById = dataSource;
         }
         if (this.options.autoPipeEvents) {
@@ -274,7 +279,8 @@ define(function(require, exports, module) {
             this._layout.literal = undefined;
 
         // If the layout is an object, treat it as a layout-literal
-        } else if (layout instanceof Object) {
+        }
+        else if (layout instanceof Object) {
             this._layout.literal = layout;
             this._layout.capabilities = undefined; // todo - derive from literal somehow?
             var helperName = Object.keys(layout)[0];
@@ -561,11 +567,13 @@ define(function(require, exports, module) {
                 i = viewSequence.getIndex();
                 if (i === index) {
                     return viewSequence;
-                } else if (index < i) {
+                }
+                else if (index < i) {
                     return undefined;
                 }
             }
-        } else if (index < i) {
+        }
+        else if (index < i) {
             while (viewSequence) {
                 viewSequence = viewSequence.getPrevious();
                 if (!viewSequence) {
@@ -574,7 +582,8 @@ define(function(require, exports, module) {
                 i = viewSequence.getIndex();
                 if (i === index) {
                     return viewSequence;
-                } else if (index > i) {
+                }
+                else if (index > i) {
                     return undefined;
                 }
             }
@@ -659,7 +668,8 @@ define(function(require, exports, module) {
             if (dirty) {
                 this._isDirty = true;
             }
-        } else if (this._dataSource){
+        }
+        else if (this._dataSource){
           this.setDataSource([]);
         }
         return this;
