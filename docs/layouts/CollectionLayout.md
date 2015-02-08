@@ -31,3 +31,9 @@ var scrollView = new FlexScrollView({
 });
 ```
 
+Notes:
+
+* Recall that the **`direction`** option is given to `FlexScrollView` and not
+the `ColllectionLayout`.  As such, it affects *scroll direction* and not
+*layout direction*.  With direction `Y`, items are *laid out horizontally*,
+but multiple rows *scroll vertically*, and this is the correct behaviour.
