@@ -8,7 +8,7 @@ Animatable layouts, FlexScrollView & widgets for famo.us.
 Above anything, famous-flex is a concept in which renderables are seperated from how
 they are layed-out. This makes it possible to change layouts on the fly and animate
 the renderables from one layout to another. For instance, you can layout a collection
-of renderables using a `GridLayout`, and change that into a `ListLayout`. When using
+of renderables using a `CollectionLayout`, and change that into a `ListLayout`. When using
 `flow`-mode the renderables will smoothly transition from the old state to the new state using physics, particles and springs.
 
 ### Demos
@@ -36,7 +36,6 @@ of renderables using a `GridLayout`, and change that into a `ListLayout`. When u
 - [TabBar](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md)
 
 ### [Layouts](#standard-layouts)
-- [GridLayout](docs/layouts/GridLayout.md)
 - [ProportionalLayout](docs/layouts/ProportionalLayout.md)
 - [HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)
 - [NavBarLayout](docs/layouts/NavBarLayout.md)
@@ -57,7 +56,6 @@ Install using bower or npm:
 	bower install famous-flex
 
 	npm install famous-flex
-
 
 ## LayoutController
 
@@ -239,14 +237,13 @@ Layout helpers are special classes that simplify writing layout functions.
 
 |Layout|DataSource|Scrollable|Description|
 |---|---|---|---|
-|[GridLayout](docs/layouts/GridLayout.md)|ViewSequence / Array|No|Grid-layout with fixed number of rows & columns.|
 |[ProportionalLayout](docs/layouts/ProportionalLayout.md)|ViewSequence / Array|No|Lays out renderables sequentially and sizes them proportionally.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
 |[TabBarLayout](docs/layouts/TabBarLayout.md)|Id-based|No|Tab-bar layout.|
 |*Scrollable layouts:*|
 |[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
-|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables with a specific width & height.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a grid with a specific width & height.|
 |[WheelLayout](docs/layouts/WheelLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
 
 
