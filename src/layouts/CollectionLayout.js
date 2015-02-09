@@ -17,7 +17,8 @@
  *
  * |options|type|description|
  * |---|---|---|
- * |`itemSize`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
+ * |`[itemSize]`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
+ * |`[cells]`|Array.Number|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number/Array|Spacing between items (e.g. 5, [10, 10])|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
@@ -25,13 +26,28 @@
  * Example:
  *
  * ```javascript
- * var FlexScrollView = require('famous-flex/FlexScrollView');
  * var CollectionLayout = require('famous-flex/layouts/CollectionLayout');
  *
+ * // Create scrollable layout where items have a fixed width/height
  * var scrollView = new FlexScrollView({
  *   layout: CollectionLayout,
  *   layoutOptions: {
  *     itemSize: [100, 100],    // item has width and height of 100 pixels
+ *     margins: [10, 5, 10, 5], // outer margins
+ *     spacing: [10, 10]        // spacing between items
+ *   },
+ *   dataSource: [
+ *     new Surface({content: 'item 1'}),
+ *     new Surface({content: 'item 2'}),
+ *     new Surface({content: 'item 3'})
+ *   ]
+ * });
+ *
+ * // Create grid layout with a fixed number of columns and rows.
+ * var gridLayout = new LayoutController({
+ *   layout: CollectionLayout,
+ *   layoutOptions: {
+ *     cells: [3, 5],           // 3 columns and 5 rows
  *     margins: [10, 5, 10, 5], // outer margins
  *     spacing: [10, 10]        // spacing between items
  *   },
@@ -171,7 +187,7 @@ define(function(require, exports, module) {
         alignment = context.alignment;
         lineDirection = (direction + 1) % 2;
         if ((options.gutter !== undefined) && console.warn) {
-            console.warn('gutter has been deprecated for CollectionLayout, use margins & spacing instead');
+            console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
         }
         if (options.gutter && !options.margins && !options.spacing) {
             var gutter = Array.isArray(options.gutter) ? options.gutter : [options.gutter, options.gutter];
@@ -195,7 +211,16 @@ define(function(require, exports, module) {
         //
         // Prepare item-size
         //
-        if (!options.itemSize) {
+        if (options.cells) {
+            if (options.itemSize && console.warn) {
+                console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
+            }
+            itemSize = [
+                (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
+                (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
+            ];
+        }
+        else if (!options.itemSize) {
             itemSize = [true, true]; // when no item-size specified, use size from renderables
         }
         else if (options.itemSize instanceof Function) {
