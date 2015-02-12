@@ -670,9 +670,13 @@ define(function(require, exports, module) {
     /**
      * Removes all renderables from the data-source.
      *
+     * The optional argument `removeSpec` is only used `flow` mode is enabled.
+     * When specified, the renderables ares removed using an animation ending at
+     * the size, origin, opacity, transform, etc... as specified in `removeSpec'.
+     *
      * @return {LayoutController} this
      */
-    LayoutController.prototype.removeAll = function() {
+    LayoutController.prototype.removeAll = function(removeSpec) {
         if (this._nodesById) {
             var dirty = false;
             for (var key in this._nodesById) {
@@ -684,7 +688,14 @@ define(function(require, exports, module) {
             }
         }
         else if (this._dataSource){
-          this.setDataSource([]);
+            this.setDataSource([]);
+        }
+        if (removeSpec) {
+            var node = this._nodes.getStartEnumNode();
+            while (node) {
+                node.remove(removeSpec || this.options.removeSpec);
+                node = node._next;
+            }
         }
         return this;
     };
