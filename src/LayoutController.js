@@ -792,6 +792,11 @@ define(function(require, exports, module) {
                     this._layout.options    // additional layout-options
                 );
             }
+
+            // Mark non-invalidated nodes for removal
+            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+
+            // Cleanup any nodes in case of a VirtualViewSequence
             this._nodes.removeVirtualViewSequenceNodes();
 
             // Calculate scroll-length and use that as the true-size (height)
