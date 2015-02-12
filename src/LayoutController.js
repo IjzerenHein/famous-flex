@@ -592,6 +592,20 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Get the renderable at the given index or Id.
+     *
+     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @return {Renderable} renderable or `undefined`
+     */
+    LayoutController.prototype.get = function(indexOrId) {
+      if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+        return this._nodesById[indexOrId];
+      }
+      var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
+      return viewSequence ? viewSequence.get() : undefined;
+    };
+
+    /**
      * Swaps two renderables at the given positions.
      *
      * @param {Number} index Index of the renderable to swap
