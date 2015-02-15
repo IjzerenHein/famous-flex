@@ -72,7 +72,7 @@ define(function(require, exports, module) {
      *   while (node) {
      *     context.set(node, {
      *       size: [context.size[0], 100],
-     *       transform: [0, height, 0]
+     *       translate: [0, height, 0]
      *     });
      *     height += 100;
      *     node = context.next(); // get next node
@@ -102,9 +102,9 @@ define(function(require, exports, module) {
      *     height -= 100;
      *     context.set(node, {
      *       size: [context.size[0], 100],
-     *       transform: [0, height, 0]
+     *       translate: [0, height, 0]
      *     });
-     *     node = context.next(); // get prev node
+     *     node = context.prev(); // get prev node
      *   }
      * }
      * ```
