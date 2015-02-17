@@ -76,10 +76,10 @@
     "deamdify": "latest",
     "grunt": "latest",
     "grunt-contrib-csslint": "^0.4.0",
-    "grunt-eslint": "latest",
+    "grunt-eslint": "^6.0.0",
     "grunt-exec": "^0.4.6",
-    "grunt-jscs": "latest",
-    "grunt-jsdoc-to-markdown": "latest"
+    "grunt-jscs": "^1.5.0",
+    "grunt-jsdoc-to-markdown": "^0.4.2"
   },
   "files": [
     "src",
