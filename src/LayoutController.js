@@ -484,6 +484,9 @@ define(function(require, exports, module) {
             }
 
             // Insert renderable
+            if (this._nodesById[indexOrId] === renderable) {
+                return;
+            }
             this._nodesById[indexOrId] = renderable;
         }
 
