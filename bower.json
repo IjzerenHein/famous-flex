@@ -43,6 +43,6 @@
     "CONTRIBUTORS.md"
   ],
   "devDependencies": {
-    "famous": "~0.3.4"
+    "famous": "~0.3.5"
   }
 }
