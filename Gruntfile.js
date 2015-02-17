@@ -4,13 +4,13 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     eslint: {
-      target: ['src/*.js', 'src/**/*.js'],
+      target: ['src/**/*.js'],
       options: {
         config: '.eslintrc'
       }
     },
     jscs: {
-        src: ['src/*.js', 'src/**/*.js'],
+        src: ['src/**/*.js'],
         options: {
             config: '.jscsrc'
         }
@@ -20,13 +20,13 @@ module.exports = function(grunt) {
         options: {
           import: 2
         },
-        src: ['src/*.css', 'src/**/*.css']
+        src: ['src/**/*.css']
       },
       lax: {
         options: {
           import: false
         },
-        src: ['src/*.css', 'src/**/*.css']
+        src: ['src/**/*.css']
       },
       options: {
         csslintrc: '.csslintrc'
