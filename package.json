@@ -76,6 +76,7 @@
     "deamdify": "latest",
     "grunt": "latest",
     "grunt-contrib-csslint": "^0.4.0",
+    "grunt-contrib-watch": "^0.6.1",
     "grunt-eslint": "^6.0.0",
     "grunt-exec": "^0.4.6",
     "grunt-jscs": "^1.5.0",

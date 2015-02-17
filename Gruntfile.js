@@ -3,6 +3,15 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+    watch: {
+      source: {
+          spawn: false,
+          debounceDelay: 1000,
+          atBegin: true,
+          files: ['src/**/*.js'],
+          tasks: ['lint', 'build']
+      }
+    },
     eslint: {
       target: ['src/**/*.js'],
       options: {
@@ -73,7 +82,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
   grunt.loadNpmTasks('grunt-exec');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+
+  // Lint: Check JS and CSS for errors & style.
+  grunt.registerTask('lint', ['eslint', 'jscs', 'csslint']);
+
+  // Build: Generate Docs and global module.
+  grunt.registerTask('build', ['jsdoc2md', 'exec:global-no-famous']);
+
+  // Develop: Watches source files. Trigger lint & build upon change.
+  grunt.registerTask('develop', ['watch:source']);
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs', 'csslint', 'jsdoc2md', 'exec:global-no-famous']);
+  grunt.registerTask('default', ['lint', 'build']);
+
 };
