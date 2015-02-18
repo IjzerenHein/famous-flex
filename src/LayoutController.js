@@ -621,6 +621,27 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Swaps two renderables at the given positions.
+     *
+     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @param {Renderable} renderable renderable to replace with
+     * @return {Renderable} replaced renderable
+     */
+    LayoutController.prototype.replace = function(indexOrId, renderable) {
+        var oldRenderable;
+        if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+            oldRenderable = this._nodesById[indexOrId];
+            this._nodesById[indexOrId] = renderable;
+            this._isDirty = true;
+            return oldRenderable;
+        }
+        //var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
+        //return viewSequence ? viewSequence.get() : undefined;
+        // TODO - support indexes
+        return undefined;
+    };
+
+    /**
      * Removes a renderable from the data-source.
      *
      * The optional argument `removeSpec` is only used `flow` mode is enabled.
