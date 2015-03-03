@@ -651,7 +651,7 @@ define(function(require, exports, module) {
      * When specified, the renderable is removed using an animation ending at
      * the size, origin, opacity, transform, etc... as specified in `removeSpec'.
      *
-     * @param {Number|String} indexOrId Index within dataSource array or id (String)
+     * @param {Number|String|Renderable} indexOrId Index, id (String) or renderable to remove.
      * @param {Spec} [removeSpec] Size, transform, etc.. to end with when removing
      * @return {LayoutController} this
      */
@@ -662,9 +662,20 @@ define(function(require, exports, module) {
         if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
 
             // Find and remove renderable from data-source
-            renderNode = this._nodesById[indexOrId];
-            if (renderNode) {
-                delete this._nodesById[indexOrId];
+            if ((indexOrId instanceof String) || (typeof indexOrId === 'string')) {
+                renderNode = this._nodesById[indexOrId];
+                if (renderNode) {
+                    delete this._nodesById[indexOrId];
+                }
+            }
+            else {
+                for (var key in this._nodesById) {
+                    if (this._nodesById[key] === indexOrId) {
+                        delete this._nodesById[key];
+                        renderNode = indexOrId;
+                        break;
+                    }
+                }
             }
         }
 
@@ -672,7 +683,22 @@ define(function(require, exports, module) {
         else {
 
             // Remove from array
-            renderNode = this._dataSource.splice(indexOrId, 1)[0];
+            if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
+                if (this._dataSource instanceof Array) {
+                    renderNode = this._dataSource.splice(indexOrId, 1)[0];
+                }
+                else {
+                    renderNode = this._dataSource._.getValue(indexOrId);
+                    this._dataSource.splice(indexOrId, 1);
+                }
+            }
+            else {
+                indexOrId = this._dataSource.indexOf(indexOrId);
+                if (indexOrId >= 0) {
+                    this._dataSource.splice(indexOrId, 1);
+                    renderNode = indexOrId;
+                }
+            }
         }
 
         // When a custom remove-spec was specified, store that in the layout-node
