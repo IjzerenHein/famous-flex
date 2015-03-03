@@ -848,7 +848,7 @@ define(function(require, exports, module) {
 
         // 3. Update springs
         if (foundNode) {
-            if (this._scroll.ensureVisibleSequence) {
+            if (this._scroll.ensureVisibleRenderNode) {
                 if (this.options.alignment) {
                     if ((scrollToOffset - foundNode.scrollLength) < 0) {
                         this._scroll.springPosition = scrollToOffset;
@@ -859,7 +859,9 @@ define(function(require, exports, module) {
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
                     else {
-                        this._scroll.ensureVisibleRenderNode = undefined;
+                        if (!foundNode.trueSizeRequested) {
+                            this._scroll.ensureVisibleRenderNode = undefined;
+                        }
                     }
                 }
                 else {
@@ -873,7 +875,9 @@ define(function(require, exports, module) {
                         this._scroll.springSource = SpringSource.ENSUREVISIBLE;
                     }
                     else {
-                        this._scroll.ensureVisibleRenderNode = undefined;
+                        if (!foundNode.trueSizeRequested) {
+                          this._scroll.ensureVisibleRenderNode = undefined;
+                        }
                     }
                 }
             }
