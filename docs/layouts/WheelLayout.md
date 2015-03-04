@@ -1,5 +1,5 @@
 <a name="module_WheelLayout"></a>
-##WheelLayout
+#WheelLayout
 Lays out renderables in a spinner wheel (slot-machine wheel) formation.
 
 |options|type|description|

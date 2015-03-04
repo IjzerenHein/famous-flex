@@ -1,5 +1,5 @@
 <a name="module_TabBarLayout"></a>
-##TabBarLayout
+#TabBarLayout
 Tab-bar layout supporting both horizontal (default) and vertical orientation.
 
 |options|type|description|

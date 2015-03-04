@@ -1,101 +1,100 @@
 <a name="module_LayoutUtility"></a>
-##LayoutUtility
+#LayoutUtility
 Utility class for famous-flex.
 
+<a name="exp_module_LayoutUtility"></a>
+##class: LayoutUtility ⏏
+**Members**
 
-* [LayoutUtility](#module_LayoutUtility)
-  * [class: LayoutUtility](#exp_module_LayoutUtility--LayoutUtility) ⏏
-    * _static_
-      * [.normalizeMargins(margins)](#module_LayoutUtility--LayoutUtility.normalizeMargins)
-      * [.cloneSpec(spec)](#module_LayoutUtility--LayoutUtility.cloneSpec) ⇒ <code>Spec</code>
-      * [.isEqualSpec(spec1, spec2)](#module_LayoutUtility--LayoutUtility.isEqualSpec) ⇒ <code>Boolean</code>
-      * [.getSpecDiffText(spec1, spec2)](#module_LayoutUtility--LayoutUtility.getSpecDiffText) ⇒ <code>String</code>
-      * [.error(message)](#module_LayoutUtility--LayoutUtility.error)
-      * [.warning(message)](#module_LayoutUtility--LayoutUtility.warning)
-      * [.log(args)](#module_LayoutUtility--LayoutUtility.log)
-      * [.combineOptions(options1, options2, [forceClone])](#module_LayoutUtility--LayoutUtility.combineOptions) ⇒ <code>Object</code>
-      * [.registerHelper(name, Helper)](#module_LayoutUtility--LayoutUtility.registerHelper)
-      * [.unregisterHelper(name)](#module_LayoutUtility--LayoutUtility.unregisterHelper)
-      * [.getRegisteredHelper(name)](#module_LayoutUtility--LayoutUtility.getRegisteredHelper) ⇒ <code>function</code>
+* [class: LayoutUtility ⏏](#exp_module_LayoutUtility)
+  * [LayoutUtility.normalizeMargins(margins)](#module_LayoutUtility.normalizeMargins)
+  * [LayoutUtility.cloneSpec(spec)](#module_LayoutUtility.cloneSpec)
+  * [LayoutUtility.isEqualSpec(spec1, spec2)](#module_LayoutUtility.isEqualSpec)
+  * [LayoutUtility.getSpecDiffText(spec1, spec2)](#module_LayoutUtility.getSpecDiffText)
+  * [LayoutUtility.error(message)](#module_LayoutUtility.error)
+  * [LayoutUtility.warning(message)](#module_LayoutUtility.warning)
+  * [LayoutUtility.log(args)](#module_LayoutUtility.log)
+  * [LayoutUtility.combineOptions(options1, options2, [forceClone])](#module_LayoutUtility.combineOptions)
+  * [LayoutUtility.registerHelper(name, Helper)](#module_LayoutUtility.registerHelper)
+  * [LayoutUtility.unregisterHelper(name)](#module_LayoutUtility.unregisterHelper)
+  * [LayoutUtility.getRegisteredHelper(name)](#module_LayoutUtility.getRegisteredHelper)
 
-<a name="exp_module_LayoutUtility--LayoutUtility"></a>
-###class: LayoutUtility ⏏
-<a name="module_LayoutUtility--LayoutUtility.normalizeMargins"></a>
-####LayoutUtility.normalizeMargins(margins)
+<a name="module_LayoutUtility.normalizeMargins"></a>
+###LayoutUtility.normalizeMargins(margins)
 Normalizes the margins argument.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| margins | <code>Array.Number</code> |  |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.cloneSpec"></a>
-####LayoutUtility.cloneSpec(spec) ⇒ <code>Spec</code>
+- margins `Array.Number`  
+
+<a name="module_LayoutUtility.cloneSpec"></a>
+###LayoutUtility.cloneSpec(spec)
 Makes a (shallow) copy of a spec.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| spec | <code>Spec</code> | Spec to clone |
+**Params**
 
-**Returns**: <code>Spec</code> - cloned spec  
-<a name="module_LayoutUtility--LayoutUtility.isEqualSpec"></a>
-####LayoutUtility.isEqualSpec(spec1, spec2) ⇒ <code>Boolean</code>
+- spec `Spec` - Spec to clone  
+
+**Returns**: `Spec` - cloned spec  
+<a name="module_LayoutUtility.isEqualSpec"></a>
+###LayoutUtility.isEqualSpec(spec1, spec2)
 Compares two specs for equality.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| spec1 | <code>Spec</code> | Spec to compare |
-| spec2 | <code>Spec</code> | Spec to compare |
+**Params**
 
-**Returns**: <code>Boolean</code> - true/false  
-<a name="module_LayoutUtility--LayoutUtility.getSpecDiffText"></a>
-####LayoutUtility.getSpecDiffText(spec1, spec2) ⇒ <code>String</code>
+- spec1 `Spec` - Spec to compare  
+- spec2 `Spec` - Spec to compare  
+
+**Returns**: `Boolean` - true/false  
+<a name="module_LayoutUtility.getSpecDiffText"></a>
+###LayoutUtility.getSpecDiffText(spec1, spec2)
 Helper function that returns a string containing the differences
 between two specs.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| spec1 | <code>Spec</code> | Spec to compare |
-| spec2 | <code>Spec</code> | Spec to compare |
+**Params**
 
-**Returns**: <code>String</code> - text  
-<a name="module_LayoutUtility--LayoutUtility.error"></a>
-####LayoutUtility.error(message)
+- spec1 `Spec` - Spec to compare  
+- spec2 `Spec` - Spec to compare  
+
+**Returns**: `String` - text  
+<a name="module_LayoutUtility.error"></a>
+###LayoutUtility.error(message)
 Helper function to call whenever a critical error has occurred.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| message | <code>String</code> | error-message |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.warning"></a>
-####LayoutUtility.warning(message)
+- message `String` - error-message  
+
+<a name="module_LayoutUtility.warning"></a>
+###LayoutUtility.warning(message)
 Helper function to call whenever a warning error has occurred.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| message | <code>String</code> | warning-message |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.log"></a>
-####LayoutUtility.log(args)
+- message `String` - warning-message  
+
+<a name="module_LayoutUtility.log"></a>
+###LayoutUtility.log(args)
 Helper function to log 1 or more arguments. All the arguments
 are concatenated to produce a single string which is logged.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| args | <code>String</code> \| <code>Array</code> \| <code>Object</code> | arguments to stringify and concatenate |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.combineOptions"></a>
-####LayoutUtility.combineOptions(options1, options2, [forceClone]) ⇒ <code>Object</code>
+- args `String` | `Array` | `Object` - arguments to stringify and concatenate  
+
+<a name="module_LayoutUtility.combineOptions"></a>
+###LayoutUtility.combineOptions(options1, options2, [forceClone])
 Combines two sets of options into a single set.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| options1 | <code>Object</code> | base set of options |
-| options2 | <code>Object</code> | set of options to merge into `options1` |
-| \[forceClone\] | <code>Bool</code> | ensures that a clone is returned rather that one of the original options objects |
+**Params**
 
-**Returns**: <code>Object</code> - Combined options  
-<a name="module_LayoutUtility--LayoutUtility.registerHelper"></a>
-####LayoutUtility.registerHelper(name, Helper)
+- options1 `Object` - base set of options  
+- options2 `Object` - set of options to merge into `options1`  
+- \[forceClone\] `Bool` - ensures that a clone is returned rather that one of the original options objects  
+
+**Returns**: `Object` - Combined options  
+<a name="module_LayoutUtility.registerHelper"></a>
+###LayoutUtility.registerHelper(name, Helper)
 Registers a layout-helper so it can be used as a layout-literal for
 a layout-controller. The LayoutHelper instance must support the `parse`
 function, which is fed the layout-literal content.
@@ -119,25 +118,25 @@ var layoutController = new LayoutController({
 })
 ```
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| name | <code>String</code> | name of the helper (e.g. 'dock') |
-| Helper | <code>function</code> | Helper to register (e.g. LayoutDockHelper) |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.unregisterHelper"></a>
-####LayoutUtility.unregisterHelper(name)
+- name `String` - name of the helper (e.g. 'dock')  
+- Helper `function` - Helper to register (e.g. LayoutDockHelper)  
+
+<a name="module_LayoutUtility.unregisterHelper"></a>
+###LayoutUtility.unregisterHelper(name)
 Unregisters a layout-helper.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| name | <code>String</code> | name of the layout-helper |
+**Params**
 
-<a name="module_LayoutUtility--LayoutUtility.getRegisteredHelper"></a>
-####LayoutUtility.getRegisteredHelper(name) ⇒ <code>function</code>
+- name `String` - name of the layout-helper  
+
+<a name="module_LayoutUtility.getRegisteredHelper"></a>
+###LayoutUtility.getRegisteredHelper(name)
 Gets a registered layout-helper by its name.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| name | <code>String</code> | name of the layout-helper |
+**Params**
 
-**Returns**: <code>function</code> - layout-helper or undefined  
+- name `String` - name of the layout-helper  
+
+**Returns**: `function` - layout-helper or undefined  

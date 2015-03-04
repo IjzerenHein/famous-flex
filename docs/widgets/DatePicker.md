@@ -1,5 +1,5 @@
 <a name="module_DatePicker"></a>
-##DatePicker
+#DatePicker
 Date/time picker wheel for famo.us.
 
 This component can be used as a date/time picker, a clock or
@@ -39,69 +39,69 @@ CSS:
 }
 ```
 
+<a name="exp_module_DatePicker"></a>
+##class: DatePicker ⏏
+**Extends**: `View`  
+**Members**
 
-* [DatePicker](#module_DatePicker)
-  * [class: DatePicker](#exp_module_DatePicker--DatePicker) ⇐ <code>View</code> ⏏
-    * [new DatePicker(options)](#new_module_DatePicker--DatePicker_new)
-    * _instance_
-      * [.setOptions(options)](#module_DatePicker--DatePicker#setOptions) ⇒ <code>DatePicker</code>
-      * [.setComponents(components)](#module_DatePicker--DatePicker#setComponents) ⇒ <code>DatePicker</code>
-      * [.getComponents()](#module_DatePicker--DatePicker#getComponents) ⇒ <code>Array</code>
-      * [.setDate(date)](#module_DatePicker--DatePicker#setDate) ⇒ <code>DatePicker</code>
-      * [.getDate()](#module_DatePicker--DatePicker#getDate) ⇒ <code>Date</code>
+* [class: DatePicker ⏏](#exp_module_DatePicker)
+  * [new DatePicker(options)](#exp_new_module_DatePicker)
+  * [datePicker.setOptions(options)](#module_DatePicker#setOptions)
+  * [datePicker.setComponents(components)](#module_DatePicker#setComponents)
+  * [datePicker.getComponents()](#module_DatePicker#getComponents)
+  * [datePicker.setDate(date)](#module_DatePicker#setDate)
+  * [datePicker.getDate()](#module_DatePicker#getDate)
 
-<a name="exp_module_DatePicker--DatePicker"></a>
-###class: DatePicker ⇐ <code>View</code> ⏏
-**Extends:** <code>View</code>  
-<a name="new_module_DatePicker--DatePicker_new"></a>
-####new DatePicker(options)
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| options | <code>Object</code> | Configurable options. |
-| \[options.perspective\] | <code>Number</code> | Perspective to use when rendering the wheel. |
-| \[options.wheelLayout\] | <code>Object</code> | Layout-options that are passed to the WheelLayout. |
-| \[options.scrollController\] | <code>Object</code> | Options that are passed to the underlying ScrollControllers. |
-| \[options.container\] | <code>Object</code> | Container-options that are passed to the underlying ContainerSurface. |
-| \[options.classes\] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
-| \[options.createRenderables\] | <code>Object</code> | Options that specify which renderables should be created. |
+<a name="exp_new_module_DatePicker"></a>
+###new DatePicker(options)
+**Params**
 
-<a name="module_DatePicker--DatePicker#setOptions"></a>
-####datePicker.setOptions(options) ⇒ <code>DatePicker</code>
+- options `Object` - Configurable options.  
+  - \[perspective\] `Number` - Perspective to use when rendering the wheel.  
+  - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
+  - \[scrollController\] `Object` - Options that are passed to the underlying ScrollControllers.  
+  - \[container\] `Object` - Container-options that are passed to the underlying ContainerSurface.  
+  - \[classes\] `Array.String` - Css-classes that are added to the surfaces that are created.  
+  - \[createRenderables\] `Object` - Options that specify which renderables should be created.  
+
+**Extends**: `View`  
+<a name="module_DatePicker#setOptions"></a>
+###datePicker.setOptions(options)
 Patches the DatePicker instance's options with the passed-in ones.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| options | <code>Object</code> | Configurable options (see ScrollController for all inherited options). |
-| \[options.perspective\] | <code>Number</code> | Perspective to use when rendering the wheel. |
-| \[options.wheelLayout\] | <code>Object</code> | Layout-options that are passed to the WheelLayout. |
-| \[options.scrollController\] | <code>Object</code> | Options that are passed to the underlying ScrollControllers. |
+**Params**
 
-**Returns**: <code>DatePicker</code> - this  
-<a name="module_DatePicker--DatePicker#setComponents"></a>
-####datePicker.setComponents(components) ⇒ <code>DatePicker</code>
+- options `Object` - Configurable options (see ScrollController for all inherited options).  
+  - \[perspective\] `Number` - Perspective to use when rendering the wheel.  
+  - \[wheelLayout\] `Object` - Layout-options that are passed to the WheelLayout.  
+  - \[scrollController\] `Object` - Options that are passed to the underlying ScrollControllers.  
+
+**Returns**: `DatePicker` - this  
+<a name="module_DatePicker#setComponents"></a>
+###datePicker.setComponents(components)
 Sets the components for the date-picker.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| components | <code>Array</code> | Array of DatePicker.Component objects. |
+**Params**
 
-**Returns**: <code>DatePicker</code> - this  
-<a name="module_DatePicker--DatePicker#getComponents"></a>
-####datePicker.getComponents() ⇒ <code>Array</code>
+- components `Array` - Array of DatePicker.Component objects.  
+
+**Returns**: `DatePicker` - this  
+<a name="module_DatePicker#getComponents"></a>
+###datePicker.getComponents()
 Get the components for the date-picker.
 
-**Returns**: <code>Array</code> - components  
-<a name="module_DatePicker--DatePicker#setDate"></a>
-####datePicker.setDate(date) ⇒ <code>DatePicker</code>
+**Returns**: `Array` - components  
+<a name="module_DatePicker#setDate"></a>
+###datePicker.setDate(date)
 Set the selected date.
 
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| date | <code>Date</code> | Selected date/time. |
+**Params**
 
-**Returns**: <code>DatePicker</code> - this  
-<a name="module_DatePicker--DatePicker#getDate"></a>
-####datePicker.getDate() ⇒ <code>Date</code>
+- date `Date` - Selected date/time.  
+
+**Returns**: `DatePicker` - this  
+<a name="module_DatePicker#getDate"></a>
+###datePicker.getDate()
 Get the selected date.
 
-**Returns**: <code>Date</code> - selected date  
+**Returns**: `Date` - selected date  

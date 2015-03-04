@@ -1,5 +1,5 @@
 <a name="module_NavBarLayout"></a>
-##NavBarLayout
+#NavBarLayout
 Navigation-bar layout consisting of optionally left and right items and a
 title in the middle.
 

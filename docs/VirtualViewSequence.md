@@ -1,5 +1,5 @@
 <a name="module_VirtualViewSequence"></a>
-##VirtualViewSequence
+#VirtualViewSequence
 Virtual ViewSequence for famo.us which creates & destroys nodes using a
 factory delegate. The factory class should support the following functions:
 - create()
@@ -38,64 +38,63 @@ var scrollView = new FlexScrollView({
 });
 ```
 
+<a name="exp_module_VirtualViewSequence"></a>
+##class: VirtualViewSequence ⏏
+**Members**
 
-* [VirtualViewSequence](#module_VirtualViewSequence)
-  * [class: VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence) ⏏
-    * [new VirtualViewSequence(options)](#new_module_VirtualViewSequence--VirtualViewSequence_new)
-    * _instance_
-      * [.getPrevious()](#module_VirtualViewSequence--VirtualViewSequence#getPrevious) ⇒ <code>VirtualViewSequence</code>
-      * [.getNext()](#module_VirtualViewSequence--VirtualViewSequence#getNext) ⇒ <code>VirtualViewSequence</code>
-      * [.get()](#module_VirtualViewSequence--VirtualViewSequence#get) ⇒ <code>Renderable</code>
-      * [.getIndex()](#module_VirtualViewSequence--VirtualViewSequence#getIndex) ⇒ <code>Number</code>
-      * [.toString()](#module_VirtualViewSequence--VirtualViewSequence#toString) ⇒ <code>String</code>
-      * [.cleanup()](#module_VirtualViewSequence--VirtualViewSequence#cleanup) ⇒ <code>VirtualViewSequence</code>
+* [class: VirtualViewSequence ⏏](#exp_module_VirtualViewSequence)
+  * [new VirtualViewSequence(options)](#exp_new_module_VirtualViewSequence)
+  * [virtualViewSequence.getPrevious()](#module_VirtualViewSequence#getPrevious)
+  * [virtualViewSequence.getNext()](#module_VirtualViewSequence#getNext)
+  * [virtualViewSequence.get()](#module_VirtualViewSequence#get)
+  * [virtualViewSequence.getIndex()](#module_VirtualViewSequence#getIndex)
+  * [virtualViewSequence.toString()](#module_VirtualViewSequence#toString)
+  * [virtualViewSequence.cleanup()](#module_VirtualViewSequence#cleanup)
 
-<a name="exp_module_VirtualViewSequence--VirtualViewSequence"></a>
-###class: VirtualViewSequence ⏏
-<a name="new_module_VirtualViewSequence--VirtualViewSequence_new"></a>
-####new VirtualViewSequence(options)
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| options | <code>Object</code> | Configurable options. |
-| options.factory | <code>Object</code> | Factory delegate for creating new renderables. |
-| \[options.value\] | <code>Renderable</code> | Renderable for this node (when omitted, `factory.create()` is called) |
-| \[options.index\] | <code>Number</code> | Index of this node (default: 0). |
+<a name="exp_new_module_VirtualViewSequence"></a>
+###new VirtualViewSequence(options)
+**Params**
 
-<a name="module_VirtualViewSequence--VirtualViewSequence#getPrevious"></a>
-####virtualViewSequence.getPrevious() ⇒ <code>VirtualViewSequence</code>
+- options `Object` - Configurable options.  
+  - factory `Object` - Factory delegate for creating new renderables.  
+  - \[value\] `Renderable` - Renderable for this node (when omitted, `factory.create()` is called)  
+  - \[index\] `Number` - Index of this node (default: 0).  
+
+<a name="module_VirtualViewSequence#getPrevious"></a>
+###virtualViewSequence.getPrevious()
 Get previous node.
 
 When no previous node exists, the factory-delegate function `createPrevious`
 is called to construct a renderable for the previous node. When `createPrevious`
 returns `undefined`, no previous-node will be created.
 
-**Returns**: <code>VirtualViewSequence</code> - previous node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#getNext"></a>
-####virtualViewSequence.getNext() ⇒ <code>VirtualViewSequence</code>
+**Returns**: `VirtualViewSequence` - previous node.  
+<a name="module_VirtualViewSequence#getNext"></a>
+###virtualViewSequence.getNext()
 Get next node.
 
 When no next node exists, the factory-delegate function `createNext`
 is called to construct a renderable for the next node. When `createNext`
 returns `undefined`, no next-node will be created.
 
-**Returns**: <code>VirtualViewSequence</code> - next node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#get"></a>
-####virtualViewSequence.get() ⇒ <code>Renderable</code>
+**Returns**: `VirtualViewSequence` - next node.  
+<a name="module_VirtualViewSequence#get"></a>
+###virtualViewSequence.get()
 Get the value of this node.
 
-**Returns**: <code>Renderable</code> - surface/view  
-<a name="module_VirtualViewSequence--VirtualViewSequence#getIndex"></a>
-####virtualViewSequence.getIndex() ⇒ <code>Number</code>
+**Returns**: `Renderable` - surface/view  
+<a name="module_VirtualViewSequence#getIndex"></a>
+###virtualViewSequence.getIndex()
 Get the index of the node.
 
-**Returns**: <code>Number</code> - Index of node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#toString"></a>
-####virtualViewSequence.toString() ⇒ <code>String</code>
+**Returns**: `Number` - Index of node.  
+<a name="module_VirtualViewSequence#toString"></a>
+###virtualViewSequence.toString()
 Get human readable string verion of the node.
 
-**Returns**: <code>String</code> - node as a human readable string  
-<a name="module_VirtualViewSequence--VirtualViewSequence#cleanup"></a>
-####virtualViewSequence.cleanup() ⇒ <code>VirtualViewSequence</code>
+**Returns**: `String` - node as a human readable string  
+<a name="module_VirtualViewSequence#cleanup"></a>
+###virtualViewSequence.cleanup()
 Cleans up any un-accessed nodes since the previous call to `cleanup`.
 
 This function cleans up any nodes that have not been accessed
@@ -103,4 +102,4 @@ since the last call to `cleanup`. When a node is accessed
 through a call to `getNext`, `getPrevious`, `get` or `getIndex`
 it is considered `touched` and should not be cleaned up.
 
-**Returns**: <code>VirtualViewSequence</code> - this.  
+**Returns**: `VirtualViewSequence` - this.  

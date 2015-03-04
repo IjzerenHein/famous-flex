@@ -1,5 +1,5 @@
 <a name="module_ListLayout"></a>
-##ListLayout
+#ListLayout
 Lays out items and optionally sticky sections from top to bottom or left to right.
 
 |options|type|description|
