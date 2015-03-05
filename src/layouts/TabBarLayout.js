@@ -5,10 +5,8 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2015
  */
-
-/*global define*/
 
 /**
  * Tab-bar layout supporting both horizontal (default) and vertical orientation.
@@ -17,6 +15,7 @@
  * |---|---|---|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number|Space in between items|
+ * |`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 0.001)|
  * |`[itemSize]`|Number/Bool|Width or height of the item (see below)|
  *
  * `itemSize` can have of the following values:
@@ -88,9 +87,10 @@ define(function(require, exports, module) {
     };
     var nodeSize;
     var offset;
+    var zIncrement;
 
     // Layout function
-    function NavBarLayout(context, options) {
+    function TabBarLayout(context, options) {
 
         // Prepare data
         size = context.size;
@@ -100,12 +100,13 @@ define(function(require, exports, module) {
         items = context.get('items');
         spacers = context.get('spacers');
         margins = LayoutUtility.normalizeMargins(options.margins);
+        zIncrement = options.zIncrement || 0.001;
         set.size[0] = context.size[0];
         set.size[1] = context.size[1];
         set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
         set.translate[0] = 0;
         set.translate[1] = 0;
-        set.translate[2] = 0.001;
+        set.translate[2] = zIncrement;
         set.translate[revDirection] = margins[direction ? 3 : 0];
         set.align[0] = 0;
         set.align[1] = 0;
@@ -151,11 +152,11 @@ define(function(require, exports, module) {
             if (i === options.selectedItemIndex) {
                 set.scrollLength = 0;
                 set.translate[direction] += (nodeSize / 2);
-                set.translate[2] = 0.002;
+                set.translate[2] = zIncrement * 2;
                 set.origin[direction] = 0.5;
                 context.set('selectedItemOverlay', set);
                 set.origin[direction] = 0;
-                set.translate[2] = 0.001;
+                set.translate[2] = zIncrement;
             }
 
             // Position spacer (optional)
@@ -184,8 +185,8 @@ define(function(require, exports, module) {
         context.set('background', set);
     }
 
-    NavBarLayout.Capabilities = capabilities;
-    NavBarLayout.Name = 'TabBarLayout';
-    NavBarLayout.Description = 'TabBar widget layout';
-    module.exports = NavBarLayout;
+    TabBarLayout.Capabilities = capabilities;
+    TabBarLayout.Name = 'TabBarLayout';
+    TabBarLayout.Description = 'TabBar widget layout';
+    module.exports = TabBarLayout;
 });
