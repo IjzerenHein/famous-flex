@@ -320,23 +320,23 @@ var scrollView = new FlexScrollView({
 
 ![Sticky Headers](FlexScrollView/stickyheaders.gif)
 
-To enable sticky headers, set the `isHeaderCallback` layout-option to a function which returns `true` when a renderable is a section:
+To enable sticky headers, set the `isSectionCallback` layout-option to a function which returns `true` when a renderable is a section:
 
 ```javascript
 var scrollView = new FlexScrollView({
     layoutOptions: {
-        isHeaderCallback: function(renderNode) {
-            return renderNode.isHeader;
+        isSectionCallback: function(renderNode) {
+            return renderNode.isSection;
         }
     }
 ```
 
-A header is a regular renderable, just like any other renderable. In the following example we add a property `isHeader` so the header can be detected by the `isHeaderCallback()` function. Also, the renderable is moved in front so that it overlaps non-header items.
+A section is a regular renderable, just like any other renderable. In the following example we add a property `isSection` so the section can be detected by the `isSectionCallback()` function. Also, the renderable is moved in front so that it overlaps non-section items.
 
 ```javascript
-function _createHeader() {
+function _createSection() {
     var surface = new Surface({..});
-    surface.isHeader = true;
+    surface.isSection = true;
     var renderNode = new RenderNode(new Modifier({
         transform: Transform.infront
     }));
@@ -345,13 +345,13 @@ function _createHeader() {
 }
 ```
 
-To add headers & items, just add them in the order that you want them to be displayed:
+To add sections & items, just add them in the order that you want them to be displayed:
 
 ``` javascript
-scrollView.push(_createHeader());
+scrollView.push(_createSection());
 scrollView.push(new Surface({}));
 scrollView.push(new Surface({}));
-scrollView.push(_createHeader());
+scrollView.push(_createSection());
 scrollView.push(new Surface({}));
 ```
 
