@@ -209,6 +209,17 @@ define(function(require, exports, module) {
     FlexScrollView.prototype.getPosition = FlexScrollView.prototype.getOffset;
 
     /**
+     * Returns the absolute position associated with the Scrollview instance.
+     *
+     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
+     *
+     * @return {number} The position of the Scrollview's current Node, in pixels translated.
+     */
+    FlexScrollView.prototype.getAbsolutePosition = function() {
+        return -(this._scrollOffsetCache + this._scroll.groupStart);
+    };
+
+    /**
      * Helper function for setting the pull-to-refresh status.
      */
     function _setPullToRefreshState(pullToRefresh, state) {
