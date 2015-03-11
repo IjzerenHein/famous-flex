@@ -1786,8 +1786,8 @@ define(function(require, exports, module) {
                 target: this,
                 oldSize: this._contextSizeCache,
                 size: size,
-                oldScrollOffset: this._scrollOffsetCache,
-                scrollOffset: scrollOffset
+                oldScrollOffset: -(this._scrollOffsetCache + this._scroll.groupStart),
+                scrollOffset: -(scrollOffset + this._scroll.groupStart)
             };
 
             // When scroll-offset has changed, emit scroll-start and scroll events
@@ -1829,7 +1829,7 @@ define(function(require, exports, module) {
             this._scrollOffsetCache = scrollOffset;
 
             // Emit end event
-            eventData.scrollOffset = this._scrollOffsetCache;
+            eventData.scrollOffset = -(this._scrollOffsetCache + this._scroll.groupStart);
             this._eventOutput.emit('layoutend', eventData);
         }
         else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
@@ -1881,8 +1881,8 @@ define(function(require, exports, module) {
                 target: this,
                 oldSize: size,
                 size: size,
-                oldScrollOffset: scrollOffset,
-                scrollOffset: scrollOffset
+                oldScrollOffset: -(this._scroll.groupStart + scrollOffset),
+                scrollOffset: -(this._scroll.groupStart + scrollOffset)
             };
             this._eventOutput.emit('scrollend', eventData);
         }
