@@ -8,9 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define, console*/
-/*eslint no-use-before-define:0, no-console:0 */
-
 /**
  * Scrollable layout-controller.
  *

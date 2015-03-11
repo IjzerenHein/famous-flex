@@ -8,9 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-/*eslint no-use-before-define:0 */
-
 /**
  * LayoutController lays out renderables according to a layout-
  * function and a data-source.

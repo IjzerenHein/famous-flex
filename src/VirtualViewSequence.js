@@ -8,8 +8,8 @@
  * @copyright Gloey Apps, 2015
  */
 
-/*global define, console*/
-/*eslint no-use-before-define:0, no-console:0 */
+/*global console*/
+/*eslint no-console:0 */
 
 /**
  * Virtual ViewSequence for famo.us which creates & destroys nodes using a

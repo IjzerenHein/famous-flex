@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * Lays-out renderables from left to right, in a grid with fixed number of
  * columns and rows.

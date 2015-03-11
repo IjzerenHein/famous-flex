@@ -8,9 +8,6 @@
  * @copyright Gloey Apps, 2015
  */
 
-/*global define, console*/
-/*eslint no-use-before-define:0, no-console:0 */
-
 /**
  * Date/time picker wheel for famo.us.
  *

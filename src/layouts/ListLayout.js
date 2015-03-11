@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * Lays out items and optionally sticky sections from top to bottom or left to right.
  *

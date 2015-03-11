@@ -5,11 +5,8 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2015
  */
-
-/*global define, console*/
-/*eslint no-use-before-define:0, no-console:0 */
 
 /**
  * Flexible FlexScrollView for famo.us.

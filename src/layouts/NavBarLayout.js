@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * Navigation-bar layout consisting of optionally left and right items and a
  * title in the middle.

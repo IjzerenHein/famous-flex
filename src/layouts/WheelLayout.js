@@ -8,9 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define, console*/
-/*eslint no-console: 0*/
-
 /**
  * Lays out renderables in a spinner wheel (slot-machine wheel) formation.
  *

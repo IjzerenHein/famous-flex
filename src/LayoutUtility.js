@@ -8,7 +8,7 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define, console*/
+/*global console*/
 /*eslint no-console:0*/
 
 /**

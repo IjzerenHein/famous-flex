@@ -8,9 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-/*eslint no-use-before-define:0 */
-
 /**
  * LayoutNodeManager is a private class used internally by LayoutController, ScrollController
  * and ScrollView. It manages the layout-nodes that are rendered and exposes the layout-context

@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * Three part layout consisting of a top-header, bottom-footer and middle part.
  *

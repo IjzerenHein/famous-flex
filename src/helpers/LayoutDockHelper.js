@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * LayoutDockHelper helps positioning nodes using docking principles.
  *

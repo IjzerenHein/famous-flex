@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define, console*/
-
 /**
  * LayoutContext is the interface for a layout-function to access
  * renderables in the data-source and set their size, position, tranformation, etc...

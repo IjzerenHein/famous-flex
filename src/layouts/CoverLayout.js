@@ -8,8 +8,6 @@
  * @copyright Gloey Apps, 2014
  */
 
-/*global define*/
-
 /**
  * Lays a collection of renderables from left to right, and when the right edge is reached,
  * continues at the left of the next line.
