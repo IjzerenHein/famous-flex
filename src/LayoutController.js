@@ -592,6 +592,19 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Helper that return the underlying array datasource if available.
+     */
+    function _getDataSourceArray() {
+      if (Array.isArray(this._dataSource)) {
+        return this._dataSource;
+      }
+      else if (this._viewSequence) {
+        return this._viewSequence._;
+      }
+      return undefined;
+    }
+
+    /**
      * Get the renderable at the given index or Id.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
@@ -608,37 +621,88 @@ define(function(require, exports, module) {
     /**
      * Swaps two renderables at the given positions.
      *
+     * This method is only supported for dataSources of type Array or ViewSequence.
+     *
      * @param {Number} index Index of the renderable to swap
      * @param {Number} index2 Index of the renderable to swap with
      * @return {LayoutController} this
      */
     LayoutController.prototype.swap = function(index, index2) {
-        if (this._viewSequence) {
-            _getViewSequenceAtIndex.call(this, index).swap(_getViewSequenceAtIndex.call(this, index2));
-            this._isDirty = true;
+        var array = _getDataSourceArray.call(this);
+        if (!array) {
+            throw '.swap is only supported for dataSources of type Array or ViewSequence';
         }
+        if (index === index2) {
+          return this;
+        }
+        if ((index < 0) || (index >= array.length)) {
+          throw 'Invalid index (' + index + ') specified to .swap';
+        }
+        if ((index2 < 0) || (index2 >= array.length)) {
+          throw 'Invalid second index (' + index2 + ') specified to .swap';
+        }
+        var renderNode = array[index];
+        array[index] = array[index2];
+        array[index2] = renderNode;
+        this._isDirty = true;
         return this;
     };
 
     /**
-     * Swaps two renderables at the given positions.
+     * Replaces a renderable at the given index or id.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
      * @param {Renderable} renderable renderable to replace with
-     * @return {Renderable} replaced renderable
+     * @return {Renderable} old renderable that has been replaced
      */
     LayoutController.prototype.replace = function(indexOrId, renderable) {
         var oldRenderable;
         if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
             oldRenderable = this._nodesById[indexOrId];
-            this._nodesById[indexOrId] = renderable;
-            this._isDirty = true;
+            if (oldRenderable !== renderable) {
+              this._nodesById[indexOrId] = renderable;
+              this._isDirty = true;
+            }
             return oldRenderable;
         }
-        //var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
-        //return viewSequence ? viewSequence.get() : undefined;
-        // TODO - support indexes
-        return undefined;
+        var array = _getDataSourceArray.call(this);
+        if (!array) {
+          return undefined;
+        }
+        if ((indexOrId < 0) || (indexOrId >= array.length)) {
+          throw 'Invalid index (' + indexOrId + ') specified to .replace';
+        }
+        oldRenderable = array[indexOrId];
+        if (oldRenderable !== renderable) {
+          array[indexOrId] = renderable;
+          this._isDirty = true;
+        }
+        return oldRenderable;
+    };
+
+    /**
+     * Moves a renderable to a new index.
+     *
+     * This method is only supported for dataSources of type Array or ViewSequence.
+     *
+     * @param {Number} index Index of the renderable to move.
+     * @param {Number} newIndex New index of the renderable.
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.move = function(index, newIndex) {
+        var array = _getDataSourceArray.call(this);
+        if (!array) {
+            throw '.move is only supported for dataSources of type Array or ViewSequence';
+        }
+        if ((index < 0) || (index >= array.length)) {
+          throw 'Invalid index (' + index + ') specified to .move';
+        }
+        if ((newIndex < 0) || (newIndex >= array.length)) {
+          throw 'Invalid newIndex (' + newIndex + ') specified to .move';
+        }
+        var item = array.splice(index, 1)[0];
+        array.splice(newIndex, 0, item);
+        return this;
     };
 
     /**
@@ -650,7 +714,7 @@ define(function(require, exports, module) {
      *
      * @param {Number|String|Renderable} indexOrId Index, id (String) or renderable to remove.
      * @param {Spec} [removeSpec] Size, transform, etc.. to end with when removing
-     * @return {LayoutController} this
+     * @return {Renderable} renderable that has been removed
      */
     LayoutController.prototype.remove = function(indexOrId, removeSpec) {
 
@@ -711,7 +775,7 @@ define(function(require, exports, module) {
             this._isDirty = true;
         }
 
-        return this;
+        return renderNode;
     };
 
     /**
