@@ -109,6 +109,7 @@ define(function(require, exports, module) {
         contextState.prevSetIndex = 0;
         contextState.addCount = 0;
         contextState.removeCount = 0;
+        contextState.lastRenderNode = undefined;
 
         // Prepare content
         context.size[0] = contextData.size[0];
@@ -517,6 +518,10 @@ define(function(require, exports, module) {
         if (!this._context.reverse) {
             this._contextState.nextSequence = this._contextState.nextSequence.getNext();
         }
+        if (this._contextState.lastRenderNode === renderNode) {
+          throw 'ViewSequence is corrupted, should never contain the same renderNode twice';
+        }
+        this._contextState.lastRenderNode = renderNode;
         return {
             renderNode: renderNode,
             viewSequence: nextSequence,
@@ -548,6 +553,9 @@ define(function(require, exports, module) {
         var prevSequence = this._contextState.prevSequence;
         if (this._context.reverse) {
             this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
+        }
+        if (this._contextState.lastRenderNode === renderNode) {
+          throw 'ViewSequence is corrupted, should never contain the same renderNode twice';
         }
         return {
             renderNode: renderNode,
