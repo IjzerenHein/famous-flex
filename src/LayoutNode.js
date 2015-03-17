@@ -103,7 +103,7 @@ define(function(require, exports, module) {
             }
             else {
                 for (var i = 0; i < 16; i++) {
-                    this._spec.transform[0] = spec.transform[0];
+                    this._spec.transform[i] = spec.transform[i];
                 }
             }
         }
