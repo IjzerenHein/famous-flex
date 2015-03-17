@@ -598,8 +598,8 @@ define(function(require, exports, module) {
       if (Array.isArray(this._dataSource)) {
         return this._dataSource;
       }
-      else if (this._viewSequence) {
-        return this._viewSequence._;
+      else if (this._viewSequence || this._viewSequence._) {
+        return this._viewSequence._.array;
       }
       return undefined;
     }
@@ -717,9 +717,9 @@ define(function(require, exports, module) {
      * @return {Renderable} renderable that has been removed
      */
     LayoutController.prototype.remove = function(indexOrId, removeSpec) {
+        var renderNode;
 
         // Remove the renderable in case of an id (String)
-        var renderNode;
         if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
 
             // Find and remove renderable from data-source
@@ -741,24 +741,21 @@ define(function(require, exports, module) {
         }
 
         // Remove the renderable using an index
-        else {
-
-            // Remove from array
-            if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
-                if (this._dataSource instanceof Array) {
-                    renderNode = this._dataSource.splice(indexOrId, 1)[0];
-                }
-                else {
-                    renderNode = this._dataSource._.getValue(indexOrId);
-                    this._dataSource.splice(indexOrId, 1);
-                }
+        else if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
+            var array = _getDataSourceArray.call(this);
+            if (!array || (indexOrId < 0) || (indexOrId >= array.length)) {
+              throw 'Invalid index (' + indexOrId + ') specified to .remove (or dataSource doesn\'t support remove)';
             }
-            else {
-                indexOrId = this._dataSource.indexOf(indexOrId);
-                if (indexOrId >= 0) {
-                    this._dataSource.splice(indexOrId, 1);
-                    renderNode = indexOrId;
-                }
+            renderNode = array[indexOrId];
+            this._viewSequence.splice(indexOrId, 1);
+        }
+
+        // Remove by renderable
+        else {
+            indexOrId = this._dataSource.indexOf(indexOrId);
+            if (indexOrId >= 0) {
+                this._dataSource.splice(indexOrId, 1);
+                renderNode = indexOrId;
             }
         }
 
