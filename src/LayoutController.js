@@ -702,6 +702,7 @@ define(function(require, exports, module) {
         }
         var item = array.splice(index, 1)[0];
         array.splice(newIndex, 0, item);
+        this._isDirty = true;
         return this;
     };
 
