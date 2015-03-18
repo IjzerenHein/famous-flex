@@ -1608,20 +1608,22 @@ define(function(require, exports, module) {
             this._scroll.scrollDirty = true;
             if (this._scroll.scrollForceStartItem && this.options.paginated && (this.options.paginationMode === PaginationMode.PAGE)) {
                 var item = this.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
-                if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
-                    this.goToRenderNode(item.renderNode);
-                }
-                else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
-                    velocity = velocity || 0;
-                    if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
-                        this.goToRenderNode(item._node._next.renderNode);
+                if (item) {
+                    if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
+                        this.goToRenderNode(item.renderNode);
                     }
-                    else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
-                        this.goToRenderNode(item._node._prev.renderNode);
+                    else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+                        velocity = velocity || 0;
+                        if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
+                            this.goToRenderNode(item._node._next.renderNode);
+                        }
+                        else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
+                            this.goToRenderNode(item._node._prev.renderNode);
+                        }
                     }
-                }
-                else {
-                    this.goToRenderNode(item.renderNode);
+                    else {
+                        this.goToRenderNode(item.renderNode);
+                    }
                 }
             }
             this._scroll.scrollForceStartItem = undefined;
