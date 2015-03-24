@@ -662,6 +662,10 @@ define(function(require, exports, module) {
         if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
             contextNode.usesTrueSize = true;
             var backupSize = renderNode._backupSize;
+            if (renderNode._contentDirty || renderNode._trueSizeCheck) {
+              this._trueSizeRequested = true;
+              contextNode.trueSizeRequested = true;
+            }
             if (renderNode._trueSizeCheck) {
 
                 // Fix for true-size renderables. When true-size is used, the size
@@ -672,19 +676,11 @@ define(function(require, exports, module) {
                 if (backupSize && (configSize !== size)) {
                     var newWidth = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
                     var newHeight = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
-                    if ((newWidth !== backupSize[0]) || (newHeight !== backupSize[1])) {
-                        this._trueSizeRequested = true;
-                        contextNode.trueSizeRequested = true;
-                    }
                     backupSize[0] = newWidth;
                     backupSize[1] = newHeight;
                     size = backupSize;
                     renderNode._backupSize = undefined;
                     backupSize = undefined;
-                }
-                else {
-                    this._trueSizeRequested = true;
-                    contextNode.trueSizeRequested = true;
                 }
             }
             if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
