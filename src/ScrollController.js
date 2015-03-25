@@ -1832,7 +1832,6 @@ define(function(require, exports, module) {
 
             // Emit end event
             eventData.scrollOffset = -(this._scrollOffsetCache + this._scroll.groupStart);
-            this._eventOutput.emit('layoutend', eventData);
         }
         else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
             emitEndScrollingEvent = true;
@@ -1847,6 +1846,9 @@ define(function(require, exports, module) {
         var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
         this._specs = result.specs;
+        if (eventData) { // eventData is only used here to check whether there has been a re-layout
+            this._eventOutput.emit('layoutend', eventData);
+        }
         if (result.modified) {
             this._eventOutput.emit('reflow', {
                 target: this

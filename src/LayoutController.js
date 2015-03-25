@@ -926,18 +926,18 @@ define(function(require, exports, module) {
 
             // Update output and optionally emit event
             var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._specs = result.specs;
             this._commitOutput.target = result.specs;
+            this._eventOutput.emit('layoutend', eventData);
             this._eventOutput.emit('reflow', {
                 target: this
             });
-
-            // Emit end event
-            this._eventOutput.emit('layoutend', eventData);
         }
         else if (this.options.flow) {
 
             // Update output and optionally emit event
             result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+            this._specs = result.specs;
             this._commitOutput.target = result.specs;
             if (result.modified) {
                 this._eventOutput.emit('reflow', {
@@ -945,7 +945,6 @@ define(function(require, exports, module) {
                 });
             }
         }
-        this._specs = this._commitOutput.target;
 
         // Render child-nodes every commit
         var target = this._commitOutput.target;
