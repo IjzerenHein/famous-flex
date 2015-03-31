@@ -875,14 +875,24 @@ define(function(require, exports, module) {
             // When the layout has changed, and we are not just scrolling,
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
-            if (this.options.flow && (this._isDirty ||
-                (this.options.reflowOnResize &&
-                ((size[0] !== this._contextSizeCache[0]) ||
-                 (size[1] !== this._contextSizeCache[1]))))) {
-                var node = this._nodes.getStartEnumNode();
-                while (node) {
-                    node.releaseLock();
-                    node = node._next;
+            if (this.options.flow) {
+                var lock = false;
+                if (!this.options.reflowOnResize) {
+                    if (!this._isDirty &&
+                        ((size[0] !== this._contextSizeCache[0]) ||
+                         (size[1] !== this._contextSizeCache[1]))) {
+                        lock = undefined;
+                    }
+                    else {
+                      lock = true;
+                    }
+                }
+                if (lock !== undefined) {
+                    var node = this._nodes.getStartEnumNode();
+                    while (node) {
+                        node.releaseLock(lock);
+                        node = node._next;
+                    }
                 }
             }
 

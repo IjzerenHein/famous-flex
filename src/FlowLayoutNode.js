@@ -5,11 +5,11 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
- * Internal LayoutNode class used by `FlowLayoutController`.
+ * Internal LayoutNode class used by `LayoutNodeManager`.
  *
  * @module
  */
@@ -202,12 +202,14 @@ define(function(require, exports, module) {
      * E.g., when changing position, resizing, the lock should be released so that
      * the renderables can smoothly transition to their new positions.
      */
-    FlowLayoutNode.prototype.releaseLock = function(duration) {
+    FlowLayoutNode.prototype.releaseLock = function(enable) {
         this._lockTransitionable.halt();
         this._lockTransitionable.reset(0);
-        this._lockTransitionable.set(1, {
-            duration: duration || this.options.spring.period || 1000
-        });
+        if (enable) {
+          this._lockTransitionable.set(1, {
+              duration: this.options.spring.period || 1000
+          });
+        }
     };
 
     /**

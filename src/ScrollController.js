@@ -1833,7 +1833,7 @@ define(function(require, exports, module) {
                  (size[1] !== this._contextSizeCache[1]))))) {
                 var node = this._nodes.getStartEnumNode();
                 while (node) {
-                    node.releaseLock();
+                    node.releaseLock(true);
                     node = node._next;
                 }
             }
