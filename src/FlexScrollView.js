@@ -148,7 +148,7 @@ define(function(require, exports, module) {
      *
      * @return {Number} The current index of the ViewSequence
      */
-    FlexScrollView.prototype.getCurrentIndex = function getCurrentIndex() {
+    FlexScrollView.prototype.getCurrentIndex = function() {
         var item = this.getFirstVisibleItem();
         return item ? item.viewSequence.getIndex() : -1;
     };
@@ -158,9 +158,10 @@ define(function(require, exports, module) {
      * for compatibility with the stock famo.us Scrollview.
      *
      * @param {Number} index view-sequence index to go to.
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without scrolling animation.
      * @return {FlexScrollView} this
      */
-    FlexScrollView.prototype.goToPage = function goToPage(index) {
+    FlexScrollView.prototype.goToPage = function(index, noAnimation) {
         var viewSequence = this._viewSequence;
         if (!viewSequence) {
             return this;
@@ -177,7 +178,7 @@ define(function(require, exports, module) {
                 return this;
             }
         }
-        this.goToRenderNode(viewSequence.get());
+        this.goToRenderNode(viewSequence.get(), noAnimation);
         return this;
     };
 

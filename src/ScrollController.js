@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -1204,14 +1204,26 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Helper function that scrolls the view towards a view-sequence node.
+     * Helper function that goes to a view-sequence either by scrolling
+     * or immediately without any scrolling animation.
      */
-    function _scrollToSequence(viewSequence, next) {
-        this._scroll.scrollToSequence = viewSequence;
-        this._scroll.scrollToRenderNode = viewSequence.get();
-        this._scroll.ensureVisibleRenderNode = undefined;
-        this._scroll.scrollToDirection = next;
-        this._scroll.scrollDirty = true;
+    function _goToSequence(viewSequence, next, noAnimation) {
+        if (noAnimation) {
+            this._viewSequence = viewSequence;
+            this._scroll.springPosition = undefined;
+            _updateSpring.call(this);
+            this.halt();
+            this._scroll.scrollDelta = 0;
+            _setParticle.call(this, 0, 0, '_goToSequence');
+            this._isDirty = true;
+        }
+        else {
+            this._scroll.scrollToSequence = viewSequence;
+            this._scroll.scrollToRenderNode = viewSequence.get();
+            this._scroll.ensureVisibleRenderNode = undefined;
+            this._scroll.scrollToDirection = next;
+            this._scroll.scrollDirty = true;
+        }
     }
 
     /**
@@ -1229,14 +1241,15 @@ define(function(require, exports, module) {
      * Moves to the next node in the viewSequence.
      *
      * @param {Number} [amount] Amount of nodes to move
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without any scrolling animation.
      */
-    function _goToPage(amount) {
+    function _goToPage(amount, noAnimation) {
 
         // Get current scroll-position. When a previous call was made to
         // `scroll' or `scrollTo` and that node has not yet been reached, then
         // the amount is accumalated onto that scroll target.
-        var viewSequence = this._scroll.scrollToSequence || this._viewSequence;
-        if (!this._scroll.scrollToSequence) {
+        var viewSequence = (!noAnimation ? this._scroll.scrollToSequence : undefined) || this._viewSequence;
+        if (!this._scroll.scrollToSequence && !noAnimation) {
             var firstVisibleItem = this.getFirstVisibleItem();
             if (firstVisibleItem) {
                 viewSequence = firstVisibleItem.viewSequence;
@@ -1260,17 +1273,18 @@ define(function(require, exports, module) {
                 break;
             }
         }
-        _scrollToSequence.call(this, viewSequence, amount >= 0);
+        _goToSequence.call(this, viewSequence, amount >= 0, noAnimation);
     }
 
     /**
-     * Scroll to the first page, making it visible.
+     * Goes to the first page, making it visible.
      *
      * NOTE: This function does not work on ViewSequences that have the `loop` property enabled.
      *
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without any scrolling animation.
      * @return {ScrollController} this
      */
-    ScrollController.prototype.goToFirstPage = function() {
+    ScrollController.prototype.goToFirstPage = function(noAnimation) {
         if (!this._viewSequence) {
             return this;
         }
@@ -1288,38 +1302,41 @@ define(function(require, exports, module) {
                 break;
             }
         }
-        _scrollToSequence.call(this, viewSequence, false);
+        _goToSequence.call(this, viewSequence, false, noAnimation);
         return this;
     };
 
     /**
-     * Scroll to the previous page, making it visible.
+     * Goes to the previous page, making it visible.
      *
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without any scrolling animation.
      * @return {ScrollController} this
      */
-    ScrollController.prototype.goToPreviousPage = function() {
-        _goToPage.call(this, -1);
+    ScrollController.prototype.goToPreviousPage = function(noAnimation) {
+        _goToPage.call(this, -1, noAnimation);
         return this;
     };
 
     /**
-     * Scroll to the next page, making it visible.
+     * Goes to the next page, making it visible.
      *
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without any scrolling animation.
      * @return {ScrollController} this
      */
-    ScrollController.prototype.goToNextPage = function() {
-        _goToPage.call(this, 1);
+    ScrollController.prototype.goToNextPage = function(noAnimation) {
+        _goToPage.call(this, 1, noAnimation);
         return this;
     };
 
     /**
-     * Scroll to the last page, making it visible.
+     * Goes to the last page, making it visible.
      *
      * NOTE: This function does not work on ViewSequences that have the `loop` property enabled.
      *
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without any scrolling animation.
      * @return {ScrollController} this
      */
-    ScrollController.prototype.goToLastPage = function() {
+    ScrollController.prototype.goToLastPage = function(noAnimation) {
         if (!this._viewSequence) {
             return this;
         }
@@ -1337,17 +1354,18 @@ define(function(require, exports, module) {
                 break;
             }
         }
-        _scrollToSequence.call(this, viewSequence, true);
+        _goToSequence.call(this, viewSequence, true, noAnimation);
         return this;
     };
 
     /**
-     * Scroll to the given renderable in the datasource.
+     * Goes to the given renderable in the datasource.
      *
      * @param {RenderNode} node renderable to scroll to.
+     * @param {Bool} [noAnimation] When set to true, immediately shows the node without scrolling animation.
      * @return {ScrollController} this
      */
-    ScrollController.prototype.goToRenderNode = function(node) {
+    ScrollController.prototype.goToRenderNode = function(node, noAnimation) {
 
         // Verify arguments and state
         if (!this._viewSequence || !node) {
@@ -1357,7 +1375,7 @@ define(function(require, exports, module) {
         // Check current node
         if (this._viewSequence.get() === node) {
             var next = _calcScrollOffset.call(this) >= 0;
-            _scrollToSequence.call(this, this._viewSequence, next);
+            _goToSequence.call(this, this._viewSequence, next, noAnimation);
             return this;
         }
 
@@ -1369,12 +1387,12 @@ define(function(require, exports, module) {
         while ((nextSequence || prevSequence) && (nextSequence !== this._viewSequence)){
             var nextNode = nextSequence ? nextSequence.get() : undefined;
             if (nextNode === node) {
-                _scrollToSequence.call(this, nextSequence, true);
+                _goToSequence.call(this, nextSequence, true, noAnimation);
                 break;
             }
             var prevNode = prevSequence ? prevSequence.get() : undefined;
             if (prevNode === node) {
-                _scrollToSequence.call(this, prevSequence, false);
+                _goToSequence.call(this, prevSequence, false, noAnimation);
                 break;
             }
             nextSequence = nextNode ? nextSequence.getNext() : undefined;
