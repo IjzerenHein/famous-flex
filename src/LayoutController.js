@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -745,7 +745,7 @@ define(function(require, exports, module) {
         else if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
             var array = _getDataSourceArray.call(this);
             if (!array || (indexOrId < 0) || (indexOrId >= array.length)) {
-              throw 'Invalid index (' + indexOrId + ') specified to .remove (or dataSource doesn\'t support remove)';
+                throw 'Invalid index (' + indexOrId + ') specified to .remove (or dataSource doesn\'t support remove)';
             }
             renderNode = array[indexOrId];
             this._viewSequence.splice(indexOrId, 1);
@@ -757,6 +757,17 @@ define(function(require, exports, module) {
             if (indexOrId >= 0) {
                 this._dataSource.splice(indexOrId, 1);
                 renderNode = indexOrId;
+            }
+        }
+
+        // When a node is removed from the view-sequence, the current this._viewSequence
+        // node may not be part of the valid view-sequence anymore. This seems to be a bug
+        // in the famo.us ViewSequence implementation/concept. The following check was added
+        // to ensure that always a valid viewSequence node is selected into the ScrollView.
+        if (this._viewSequence) {
+            var next = this._viewSequence.getNext();
+            if (next && (next.get() === this._viewSequence.get())) {
+                this._viewSequence = next;
             }
         }
 

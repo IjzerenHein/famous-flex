@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -519,7 +519,7 @@ define(function(require, exports, module) {
             this._contextState.nextSequence = this._contextState.nextSequence.getNext();
         }
         if (this._contextState.lastRenderNode === renderNode) {
-          throw 'ViewSequence is corrupted, should never contain the same renderNode twice';
+          throw 'ViewSequence is corrupted, should never contain the same renderNode twice, index: ' + nextSequence.getIndex();
         }
         this._contextState.lastRenderNode = renderNode;
         return {
@@ -555,8 +555,9 @@ define(function(require, exports, module) {
             this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
         }
         if (this._contextState.lastRenderNode === renderNode) {
-          throw 'ViewSequence is corrupted, should never contain the same renderNode twice';
+          throw 'ViewSequence is corrupted, should never contain the same renderNode twice, index: ' + prevSequence.getIndex();
         }
+        this._contextState.lastRenderNode = renderNode;
         return {
             renderNode: renderNode,
             viewSequence: prevSequence,
