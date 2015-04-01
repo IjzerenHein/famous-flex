@@ -97,14 +97,12 @@ define(function(require, exports, module) {
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
      * @param {Bool} [options.overscroll] Enables or disables overscroll (default: `true`).
-     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
-     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @alias module:ScrollController
      */
     function ScrollController(options) {
@@ -258,14 +256,12 @@ define(function(require, exports, module) {
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
      * @param {Bool} [options.enabled] Enables or disables user input (default: `true`).
      * @param {Bool} [options.overscroll] Enables or disables overscroll (default: `true`).
-     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
      * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
      * @return {ScrollController} this
      */
     ScrollController.prototype.setOptions = function(options) {

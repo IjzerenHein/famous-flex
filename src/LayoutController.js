@@ -46,6 +46,7 @@ define(function(require, exports, module) {
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
      * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
      * @param {Bool} [options.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
+     * @param {Object} [options.nodeSpring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
@@ -149,10 +150,10 @@ define(function(require, exports, module) {
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Object} [options.nodeSpring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
      * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
      * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
-     * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
      * @return {LayoutController} this
      */
     LayoutController.prototype.setOptions = function setOptions(options) {
