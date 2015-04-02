@@ -1759,7 +1759,16 @@ define(function(require, exports, module) {
     function _innerRender() {
         var specs = this._specs;
         for (var i3 = 0, j3 = specs.length; i3 < j3; i3++) {
-            specs[i3].target = specs[i3].renderNode.render();
+            if (specs[i3].renderNode) {
+                specs[i3].target = specs[i3].renderNode.render();
+            }
+        }
+
+        // Add our cleanup-registration id also to the list, so that the
+        // cleanup function is called by famo.us when the LayoutController is
+        // removed from the render-tree.
+        if (!specs.length || (specs[specs.length-1] !== this._cleanupRegistration)) {
+            specs.push(this._cleanupRegistration);
         }
         return specs;
     }
@@ -1778,6 +1787,13 @@ define(function(require, exports, module) {
 
         // Update debug info
         this._debug.commitCount++;
+
+        // Reset the flow-state when requested
+        if (this._resetFlowState) {
+            this._resetFlowState = false;
+            this._isDirty = true;
+            this._nodes.removeAll();
+        }
 
         // Calculate scroll offset
         var scrollOffset = _calcScrollOffset.call(this, true, true);

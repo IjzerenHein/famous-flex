@@ -302,6 +302,19 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Removes all nodes.
+     */
+    LayoutNodeManager.prototype.removeAll = function() {
+        var node = this._first;
+        while (node) {
+          var next = node._next;
+          _destroyNode.call(this, node);
+          node = next;
+        }
+        this._first = undefined;
+    };
+
+    /**
      * Destroys a layout-node
      */
     function _destroyNode(node) {

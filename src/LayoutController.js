@@ -62,6 +62,21 @@ define(function(require, exports, module) {
         this._contextSizeCache = [0, 0];
         this._commitOutput = {};
 
+        // Create an object to we can capture the famo.us cleanup call on
+        // LayoutController.
+        this._cleanupRegistration = {
+          commit: function() {
+              return undefined;
+          },
+          cleanup: function(context) {
+              this.cleanup(context);
+          }.bind(this)
+        };
+        this._cleanupRegistration.target = Entity.register(this._cleanupRegistration);
+        this._cleanupRegistration.render = function() {
+          return this.target;
+        }.bind(this._cleanupRegistration);
+
         // Setup input event handler
         this._eventInput = new EventHandler();
         EventHandler.setInputHandler(this, this._eventInput);
@@ -459,6 +474,19 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Resets the current flow state, so that all renderables
+     * are immediately displayed in their end-state.
+     *
+     * @return {LayoutController} this
+     */
+    LayoutController.prototype.resetFlowState = function() {
+        if (this.options.flow) {
+            this._resetFlowState = true;
+        }
+        return this;
+    };
+
+    /**
      * Inserts a renderable into the data-source.
      *
      * The optional argument `insertSpec` is only used `flow` mode is enabled.
@@ -767,8 +795,14 @@ define(function(require, exports, module) {
         // to ensure that always a valid viewSequence node is selected into the ScrollView.
         if (this._viewSequence) {
             var next = this._viewSequence.getNext();
-            if (next && (next.get() === this._viewSequence.get())) {
+            if (next && next.get() && (next.get() === this._viewSequence.get())) {
                 this._viewSequence = next;
+            }
+            else {
+                next = this._viewSequence.getPrevious();
+                if (next && next.get() && (next.get() === this._viewSequence.get())) {
+                    this._viewSequence = next;
+                }
             }
         }
 
@@ -855,6 +889,13 @@ define(function(require, exports, module) {
         var origin = context.origin;
         var size = context.size;
         var opacity = context.opacity;
+
+        // Reset the flow-state when requested
+        if (this._resetFlowState) {
+            this._resetFlowState = false;
+            this._isDirty = true;
+            this._nodes.removeAll();
+        }
 
         // When the size or layout function has changed, reflow the layout
         if (size[0] !== this._contextSizeCache[0] ||
@@ -971,7 +1012,16 @@ define(function(require, exports, module) {
         // Render child-nodes every commit
         var target = this._commitOutput.target;
         for (var i = 0, j = target.length; i < j; i++) {
-            target[i].target = target[i].renderNode.render();
+            if (target[i].renderNode) {
+                target[i].target = target[i].renderNode.render();
+            }
+        }
+
+        // Add our cleanup-registration id also to the list, so that the
+        // cleanup function is called by famo.us when the LayoutController is
+        // removed from the render-tree.
+        if (!target.length || (target[target.length-1] !== this._cleanupRegistration)) {
+            target.push(this._cleanupRegistration);
         }
 
         // Translate dependent on origin
@@ -982,6 +1032,18 @@ define(function(require, exports, module) {
         this._commitOutput.opacity = opacity;
         this._commitOutput.transform = transform;
         return this._commitOutput;
+    };
+
+    /**
+     * Called whenever the layout-controller is removed from the render-tree.
+     *
+     * @private
+     * @param {Context} context cleanup context
+     */
+    LayoutController.prototype.cleanup = function(context) {
+        if (this.options.flow) {
+            this._resetFlowState = true;
+        }
     };
 
     module.exports = LayoutController;
