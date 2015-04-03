@@ -584,8 +584,8 @@ define(function(require, exports, module) {
     /**
      * Helper function for finding the view-sequence node at the given position.
      */
-    function _getViewSequenceAtIndex(index) {
-        var viewSequence = this._viewSequence;
+    function _getViewSequenceAtIndex(index, startViewSequence) {
+        var viewSequence = startViewSequence || this._viewSequence;
         var i = viewSequence ? viewSequence.getIndex() : index;
         if (index > i) {
             while (viewSequence) {
@@ -777,7 +777,7 @@ define(function(require, exports, module) {
                 throw 'Invalid index (' + indexOrId + ') specified to .remove (or dataSource doesn\'t support remove)';
             }
             renderNode = array[indexOrId];
-            this._viewSequence.splice(indexOrId, 1);
+            this._dataSource.splice(indexOrId, 1);
         }
 
         // Remove by renderable
@@ -793,17 +793,11 @@ define(function(require, exports, module) {
         // node may not be part of the valid view-sequence anymore. This seems to be a bug
         // in the famo.us ViewSequence implementation/concept. The following check was added
         // to ensure that always a valid viewSequence node is selected into the ScrollView.
-        if (this._viewSequence) {
-            var next = this._viewSequence.getNext();
-            if (next && next.get() && (next.get() === this._viewSequence.get())) {
-                this._viewSequence = next;
-            }
-            else {
-                next = this._viewSequence.getPrevious();
-                if (next && next.get() && (next.get() === this._viewSequence.get())) {
-                    this._viewSequence = next;
-                }
-            }
+        if (this._viewSequence && renderNode) {
+            var viewSequence = _getViewSequenceAtIndex.call(this, this._viewSequence.getIndex(), this._dataSource);
+            viewSequence = viewSequence || _getViewSequenceAtIndex.call(this, this._viewSequence.getIndex() - 1, this._dataSource);
+            viewSequence = viewSequence || this._dataSource;
+            this._viewSequence = viewSequence;
         }
 
         // When a custom remove-spec was specified, store that in the layout-node
