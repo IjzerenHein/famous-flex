@@ -1750,6 +1750,22 @@ define(function(require, exports, module) {
         // Cleanup any nodes in case of a VirtualViewSequence
         this._nodes.removeVirtualViewSequenceNodes();
 
+        // Calculate scroll-length and use that as the true-size (height)
+        if (this.options.size && (this.options.size[this._direction] === true)) {
+            var scrollLength = 0;
+            var node = this._nodes.getStartEnumNode();
+            while (node) {
+                if (node._invalidated && node.scrollLength) {
+                    scrollLength += node.scrollLength;
+                }
+                node = node._next;
+            }
+            this._size = this._size || [0, 0];
+            this._size[0] = this.options.size[0];
+            this._size[1] = this.options.size[1];
+            this._size[this._direction] = scrollLength;
+        }
+
         return scrollOffset;
     }
 
