@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -45,8 +45,8 @@ define(function(require, exports, module) {
     // Layout function
     module.exports = function HeaderFooterLayout(context, options) {
         var dock = new LayoutDockHelper(context, options);
-        dock.top('header', options.headerSize === 0 ? 0 : options.headerSize || options.headerHeight);
-        dock.bottom('footer', options.footerSize === 0 ? 0 : options.footerSize || options.footerHeight);
+        dock.top('header', (options.headerSize !== undefined) ? options.headerSize : options.headerHeight);
+        dock.bottom('footer', (options.footerSize !== undefined) ? options.footerSize : options.footerHeight);
         dock.fill('content');
     };
 });
