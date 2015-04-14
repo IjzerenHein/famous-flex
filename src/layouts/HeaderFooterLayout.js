@@ -45,8 +45,8 @@ define(function(require, exports, module) {
     // Layout function
     module.exports = function HeaderFooterLayout(context, options) {
         var dock = new LayoutDockHelper(context, options);
-        dock.top('header', options.headerSize || options.headerHeight);
-        dock.bottom('footer', options.footerSize || options.footerHeight);
+        dock.top('header', options.headerSize === 0 ? 0 : options.headerSize || options.headerHeight);
+        dock.bottom('footer', options.footerSize === 0 ? 0 : options.footerSize || options.footerHeight);
         dock.fill('content');
     };
 });
