@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -18,8 +18,8 @@
  *
  * function HeaderFooterLayout(context, options) {
  *   var dock = new LayoutDockHelper(context);
- *   dock.top('header', options.headerHeight);
- *   dock.bottom('footer', options.footerHeight);
+ *   dock.top('header', options.headerSize);
+ *   dock.bottom('footer', options.footerSize);
  *   dock.fill('content');
  * };
  * ```
@@ -123,8 +123,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the top.
      *
-     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+     * @param {LayoutNode|String} [node] layout-node to dock, when omitted the `height` argument argument is used for padding
+     * @param {Number} [height] height of the layout-node, when omitted the height of the node is used
      * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
@@ -149,8 +149,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the left
      *
-     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+     * @param {LayoutNode|String} [node] layout-node to dock, when omitted the `width` argument argument is used for padding
+     * @param {Number} [width] width of the layout-node, when omitted the width of the node is used
      * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
@@ -175,8 +175,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the bottom
      *
-     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+     * @param {LayoutNode|String} [node] layout-node to dock, when omitted the `height` argument argument is used for padding
+     * @param {Number} [height] height of the layout-node, when omitted the height of the node is used
      * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
@@ -201,8 +201,8 @@ define(function(require, exports, module) {
     /**
      * Dock the node to the right.
      *
-     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+     * @param {LayoutNode|String} [node] layout-node to dock, when omitted the `width` argument argument is used for padding
+     * @param {Number} [width] width of the layout-node, when omitted the width of the node is used
      * @param {Number} [z] z-index to use for the node
      * @return {LayoutDockHelper} this
      */
