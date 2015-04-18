@@ -1,11 +1,12 @@
 <a name="module_TabBarLayout"></a>
-#TabBarLayout
+## TabBarLayout
 Tab-bar layout supporting both horizontal (default) and vertical orientation.
 
 |options|type|description|
 |---|---|---|
 |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
 |`[spacing]`|Number|Space in between items|
+|`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 0.001)|
 |`[itemSize]`|Number/Bool|Width or height of the item (see below)|
 
 `itemSize` can have of the following values:

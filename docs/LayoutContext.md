@@ -1,5 +1,5 @@
 <a name="module_LayoutContext"></a>
-#LayoutContext
+## LayoutContext
 LayoutContext is the interface for a layout-function to access
 renderables in the data-source and set their size, position, tranformation, etc...
 
@@ -7,44 +7,50 @@ The `next`, `prev` and `get` functions return an opaque object which represents
 the renderable that is to be layed out. To access the actual renderable, use the
 `.renderNode` property of this opaque object.
 
-<a name="exp_module_LayoutContext"></a>
-##class: LayoutContext ⏏
-**Members**
 
-* [class: LayoutContext ⏏](#exp_module_LayoutContext)
-  * [layoutContext.size](#module_LayoutContext#size)
-  * [layoutContext.direction](#module_LayoutContext#direction)
-  * [layoutContext.scrollOffset](#module_LayoutContext#scrollOffset)
-  * [layoutContext.scrollStart](#module_LayoutContext#scrollStart)
-  * [layoutContext.scrollEnd](#module_LayoutContext#scrollEnd)
-  * [layoutContext.next()](#module_LayoutContext#next)
-  * [layoutContext.prev()](#module_LayoutContext#prev)
-  * [layoutContext.get(node)](#module_LayoutContext#get)
-  * [layoutContext.set(node, set)](#module_LayoutContext#set)
-  * [layoutContext.resolveSize(node)](#module_LayoutContext#resolveSize)
+* [LayoutContext](#module_LayoutContext)
+  * [LayoutContext](#exp_module_LayoutContext--LayoutContext) ⏏
+    * [.size](#module_LayoutContext--LayoutContext#size)
+    * [.direction](#module_LayoutContext--LayoutContext#direction)
+    * [.scrollOffset](#module_LayoutContext--LayoutContext#scrollOffset)
+    * [.scrollStart](#module_LayoutContext--LayoutContext#scrollStart)
+    * [.scrollEnd](#module_LayoutContext--LayoutContext#scrollEnd)
+    * [.next()](#module_LayoutContext--LayoutContext#next) ⇒ <code>Object</code>
+    * [.prev()](#module_LayoutContext--LayoutContext#prev) ⇒ <code>Object</code>
+    * [.get(node)](#module_LayoutContext--LayoutContext#get) ⇒ <code>Object</code>
+    * [.set(node, set)](#module_LayoutContext--LayoutContext#set)
+    * [.resolveSize(node)](#module_LayoutContext--LayoutContext#resolveSize) ⇒ <code>Size</code>
 
-<a name="module_LayoutContext#size"></a>
-###layoutContext.size
+<a name="exp_module_LayoutContext--LayoutContext"></a>
+### LayoutContext ⏏
+**Kind**: Exported class  
+<a name="module_LayoutContext--LayoutContext#size"></a>
+#### layoutContext.size
 {Property} Size in which to layout the renderables.
 
-<a name="module_LayoutContext#direction"></a>
-###layoutContext.direction
+**Kind**: instance property of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+<a name="module_LayoutContext--LayoutContext#direction"></a>
+#### layoutContext.direction
 {Property} Direction in which to layout the renderables (0 = X, 1 = Y).
 
-<a name="module_LayoutContext#scrollOffset"></a>
-###layoutContext.scrollOffset
+**Kind**: instance property of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+<a name="module_LayoutContext--LayoutContext#scrollOffset"></a>
+#### layoutContext.scrollOffset
 {Property} {Number} Scrolling offset at which to start laying out next/prev renderables.
 
-<a name="module_LayoutContext#scrollStart"></a>
-###layoutContext.scrollStart
+**Kind**: instance property of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+<a name="module_LayoutContext--LayoutContext#scrollStart"></a>
+#### layoutContext.scrollStart
 {Property} {Number} Top/left boundary to which to layout renderables (default: 0).
 
-<a name="module_LayoutContext#scrollEnd"></a>
-###layoutContext.scrollEnd
+**Kind**: instance property of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+<a name="module_LayoutContext--LayoutContext#scrollEnd"></a>
+#### layoutContext.scrollEnd
 {Property} {Number} Bottom/right boundary to which to continue laying out renderables.
 
-<a name="module_LayoutContext#next"></a>
-###layoutContext.next()
+**Kind**: instance property of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+<a name="module_LayoutContext--LayoutContext#next"></a>
+#### layoutContext.next() ⇒ <code>Object</code>
 Get the context-node for the next renderable in the data-source. When
 the end of the data-source is reached, `undefined` is returned.
 Use this function to enumerate the contents of a data-source that is
@@ -67,9 +73,10 @@ function MyLayoutFunction(context, options) {
 }
 ```
 
-**Returns**: `Object` - context-node or undefined  
-<a name="module_LayoutContext#prev"></a>
-###layoutContext.prev()
+**Kind**: instance method of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+**Returns**: <code>Object</code> - context-node or undefined  
+<a name="module_LayoutContext--LayoutContext#prev"></a>
+#### layoutContext.prev() ⇒ <code>Object</code>
 Get the context-node for the previous renderable in the data-source. When
 the start of the data-source is reached, `undefined` is returned.
 Use this function to enumerate the contents of a data-source that is
@@ -92,9 +99,10 @@ function MyLayoutFunction(context, options) {
 }
 ```
 
-**Returns**: `Object` - context-node or undefined  
-<a name="module_LayoutContext#get"></a>
-###layoutContext.get(node)
+**Kind**: instance method of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+**Returns**: <code>Object</code> - context-node or undefined  
+<a name="module_LayoutContext--LayoutContext#get"></a>
+#### layoutContext.get(node) ⇒ <code>Object</code>
 Get the context-node for a renderable with a specific id. This function
 should be used to access data-sources which are key-value collections.
 When a data-source is an Array or a ViewSequence, use `next()`.
@@ -167,13 +175,15 @@ var layoutController = new LayoutController({
 });
 ```
 
-**Params**
+**Kind**: instance method of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+**Returns**: <code>Object</code> - context-node or undefined  
 
-- node `Object` | `String` - context-node or node-id  
+| Param | Type | Description |
+| --- | --- | --- |
+| node | <code>Object</code> &#124; <code>String</code> | context-node or node-id |
 
-**Returns**: `Object` - context-node or undefined  
-<a name="module_LayoutContext#set"></a>
-###layoutContext.set(node, set)
+<a name="module_LayoutContext--LayoutContext#set"></a>
+#### layoutContext.set(node, set)
 Set the size, origin, align, translation, scale, rotate, skew & opacity for a context-node.
 
 **Overview of all supported properties:**
@@ -193,13 +203,15 @@ function MyLayoutFunction(context, options) {
 }
 ```
 
-**Params**
+**Kind**: instance method of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
 
-- node `Object` | `String` - context-node or node-id  
-- set `Object` - properties: size, origin, align, translate, scale, rotate, skew & opacity  
+| Param | Type | Description |
+| --- | --- | --- |
+| node | <code>Object</code> &#124; <code>String</code> | context-node or node-id |
+| set | <code>Object</code> | properties: size, origin, align, translate, scale, rotate, skew & opacity |
 
-<a name="module_LayoutContext#resolveSize"></a>
-###layoutContext.resolveSize(node)
+<a name="module_LayoutContext--LayoutContext#resolveSize"></a>
+#### layoutContext.resolveSize(node) ⇒ <code>Size</code>
 Resolve the size of a context-node by accessing the `getSize` function
 of the renderable.
 
@@ -230,8 +242,10 @@ is unknown. In this case, the LayoutController will cause a second
 reflow of the layout the next render-cycle, ensuring that the renderables
 are layed out as expected.
 
-**Params**
+**Kind**: instance method of <code>[LayoutContext](#exp_module_LayoutContext--LayoutContext)</code>  
+**Returns**: <code>Size</code> - size of the node  
 
-- node `Object` | `String` - context-node, node-id or array-element  
+| Param | Type | Description |
+| --- | --- | --- |
+| node | <code>Object</code> &#124; <code>String</code> | context-node, node-id or array-element |
 
-**Returns**: `Size` - size of the node  

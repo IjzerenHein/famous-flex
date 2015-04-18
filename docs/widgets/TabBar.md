@@ -1,5 +1,5 @@
 <a name="module_TabBar"></a>
-#TabBar
+## TabBar
 TabBar widget for famo.us.
 
 ```javascript
@@ -50,45 +50,48 @@ Example css styles for a black theme:
 }
 ```
 
-<a name="exp_module_TabBar"></a>
-##class: TabBar ⏏
-**Extends**: `View`  
-**Members**
 
-* [class: TabBar ⏏](#exp_module_TabBar)
-  * [new TabBar(options)](#exp_new_module_TabBar)
-  * [tabBar.setOptions(options)](#module_TabBar#setOptions)
-  * [tabBar.setItems(items)](#module_TabBar#setItems)
-  * [tabBar.getItems()](#module_TabBar#getItems)
-  * [tabBar.getItemSpec(index)](#module_TabBar#getItemSpec)
-  * [tabBar.setSelectedItemIndex(index)](#module_TabBar#setSelectedItemIndex)
-  * [tabBar.getSelectedItemIndex()](#module_TabBar#getSelectedItemIndex)
-  * [tabBar.getSize()](#module_TabBar#getSize)
+* [TabBar](#module_TabBar)
+  * [TabBar](#exp_module_TabBar--TabBar) ⇐ <code>View</code> ⏏
+    * [new TabBar(options)](#new_module_TabBar--TabBar_new)
+    * [.setOptions(options)](#module_TabBar--TabBar#setOptions) ⇒ <code>TabBar</code>
+    * [.setItems(items)](#module_TabBar--TabBar#setItems) ⇒ <code>TabBar</code>
+    * [.getItems()](#module_TabBar--TabBar#getItems) ⇒ <code>Array</code>
+    * [.getItemSpec(index)](#module_TabBar--TabBar#getItemSpec) ⇒ <code>Spec</code>
+    * [.setSelectedItemIndex(index)](#module_TabBar--TabBar#setSelectedItemIndex) ⇒ <code>TabBar</code>
+    * [.getSelectedItemIndex()](#module_TabBar--TabBar#getSelectedItemIndex) ⇒ <code>Number</code>
+    * [.getSize()](#module_TabBar--TabBar#getSize) ⇒ <code>Array</code>
 
-<a name="exp_new_module_TabBar"></a>
-###new TabBar(options)
-**Params**
+<a name="exp_module_TabBar--TabBar"></a>
+### TabBar ⇐ <code>View</code> ⏏
+**Kind**: Exported class  
+**Extends:** <code>View</code>  
+<a name="new_module_TabBar--TabBar_new"></a>
+#### new TabBar(options)
 
-- options `Object` - Configurable options.  
-  - \[tabBarLayout\] `Object` - Layout-options that are passed to the TabBarLayout.  
-  - \[layoutController\] `Object` - Options that are passed to the underlying layout-controller.  
-  - \[classes\] `Array.String` - Css-classes that are added to the surfaces that are created.  
-  - \[createRenderables\] `Object` - Options that specify which renderables should be created.  
+| Param | Type | Description |
+| --- | --- | --- |
+| options | <code>Object</code> | Configurable options. |
+| [options.tabBarLayout] | <code>Object</code> | Layout-options that are passed to the TabBarLayout. |
+| [options.layoutController] | <code>Object</code> | Options that are passed to the underlying layout-controller. |
+| [options.classes] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
+| [options.createRenderables] | <code>Object</code> | Options that specify which renderables should be created. |
 
-**Extends**: `View`  
-<a name="module_TabBar#setOptions"></a>
-###tabBar.setOptions(options)
+<a name="module_TabBar--TabBar#setOptions"></a>
+#### tabBar.setOptions(options) ⇒ <code>TabBar</code>
 Patches the TabBar instance's options with the passed-in ones.
 
-**Params**
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>TabBar</code> - this  
 
-- options `Object` - Configurable options.  
-  - \[tabBarLayout\] `Object` - Layout-options that are passed to the TabBarLayout.  
-  - \[layoutController\] `Object` - Options that are passed to the underlying layout-controller.  
+| Param | Type | Description |
+| --- | --- | --- |
+| options | <code>Object</code> | Configurable options. |
+| [options.tabBarLayout] | <code>Object</code> | Layout-options that are passed to the TabBarLayout. |
+| [options.layoutController] | <code>Object</code> | Options that are passed to the underlying layout-controller. |
 
-**Returns**: `TabBar` - this  
-<a name="module_TabBar#setItems"></a>
-###tabBar.setItems(items)
+<a name="module_TabBar--TabBar#setItems"></a>
+#### tabBar.setItems(items) ⇒ <code>TabBar</code>
 Sets the items for the tab-bar.
 
 Example 1:
@@ -124,41 +127,50 @@ CSS:
 }
 ```
 
-**Params**
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>TabBar</code> - this  
 
-- items `Array` - Array of tab-item renderables.  
+| Param | Type | Description |
+| --- | --- | --- |
+| items | <code>Array</code> | Array of tab-item renderables. |
 
-**Returns**: `TabBar` - this  
-<a name="module_TabBar#getItems"></a>
-###tabBar.getItems()
+<a name="module_TabBar--TabBar#getItems"></a>
+#### tabBar.getItems() ⇒ <code>Array</code>
 Get the tab-item renderables for the tab-bar.
 
-**Returns**: `Array` - tab-item renderables  
-<a name="module_TabBar#getItemSpec"></a>
-###tabBar.getItemSpec(index)
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>Array</code> - tab-item renderables  
+<a name="module_TabBar--TabBar#getItemSpec"></a>
+#### tabBar.getItemSpec(index) ⇒ <code>Spec</code>
 Get the spec (size, transform, etc..) of the given tab-item.
 
-**Params**
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>Spec</code> - item spec  
 
-- index `Number` - Index of the tab-item.  
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>Number</code> | Index of the tab-item. |
 
-**Returns**: `Spec` - item spec  
-<a name="module_TabBar#setSelectedItemIndex"></a>
-###tabBar.setSelectedItemIndex(index)
+<a name="module_TabBar--TabBar#setSelectedItemIndex"></a>
+#### tabBar.setSelectedItemIndex(index) ⇒ <code>TabBar</code>
 Sets the index of the selected tab.
 
-**Params**
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>TabBar</code> - this  
 
-- index `Number` - selected index.  
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>Number</code> | selected index. |
 
-**Returns**: `TabBar` - this  
-<a name="module_TabBar#getSelectedItemIndex"></a>
-###tabBar.getSelectedItemIndex()
+<a name="module_TabBar--TabBar#getSelectedItemIndex"></a>
+#### tabBar.getSelectedItemIndex() ⇒ <code>Number</code>
 Get the index of the selected tab-item.
 
-**Returns**: `Number` - selected index  
-<a name="module_TabBar#getSize"></a>
-###tabBar.getSize()
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>Number</code> - selected index  
+<a name="module_TabBar--TabBar#getSize"></a>
+#### tabBar.getSize() ⇒ <code>Array</code>
 Get the size of the widget.
 
-**Returns**: `Array` - size.  
+**Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
+**Returns**: <code>Array</code> - size.  

@@ -1,5 +1,5 @@
 <a name="module_CollectionLayout"></a>
-#CollectionLayout
+## CollectionLayout
 Lays a collection of renderables from left to right or top to bottom, and when the right/bottom edge is reached,
 continues at the next column/row.
 
