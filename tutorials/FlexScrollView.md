@@ -15,6 +15,7 @@ By default FlexScrollView uses the [ListLayout](../docs/layouts/ListLayout.md) l
 - [Pagination](#pagination)
 - [Inserting & removing items](#inserting--removing-items)
     - [Auto event piping](#auto-event-piping)
+    - [Moving & swapping items](#moving--swapping-items)
 - [Getting the visible item(s)](#getting-the-visible-items)
 - [Scrolling](#scrolling)
 - [Margins & spacing](#margins--spacing-listlayout)
@@ -55,15 +56,17 @@ The effect as seen above is created by setting the following options:
 ```javascript
 var scrollView = new FlexScrollView({
     flow: true,             // enable flow-mode (can only be enabled from the constructor)
-    insertSpec: {           // render-spec used when inserting renderables
-        opacity: 0          // start opacity is 0, causing a fade-in effect,
-        //size: [0, 0],     // uncommented to create a grow-effect
-        //transform: Transform.translate(-300, 0, 0) // uncomment for slide-in effect
-    },
-    //removeSpec: {...},    // render-spec used when removing renderables
-    nodeSpring: {           // spring-options used when transitioning between states
-        dampingRatio: 0.8,  // spring damping ratio
-        period: 1000        // duration of the animation
+    flowOptions: {
+        spring: {               // spring-options used when transitioning between states
+            dampingRatio: 0.8,  // spring damping ratio
+            period: 1000        // duration of the animation
+        }
+        insertSpec: {           // render-spec used when inserting renderables
+            opacity: 0          // start opacity is 0, causing a fade-in effect,
+            //size: [0, 0],     // uncommented to create a grow-effect
+            //transform: Transform.translate(-300, 0, 0) // uncomment for slide-in effect
+        },
+        //removeSpec: {...},    // render-spec used when removing renderables
     }
 });
 ```
@@ -131,6 +134,7 @@ scrollView.push(new Surface({}), {size: [0, 0]}); // insert with grow effect
 scrollView.remove(0);                   // remove at index 0
 scrollView.remove(-1, {opacity: 0});    // remove last item and fade-out
 scrollView.removeAll();                 // removes all items
+scrollView.replace(0, new Surface({})); // replaces the item at index 0
 ```
 
 Using `setDataSource` or `sequenceFrom`:
@@ -162,6 +166,15 @@ var scrollView = new FlexScrollView({
 scrollView.push(new Surface({
     content: 'My surface'
 }));
+```
+
+## Moving & swapping items
+
+To move or swap an item, use the following functions:
+
+```javascript
+scrollView.move(0, 5);          // move item from index 0 to index 5
+scrollView.swap(0, 5);          // swap items at index 0 and 5
 ```
 
 
@@ -314,6 +327,17 @@ var scrollView = new FlexScrollView({
     }
 });
 ```
+
+**IMPORTANT NOTE:**
+
+In the current version of Chrome, the use of `overflow: hidden` causes z-indexing issues inside the ContainerSurface.
+This causes elements to seemingly overlap/underlap each other at random. Basically, the z-translate coordinate from the
+`matrix3d` function is ignored and instead the browser uses the DOM ordering for z-translation. There is currently no known
+fix for this. The best way to workaround it, is to not use `overflow: hidden` and instead move the surrounding surfaces to
+a higher z-index plane and give them a background so that the FlexScrollView scrolls underneath them when overflowing outside
+its region.
+
+[https://github.com/Famous/famous/issues/493](https://github.com/Famous/famous/issues/493)
 
 
 # Sticky headers (ListLayout)
