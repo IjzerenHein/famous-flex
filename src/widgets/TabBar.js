@@ -121,10 +121,12 @@ define(function(require, exports, module) {
             autoPipeEvents: true,
             layout: TabBarLayout,
             flow: true,
-            reflowOnResize: false,
-            nodeSpring: {
-                dampingRatio: 0.8,
-                period: 300
+            flowOptions: {
+                reflowOnResize: false,
+                spring: {
+                    dampingRatio: 0.8,
+                    period: 300
+                }
             }
         }
     };

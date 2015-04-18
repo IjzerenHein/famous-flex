@@ -200,9 +200,6 @@ define(function(require, exports, module) {
     ScrollController.PaginationMode = PaginationMode;
 
     ScrollController.DEFAULT_OPTIONS = {
-        flow: false,
-        //insertSpec: undefined,
-        //removeSpec: undefined,
         useContainer: false,    // when true embeds inside a ContainerSurface for capturing input events & clipping
         container: {
             properties: {
@@ -287,8 +284,8 @@ define(function(require, exports, module) {
      * is immediately updated when the user scrolls the view.
      */
     function _initLayoutNode(node, spec) {
-        if (!spec && this.options.insertSpec) {
-            node.setSpec(this.options.insertSpec);
+        if (!spec && this.options.flowOptions.insertSpec) {
+            node.setSpec(this.options.flowOptions.insertSpec);
         }
     }
 
@@ -1720,7 +1717,7 @@ define(function(require, exports, module) {
         }
 
         // Mark non-invalidated nodes for removal
-        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+        this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
 
         // Check whether the bounds have been reached
         _calcBounds.call(this, size, scrollOffset);
@@ -1856,7 +1853,7 @@ define(function(require, exports, module) {
             // disable the locked state of the layout-nodes so that they
             // can freely transition between the old and new state.
             if (this.options.flow && (this._isDirty ||
-                (this.options.reflowOnResize &&
+                (this.options.flowOptions.reflowOnResize &&
                 ((size[0] !== this._contextSizeCache[0]) ||
                  (size[1] !== this._contextSizeCache[1]))))) {
                 var node = this._nodes.getStartEnumNode();
@@ -1892,6 +1889,9 @@ define(function(require, exports, module) {
         var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
         this._specs = result.specs;
+        if (!this._specs.length) {
+          this._scroll.groupStart = 0;
+        }
         if (eventData) { // eventData is only used here to check whether there has been a re-layout
             this._eventOutput.emit('layoutend', eventData);
         }

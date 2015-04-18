@@ -8,6 +8,9 @@
  * @copyright Gloey Apps, 2014 - 2015
  */
 
+/*global console*/
+/*eslint no-console: 0*/
+
 /**
  * LayoutController lays out renderables according to a layout-
  * function and a data-source.
@@ -43,12 +46,14 @@ define(function(require, exports, module) {
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used)
      * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
-     * @param {Bool} [options.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
-     * @param {Object} [options.nodeSpring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
-     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Object} [options.flowOptions] Options used by nodes when reflowing.
+     * @param {Bool} [options.flowOptions.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
+     * @param {Object} [options.flowOptions.spring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
+     * @param {Object} [options.flowOptions.properties] Properties which should be enabled or disabled for flowing.
+     * @param {Spec} [options.flowOptions.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.flowOptions.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
      * @param {Object} [options.preallocateNodes] Optimisation option to improve initial scrolling/animation performance by pre-allocating nodes, e.g.: `{count: 50, spec: {size:[0, 0], transform: Transform.identity}}`.
@@ -126,25 +131,38 @@ define(function(require, exports, module) {
     }
 
     LayoutController.DEFAULT_OPTIONS = {
-        nodeSpring: {
-            dampingRatio: 0.8,
-            period: 300
-        },
-        reflowOnResize: true
-        /*insertSpec: {
-            opacity: undefined,
-            size: undefined,
-            transform: undefined,
-            origin: undefined,
-            align: undefined
-        },
-        removeSpec: {
-            opacity: undefined,
-            size: undefined,
-            transform: undefined,
-            origin: undefined,
-            align: undefined
-        }*/
+        flow: false,
+        flowOptions: {
+            reflowOnResize: true,
+            properties: {
+                opacity: true,
+                align: true,
+                origin: true,
+                size: true,
+                translate: true,
+                skew: true,
+                rotate: true,
+                scale: true
+            },
+            spring: {
+                dampingRatio: 0.8,
+                period: 300
+            }
+            /*insertSpec: {
+                opacity: undefined,
+                size: undefined,
+                transform: undefined,
+                origin: undefined,
+                align: undefined
+            },
+            removeSpec: {
+                opacity: undefined,
+                size: undefined,
+                transform: undefined,
+                origin: undefined,
+                align: undefined
+            }*/
+        }
     };
 
     /**
@@ -152,8 +170,8 @@ define(function(require, exports, module) {
      * the node with the `insertSpec` if it has been defined.
      */
     function _initFlowLayoutNode(node, spec) {
-        if (!spec && this.options.insertSpec) {
-            node.setSpec(this.options.insertSpec);
+        if (!spec && this.options.flowOptions.insertSpec) {
+            node.setSpec(this.options.flowOptions.insertSpec);
         }
     }
 
@@ -164,18 +182,57 @@ define(function(require, exports, module) {
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
      * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-     * @param {Object} [options.nodeSpring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
-     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used)
+     * @param {Object} [options.flowOptions] Options used by nodes when reflowing.
+     * @param {Bool} [options.flowOptions.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
+     * @param {Object} [options.flowOptions.spring] Spring options used by nodes when reflowing (default: `{dampingRatio: 0.8, period: 300}`).
+     * @param {Object} [options.flowOptions.properties] Properties which should be enabled or disabled for flowing.
+     * @param {Spec} [options.flowOptions.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
+     * @param {Spec} [options.flowOptions.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
      * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
      * @return {LayoutController} this
      */
-    LayoutController.prototype.setOptions = function setOptions(options) {
+    LayoutController.prototype.setOptions = function(options) {
         if ((options.alignment !== undefined) && (options.alignment !== this.options.alignment)) {
             this._isDirty = true;
         }
         this._optionsManager.setOptions(options);
+        if (options.nodeSpring) {
+            console.warn('nodeSpring options have been moved inside `flowOptions`. Use `flowOptions.spring` instead.');
+            this._optionsManager.setOptions({
+                flowOptions: {
+                    spring: options.nodeSpring
+                }
+            });
+            this._nodes.setNodeOptions(this.options.flowOptions);
+        }
+        if (options.reflowOnResize !== undefined) {
+            console.warn('reflowOnResize options have been moved inside `flowOptions`. Use `flowOptions.reflowOnResize` instead.');
+            this._optionsManager.setOptions({
+                flowOptions: {
+                    reflowOnResize: options.reflowOnResize
+                }
+            });
+            this._nodes.setNodeOptions(this.options.flowOptions);
+        }
+        if (options.insertSpec) {
+            console.warn('insertSpec options have been moved inside `flowOptions`. Use `flowOptions.insertSpec` instead.');
+            this._optionsManager.setOptions({
+                flowOptions: {
+                    insertSpec: options.insertSpec
+                }
+            });
+            this._nodes.setNodeOptions(this.options.flowOptions);
+        }
+        if (options.removeSpec) {
+            console.warn('removeSpec options have been moved inside `flowOptions`. Use `flowOptions.removeSpec` instead.');
+            this._optionsManager.setOptions({
+                flowOptions: {
+                    removeSpec: options.removeSpec
+                }
+            });
+            this._nodes.setNodeOptions(this.options.flowOptions);
+        }
         if (options.dataSource) {
             this.setDataSource(options.dataSource);
         }
@@ -188,10 +245,8 @@ define(function(require, exports, module) {
         if (options.direction !== undefined) {
             this.setDirection(options.direction);
         }
-        if (options.nodeSpring && this.options.flow) {
-            this._nodes.setNodeOptions({
-                spring: options.nodeSpring
-            });
+        if (options.flowOptions && this.options.flow) {
+            this._nodes.setNodeOptions(this.options.flowOptions);
         }
         if (options.preallocateNodes) {
             this._nodes.preallocateNodes(options.preallocateNodes.count || 0, options.preallocateNodes.spec);
@@ -804,7 +859,7 @@ define(function(require, exports, module) {
         if (renderNode && removeSpec) {
             var node = this._nodes.getNodeByRenderNode(renderNode);
             if (node) {
-                node.remove(removeSpec || this.options.removeSpec);
+                node.remove(removeSpec || this.options.flowOptions.removeSpec);
             }
         }
 
@@ -819,10 +874,11 @@ define(function(require, exports, module) {
     /**
      * Removes all renderables from the data-source.
      *
-     * The optional argument `removeSpec` is only used `flow` mode is enabled.
-     * When specified, the renderables ares removed using an animation ending at
+     * The optional argument `removeSpec` is only used when `flow` mode is enabled.
+     * When specified, the renderables are removed using an animation ending at
      * the size, origin, opacity, transform, etc... as specified in `removeSpec'.
      *
+     * @param {Spec} [removeSpec] Size, transform, etc.. to end with when removing
      * @return {LayoutController} this
      */
     LayoutController.prototype.removeAll = function(removeSpec) {
@@ -842,7 +898,7 @@ define(function(require, exports, module) {
         if (removeSpec) {
             var node = this._nodes.getStartEnumNode();
             while (node) {
-                node.remove(removeSpec || this.options.removeSpec);
+                node.remove(removeSpec || this.options.flowOptions.removeSpec);
                 node = node._next;
             }
         }
@@ -913,7 +969,7 @@ define(function(require, exports, module) {
             // can freely transition between the old and new state.
             if (this.options.flow) {
                 var lock = false;
-                if (!this.options.reflowOnResize) {
+                if (!this.options.flowOptions.reflowOnResize) {
                     if (!this._isDirty &&
                         ((size[0] !== this._contextSizeCache[0]) ||
                          (size[1] !== this._contextSizeCache[1]))) {
@@ -960,7 +1016,7 @@ define(function(require, exports, module) {
             }
 
             // Mark non-invalidated nodes for removal
-            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+            this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
 
             // Cleanup any nodes in case of a VirtualViewSequence
             this._nodes.removeVirtualViewSequenceNodes();

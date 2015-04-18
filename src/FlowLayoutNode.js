@@ -77,6 +77,16 @@ define(function(require, exports, module) {
             dampingRatio: 0.8,
             period: 300
         },
+        properties: {
+            opacity: true,
+            align: true,
+            origin: true,
+            size: true,
+            translate: true,
+            skew: true,
+            rotate: true,
+            scale: true
+        },
         particleRounding: 0.001
     };
 
@@ -130,8 +140,20 @@ define(function(require, exports, module) {
         var wasSleeping = this._pe.isSleeping();
         for (var propName in this._properties) {
             var prop = this._properties[propName];
-            if (prop.force) {
-                prop.force.setOptions(prop.force);
+            if (options.spring && prop.force) {
+                prop.force.setOptions(this.options.spring);
+            }
+            if (options.properties && (options.properties[propName] !== undefined)) {
+                if (this.options.properties[propName].length) {
+                    prop.enabled = this.options.properties[propName];
+                }
+                else {
+                    prop.enabled = [
+                        this.options.properties[propName],
+                        this.options.properties[propName],
+                        this.options.properties[propName]
+                    ];
+                }
             }
         }
         if (wasSleeping) {
@@ -220,9 +242,9 @@ define(function(require, exports, module) {
             return def;
         }
         return [
-            Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / precision) * precision,
-            Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / precision) * precision,
-            Math.round((prop.curState.z + ((prop.endState.z - prop.curState.z) * lockValue)) / precision) * precision
+            prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / precision) * precision) : prop.endState.x,
+            prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / precision) * precision) : prop.endState.y,
+            prop.enabled[2] ? (Math.round((prop.curState.z + ((prop.endState.z - prop.curState.z) * lockValue)) / precision) * precision) : prop.endState.z
         ];
     }
 
@@ -254,7 +276,7 @@ define(function(require, exports, module) {
         // opacity
         var prop = this._properties.opacity;
         if (prop && prop.init) {
-            spec.opacity = Math.round(Math.max(0, Math.min(1, prop.curState.x)) / precision) * precision;
+            spec.opacity = prop.enabled[0] ? (Math.round(Math.max(0, Math.min(1, prop.curState.x)) / precision) * precision) : prop.endState.x;
         }
         else {
             spec.opacity = undefined;
@@ -264,8 +286,8 @@ define(function(require, exports, module) {
         prop = this._properties.size;
         if (prop && prop.init) {
             spec.size = spec.size || [0, 0];
-            spec.size[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
-            spec.size[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
+            spec.size[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+            spec.size[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
         }
         else {
             spec.size = undefined;
@@ -275,8 +297,8 @@ define(function(require, exports, module) {
         prop = this._properties.align;
         if (prop && prop.init) {
             spec.align = spec.align || [0, 0];
-            spec.align[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
-            spec.align[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
+            spec.align[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+            spec.align[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
         }
         else {
             spec.align = undefined;
@@ -286,8 +308,8 @@ define(function(require, exports, module) {
         prop = this._properties.origin;
         if (prop && prop.init) {
             spec.origin = spec.origin || [0, 0];
-            spec.origin[0] = Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1;
-            spec.origin[1] = Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1;
+            spec.origin[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+            spec.origin[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
         }
         else {
             spec.origin = undefined;
@@ -299,9 +321,9 @@ define(function(require, exports, module) {
         var translateY;
         var translateZ;
         if (translate && translate.init) {
-            translateX = Math.round((translate.curState.x + ((translate.endState.x - translate.curState.x) * lockValue)) / precision) * precision;
-            translateY = Math.round((translate.curState.y + ((translate.endState.y - translate.curState.y) * lockValue)) / precision) * precision;
-            translateZ = Math.round((translate.curState.z + ((translate.endState.z - translate.curState.z) * lockValue)) / precision) * precision;
+            translateX = translate.enabled[0] ? (Math.round((translate.curState.x + ((translate.endState.x - translate.curState.x) * lockValue)) / precision) * precision) : translate.endState.x;
+            translateY = translate.enabled[1] ? (Math.round((translate.curState.y + ((translate.endState.y - translate.curState.y) * lockValue)) / precision) * precision) : translate.endState.y;
+            translateZ = translate.enabled[2] ? (Math.round((translate.curState.z + ((translate.endState.z - translate.curState.z) * lockValue)) / precision) * precision) : translate.endState.z;
         }
         else {
             translateX = 0;
@@ -409,6 +431,16 @@ define(function(require, exports, module) {
             }
             else if (wasSleeping) {
                 this._pe.sleep(); // nothing has changed, put back to sleep
+            }
+            if (this.options.properties[propName] && this.options.properties[propName].length) {
+                prop.enabled = this.options.properties[propName];
+            }
+            else {
+                prop.enabled = [
+                  this.options.properties[propName],
+                  this.options.properties[propName],
+                  this.options.properties[propName]
+                ];
             }
             prop.init = true;
             prop.invalidated = true;
