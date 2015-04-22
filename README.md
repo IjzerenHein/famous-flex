@@ -30,6 +30,7 @@ of renderables using a `CollectionLayout`, and change that into a `ListLayout`. 
 
 ### Views / widgets
 - [LayoutController](docs/LayoutController.md)
+- [AnimationController](https://github.com/IjzerenHein/famous-flex-animationcontroller/blob/master/tutorial/AnimationController.md)
 - [ScrollController](docs/ScrollController.md)
 - [FlexScrollView](tutorials/FlexScrollView.md)
 - [DatePicker](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md)
@@ -252,6 +253,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |Class|Description|
 |---|---|
 |[LayoutController](docs/LayoutController.md)|Lays out renderables and optionally animates between layout states.|
+|[AnimationController](https://github.com/IjzerenHein/famous-flex-animationcontroller/blob/master/tutorial/AnimationController.md)|Animating between famo.us views in awesome ways.|
 |[ScrollController](docs/ScrollController.md)|Scrollable LayoutController (base class for FlexScrollView).|
 |[FlexScrollView](tutorials/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
 |[DatePicker](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md)|Date/time picker wheel.|

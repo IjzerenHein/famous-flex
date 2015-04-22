@@ -54,6 +54,7 @@ module.exports = function(grunt) {
             { src: 'src/FlexScrollView.js', dest: 'docs/FlexScrollView.md' },
             { src: 'src/LayoutUtility.js', dest: 'docs/LayoutUtility.md' },
             { src: 'src/VirtualViewSequence.js', dest: 'docs/VirtualViewSequence.md' },
+            { src: 'src/AnimationController.js', dest: 'docs/AnimationController.md' },
             // widgets
             { src: 'src/widgets/DatePicker.js', dest: 'docs/widgets/DatePicker.md' },
             { src: 'src/widgets/TabBar.js', dest: 'docs/widgets/TabBar.md' },

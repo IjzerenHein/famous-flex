@@ -42,6 +42,7 @@ Inherited from: [LayoutController](./LayoutController.md)
     * [.isScrolling()](#module_ScrollController--ScrollController#isScrolling) ⇒ <code>Bool</code>
     * [.getBoundsReached()](#module_ScrollController--ScrollController#getBoundsReached) ⇒ <code>ScrollController.Bounds</code>
     * [.getVelocity()](#module_ScrollController--ScrollController#getVelocity) ⇒ <code>Number</code>
+    * [.getEnergy()](#module_ScrollController--ScrollController#getEnergy) ⇒ <code>Number</code>
     * [.setVelocity(velocity)](#module_ScrollController--ScrollController#setVelocity) ⇒ <code>ScrollController</code>
     * [.applyScrollForce(delta)](#module_ScrollController--ScrollController#applyScrollForce) ⇒ <code>ScrollController</code>
     * [.updateScrollForce(prevDelta, newDelta)](#module_ScrollController--ScrollController#updateScrollForce) ⇒ <code>ScrollController</code>
@@ -261,6 +262,12 @@ Get the current scrolling velocity.
 
 **Kind**: instance method of <code>[ScrollController](#exp_module_ScrollController--ScrollController)</code>  
 **Returns**: <code>Number</code> - Scroll velocity  
+<a name="module_ScrollController--ScrollController#getEnergy"></a>
+#### scrollController.getEnergy() ⇒ <code>Number</code>
+Get the current energy of the scrolling particle.
+
+**Kind**: instance method of <code>[ScrollController](#exp_module_ScrollController--ScrollController)</code>  
+**Returns**: <code>Number</code> - Energy  
 <a name="module_ScrollController--ScrollController#setVelocity"></a>
 #### scrollController.setVelocity(velocity) ⇒ <code>ScrollController</code>
 Set the scrolling velocity.
