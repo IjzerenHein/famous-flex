@@ -1549,6 +1549,15 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Get the current energy of the scrolling particle.
+     *
+     * @return {Number} Energy
+     */
+    ScrollController.prototype.getEnergy = function() {
+        return this._scroll.particle.getEnergy();
+    };
+
+    /**
      * Set the scrolling velocity.
      *
      * @param {Number} velocity New scroll velocity
@@ -1832,7 +1841,8 @@ define(function(require, exports, module) {
                 oldSize: this._contextSizeCache,
                 size: size,
                 oldScrollOffset: -(this._scrollOffsetCache + this._scroll.groupStart),
-                scrollOffset: -(scrollOffset + this._scroll.groupStart)
+                scrollOffset: -(scrollOffset + this._scroll.groupStart),
+                scrollEnergy: (this._scrollOffsetCache !== scrollOffset) ? this.
             };
 
             // When scroll-offset has changed, emit scroll-start and scroll events
