@@ -1841,8 +1841,7 @@ define(function(require, exports, module) {
                 oldSize: this._contextSizeCache,
                 size: size,
                 oldScrollOffset: -(this._scrollOffsetCache + this._scroll.groupStart),
-                scrollOffset: -(scrollOffset + this._scroll.groupStart),
-                scrollEnergy: (this._scrollOffsetCache !== scrollOffset) ? this.
+                scrollOffset: -(scrollOffset + this._scroll.groupStart)
             };
 
             // When scroll-offset has changed, emit scroll-start and scroll events
