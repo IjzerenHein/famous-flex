@@ -699,15 +699,6 @@ define(function(require, exports, module) {
         var nextHeight = this._calcScrollHeight(true);
         var enforeMinSize = this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized;
 
-        // 0. Don't set any springs when either next or prev-height could
-        //    not be determined due to true-size renderables.
-        if ((prevHeight === undefined) || (nextHeight === undefined)) {
-            this._scroll.boundsReached = Bounds.NONE;
-            this._scroll.springPosition = undefined;
-            this._scroll.springSource = SpringSource.NONE;
-            return;
-        }
-
         // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
         var totalHeight;
@@ -1729,7 +1720,11 @@ define(function(require, exports, module) {
         this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
 
         // Check whether the bounds have been reached
+        //var oldBoundsReached = this._scroll.boundsReached;
         _calcBounds.call(this, size, scrollOffset);
+        //if (oldBoundsReached !== this._scroll.boundsReached) {
+        //    _log.call(this, 'bounds reached changed (', oldBoundsReached, ' != ', this._scroll.boundsReached, ')');
+        //}
 
         // Update scroll-to spring
         _calcScrollToOffset.call(this, size, scrollOffset);
