@@ -472,10 +472,11 @@ define(function(require, exports, module) {
      * Id.
      *
      * @param {Renderable|String} node Renderabe or Id to look for
-     * @param {Bool} normalize When set to `true` normalizes the origin/align into the transform translation (default: `false`).
+     * @param {Bool} [normalize] When set to `true` normalizes the origin/align into the transform translation (default: `false`).
+     * @param {Bool} [endState] When set to `true` returns the flowing end-state spec rather than the current spec.
      * @return {Spec} spec or undefined
      */
-    LayoutController.prototype.getSpec = function(node, normalize) {
+    LayoutController.prototype.getSpec = function(node, normalize, endState) {
         if (!node) {
             return undefined;
         }
@@ -497,6 +498,10 @@ define(function(require, exports, module) {
             for (var i = 0; i < this._specs.length; i++) {
                 var spec = this._specs[i];
                 if (spec.renderNode === node) {
+                    if (endState && spec.endState) {
+                        spec = spec.endState;
+                    }
+                    // normalize align & origin into transform
                     if (normalize && spec.transform && spec.size && (spec.align || spec.origin)) {
                         var transform = spec.transform;
                         if (spec.align && (spec.align[0] || spec.align[1])) {

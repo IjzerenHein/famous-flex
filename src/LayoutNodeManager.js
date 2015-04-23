@@ -171,7 +171,6 @@ define(function(require, exports, module) {
         while (node) {
             var modified = node._specModified;
             var spec = node.getSpec();
-            //if (spec.removed && (!this._contextState.addCount || (this._contextState.removeCount > 5))) {
             if (spec.removed) {
 
                 // Destroy node
@@ -192,6 +191,13 @@ define(function(require, exports, module) {
                         spec.transform[14] += translate[2];
                         spec.transform[12] = Math.round(spec.transform[12] * 100000) / 100000;
                         spec.transform[13] = Math.round(spec.transform[13] * 100000) / 100000;
+                        if (spec.endState) {
+                            spec.endState.transform[12] += translate[0];
+                            spec.endState.transform[13] += translate[1];
+                            spec.endState.transform[14] += translate[2];
+                            spec.endState.transform[12] = Math.round(spec.endState.transform[12] * 100000) / 100000;
+                            spec.endState.transform[13] = Math.round(spec.endState.transform[13] * 100000) / 100000;
+                        }
                     }
                     result.modified = true;
                 }
