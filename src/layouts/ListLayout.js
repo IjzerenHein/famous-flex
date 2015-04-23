@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
 
 /**
@@ -146,14 +146,10 @@ define(function(require, exports, module) {
         //
         offset = context.scrollOffset + margin[alignment];
         bound = context.scrollEnd + margin[alignment];
-        while (offset < bound) {
+        while (offset < (bound + spacing)) {
             lastNode = node;
             node = context.next();
             if (!node) {
-                if (lastNode && !alignment) {
-                    set.scrollLength = nodeSize + margin[0] + -margin[1];
-                    context.set(lastNode, set);
-                }
                 break;
             }
 
@@ -192,24 +188,22 @@ define(function(require, exports, module) {
                 firstVisibleCell = node;
             }
         }
+        if (lastNode && !node && !alignment) {
+            set.scrollLength = nodeSize + margin[0] + -margin[1];
+            context.set(lastNode, set);
+        }
 
         //
         // Process previous nodes
         //
+        lastNode = undefined;
         node = undefined;
         offset = context.scrollOffset + margin[alignment];
         bound = context.scrollStart + margin[alignment];
-        while (offset > bound) {
+        while (offset > (bound - spacing)) {
             lastNode = node;
             node = context.prev();
             if (!node) {
-                if (lastNode && alignment) {
-                    set.scrollLength = nodeSize + margin[0] + -margin[1];
-                    context.set(lastNode, set);
-                    if (lastSectionBeforeVisibleCell === lastNode) {
-                        lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
-                    }
-                }
                 break;
             }
 
@@ -247,6 +241,13 @@ define(function(require, exports, module) {
                     lastCellOffsetInFirstVisibleSection = offset + nodeSize;
                 }
                 lastSectionBeforeVisibleCell = undefined;
+            }
+        }
+        if (lastNode && !node && alignment) {
+            set.scrollLength = nodeSize + margin[0] + -margin[1];
+            context.set(lastNode, set);
+            if (lastSectionBeforeVisibleCell === lastNode) {
+                lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
             }
         }
 
