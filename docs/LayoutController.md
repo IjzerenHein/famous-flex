@@ -24,14 +24,14 @@ Events:
     * [.getLayoutOptions()](#module_LayoutController--LayoutController#getLayoutOptions) ⇒ <code>Object</code>
     * [.setDirection(direction)](#module_LayoutController--LayoutController#setDirection) ⇒ <code>LayoutController</code>
     * [.getDirection([actual])](#module_LayoutController--LayoutController#getDirection) ⇒ <code>Utility.Direction</code>
-    * [.getSpec(node, normalize)](#module_LayoutController--LayoutController#getSpec) ⇒ <code>Spec</code>
+    * [.getSpec(node, [normalize], [endState])](#module_LayoutController--LayoutController#getSpec) ⇒ <code>Spec</code>
     * [.reflowLayout()](#module_LayoutController--LayoutController#reflowLayout) ⇒ <code>LayoutController</code>
     * [.resetFlowState()](#module_LayoutController--LayoutController#resetFlowState) ⇒ <code>LayoutController</code>
     * [.insert(indexOrId, renderable, [insertSpec])](#module_LayoutController--LayoutController#insert) ⇒ <code>LayoutController</code>
     * [.push(renderable, [insertSpec])](#module_LayoutController--LayoutController#push) ⇒ <code>LayoutController</code>
     * [.get(indexOrId)](#module_LayoutController--LayoutController#get) ⇒ <code>Renderable</code>
     * [.swap(index, index2)](#module_LayoutController--LayoutController#swap) ⇒ <code>LayoutController</code>
-    * [.replace(indexOrId, renderable)](#module_LayoutController--LayoutController#replace) ⇒ <code>Renderable</code>
+    * [.replace(indexOrId, renderable, [noAnimation])](#module_LayoutController--LayoutController#replace) ⇒ <code>Renderable</code>
     * [.move(index, newIndex)](#module_LayoutController--LayoutController#move) ⇒ <code>LayoutController</code>
     * [.remove(indexOrId, [removeSpec])](#module_LayoutController--LayoutController#remove) ⇒ <code>Renderable</code>
     * [.removeAll([removeSpec])](#module_LayoutController--LayoutController#removeAll) ⇒ <code>LayoutController</code>
@@ -171,7 +171,7 @@ never returns undefined.
 | [actual] | <code>Boolean</code> | Set to true to obtain the actual in-use direction |
 
 <a name="module_LayoutController--LayoutController#getSpec"></a>
-#### layoutController.getSpec(node, normalize) ⇒ <code>Spec</code>
+#### layoutController.getSpec(node, [normalize], [endState]) ⇒ <code>Spec</code>
 Get the spec (size, transform, etc..) for the given renderable or
 Id.
 
@@ -181,7 +181,8 @@ Id.
 | Param | Type | Description |
 | --- | --- | --- |
 | node | <code>Renderable</code> &#124; <code>String</code> | Renderabe or Id to look for |
-| normalize | <code>Bool</code> | When set to `true` normalizes the origin/align into the transform translation (default: `false`). |
+| [normalize] | <code>Bool</code> | When set to `true` normalizes the origin/align into the transform translation (default: `false`). |
+| [endState] | <code>Bool</code> | When set to `true` returns the flowing end-state spec rather than the current spec. |
 
 <a name="module_LayoutController--LayoutController#reflowLayout"></a>
 #### layoutController.reflowLayout() ⇒ <code>LayoutController</code>
@@ -255,7 +256,7 @@ This method is only supported for dataSources of type Array or ViewSequence.
 | index2 | <code>Number</code> | Index of the renderable to swap with |
 
 <a name="module_LayoutController--LayoutController#replace"></a>
-#### layoutController.replace(indexOrId, renderable) ⇒ <code>Renderable</code>
+#### layoutController.replace(indexOrId, renderable, [noAnimation]) ⇒ <code>Renderable</code>
 Replaces a renderable at the given index or id.
 
 **Kind**: instance method of <code>[LayoutController](#exp_module_LayoutController--LayoutController)</code>  
@@ -265,6 +266,7 @@ Replaces a renderable at the given index or id.
 | --- | --- | --- |
 | indexOrId | <code>Number</code> &#124; <code>String</code> | Index within dataSource array or id (String) |
 | renderable | <code>Renderable</code> | renderable to replace with |
+| [noAnimation] | <code>Bool</code> | When set to `true`, replaces the renderable without any flowing animation. |
 
 <a name="module_LayoutController--LayoutController#move"></a>
 #### layoutController.move(index, newIndex) ⇒ <code>LayoutController</code>

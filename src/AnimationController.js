@@ -30,6 +30,7 @@ define(function(require, exports, module) {
      * @param {Object} [options] Configurable options.
      * @param {Object} [options.transition] Transition options (default: `{duration: 400, curve: Easing.inOutQuad}`).
      * @param {Function} [options.animation] Animation function (default: `AnimationController.Animation.Slide.Left`).
+     * @param {Number} [options.zIndexOffset] Optional z-index difference between the hiding & showing renderable (default: 0).
      * @param {Object} [options.show] Show specific options.
      * @param {Object} [options.show.transition] Show specific transition options.
      * @param {Function} [options.show.animation] Show specific animation function.
@@ -38,7 +39,7 @@ define(function(require, exports, module) {
      * @param {Function} [options.hide.animation] Hide specific animation function.
      * @param {Object} [options.transfer] Transfer options.
      * @param {Object} [options.transfer.transition] Transfer specific transition options.
-     * @param {Function} [options.transfer.zIndex] Z-index the tranferables are moved on top while animating (default: 10).
+     * @param {Number} [options.transfer.zIndex] Z-index the tranferables are moved on top while animating (default: 10).
      * @param {Array} [options.transfer.items] Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred.
      * @alias module:AnimationController
      */
@@ -100,7 +101,7 @@ define(function(require, exports, module) {
 
     AnimationController.DEFAULT_OPTIONS = {
         transition: {duration: 400, curve: Easing.inOutQuad},
-        animation: AnimationController.Animation.Slide.Left,
+        animation: AnimationController.Animation.Fade,
         show: {
             // transition,
             // animation
@@ -117,9 +118,7 @@ define(function(require, exports, module) {
             //   'image': ['image', 'image2']
             // }
         },
-        zIndexOffset: {
-            views: 1
-        }
+        zIndexOffset: 0
     };
 
     var ItemState = {
@@ -169,7 +168,7 @@ define(function(require, exports, module) {
                     }
 
                     // Increase z-index for next view
-                    set.translate[2] += options.zIndexOffset.views;
+                    set.translate[2] += options.zIndexOffset;
                     break;
             }
         }
@@ -429,8 +428,6 @@ define(function(require, exports, module) {
         if (options) {
             item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
             item.options.show.animation = (options.show ? options.show.animation : undefined) || options.animation || item.options.show.animation;
-            item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
             item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
             item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
@@ -482,7 +479,7 @@ define(function(require, exports, module) {
      * operations from the queue.
      *
      * @param {Renderable} renderable View or surface to show
-     * @param {Object} [options] Show options
+     * @param {Object} [options] Options.
      * @param {Object} [options.transition] Transition options for both show & hide.
      * @param {Function} [options.animation] Animation function for both show & hide.
      * @param {Object} [options.show] Show specific options.
@@ -493,9 +490,9 @@ define(function(require, exports, module) {
      * @param {Function} [options.hide.animation] Hide specific animation function.
      * @param {Object} [options.transfer] Transfer options.
      * @param {Object} [options.transfer.transition] Transfer specific transition options.
-     * @param {Function} [options.transfer.zIndex] Z-index the tranferables are moved on top while animating (default: 10).
+     * @param {Number} [options.transfer.zIndex] Z-index the tranferables are moved on top while animating.
      * @param {Array} [options.transfer.items] Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred.
-     * @param {Function} [callback] Function that is called an completion.
+     * @param {Function} [callback] Function that is called on completion.
      * @return {AnimationController} this
      */
     AnimationController.prototype.show = function(renderable, options, callback) {
@@ -506,6 +503,10 @@ define(function(require, exports, module) {
         if (item && (item.view === renderable)) {
             item.hide = false;
             return this;
+        }
+        if (item && (item.state !== ItemState.HIDING) && options) {
+            item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
         }
         item = _createItem.call(this, renderable, options, callback);
         item.showCallback = function() {
@@ -545,8 +546,8 @@ define(function(require, exports, module) {
         }
         item.hide = true;
         if (options) {
-            item.options.hide.transition = options.transition || item.options.hide.transition;
-            item.options.hide.animation = options.animation || item.options.hide.animation;
+            item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
         }
         item.hideCallback = function() {
             var index = this._viewStack.indexOf(item);
