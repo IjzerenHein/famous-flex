@@ -62,6 +62,8 @@ define(function(require, exports, module) {
     FlexScrollView.prototype = Object.create(ScrollController.prototype);
     FlexScrollView.prototype.constructor = FlexScrollView;
     FlexScrollView.PullToRefreshState = PullToRefreshState;
+    FlexScrollView.Bounds = ScrollController.Bounds;
+    FlexScrollView.PaginationMode = ScrollController.PaginationMode;
 
     FlexScrollView.DEFAULT_OPTIONS = {
         layout: ListLayout,         // sequential layout, uses width/height from renderable
