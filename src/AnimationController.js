@@ -76,7 +76,11 @@ define(function(require, exports, module) {
             return {opacity: (opacity === undefined) ? 0 : opacity};
         },
         Zoom: function(show, size, scale) {
-            return {transform: Transform.scale(scale ? scale[0] : 0.5, scale ? scale[1] : 0.5, 1)};
+            return {
+              transform: Transform.scale(scale ? scale[0] : 0.5, scale ? scale[1] : 0.5, 1),
+              align: [0.5, 0.5],
+              origin: [0.5, 0.5]
+            };
         }/*,
         Flip: {
             Left: function(show, size) {
@@ -286,19 +290,20 @@ define(function(require, exports, module) {
                 // cycles if for instance, this involves a true-size renderable or the
                 // renderable is affected by other true-size renderables around itsself.
                 Timer.after(function() {
-                    transferable.target.getSpec(function(targetSpec) {
+                    transferable.target.getSpec(function(targetSpec, transition) {
+                        mod.halt();
                         if (sourceSpec.transform || targetSpec.transform) {
-                            mod.setTransform(targetSpec.transform || Transform.identity, item.options.transfer.transition);
+                            mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
                         }
                         if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
-                            mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, item.options.transfer.transition);
+                            mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition|| item.options.transfer.transition);
                         }
                         if (sourceSpec.size || targetSpec.size) {
-                            mod.setSize(targetSpec.size || sourceSpec.size, item.options.transfer.transition);
+                            mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
                         }
-                    });
+                    }, true);
                 }, 1);
-            }.bind(this));
+            }.bind(this), false);
         }
     }
 
@@ -350,41 +355,27 @@ define(function(require, exports, module) {
      * Starts the view animation.
      */
     function _startAnimation(item, prevItem, size, show) {
-        var transform;
-        var opacity;
         var animation = show ? item.options.show.animation : item.options.hide.animation;
-        if (animation) {
-            var result = animation(show, size);
-            if (result && result.transform) {
-                if (transform) {
-                    transform = Transform.multiply(transform, result.transform);
-                }
-                else {
-                    transform = result.transform;
-                }
-            }
-            if (result && (result.opacity !== undefined)) {
-                if (opacity !== undefined) {
-                    opacity *= result.opacity;
-                }
-                else {
-                    opacity = result.opacity;
-                }
-            }
-        }
+        var spec = animation ? animation(show, size) : {};
         item.mod.halt();
         var callback;
         if (show) {
             callback = item.showCallback;
-            if (transform) {
-                item.mod.setTransform(transform);
+            if (spec.transform) {
+                item.mod.setTransform(spec.transform);
                 item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
                 callback = undefined;
             }
-            if (opacity !== undefined) {
-                item.mod.setOpacity(opacity);
+            if (spec.opacity !== undefined) {
+                item.mod.setOpacity(spec.opacity);
                 item.mod.setOpacity(1, item.options.show.transition, callback);
                 callback = undefined;
+            }
+            if (spec.align) {
+                item.mod.setAlign(spec.align);
+            }
+            if (spec.origin) {
+                item.mod.setOrigin(spec.origin);
             }
             if (prevItem) {
                 _startTransferableAnimations.call(this, item, prevItem);
@@ -395,12 +386,12 @@ define(function(require, exports, module) {
         }
         else {
             callback = item.hideCallback;
-            if (transform) {
-                item.mod.setTransform(transform, item.options.hide.transition, callback);
+            if (spec.transform) {
+                item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
                 callback = undefined;
             }
-            if (opacity !== undefined) {
-                item.mod.setOpacity(opacity, item.options.hide.transition, callback);
+            if (spec.opacity !== undefined) {
+                item.mod.setOpacity(spec.opacity, item.options.hide.transition, callback);
                 callback = undefined;
             }
             if (callback) {
