@@ -17,7 +17,7 @@ define(function(require, exports, module) {
 
     // import dependencies
     var View = require('famous/core/View');
-    var LayoutController = require('famous-flex/LayoutController');
+    var LayoutController = require('./LayoutController');
     var Transform = require('famous/core/Transform');
     var Modifier = require('famous/core/Modifier');
     var StateModifier = require('famous/modifiers/StateModifier');

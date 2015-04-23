@@ -1,6 +1,6 @@
 {
   "name": "famous-flex",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -33,7 +33,12 @@
     "famous/physics/bodies/Particle": "global:famous.physics.bodies.Particle",
     "famous/transitions/Transitionable": "global:famous.transitions.Transitionable",
     "famous/core/Entity": "global:famous.core.Entity",
-    "famous/core/ViewSequence": "global:famous.core.ViewSequence"
+    "famous/core/ViewSequence": "global:famous.core.ViewSequence",
+    "famous/transitions/Easing": "global:famous.transitions.Easing",
+    "famous/utilities/Timer": "global:famous.utilities.Timer",
+    "famous/core/RenderNode": "global:famous.core.RenderNode",
+    "famous/core/Modifier": "global:famous.core.Modifier",
+    "famous/modifiers/StateModifier": "global:famous.modifiers.StateModifier"
   },
   "author": {
     "name": "Hein Rutjes <hrutjes@gmail.com>"
