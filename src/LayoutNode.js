@@ -36,6 +36,14 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Called to update the underlying render-node
+     */
+    LayoutNode.prototype.setRenderNode = function(renderNode) {
+        this.renderNode = renderNode;
+        this._spec.renderNode = renderNode;
+    };
+
+    /**
      * Called to update the options for the node
      */
     LayoutNode.prototype.setOptions = function(options) {

@@ -742,15 +742,22 @@ define(function(require, exports, module) {
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
      * @param {Renderable} renderable renderable to replace with
+     * @param {Bool} [noAnimation] When set to `true`, replaces the renderable without any flowing animation.
      * @return {Renderable} old renderable that has been replaced
      */
-    LayoutController.prototype.replace = function(indexOrId, renderable) {
+    LayoutController.prototype.replace = function(indexOrId, renderable, noAnimation) {
         var oldRenderable;
         if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
             oldRenderable = this._nodesById[indexOrId];
             if (oldRenderable !== renderable) {
-              this._nodesById[indexOrId] = renderable;
-              this._isDirty = true;
+                if (noAnimation && oldRenderable) {
+                    var node = this._nodes.getNodeByRenderNode(oldRenderable);
+                    if (node) {
+                        node.setRenderNode(renderable);
+                    }
+                }
+                this._nodesById[indexOrId] = renderable;
+                this._isDirty = true;
             }
             return oldRenderable;
         }
