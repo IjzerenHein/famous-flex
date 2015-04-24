@@ -1513,6 +1513,15 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Checks whether user is touching the ScrollController.
+     *
+     * @return {Bool} true when user is touching the ScrollController
+     */
+    ScrollController.prototype.isTouching = function() {
+        return this._scroll.activeTouches.length > 0;
+    };
+
+    /**
      * Checks whether any boundaries have been reached.
      *
      * @return {ScrollController.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
