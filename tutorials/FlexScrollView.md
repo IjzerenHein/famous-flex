@@ -201,8 +201,6 @@ var item = {
 };
 ```
 
-The `getFirstVisibleItem` and `getLastVisibleItem` functions return the first or last item that is completely visible or the item that is partially visible and satisfies the `visibleItemThresshold` option. By default, this option is set to 0.5, which means that when an item is 50% percent visible, it is considered to be visible.
-
 
 # Scrolling
 
