@@ -102,7 +102,6 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @alias module:ScrollController
      */
     function ScrollController(options) {
@@ -206,7 +205,6 @@ define(function(require, exports, module) {
                 overflow: 'hidden' // overflow mode when useContainer is enabled
             }
         },
-        visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
         scrollParticle: {
             // use defaults
         },
@@ -257,7 +255,6 @@ define(function(require, exports, module) {
      * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
      * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
      * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
-     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
      * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
      * @return {ScrollController} this
      */
@@ -1104,87 +1101,81 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Get the first visible item in the view.
-     *
-     * An item is considered to be the first visible item when:
-     * -    First item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
-     * -    It is the first item after the top/left bounds
-     *
-     * @return {Object} item or `undefined`
+     * Get the first or last visible item in the view.
      */
-    ScrollController.prototype.getFirstVisibleItem = function(includeNode) {
-        var size = this._contextSizeCache;
-        var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+    function _getVisibleItem(first) {
+        var result = {};
+        var diff;
+        var prevDiff = 10000000;
+        var diffDelta = (first && this.options.alignment) ? -this._contextSizeCache[this._direction] : ((!first && !this.options.alignment) ? this._contextSizeCache[this._direction] : 0);
+        var scrollOffset = this._scroll.unnormalizedScrollOffset;
         var node = this._nodes.getStartEnumNode(true);
-        var nodeFoundVisiblePerc;
-        var nodeFoundScrollOffset;
-        var nodeFound;
         while (node) {
-            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
+            if (!node._invalidated || (node.scrollLength === undefined)) {
                 break;
             }
-            scrollOffset += node.scrollLength;
-            if ((scrollOffset >= 0) && node._viewSequence) {
-                nodeFoundVisiblePerc = node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1;
-                nodeFoundScrollOffset = scrollOffset - node.scrollLength;
-                if ((nodeFoundVisiblePerc >= this.options.visibleItemThresshold) ||
-                    (nodeFoundScrollOffset >= 0)) {
-                    nodeFound = node;
+            if (node._viewSequence) {
+                diff = Math.abs(diffDelta - (scrollOffset + (!first ? node.scrollLength : 0)));
+                if (diff >= prevDiff) {
                     break;
                 }
+                prevDiff = diff;
+                result.scrollOffset = scrollOffset;
+                result._node = node;
+                scrollOffset += node.scrollLength;
             }
             node = node._next;
         }
-        scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+        scrollOffset = this._scroll.unnormalizedScrollOffset;
         node = this._nodes.getStartEnumNode(false);
         while (node) {
-            if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset < 0)) {
+            if (!node._invalidated || (node.scrollLength === undefined)) {
                 break;
             }
-            scrollOffset -= node.scrollLength;
-            if ((scrollOffset < size[this._direction]) && node._viewSequence) {
-                var visiblePerc = node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1;
-                if ((visiblePerc >= this.options.visibleItemThresshold) ||
-                    (scrollOffset >= 0)) {
-                    nodeFoundVisiblePerc = visiblePerc;
-                    nodeFoundScrollOffset = scrollOffset;
-                    nodeFound = node;
+            if (node._viewSequence) {
+                scrollOffset -= node.scrollLength;
+                diff = Math.abs(diffDelta - (scrollOffset + (!first ? node.scrollLength : 0)));
+                if (diff >= prevDiff) {
                     break;
                 }
+                prevDiff = diff;
+                result.scrollOffset = scrollOffset;
+                result._node = node;
             }
             node = node._prev;
         }
-        return nodeFound ? {
-            index: nodeFound._viewSequence.getIndex(),
-            viewSequence: nodeFound._viewSequence,
-            renderNode: nodeFound.renderNode,
-            visiblePerc: nodeFoundVisiblePerc,
-            scrollOffset: nodeFoundScrollOffset,
-            scrollLength: nodeFound.scrollLength,
-            _node: nodeFound
-        } : undefined;
+        if (!result._node) {
+            return undefined;
+        }
+        result.scrollLength = result._node.scrollLength;
+        if (this.options.alignment) {
+            result.visiblePerc = (Math.min(result.scrollOffset + result.scrollLength, 0) - Math.max(result.scrollOffset, -this._contextSizeCache[this._direction])) / result.scrollLength;
+        }
+        else {
+            result.visiblePerc = (Math.min(result.scrollOffset + result.scrollLength, this._contextSizeCache[this._direction]) - Math.max(result.scrollOffset, 0)) / result.scrollLength;
+        }
+        result.index = result._node._viewSequence.getIndex();
+        result.viewSequence = result._node._viewSequence;
+        result.renderNode = result._node.renderNode;
+        return result;
+    }
+
+    /**
+     * Get the first visible item in the view.
+     *
+     * @return {Object} item or `undefined`
+     */
+    ScrollController.prototype.getFirstVisibleItem = function() {
+        return _getVisibleItem.call(this, true);
     };
 
     /**
      * Get the last visible item in the view.
      *
-     * An item is considered to be the last visible item when:
-     * -    Last item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
-     * -    It is the last item before the bottom/right bounds
-     *
      * @return {Object} item or `undefined`
      */
     ScrollController.prototype.getLastVisibleItem = function() {
-        var items = this.getVisibleItems();
-        var size = this._contextSizeCache;
-        for (var i = items.length - 1; i >= 0; i--) {
-            var item = items[i];
-            if ((item.visiblePerc >= this.options.visibleItemThresshold) ||
-                ((item.scrollOffset + item.scrollLength) <= size[this._direction])) {
-                return item;
-            }
-        }
-        return items.length ? items[items.length - 1] : undefined;
+        return _getVisibleItem.call(this, false);
     };
 
     /**
@@ -1574,7 +1565,7 @@ define(function(require, exports, module) {
     ScrollController.prototype.applyScrollForce = function(delta) {
         this.halt();
         if (this._scroll.scrollForceCount === 0) {
-            this._scroll.scrollForceStartItem = this.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+            this._scroll.scrollForceStartItem = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
         }
         this._scroll.scrollForceCount++;
         this._scroll.scrollForce += delta;
@@ -1618,7 +1609,7 @@ define(function(require, exports, module) {
             this._scroll.scrollForce = 0;
             this._scroll.scrollDirty = true;
             if (this._scroll.scrollForceStartItem && this.options.paginated && (this.options.paginationMode === PaginationMode.PAGE)) {
-                var item = this.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+                var item = this.options.alignment ? this.getLastVisibleItem(true) : this.getFirstVisibleItem(true);
                 if (item) {
                     if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                         this.goToRenderNode(item.renderNode);

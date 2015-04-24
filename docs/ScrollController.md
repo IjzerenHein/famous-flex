@@ -73,7 +73,6 @@ Inherited from: [LayoutController](./LayoutController.md)
 | [options.scrollDrag] | <code>Object</code> | Drag-force options to apply on the scroll particle |
 | [options.scrollFriction] | <code>Object</code> | Friction-force options to apply on the scroll particle |
 | [options.layoutAll] | <code>Bool</code> | When set to true, always lays out all renderables in the datasource (default: `false`). |
-| [options.visibleItemThresshold] | <code>Number</code> | Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`). |
 
 <a name="module_ScrollController--ScrollController#setOptions"></a>
 #### scrollController.setOptions(options) ⇒ <code>ScrollController</code>
@@ -96,7 +95,6 @@ Patches the ScrollController instance's options with the passed-in ones.
 | [options.scrollSpring] | <code>Object</code> | Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`) |
 | [options.scrollDrag] | <code>Object</code> | Drag-force options to apply on the scroll particle |
 | [options.scrollFriction] | <code>Object</code> | Friction-force options to apply on the scroll particle |
-| [options.visibleItemThresshold] | <code>Number</code> | Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`). |
 | [options.layoutAll] | <code>Bool</code> | When set to true, always lays out all renderables in the datasource (default: `false`). |
 
 <a name="module_ScrollController--ScrollController#getVisibleItems"></a>
@@ -120,19 +118,11 @@ following properties. Example:
 #### scrollController.getFirstVisibleItem() ⇒ <code>Object</code>
 Get the first visible item in the view.
 
-An item is considered to be the first visible item when:
--    First item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
--    It is the first item after the top/left bounds
-
 **Kind**: instance method of <code>[ScrollController](#exp_module_ScrollController--ScrollController)</code>  
 **Returns**: <code>Object</code> - item or `undefined`  
 <a name="module_ScrollController--ScrollController#getLastVisibleItem"></a>
 #### scrollController.getLastVisibleItem() ⇒ <code>Object</code>
 Get the last visible item in the view.
-
-An item is considered to be the last visible item when:
--    Last item that is partly visible and the visibility % is higher than `options.visibleItemThresshold`
--    It is the last item before the bottom/right bounds
 
 **Kind**: instance method of <code>[ScrollController](#exp_module_ScrollController--ScrollController)</code>  
 **Returns**: <code>Object</code> - item or `undefined`  
