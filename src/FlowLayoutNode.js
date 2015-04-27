@@ -367,12 +367,16 @@ define(function(require, exports, module) {
         else if (translate) {
             if (!spec.transform) {
                 spec.transform = Transform.translate(translateX, translateY, translateZ);
-                spec.endState.transform = Transform.translate(translate.endState.x, translate.endState.y, translate.endState.z);
             }
             else {
                 spec.transform[12] = translateX;
                 spec.transform[13] = translateY;
                 spec.transform[14] = translateZ;
+            }
+            if (!spec.endState.transform) {
+                spec.endState.transform = Transform.translate(translate.endState.x, translate.endState.y, translate.endState.z);
+            }
+            else {
                 spec.endState.transform[12] = translate.endState.x;
                 spec.endState.transform[13] = translate.endState.y;
                 spec.endState.transform[14] = translate.endState.z;
