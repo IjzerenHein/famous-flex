@@ -105,6 +105,7 @@ define(function(require, exports, module) {
         var lastSectionBeforeVisibleCellOffset;
         var lastSectionBeforeVisibleCellLength;
         var lastSectionBeforeVisibleCellScrollLength;
+        var lastSectionBeforeVisibleCellTopReached;
         var firstVisibleCell;
         var lastNode;
         var lastCellOffsetInFirstVisibleSection;
@@ -172,8 +173,11 @@ define(function(require, exports, module) {
             // Keep track of the last section before the first visible cell
             //
             if (isSectionCallback && isSectionCallback(node.renderNode)) {
-                set.translate[direction] = Math.max(margin[0], set.translate[direction]);
-                context.set(node, set);
+                if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+                    lastSectionBeforeVisibleCellTopReached = true;
+                    set.translate[direction] = margin[0];
+                    context.set(node, set);
+                }
                 if (!firstVisibleCell) {
                     lastSectionBeforeVisibleCell = node;
                     lastSectionBeforeVisibleCellOffset = offset - nodeSize;
@@ -226,8 +230,11 @@ define(function(require, exports, module) {
             // Keep track of the last section before the first visible cell
             //
             if (isSectionCallback && isSectionCallback(node.renderNode)) {
-                set.translate[direction] = Math.max(margin[0], set.translate[direction]);
-                context.set(node, set);
+                if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+                    lastSectionBeforeVisibleCellTopReached = true;
+                    set.translate[direction] = margin[0];
+                    context.set(node, set);
+                }
                 if (!lastSectionBeforeVisibleCell) {
                     lastSectionBeforeVisibleCell = node;
                     lastSectionBeforeVisibleCellOffset = offset;
