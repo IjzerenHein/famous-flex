@@ -32,6 +32,7 @@
   text-align: center;
   white-space: nowrap;
   color: #333333;
+  cursor: pointer;
 }
 .ff-tabbar.item > div {
   /* align content vertically */
