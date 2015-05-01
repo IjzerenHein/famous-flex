@@ -40,6 +40,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.transfer] Transfer options.
      * @param {Object} [options.transfer.transition] Transfer specific transition options.
      * @param {Number} [options.transfer.zIndex] Z-index the tranferables are moved on top while animating (default: 10).
+     * @param {Bool} [options.transfer.fastResize] When enabled, scales the renderable i.s.o. resizing when doing the transfer animation (default: true).
      * @param {Array} [options.transfer.items] Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred.
      * @alias module:AnimationController
      */
@@ -73,16 +74,29 @@ define(function(require, exports, module) {
                 return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
             }
         },
-        Fade: function(show, size, opacity) {
-            return {opacity: (opacity === undefined) ? 0 : opacity};
-        },
-        Zoom: function(show, size, scale) {
+        Fade: function(show, size) {
             return {
-              transform: Transform.scale(scale ? scale[0] : 0.5, scale ? scale[1] : 0.5, 1),
-              align: [0.5, 0.5],
-              origin: [0.5, 0.5]
+                opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0
             };
-        }/*,
+        },
+        Zoom: function(show, size) {
+            var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
+            return {
+                transform: Transform.scale(scale, scale, 1),
+                align: [0.5, 0.5],
+                origin: [0.5, 0.5]
+            };
+        },
+        FadedZoom: function(show, size) {
+            var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
+            return {
+                opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
+                transform: Transform.scale(scale, scale, 1),
+                align: [0.5, 0.5],
+                origin: [0.5, 0.5]
+            };
+        }
+        /*,
         Flip: {
             Left: function(show, size) {
                 return {transform: Transform.rotate(0, show ? Math.PI : -Math.PI, 0)};
@@ -111,6 +125,7 @@ define(function(require, exports, module) {
             // animation
         },
         transfer: {
+            fastResize: true,
             zIndex: 10 // z-index offset the items are translated while transferring
             // transition,
             // items: {
@@ -291,14 +306,25 @@ define(function(require, exports, module) {
                 Timer.after(function() {
                     transferable.target.getSpec(function(targetSpec, transition) {
                         mod.halt();
-                        if (sourceSpec.transform || targetSpec.transform) {
-                            mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
-                        }
                         if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
                             mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition|| item.options.transfer.transition);
                         }
-                        if (sourceSpec.size || targetSpec.size) {
-                            mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
+                        if (item.options.transfer.fastResize) {
+                            if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
+                                var transform = targetSpec.transform || Transform.identity;
+                                if (sourceSpec.size && targetSpec.size) {
+                                    transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
+                                }
+                                mod.setTransform(transform, transition || item.options.transfer.transition);
+                            }
+                        }
+                        else {
+                            if (sourceSpec.transform || targetSpec.transform) {
+                                mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
+                            }
+                            if (sourceSpec.size || targetSpec.size) {
+                                mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
+                            }
                         }
                     }, true);
                 }, 1);
@@ -355,7 +381,7 @@ define(function(require, exports, module) {
      */
     function _startAnimation(item, prevItem, size, show) {
         var animation = show ? item.options.show.animation : item.options.hide.animation;
-        var spec = animation ? animation(show, size) : {};
+        var spec = animation ? animation.call(undefined, show, size) : {};
         item.mod.halt();
         var callback;
         if (show) {
@@ -419,7 +445,8 @@ define(function(require, exports, module) {
                 transfer: {
                     transition: this.options.transfer.transition || this.options.transition,
                     items: this.options.transfer.items || {},
-                    zIndex: this.options.transfer.zIndex
+                    zIndex: this.options.transfer.zIndex,
+                    fastResize: this.options.transfer.fastResize
                 }
             },
             callback: callback,
@@ -431,6 +458,7 @@ define(function(require, exports, module) {
             item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
             item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
+            item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
         }
         item.node = new RenderNode(item.mod);
         item.node.add(view);

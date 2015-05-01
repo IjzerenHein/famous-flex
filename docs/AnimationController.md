@@ -35,6 +35,7 @@ Animating between famo.us views in awesome ways.
 | [options.transfer] | <code>Object</code> | Transfer options. |
 | [options.transfer.transition] | <code>Object</code> | Transfer specific transition options. |
 | [options.transfer.zIndex] | <code>Number</code> | Z-index the tranferables are moved on top while animating (default: 10). |
+| [options.transfer.fastResize] | <code>Bool</code> | When enabled, scales the renderable i.s.o. resizing when doing the transfer animation (default: true). |
 | [options.transfer.items] | <code>Array</code> | Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred. |
 
 <a name="module_AnimationController--AnimationController#show"></a>
