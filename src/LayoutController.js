@@ -591,6 +591,10 @@ define(function(require, exports, module) {
 
             // Insert into array
             var dataSource = this._viewSequence || this._dataSource;
+            var array = _getDataSourceArray.call(this);
+            if (array && (indexOrId === array.length)) {
+                indexOrId = -1;
+            }
             if (indexOrId === -1) {
                 dataSource.push(renderable);
             }
