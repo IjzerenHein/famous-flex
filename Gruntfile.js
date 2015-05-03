@@ -72,8 +72,63 @@ module.exports = function(grunt) {
         ]
       }
     },
-    exec: {
-      'global-no-famous': 'npm run-script global-no-famous'
+    requirejs: {
+      compile: {
+        options: {
+          baseUrl: '.',
+          name: 'template.js',
+          out: 'dist/famous-flex.js',
+          paths: {
+            'famous': 'empty:',
+            'famous-flex': './src'
+          },
+          optimize: 'none'
+        }
+      }
+    },
+    browserify: {
+      dist: {
+        files: {
+          './dist/famous-flex-global.js': ['./template-global.js']
+        },
+        options: {
+          transform: ['browserify-shim']
+        }
+      }
+    },
+    uglify: {
+      noglobal: {
+        src: './dist/famous-flex.js',
+        dest: './dist/famous-flex.min.js'
+      },
+      global: {
+        src: './dist/famous-flex-global.js',
+        dest: './dist/famous-flex-global.min.js'
+      }
+    },
+    usebanner: {
+      dist: {
+        options: {
+          position: 'top',
+          banner:
+            '/**\n' +
+            '* This Source Code is licensed under the MIT license. If a copy of the\n' +
+            '* MIT-license was not distributed with this file, You can obtain one at:\n' +
+            '* http://opensource.org/licenses/mit-license.html.\n' +
+            '*\n' +
+            '* @author: Hein Rutjes (IjzerenHein)\n' +
+            '* @license MIT\n' +
+            '* @copyright Gloey Apps, 2014/2015\n' +
+            '*\n' +
+            '* @library famous-flex\n' +
+            '* @version ' + grunt.file.readJSON('package.json').version + '\n' +
+            '* @generated <%= grunt.template.today("dd-mm-yyyy") %>\n' +
+            '*/'
+        },
+        files: {
+          src: ['dist/*.js']
+        }
+      }
     }
   });
 
@@ -82,19 +137,16 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jscs');
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
-  grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-banner');
 
-  // Lint: Check JS and CSS for errors & style.
+  // Tasks
   grunt.registerTask('lint', ['eslint', 'jscs', 'csslint']);
-
-  // Build: Generate Docs and global module.
-  grunt.registerTask('build', ['jsdoc2md', 'exec:global-no-famous']);
-
-  // Develop: Watches source files. Trigger lint & build upon change.
-  grunt.registerTask('develop', ['watch:source']);
-
-  // Default task.
-  grunt.registerTask('default', ['lint', 'build']);
-
+  grunt.registerTask('doc', ['jsdoc2md']);
+  grunt.registerTask('dist', ['requirejs', 'browserify', 'uglify', 'usebanner']);
+  grunt.registerTask('develop', ['watch:source']); // Develop: Watches source files. Trigger lint & build upon change.
+  grunt.registerTask('default', ['lint', 'doc', 'dist']);
 };

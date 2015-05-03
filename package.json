@@ -7,39 +7,6 @@
     "url": "git://github.com/IjzerenHein/famous-flex.git"
   },
   "main": "dist/famous-flex-global.template.js",
-  "browserify": {
-    "transform": [
-      "browserify-shim",
-      "deamdify"
-    ]
-  },
-  "scripts": {
-    "global-no-famous": "browserify ./dist/famous-flex-global.template.js -t browserify-shim -o ./dist/famous-flex-global.js --debug --verbose"
-  },
-  "browserify-shim": {
-    "famous/core/OptionsManager": "global:famous.core.OptionsManager",
-    "famous/utilities/Utility": "global:famous.utilities.Utility",
-    "famous/surfaces/ContainerSurface": "global:famous.surfaces.ContainerSurface",
-    "famous/core/EventHandler": "global:famous.core.EventHandler",
-    "famous/core/Transform": "global:famous.core.Transform",
-    "famous/core/View": "global:famous.core.View",
-    "famous/core/Surface": "global:famous.core.Surface",
-    "famous/math/Vector": "global:famous.math.Vector",
-    "famous/core/Group": "global:famous.core.Group",
-    "famous/physics/PhysicsEngine": "global:famous.physics.PhysicsEngine",
-    "famous/physics/forces/Drag": "global:famous.physics.forces.Drag",
-    "famous/physics/forces/Spring": "global:famous.physics.forces.Spring",
-    "famous/inputs/ScrollSync": "global:famous.inputs.ScrollSync",
-    "famous/physics/bodies/Particle": "global:famous.physics.bodies.Particle",
-    "famous/transitions/Transitionable": "global:famous.transitions.Transitionable",
-    "famous/core/Entity": "global:famous.core.Entity",
-    "famous/core/ViewSequence": "global:famous.core.ViewSequence",
-    "famous/transitions/Easing": "global:famous.transitions.Easing",
-    "famous/utilities/Timer": "global:famous.utilities.Timer",
-    "famous/core/RenderNode": "global:famous.core.RenderNode",
-    "famous/core/Modifier": "global:famous.core.Modifier",
-    "famous/modifiers/StateModifier": "global:famous.modifiers.StateModifier"
-  },
   "author": {
     "name": "Hein Rutjes <hrutjes@gmail.com>"
   },
@@ -76,11 +43,13 @@
     "node": ">= 0.10.0"
   },
   "devDependencies": {
-    "brfs": "latest",
-    "browserify": "latest",
-    "browserify-shim": "latest",
-    "deamdify": "latest",
+    "browserify": "^10.0.0",
+    "browserify-shim": "^3.8.6",
     "grunt": "latest",
+    "grunt-banner": "^0.3.1",
+    "grunt-browserify": "^3.8.0",
+    "grunt-contrib-requirejs": "^0.4.4",
+    "grunt-contrib-uglify": "^0.9.1",
     "grunt-contrib-csslint": "^0.4.0",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-eslint": "^6.0.0",
@@ -90,7 +59,39 @@
   },
   "files": [
     "src",
-    "dist/famous-flex-global.template.js",
+    "dist/famous-flex-global.js",
+    "dist/famous-flex-global.min.js",
+    "dist/famous-flex.js",
+    "dist/famous-flex.min.js",
     "LICENSE"
-  ]
+  ],
+  "browserify": {
+    "transform": [
+      "deamdify"
+    ]
+  },
+  "browserify-shim": {
+    "famous/core/OptionsManager": "global:famous.core.OptionsManager",
+    "famous/utilities/Utility": "global:famous.utilities.Utility",
+    "famous/surfaces/ContainerSurface": "global:famous.surfaces.ContainerSurface",
+    "famous/core/EventHandler": "global:famous.core.EventHandler",
+    "famous/core/Transform": "global:famous.core.Transform",
+    "famous/core/View": "global:famous.core.View",
+    "famous/core/Surface": "global:famous.core.Surface",
+    "famous/math/Vector": "global:famous.math.Vector",
+    "famous/core/Group": "global:famous.core.Group",
+    "famous/physics/PhysicsEngine": "global:famous.physics.PhysicsEngine",
+    "famous/physics/forces/Drag": "global:famous.physics.forces.Drag",
+    "famous/physics/forces/Spring": "global:famous.physics.forces.Spring",
+    "famous/inputs/ScrollSync": "global:famous.inputs.ScrollSync",
+    "famous/physics/bodies/Particle": "global:famous.physics.bodies.Particle",
+    "famous/transitions/Transitionable": "global:famous.transitions.Transitionable",
+    "famous/core/Entity": "global:famous.core.Entity",
+    "famous/core/ViewSequence": "global:famous.core.ViewSequence",
+    "famous/transitions/Easing": "global:famous.transitions.Easing",
+    "famous/utilities/Timer": "global:famous.utilities.Timer",
+    "famous/core/RenderNode": "global:famous.core.RenderNode",
+    "famous/core/Modifier": "global:famous.core.Modifier",
+    "famous/modifiers/StateModifier": "global:famous.modifiers.StateModifier"
+  }
 }

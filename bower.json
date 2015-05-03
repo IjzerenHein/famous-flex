@@ -40,10 +40,12 @@
     "tests",
     "examples",
     "docs",
+    "tutorials",
     "Gruntfile.js",
-    "CONTRIBUTORS.md"
-  ],
-  "devDependencies": {
-    "famous": "~0.3.5"
-  }
+    "screenshot.gif",
+    "CONTRIBUTORS.md",
+    "CONTRIBUTING.md",
+    "template-global.js",
+    "template.js"
+  ]
 }
