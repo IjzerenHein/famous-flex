@@ -426,43 +426,38 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Creates a view-item.
+     * Sets the options for an item.
      */
-    function _createItem(view, options, callback) {
-        var item = {
-            view: view,
-            mod: new StateModifier(),
-            state: ItemState.QUEUED,
-            options: {
-                show: {
-                    transition: this.options.show.transition || this.options.transition,
-                    animation: this.options.show.animation || this.options.animation
-                },
-                hide: {
-                    transition: this.options.hide.transition || this.options.transition,
-                    animation: this.options.hide.animation || this.options.animation
-                },
-                transfer: {
-                    transition: this.options.transfer.transition || this.options.transition,
-                    items: this.options.transfer.items || {},
-                    zIndex: this.options.transfer.zIndex,
-                    fastResize: this.options.transfer.fastResize
-                }
+    function _setItemOptions(item, options) {
+        item.options = {
+            show: {
+                transition: this.options.show.transition || this.options.transition,
+                animation: this.options.show.animation || this.options.animation
             },
-            callback: callback,
-            transferables: [] // renderables currently being transfered
+            hide: {
+                transition: this.options.hide.transition || this.options.transition,
+                animation: this.options.hide.animation || this.options.animation
+            },
+            transfer: {
+                transition: this.options.transfer.transition || this.options.transition,
+                items: this.options.transfer.items || {},
+                zIndex: this.options.transfer.zIndex,
+                fastResize: this.options.transfer.fastResize
+            }
         };
         if (options) {
             item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
-            item.options.show.animation = (options.show ? options.show.animation : undefined) || options.animation || item.options.show.animation;
+            if (options && options.show && (options.show.animation !== undefined)) {
+                item.options.show.animation = options.show.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.show.animation = options.animation;
+            }
             item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
             item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
             item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
         }
-        item.node = new RenderNode(item.mod);
-        item.node.add(view);
-        return item;
     }
 
     /**
@@ -530,13 +525,33 @@ define(function(require, exports, module) {
         var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
         if (item && (item.view === renderable)) {
             item.hide = false;
+            if (item.state === ItemState.HIDE) {
+                item.state = ItemState.QUEUED;
+                _setItemOptions.call(this, item, options);
+                _updateState.call(this);
+            }
             return this;
         }
         if (item && (item.state !== ItemState.HIDING) && options) {
             item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+            if (options && options.hide && (options.hide.animation !== undefined)) {
+                item.options.hide.animation = options.hide.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.hide.animation = options.animation;
+            }
         }
-        item = _createItem.call(this, renderable, options, callback);
+
+        item = {
+            view: renderable,
+            mod: new StateModifier(),
+            state: ItemState.QUEUED,
+            callback: callback,
+            transferables: [] // renderables currently being transfered
+        };
+        item.node = new RenderNode(item.mod);
+        item.node.add(renderable);
+        _setItemOptions.call(this, item, options);
         item.showCallback = function() {
             item.state = ItemState.VISIBLE;
             _updateState.call(this);
@@ -576,7 +591,12 @@ define(function(require, exports, module) {
         item.hide = true;
         if (options) {
             item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+            if (options && options.hide && (options.hide.animation !== undefined)) {
+                item.options.hide.animation = options.hide.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.hide.animation = options.animation;
+            }
         }
         item.hideCallback = function() {
             var index = this._viewStack.indexOf(item);
