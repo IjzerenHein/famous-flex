@@ -551,6 +551,7 @@ define(function(require, exports, module) {
             this._viewStack.splice(index, 1);
             item.view = undefined;
             _updateState.call(this);
+            this.layout.reflowLayout();
         }.bind(this);
         this._renderables.views.push(item.node);
         this._viewStack.push(item);
@@ -583,6 +584,7 @@ define(function(require, exports, module) {
             this._viewStack.splice(index, 1);
             item.view = undefined;
             _updateState.call(this);
+            this.layout.reflowLayout();
             if (callback) {
                 callback();
             }
