@@ -47,7 +47,8 @@ define(function(require, exports, module) {
     var capabilities = {
         sequence: true,
         direction: [Utility.Direction.X, Utility.Direction.Y],
-        scrolling: true
+        scrolling: true,
+        sequentialScrollingOptimized: false
     };
 
     function CoverLayout(context, options) {

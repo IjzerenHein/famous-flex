@@ -287,6 +287,15 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Helper that detects when layout is scrolling optimized (default: true).
+     */
+    function _isSequentiallyScrollingOptimized() {
+        return !this._layout.capabilities ||
+                (this._layout.capabilities.sequentialScrollingOptimized === undefined) ||
+                this._layout.capabilities.sequentialScrollingOptimized;
+    }
+
+    /**
      * Helper function for logging debug statements to the console.
      */
     /*function _log(args) {
@@ -701,7 +710,7 @@ define(function(require, exports, module) {
         // Local data
         var prevHeight = this._calcScrollHeight(false);
         var nextHeight = this._calcScrollHeight(true);
-        var enforeMinSize = this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized;
+        var enforeMinSize = _isSequentiallyScrollingOptimized.call(this);
 
         // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
@@ -1039,7 +1048,7 @@ define(function(require, exports, module) {
             }
 
             // Adjust group offset
-            if (caps && caps.sequentialScrollingOptimized) {
+            if (_isSequentiallyScrollingOptimized.call(this)) {
                 this._scroll.groupStart -= delta;
             }
         }
@@ -1654,7 +1663,7 @@ define(function(require, exports, module) {
      */
     ScrollController.prototype.getSpec = function(node, normalize) {
         var spec = LayoutController.prototype.getSpec.apply(this, arguments);
-        if (spec && this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized) {
+        if (spec && _isSequentiallyScrollingOptimized.call(this)) {
             spec = {
                 origin: spec.origin,
                 align: spec.align,
@@ -1888,7 +1897,7 @@ define(function(require, exports, module) {
         groupTranslate[1] = 0;
         groupTranslate[2] = 0;
         groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
-        var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
+        var sequentialScrollingOptimized = _isSequentiallyScrollingOptimized.call(this);
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
         this._specs = result.specs;
         if (!this._specs.length) {
