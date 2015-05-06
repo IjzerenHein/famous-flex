@@ -332,6 +332,13 @@ define(function(require, exports, module) {
     }
 
     /**
+     * Returns the time from the given input event.
+     */
+    function _getEventTimestamp(event) {
+        return event.timeStamp || Date.now();
+    }
+
+    /**
      * Called whenever the user presses the mouse button on the scrollview
      */
     function _mouseDown(event) {
@@ -349,7 +356,7 @@ define(function(require, exports, module) {
 
         // Calculate start of move operation
         var current = [event.clientX, event.clientY];
-        var time = Date.now();
+        var time = _getEventTimestamp(event);
         this._scroll.mouseMove = {
             delta: 0,
             start: current,
@@ -381,7 +388,7 @@ define(function(require, exports, module) {
             this._scroll.mouseMove.current = [event.clientX, event.clientY];
             this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
             this._scroll.mouseMove.direction = moveDirection;
-            this._scroll.mouseMove.time = Date.now();
+            this._scroll.mouseMove.time = _getEventTimestamp(event);
         }
 
         // Update scroll-force
@@ -399,7 +406,7 @@ define(function(require, exports, module) {
         // Calculate delta and velocity
         var velocity = 0;
         var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
-        if ((diffTime > 0) && ((Date.now() - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
+        if ((diffTime > 0) && ((_getEventTimestamp(event) - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
@@ -459,7 +466,7 @@ define(function(require, exports, module) {
             }
             if (!touchFound) {
                 var current = [changedTouch.clientX, changedTouch.clientY];
-                var time = Date.now();
+                var time = _getEventTimestamp(event);
                 this._scroll.activeTouches.push({
                     id: changedTouch.identifier,
                     start: current,
@@ -511,7 +518,7 @@ define(function(require, exports, module) {
                         touch.current = [changedTouch.clientX, changedTouch.clientY];
                         touch.prevTime = touch.time;
                         touch.direction = moveDirection;
-                        touch.time = Date.now();
+                        touch.time = _getEventTimestamp(event);
                         primaryTouch = (j === 0) ? touch : undefined;
                     }
                 }
@@ -565,7 +572,7 @@ define(function(require, exports, module) {
         // Determine velocity and add to particle
         var velocity = 0;
         var diffTime = primaryTouch.time - primaryTouch.prevTime;
-        if ((diffTime > 0) && ((Date.now() - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
+        if ((diffTime > 0) && ((_getEventTimestamp(event) - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
