@@ -152,7 +152,8 @@ define(function(require, exports, module) {
                     target: this,
                     index: index,
                     oldIndex: oldIndex,
-                    item: this._renderables.items[index]
+                    item: this._renderables.items[index],
+                    oldItem: ((oldIndex >= 0) && (oldIndex < this._renderables.items.length)) ? this._renderables.items[oldIndex] : undefined
                 });
             }
         }
