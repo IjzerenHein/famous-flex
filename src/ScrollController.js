@@ -496,8 +496,6 @@ define(function(require, exports, module) {
             this.applyScrollForce(0);
             this._scroll.touchDelta = 0;
         }
-        
-        this._eventOutput.emit('touchstart', event);
     }
 
     /**
@@ -592,8 +590,6 @@ define(function(require, exports, module) {
         var delta = this._scroll.touchDelta;
         this.releaseScrollForce(delta, velocity);
         this._scroll.touchDelta = 0;
-        
-        this._eventOutput.emit('touchend', event);
     }
 
     /**
@@ -1589,6 +1585,11 @@ define(function(require, exports, module) {
         }
         this._scroll.scrollForceCount++;
         this._scroll.scrollForce += delta;
+        this._eventOutput.emit((this._scroll.scrollForceCount === 1) ? 'swipestart' : 'swipeupdate', {
+            target: this,
+            total: this._scroll.scrollForce,
+            delta: delta
+        });
         return this;
     };
 
@@ -1607,6 +1608,11 @@ define(function(require, exports, module) {
         this.halt();
         newDelta -= prevDelta;
         this._scroll.scrollForce += newDelta;
+        this._eventOutput.emit('swipeupdate', {
+            target: this,
+            total: this._scroll.scrollForce,
+            delta: newDelta
+        });
         return this;
     };
 
@@ -1649,11 +1655,23 @@ define(function(require, exports, module) {
                 }
             }
             this._scroll.scrollForceStartItem = undefined;
+            this._scroll.scrollForceCount--;
+            this._eventOutput.emit('swipeend', {
+                target: this,
+                total: delta,
+                delta: 0,
+                velocity: velocity
+            });
         }
         else {
             this._scroll.scrollForce -= delta;
+            this._scroll.scrollForceCount--;
+            this._eventOutput.emit('swipeupdate', {
+                target: this,
+                total: this._scroll.scrollForce,
+                delta: delta
+            });
         }
-        this._scroll.scrollForceCount--;
         return this;
     };
 
