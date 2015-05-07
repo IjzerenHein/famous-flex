@@ -496,6 +496,8 @@ define(function(require, exports, module) {
             this.applyScrollForce(0);
             this._scroll.touchDelta = 0;
         }
+        
+        this._eventOutput.emit('touchstart', event);
     }
 
     /**
@@ -590,6 +592,8 @@ define(function(require, exports, module) {
         var delta = this._scroll.touchDelta;
         this.releaseScrollForce(delta, velocity);
         this._scroll.touchDelta = 0;
+        
+        this._eventOutput.emit('touchend', event);
     }
 
     /**
