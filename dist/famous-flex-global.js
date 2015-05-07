@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.1
-* @generated 03-05-2015
+* @version 0.3.2
+* @generated 07-05-2015
 */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
@@ -329,41 +329,35 @@ function _startAnimation(item, prevItem, size, show) {
         }
     }
 }
-function _createItem(view, options, callback) {
-    var item = {
-            view: view,
-            mod: new StateModifier(),
-            state: ItemState.QUEUED,
-            options: {
-                show: {
-                    transition: this.options.show.transition || this.options.transition,
-                    animation: this.options.show.animation || this.options.animation
-                },
-                hide: {
-                    transition: this.options.hide.transition || this.options.transition,
-                    animation: this.options.hide.animation || this.options.animation
-                },
-                transfer: {
-                    transition: this.options.transfer.transition || this.options.transition,
-                    items: this.options.transfer.items || {},
-                    zIndex: this.options.transfer.zIndex,
-                    fastResize: this.options.transfer.fastResize
-                }
-            },
-            callback: callback,
-            transferables: []
-        };
+function _setItemOptions(item, options) {
+    item.options = {
+        show: {
+            transition: this.options.show.transition || this.options.transition,
+            animation: this.options.show.animation || this.options.animation
+        },
+        hide: {
+            transition: this.options.hide.transition || this.options.transition,
+            animation: this.options.hide.animation || this.options.animation
+        },
+        transfer: {
+            transition: this.options.transfer.transition || this.options.transition,
+            items: this.options.transfer.items || {},
+            zIndex: this.options.transfer.zIndex,
+            fastResize: this.options.transfer.fastResize
+        }
+    };
     if (options) {
         item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
-        item.options.show.animation = (options.show ? options.show.animation : undefined) || options.animation || item.options.show.animation;
+        if (options && options.show && options.show.animation !== undefined) {
+            item.options.show.animation = options.show.animation;
+        } else if (options && options.animation !== undefined) {
+            item.options.show.animation = options.animation;
+        }
         item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
         item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
         item.options.transfer.zIndex = options.transfer && options.transfer.zIndex !== undefined ? options.transfer.zIndex : item.options.transfer.zIndex;
         item.options.transfer.fastResize = options.transfer && options.transfer.fastResize !== undefined ? options.transfer.fastResize : item.options.transfer.fastResize;
     }
-    item.node = new RenderNode(item.mod);
-    item.node.add(view);
-    return item;
 }
 function _updateState() {
     var prevItem;
@@ -399,13 +393,31 @@ AnimationController.prototype.show = function (renderable, options, callback) {
     var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
     if (item && item.view === renderable) {
         item.hide = false;
+        if (item.state === ItemState.HIDE) {
+            item.state = ItemState.QUEUED;
+            _setItemOptions.call(this, item, options);
+            _updateState.call(this);
+        }
         return this;
     }
     if (item && item.state !== ItemState.HIDING && options) {
         item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-        item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+        if (options && options.hide && options.hide.animation !== undefined) {
+            item.options.hide.animation = options.hide.animation;
+        } else if (options && options.animation !== undefined) {
+            item.options.hide.animation = options.animation;
+        }
     }
-    item = _createItem.call(this, renderable, options, callback);
+    item = {
+        view: renderable,
+        mod: new StateModifier(),
+        state: ItemState.QUEUED,
+        callback: callback,
+        transferables: []
+    };
+    item.node = new RenderNode(item.mod);
+    item.node.add(renderable);
+    _setItemOptions.call(this, item, options);
     item.showCallback = function () {
         item.state = ItemState.VISIBLE;
         _updateState.call(this);
@@ -420,6 +432,7 @@ AnimationController.prototype.show = function (renderable, options, callback) {
         this._viewStack.splice(index, 1);
         item.view = undefined;
         _updateState.call(this);
+        this.layout.reflowLayout();
     }.bind(this);
     this._renderables.views.push(item.node);
     this._viewStack.push(item);
@@ -434,7 +447,11 @@ AnimationController.prototype.hide = function (options, callback) {
     item.hide = true;
     if (options) {
         item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-        item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+        if (options && options.hide && options.hide.animation !== undefined) {
+            item.options.hide.animation = options.hide.animation;
+        } else if (options && options.animation !== undefined) {
+            item.options.hide.animation = options.animation;
+        }
     }
     item.hideCallback = function () {
         var index = this._viewStack.indexOf(item);
@@ -442,6 +459,7 @@ AnimationController.prototype.hide = function (options, callback) {
         this._viewStack.splice(index, 1);
         item.view = undefined;
         _updateState.call(this);
+        this.layout.reflowLayout();
         if (callback) {
             callback();
         }
@@ -2986,6 +3004,9 @@ function _initLayoutNode(node, spec) {
         node.setSpec(this.options.flowOptions.insertSpec);
     }
 }
+function _isSequentiallyScrollingOptimized() {
+    return !this._layout.capabilities || this._layout.capabilities.sequentialScrollingOptimized === undefined || this._layout.capabilities.sequentialScrollingOptimized;
+}
 function _updateSpring() {
     var springValue = this._scroll.scrollForceCount ? undefined : this._scroll.springPosition;
     if (this._scroll.springValue !== springValue) {
@@ -3004,6 +3025,9 @@ function _updateSpring() {
         }
     }
 }
+function _getEventTimestamp(event) {
+    return event.timeStamp || Date.now();
+}
 function _mouseDown(event) {
     if (!this.options.mouseMove) {
         return;
@@ -3015,7 +3039,7 @@ function _mouseDown(event) {
             event.clientX,
             event.clientY
         ];
-    var time = Date.now();
+    var time = _getEventTimestamp(event);
     this._scroll.mouseMove = {
         delta: 0,
         start: current,
@@ -3040,7 +3064,7 @@ function _mouseMove(event) {
         ];
         this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
         this._scroll.mouseMove.direction = moveDirection;
-        this._scroll.mouseMove.time = Date.now();
+        this._scroll.mouseMove.time = _getEventTimestamp(event);
     }
     var delta = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.start[this._direction];
     this.updateScrollForce(this._scroll.mouseMove.delta, delta);
@@ -3052,7 +3076,7 @@ function _mouseUp(event) {
     }
     var velocity = 0;
     var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
-    if (diffTime > 0 && Date.now() - this._scroll.mouseMove.time <= this.options.touchMoveNoVelocityDuration) {
+    if (diffTime > 0 && _getEventTimestamp(event) - this._scroll.mouseMove.time <= this.options.touchMoveNoVelocityDuration) {
         var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
         velocity = diffOffset / diffTime;
     }
@@ -3100,7 +3124,7 @@ function _touchStart(event) {
                     changedTouch.clientX,
                     changedTouch.clientY
                 ];
-            var time = Date.now();
+            var time = _getEventTimestamp(event);
             this._scroll.activeTouches.push({
                 id: changedTouch.identifier,
                 start: current,
@@ -3137,7 +3161,7 @@ function _touchMove(event) {
                     ];
                     touch.prevTime = touch.time;
                     touch.direction = moveDirection;
-                    touch.time = Date.now();
+                    touch.time = _getEventTimestamp(event);
                     primaryTouch = j === 0 ? touch : undefined;
                 }
             }
@@ -3171,7 +3195,7 @@ function _touchEnd(event) {
     }
     var velocity = 0;
     var diffTime = primaryTouch.time - primaryTouch.prevTime;
-    if (diffTime > 0 && Date.now() - primaryTouch.time <= this.options.touchMoveNoVelocityDuration) {
+    if (diffTime > 0 && _getEventTimestamp(event) - primaryTouch.time <= this.options.touchMoveNoVelocityDuration) {
         var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
         velocity = diffOffset / diffTime;
     }
@@ -3255,7 +3279,7 @@ ScrollController.prototype._calcScrollHeight = function (next, lastNodeOnly) {
 function _calcBounds(size, scrollOffset) {
     var prevHeight = this._calcScrollHeight(false);
     var nextHeight = this._calcScrollHeight(true);
-    var enforeMinSize = this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized;
+    var enforeMinSize = _isSequentiallyScrollingOptimized.call(this);
     var totalHeight;
     if (enforeMinSize) {
         if (nextHeight !== undefined && prevHeight !== undefined) {
@@ -3518,7 +3542,7 @@ function _normalizeViewSequence(size, scrollOffset) {
         if (this._scroll.springPosition !== undefined) {
             this._scroll.springPosition += delta;
         }
-        if (caps && caps.sequentialScrollingOptimized) {
+        if (_isSequentiallyScrollingOptimized.call(this)) {
             this._scroll.groupStart -= delta;
         }
     }
@@ -3848,12 +3872,22 @@ ScrollController.prototype.applyScrollForce = function (delta) {
     }
     this._scroll.scrollForceCount++;
     this._scroll.scrollForce += delta;
+    this._eventOutput.emit(this._scroll.scrollForceCount === 1 ? 'swipestart' : 'swipeupdate', {
+        target: this,
+        total: this._scroll.scrollForce,
+        delta: delta
+    });
     return this;
 };
 ScrollController.prototype.updateScrollForce = function (prevDelta, newDelta) {
     this.halt();
     newDelta -= prevDelta;
     this._scroll.scrollForce += newDelta;
+    this._eventOutput.emit('swipeupdate', {
+        target: this,
+        total: this._scroll.scrollForce,
+        delta: newDelta
+    });
     return this;
 };
 ScrollController.prototype.releaseScrollForce = function (delta, velocity) {
@@ -3882,15 +3916,27 @@ ScrollController.prototype.releaseScrollForce = function (delta, velocity) {
             }
         }
         this._scroll.scrollForceStartItem = undefined;
+        this._scroll.scrollForceCount--;
+        this._eventOutput.emit('swipeend', {
+            target: this,
+            total: delta,
+            delta: 0,
+            velocity: velocity
+        });
     } else {
         this._scroll.scrollForce -= delta;
+        this._scroll.scrollForceCount--;
+        this._eventOutput.emit('swipeupdate', {
+            target: this,
+            total: this._scroll.scrollForce,
+            delta: delta
+        });
     }
-    this._scroll.scrollForceCount--;
     return this;
 };
 ScrollController.prototype.getSpec = function (node, normalize) {
     var spec = LayoutController.prototype.getSpec.apply(this, arguments);
-    if (spec && this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized) {
+    if (spec && _isSequentiallyScrollingOptimized.call(this)) {
         spec = {
             origin: spec.origin,
             align: spec.align,
@@ -4029,7 +4075,7 @@ ScrollController.prototype.commit = function commit(context) {
     groupTranslate[1] = 0;
     groupTranslate[2] = 0;
     groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
-    var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
+    var sequentialScrollingOptimized = _isSequentiallyScrollingOptimized.call(this);
     var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
     this._specs = result.specs;
     if (!this._specs.length) {
@@ -4528,7 +4574,7 @@ function CollectionLayout(context_, options) {
     direction = context.direction;
     alignment = context.alignment;
     lineDirection = (direction + 1) % 2;
-    if (options.gutter !== undefined && console.warn) {
+    if (options.gutter !== undefined && console.warn && !options.suppressWarnings) {
         console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
     }
     if (options.gutter && !options.margins && !options.spacing) {
@@ -4566,7 +4612,7 @@ function CollectionLayout(context_, options) {
     var lineOffset;
     var bound;
     if (options.cells) {
-        if (options.itemSize && console.warn) {
+        if (options.itemSize && console.warn && !options.suppressWarnings) {
             console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
         }
         itemSize = [
@@ -4645,7 +4691,8 @@ var capabilities = {
             Utility.Direction.X,
             Utility.Direction.Y
         ],
-        scrolling: true
+        scrolling: true,
+        sequentialScrollingOptimized: false
     };
 function CoverLayout(context, options) {
     var node = context.next();
@@ -5224,7 +5271,8 @@ var capabilities = {
             Utility.Direction.X
         ],
         scrolling: true,
-        trueSize: true
+        trueSize: true,
+        sequentialScrollingOptimized: false
     };
 var size;
 var direction;
@@ -5977,7 +6025,8 @@ function _setSelectedItem(index) {
                 target: this,
                 index: index,
                 oldIndex: oldIndex,
-                item: this._renderables.items[index]
+                item: this._renderables.items[index],
+                oldItem: oldIndex >= 0 && oldIndex < this._renderables.items.length ? this._renderables.items[oldIndex] : undefined
             });
         }
     }
@@ -6068,6 +6117,136 @@ TabBar.prototype.getSize = function () {
 module.exports = TabBar;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutController":5,"../layouts/TabBarLayout":20}],25:[function(require,module,exports){
+(function (global){
+var View = typeof window !== 'undefined' ? window.famous.core.View : typeof global !== 'undefined' ? global.famous.core.View : null;
+var AnimationController = require('../AnimationController');
+var TabBar = require('./TabBar');
+var LayoutDockHelper = require('../helpers/LayoutDockHelper');
+var LayoutController = require('../LayoutController');
+var Easing = typeof window !== 'undefined' ? window.famous.transitions.Easing : typeof global !== 'undefined' ? global.famous.transitions.Easing : null;
+function TabBarController(options) {
+    View.apply(this, arguments);
+    _createRenderables.call(this);
+    _createLayout.call(this);
+    _setListeners.call(this);
+    this.tabBar.setOptions({ layoutController: { direction: this.options.tabBarPosition === TabBarController.Position.TOP || this.options.tabBarPosition === TabBarController.Position.BOTTOM ? 0 : 1 } });
+}
+TabBarController.prototype = Object.create(View.prototype);
+TabBarController.prototype.constructor = TabBarController;
+TabBarController.Position = {
+    TOP: 0,
+    BOTTOM: 1,
+    LEFT: 2,
+    RIGHT: 3
+};
+TabBarController.DEFAULT_LAYOUT = function (context, options) {
+    var dock = new LayoutDockHelper(context, options);
+    switch (this.options.tabBarPosition) {
+    case TabBarController.Position.TOP:
+        dock.top('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+        break;
+    case TabBarController.Position.BOTTOM:
+        dock.bottom('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+        break;
+    case TabBarController.Position.LEFT:
+        dock.left('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+        break;
+    case TabBarController.Position.RIGHT:
+        dock.right('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+        break;
+    }
+    dock.fill('content');
+};
+TabBarController.DEFAULT_OPTIONS = {
+    tabBarPosition: TabBarController.Position.BOTTOM,
+    tabBarSize: 50,
+    tabBarZIndex: 10,
+    tabBar: { createRenderables: { background: true } },
+    animationController: {
+        transition: {
+            duration: 300,
+            curve: Easing.inOutQuad
+        },
+        animation: AnimationController.Animation.FadedZoom
+    }
+};
+function _createRenderables() {
+    this.tabBar = new TabBar(this.options.tabBar);
+    this.animationController = new AnimationController(this.options.animationController);
+    this._renderables = {
+        tabBar: this.tabBar,
+        content: this.animationController
+    };
+}
+function _createLayout() {
+    this.layout = new LayoutController(this.options.layoutController);
+    this.layout.setLayout(TabBarController.DEFAULT_LAYOUT.bind(this));
+    this.layout.setDataSource(this._renderables);
+    this.add(this.layout);
+}
+function _setListeners() {
+    this.tabBar.on('tabchange', function (event) {
+        _updateView.call(this, event);
+        this._eventOutput.emit('tabchange', {
+            target: this,
+            index: event.index,
+            oldIndex: event.oldIndex,
+            item: this._items[event.index],
+            oldItem: event.oldIndex >= 0 && event.oldIndex < this._items.length ? this._items[event.oldIndex] : undefined
+        });
+    }.bind(this));
+}
+function _updateView(event) {
+    var index = this.tabBar.getSelectedItemIndex();
+    this.animationController.halt();
+    if (index >= 0) {
+        this.animationController.show(this._items[index].view);
+    } else {
+        this.animationController.hide();
+    }
+}
+TabBarController.prototype.setOptions = function (options) {
+    View.prototype.setOptions.call(this, options);
+    if (this.layout && options.layoutController) {
+        this.layout.setOptions(options.layoutController);
+    }
+    if (this.tabBar && options.tabBar) {
+        this.tabBar.setOptions(options.tabBar);
+    }
+    if (this.animationController && options.animationController) {
+        this.animationController(options.animationController);
+    }
+    if (this.layout && options.tabBarPosition !== undefined) {
+        this.tabBar.setOptions({ layoutController: { direction: options.tabBarPosition === TabBarController.Position.TOP || options.tabBarPosition === TabBarController.Position.BOTTOM ? 0 : 1 } });
+    }
+    if (this.layout) {
+        this.layout.reflowLayout();
+    }
+    return this;
+};
+TabBarController.prototype.setItems = function (items) {
+    this._items = items;
+    var tabItems = [];
+    for (var i = 0; i < items.length; i++) {
+        tabItems.push(items[i].tabItem);
+    }
+    this.tabBar.setItems(tabItems);
+    _updateView.call(this);
+    return this;
+};
+TabBarController.prototype.getItems = function () {
+    return this._items;
+};
+TabBarController.prototype.setSelectedItemIndex = function (index) {
+    this.tabBar.setSelectedItemIndex(index);
+    return this;
+};
+TabBarController.prototype.getSelectedItemIndex = function () {
+    return this.tabBar.getSelectedItemIndex();
+};
+module.exports = TabBarController;
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../AnimationController":1,"../LayoutController":5,"../helpers/LayoutDockHelper":11,"./TabBar":24}],26:[function(require,module,exports){
 if (typeof famousflex === 'undefined') {
     famousflex = {};
 }
@@ -6086,6 +6265,7 @@ famousflex.AnimationController = require('./src/AnimationController');
 famousflex.widgets = famousflex.widgets || {};
 famousflex.widgets.DatePicker = require('./src/widgets/DatePicker');
 famousflex.widgets.TabBar = require('./src/widgets/TabBar');
+famousflex.widgets.TabBarController = require('./src/widgets/TabBarController');
 
 famousflex.layouts = famousflex.layouts || {};
 famousflex.layouts.CollectionLayout = require('./src/layouts/CollectionLayout');
@@ -6101,4 +6281,4 @@ famousflex.layouts.WheelLayout = require('./src/layouts/WheelLayout');
 famousflex.helpers = famousflex.helpers || {};
 famousflex.helpers.LayoutDockHelper = require('./src/helpers/LayoutDockHelper');
 
-},{"./src/AnimationController":1,"./src/FlexScrollView":2,"./src/FlowLayoutNode":3,"./src/LayoutContext":4,"./src/LayoutController":5,"./src/LayoutNode":6,"./src/LayoutNodeManager":7,"./src/LayoutUtility":8,"./src/ScrollController":9,"./src/VirtualViewSequence":10,"./src/helpers/LayoutDockHelper":11,"./src/layouts/CollectionLayout":12,"./src/layouts/CoverLayout":13,"./src/layouts/CubeLayout":14,"./src/layouts/GridLayout":15,"./src/layouts/HeaderFooterLayout":16,"./src/layouts/ListLayout":17,"./src/layouts/NavBarLayout":18,"./src/layouts/ProportionalLayout":19,"./src/layouts/WheelLayout":21,"./src/widgets/DatePicker":22,"./src/widgets/TabBar":24}]},{},[25]);
+},{"./src/AnimationController":1,"./src/FlexScrollView":2,"./src/FlowLayoutNode":3,"./src/LayoutContext":4,"./src/LayoutController":5,"./src/LayoutNode":6,"./src/LayoutNodeManager":7,"./src/LayoutUtility":8,"./src/ScrollController":9,"./src/VirtualViewSequence":10,"./src/helpers/LayoutDockHelper":11,"./src/layouts/CollectionLayout":12,"./src/layouts/CoverLayout":13,"./src/layouts/CubeLayout":14,"./src/layouts/GridLayout":15,"./src/layouts/HeaderFooterLayout":16,"./src/layouts/ListLayout":17,"./src/layouts/NavBarLayout":18,"./src/layouts/ProportionalLayout":19,"./src/layouts/WheelLayout":21,"./src/widgets/DatePicker":22,"./src/widgets/TabBar":24,"./src/widgets/TabBarController":25}]},{},[26]);

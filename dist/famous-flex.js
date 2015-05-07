@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.1
-* @generated 03-05-2015
+* @version 0.3.2
+* @generated 07-05-2015
 */
 /**
  * This Source Code is licensed under the MIT license. If a copy of the
@@ -3760,6 +3760,15 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
     }
 
     /**
+     * Helper that detects when layout is scrolling optimized (default: true).
+     */
+    function _isSequentiallyScrollingOptimized() {
+        return !this._layout.capabilities ||
+                (this._layout.capabilities.sequentialScrollingOptimized === undefined) ||
+                this._layout.capabilities.sequentialScrollingOptimized;
+    }
+
+    /**
      * Helper function for logging debug statements to the console.
      */
     /*function _log(args) {
@@ -3805,6 +3814,13 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
     }
 
     /**
+     * Returns the time from the given input event.
+     */
+    function _getEventTimestamp(event) {
+        return event.timeStamp || Date.now();
+    }
+
+    /**
      * Called whenever the user presses the mouse button on the scrollview
      */
     function _mouseDown(event) {
@@ -3822,7 +3838,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
 
         // Calculate start of move operation
         var current = [event.clientX, event.clientY];
-        var time = Date.now();
+        var time = _getEventTimestamp(event);
         this._scroll.mouseMove = {
             delta: 0,
             start: current,
@@ -3854,7 +3870,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
             this._scroll.mouseMove.current = [event.clientX, event.clientY];
             this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
             this._scroll.mouseMove.direction = moveDirection;
-            this._scroll.mouseMove.time = Date.now();
+            this._scroll.mouseMove.time = _getEventTimestamp(event);
         }
 
         // Update scroll-force
@@ -3872,7 +3888,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         // Calculate delta and velocity
         var velocity = 0;
         var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
-        if ((diffTime > 0) && ((Date.now() - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
+        if ((diffTime > 0) && ((_getEventTimestamp(event) - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
@@ -3932,7 +3948,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
             }
             if (!touchFound) {
                 var current = [changedTouch.clientX, changedTouch.clientY];
-                var time = Date.now();
+                var time = _getEventTimestamp(event);
                 this._scroll.activeTouches.push({
                     id: changedTouch.identifier,
                     start: current,
@@ -3984,7 +4000,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                         touch.current = [changedTouch.clientX, changedTouch.clientY];
                         touch.prevTime = touch.time;
                         touch.direction = moveDirection;
-                        touch.time = Date.now();
+                        touch.time = _getEventTimestamp(event);
                         primaryTouch = (j === 0) ? touch : undefined;
                     }
                 }
@@ -4038,7 +4054,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         // Determine velocity and add to particle
         var velocity = 0;
         var diffTime = primaryTouch.time - primaryTouch.prevTime;
-        if ((diffTime > 0) && ((Date.now() - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
+        if ((diffTime > 0) && ((_getEventTimestamp(event) - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
             var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
             velocity = diffOffset / diffTime;
         }
@@ -4167,7 +4183,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         // Local data
         var prevHeight = this._calcScrollHeight(false);
         var nextHeight = this._calcScrollHeight(true);
-        var enforeMinSize = this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized;
+        var enforeMinSize = _isSequentiallyScrollingOptimized.call(this);
 
         // 1. When the rendered height is smaller than the total height,
         //    then lock to the primary bounds
@@ -4505,7 +4521,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
             }
 
             // Adjust group offset
-            if (caps && caps.sequentialScrollingOptimized) {
+            if (_isSequentiallyScrollingOptimized.call(this)) {
                 this._scroll.groupStart -= delta;
             }
         }
@@ -5042,6 +5058,11 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         }
         this._scroll.scrollForceCount++;
         this._scroll.scrollForce += delta;
+        this._eventOutput.emit((this._scroll.scrollForceCount === 1) ? 'swipestart' : 'swipeupdate', {
+            target: this,
+            total: this._scroll.scrollForce,
+            delta: delta
+        });
         return this;
     };
 
@@ -5060,6 +5081,11 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         this.halt();
         newDelta -= prevDelta;
         this._scroll.scrollForce += newDelta;
+        this._eventOutput.emit('swipeupdate', {
+            target: this,
+            total: this._scroll.scrollForce,
+            delta: newDelta
+        });
         return this;
     };
 
@@ -5102,11 +5128,23 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                 }
             }
             this._scroll.scrollForceStartItem = undefined;
+            this._scroll.scrollForceCount--;
+            this._eventOutput.emit('swipeend', {
+                target: this,
+                total: delta,
+                delta: 0,
+                velocity: velocity
+            });
         }
         else {
             this._scroll.scrollForce -= delta;
+            this._scroll.scrollForceCount--;
+            this._eventOutput.emit('swipeupdate', {
+                target: this,
+                total: this._scroll.scrollForce,
+                delta: delta
+            });
         }
-        this._scroll.scrollForceCount--;
         return this;
     };
 
@@ -5120,7 +5158,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
      */
     ScrollController.prototype.getSpec = function(node, normalize) {
         var spec = LayoutController.prototype.getSpec.apply(this, arguments);
-        if (spec && this._layout.capabilities && this._layout.capabilities.sequentialScrollingOptimized) {
+        if (spec && _isSequentiallyScrollingOptimized.call(this)) {
             spec = {
                 origin: spec.origin,
                 align: spec.align,
@@ -5354,7 +5392,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         groupTranslate[1] = 0;
         groupTranslate[2] = 0;
         groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
-        var sequentialScrollingOptimized = this._layout.capabilities ? this._layout.capabilities.sequentialScrollingOptimized : false;
+        var sequentialScrollingOptimized = _isSequentiallyScrollingOptimized.call(this);
         var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
         this._specs = result.specs;
         if (!this._specs.length) {
@@ -7050,43 +7088,38 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     }
 
     /**
-     * Creates a view-item.
+     * Sets the options for an item.
      */
-    function _createItem(view, options, callback) {
-        var item = {
-            view: view,
-            mod: new StateModifier(),
-            state: ItemState.QUEUED,
-            options: {
-                show: {
-                    transition: this.options.show.transition || this.options.transition,
-                    animation: this.options.show.animation || this.options.animation
-                },
-                hide: {
-                    transition: this.options.hide.transition || this.options.transition,
-                    animation: this.options.hide.animation || this.options.animation
-                },
-                transfer: {
-                    transition: this.options.transfer.transition || this.options.transition,
-                    items: this.options.transfer.items || {},
-                    zIndex: this.options.transfer.zIndex,
-                    fastResize: this.options.transfer.fastResize
-                }
+    function _setItemOptions(item, options) {
+        item.options = {
+            show: {
+                transition: this.options.show.transition || this.options.transition,
+                animation: this.options.show.animation || this.options.animation
             },
-            callback: callback,
-            transferables: [] // renderables currently being transfered
+            hide: {
+                transition: this.options.hide.transition || this.options.transition,
+                animation: this.options.hide.animation || this.options.animation
+            },
+            transfer: {
+                transition: this.options.transfer.transition || this.options.transition,
+                items: this.options.transfer.items || {},
+                zIndex: this.options.transfer.zIndex,
+                fastResize: this.options.transfer.fastResize
+            }
         };
         if (options) {
             item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
-            item.options.show.animation = (options.show ? options.show.animation : undefined) || options.animation || item.options.show.animation;
+            if (options && options.show && (options.show.animation !== undefined)) {
+                item.options.show.animation = options.show.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.show.animation = options.animation;
+            }
             item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
             item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
             item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
         }
-        item.node = new RenderNode(item.mod);
-        item.node.add(view);
-        return item;
     }
 
     /**
@@ -7154,13 +7187,33 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
         if (item && (item.view === renderable)) {
             item.hide = false;
+            if (item.state === ItemState.HIDE) {
+                item.state = ItemState.QUEUED;
+                _setItemOptions.call(this, item, options);
+                _updateState.call(this);
+            }
             return this;
         }
         if (item && (item.state !== ItemState.HIDING) && options) {
             item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+            if (options && options.hide && (options.hide.animation !== undefined)) {
+                item.options.hide.animation = options.hide.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.hide.animation = options.animation;
+            }
         }
-        item = _createItem.call(this, renderable, options, callback);
+
+        item = {
+            view: renderable,
+            mod: new StateModifier(),
+            state: ItemState.QUEUED,
+            callback: callback,
+            transferables: [] // renderables currently being transfered
+        };
+        item.node = new RenderNode(item.mod);
+        item.node.add(renderable);
+        _setItemOptions.call(this, item, options);
         item.showCallback = function() {
             item.state = ItemState.VISIBLE;
             _updateState.call(this);
@@ -7175,6 +7228,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             this._viewStack.splice(index, 1);
             item.view = undefined;
             _updateState.call(this);
+            this.layout.reflowLayout();
         }.bind(this);
         this._renderables.views.push(item.node);
         this._viewStack.push(item);
@@ -7199,7 +7253,12 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         item.hide = true;
         if (options) {
             item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-            item.options.hide.animation = (options.hide ? options.hide.animation : undefined) || options.animation || item.options.hide.animation;
+            if (options && options.hide && (options.hide.animation !== undefined)) {
+                item.options.hide.animation = options.hide.animation;
+            }
+            else if (options && (options.animation !== undefined)) {
+                item.options.hide.animation = options.animation;
+            }
         }
         item.hideCallback = function() {
             var index = this._viewStack.indexOf(item);
@@ -7207,6 +7266,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             this._viewStack.splice(index, 1);
             item.view = undefined;
             _updateState.call(this);
+            this.layout.reflowLayout();
             if (callback) {
                 callback();
             }
@@ -7316,7 +7376,8 @@ define('famous-flex/layouts/WheelLayout',['require','exports','module','famous/u
         sequence: true,
         direction: [Utility.Direction.Y, Utility.Direction.X],
         scrolling: true,
-        trueSize: true
+        trueSize: true,
+        sequentialScrollingOptimized: false
     };
 
     // Data
@@ -8635,7 +8696,8 @@ define('famous-flex/widgets/TabBar',['require','exports','module','famous/core/S
                     target: this,
                     index: index,
                     oldIndex: oldIndex,
-                    item: this._renderables.items[index]
+                    item: this._renderables.items[index],
+                    oldItem: ((oldIndex >= 0) && (oldIndex < this._renderables.items.length)) ? this._renderables.items[oldIndex] : undefined
                 });
             }
         }
@@ -8815,6 +8877,250 @@ define('famous-flex/widgets/TabBar',['require','exports','module','famous/core/S
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
+ * @copyright Gloey Apps, 2015
+ */
+
+/**
+ * TabBarController.
+ *
+ * @module
+ */
+define('famous-flex/widgets/TabBarController',['require','exports','module','famous/core/View','../AnimationController','./TabBar','../helpers/LayoutDockHelper','../LayoutController','famous/transitions/Easing'],function(require, exports, module) {
+
+    // import dependencies
+    var View = require('famous/core/View');
+    var AnimationController = require('../AnimationController');
+    var TabBar = require('./TabBar');
+    var LayoutDockHelper = require('../helpers/LayoutDockHelper');
+    var LayoutController = require('../LayoutController');
+    var Easing = require('famous/transitions/Easing');
+
+    /**
+     * @class
+     * @param {Object} options Configurable options.
+     * @param {TabBarController.Position} [options.tabBarPosition] Position (default: BOTTOM).
+     * @param {Number} [options.tabBarSize] Size of the tabBar (default: 50).
+     * @param {Number} [options.tabBarZIndex] Z-index the tabBar is put above the content (AnimationController) (default: 10).
+     * @param {Object} [options.tabBar] Options that are passed to the TabBar.
+     * @param {Object} [options.animationController] Options that are passed to the AnimationController.
+     * @alias module:TabBarController
+     */
+    function TabBarController(options) {
+        View.apply(this, arguments);
+
+        _createRenderables.call(this);
+        _createLayout.call(this);
+        _setListeners.call(this);
+
+        this.tabBar.setOptions({
+            layoutController: {
+                direction: ((this.options.tabBarPosition === TabBarController.Position.TOP) || (this.options.tabBarPosition === TabBarController.Position.BOTTOM)) ? 0 : 1
+            }
+        });
+    }
+    TabBarController.prototype = Object.create(View.prototype);
+    TabBarController.prototype.constructor = TabBarController;
+
+    TabBarController.Position = {
+        TOP: 0,
+        BOTTOM: 1,
+        LEFT: 2,
+        RIGHT: 3
+    };
+
+    /**
+     * Default layout-function for the TabBarController. Supports simple
+     * docking to any of the four edges.
+     */
+    TabBarController.DEFAULT_LAYOUT = function(context, options) {
+        var dock = new LayoutDockHelper(context, options);
+        switch (this.options.tabBarPosition) {
+            case TabBarController.Position.TOP:
+                dock.top('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+                break;
+            case TabBarController.Position.BOTTOM:
+                dock.bottom('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+                break;
+            case TabBarController.Position.LEFT:
+                dock.left('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+                break;
+            case TabBarController.Position.RIGHT:
+                dock.right('tabBar', this.options.tabBarSize, this.options.tabBarZIndex);
+                break;
+        }
+        dock.fill('content');
+    };
+
+    TabBarController.DEFAULT_OPTIONS = {
+        tabBarPosition: TabBarController.Position.BOTTOM,
+        tabBarSize: 50,
+        tabBarZIndex: 10,
+        tabBar: {
+            createRenderables: {
+                background: true
+            }
+        },
+        animationController: {
+            transition: {duration: 300, curve: Easing.inOutQuad},
+            animation: AnimationController.Animation.FadedZoom
+        }
+    };
+
+    /**
+     * Creates the renderables (tabBar, animationController).
+     */
+    function _createRenderables() {
+        this.tabBar = new TabBar(this.options.tabBar);
+        this.animationController = new AnimationController(this.options.animationController);
+        this._renderables = {
+            tabBar: this.tabBar,
+            content: this.animationController
+        };
+    }
+
+    /**
+     * Creates the outer (header-footer) layout.
+     */
+    function _createLayout() {
+        this.layout = new LayoutController(this.options.layoutController);
+        this.layout.setLayout(TabBarController.DEFAULT_LAYOUT.bind(this));
+        this.layout.setDataSource(this._renderables);
+        this.add(this.layout);
+    }
+
+    /**
+     * Sets the listeners.
+     */
+    function _setListeners() {
+        this.tabBar.on('tabchange', function(event) {
+            _updateView.call(this, event);
+            this._eventOutput.emit('tabchange', {
+                target: this,
+                index: event.index,
+                oldIndex: event.oldIndex,
+                item: this._items[event.index],
+                oldItem: ((event.oldIndex >= 0) && (event.oldIndex < this._items.length)) ? this._items[event.oldIndex] : undefined
+            });
+        }.bind(this));
+    }
+
+    /**
+     * Updates the view-container with the selected view.
+     */
+    function _updateView(event) {
+        var index = this.tabBar.getSelectedItemIndex();
+        this.animationController.halt();
+        if (index >= 0) {
+            this.animationController.show(this._items[index].view);
+        }
+        else {
+            this.animationController.hide();
+        }
+    }
+
+    /**
+     * Patches the TabBarController instance's options with the passed-in ones.
+     *
+     * @param {Object} options Configurable options.
+     * @param {TabBarController.Position} [options.tabBarPosition] Position (default: BOTTOM).
+     * @param {Number} [options.tabBarSize] Size of the tabBar (default: 50).
+     * @param {Number} [options.tabBarZIndex] Z-index the tabBar is put above the content (AnimationController) (default: 10).
+     * @param {Object} [options.tabBar] Options that are passed to the TabBar.
+     * @param {Object} [options.animationController] Options that are passed to the AnimationController.
+     * @return {TabBarController} this
+     */
+    TabBarController.prototype.setOptions = function(options) {
+        View.prototype.setOptions.call(this, options);
+        if (this.layout && options.layoutController) {
+            this.layout.setOptions(options.layoutController);
+        }
+        if (this.tabBar && options.tabBar) {
+            this.tabBar.setOptions(options.tabBar);
+        }
+        if (this.animationController && options.animationController) {
+            this.animationController(options.animationController);
+        }
+        if (this.layout && (options.tabBarPosition !== undefined)) {
+            this.tabBar.setOptions({
+                layoutController: {
+                    direction: ((options.tabBarPosition === TabBarController.Position.TOP) || (options.tabBarPosition === TabBarController.Position.BOTTOM)) ? 0 : 1
+                }
+            });
+        }
+        if (this.layout) {
+            this.layout.reflowLayout();
+        }
+        return this;
+    };
+
+    /**
+     * Sets the items for the tab-bar controller.
+     *
+     * Example 1:
+     *
+     * ```javascript
+     * var tabBarController = new TabBarController();
+     * tabBarController.setItems([
+     *   {tabItem: 'Profile', view: new ProfileView()},
+     *   {tabItem: 'Map', view: new MapView()},
+     *   {tabItem: 'Login', view: new LoginView()}
+     *   {tabItem: 'Settings', view: new SettingsView()}
+     * ]);
+     *```
+     *
+     * @param {Array} items Array of tab-bar controller items.
+     * @return {TabBarController} this
+     */
+    TabBarController.prototype.setItems = function(items) {
+        this._items = items;
+        var tabItems = [];
+        for (var i = 0; i < items.length; i++) {
+            tabItems.push(items[i].tabItem);
+        }
+        this.tabBar.setItems(tabItems);
+        _updateView.call(this);
+        return this;
+    };
+
+    /**
+     * Get the tab-items (also see `setItems`).
+     *
+     * @return {Array} tab-items
+     */
+    TabBarController.prototype.getItems = function() {
+        return this._items;
+    };
+
+    /**
+     * Sets the index of the selected tab.
+     *
+     * @param {Number} index selected index.
+     * @return {TabBar} this
+     */
+    TabBarController.prototype.setSelectedItemIndex = function(index) {
+        this.tabBar.setSelectedItemIndex(index);
+        return this;
+    };
+
+    /**
+     * Get the index of the selected tab-item.
+     *
+     * @return {Number} selected index
+     */
+    TabBarController.prototype.getSelectedItemIndex = function() {
+        return this.tabBar.getSelectedItemIndex();
+    };
+
+    module.exports = TabBarController;
+});
+
+/**
+ * This Source Code is licensed under the MIT license. If a copy of the
+ * MIT-license was not distributed with this file, You can obtain one at:
+ * http://opensource.org/licenses/mit-license.html.
+ *
+ * @author: Hein Rutjes (IjzerenHein)
+ * @license MIT
  * @copyright Gloey Apps, 2014
  */
 
@@ -8832,6 +9138,7 @@ define('famous-flex/widgets/TabBar',['require','exports','module','famous/core/S
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number/Array|Spacing between items (e.g. 5, [10, 10])|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
+ * |`[suppressWarnings]`|Bool|Suppresses any warnings generated by faulty configuration options|
  *
  * Example:
  *
@@ -9003,7 +9310,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         direction = context.direction;
         alignment = context.alignment;
         lineDirection = (direction + 1) % 2;
-        if ((options.gutter !== undefined) && console.warn) {
+        if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) {
             console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
         }
         if (options.gutter && !options.margins && !options.spacing) {
@@ -9029,7 +9336,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         // Prepare item-size
         //
         if (options.cells) {
-            if (options.itemSize && console.warn) {
+            if (options.itemSize && console.warn && !options.suppressWarnings) {
                 console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
             }
             itemSize = [
@@ -9154,7 +9461,8 @@ define('famous-flex/layouts/CoverLayout',['require','exports','module','famous/u
     var capabilities = {
         sequence: true,
         direction: [Utility.Direction.X, Utility.Direction.Y],
-        scrolling: true
+        scrolling: true,
+        sequentialScrollingOptimized: false
     };
 
     function CoverLayout(context, options) {
@@ -9510,7 +9818,7 @@ define('famous-flex/layouts/NavBarLayout',['require','exports','module','../help
     };
 });
 
-define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLayoutNode','famous-flex/LayoutContext','famous-flex/LayoutController','famous-flex/LayoutNode','famous-flex/LayoutNodeManager','famous-flex/LayoutUtility','famous-flex/ScrollController','famous-flex/VirtualViewSequence','famous-flex/AnimationController','famous-flex/widgets/DatePicker','famous-flex/widgets/TabBar','famous-flex/layouts/CollectionLayout','famous-flex/layouts/CoverLayout','famous-flex/layouts/CubeLayout','famous-flex/layouts/GridLayout','famous-flex/layouts/HeaderFooterLayout','famous-flex/layouts/ListLayout','famous-flex/layouts/NavBarLayout','famous-flex/layouts/ProportionalLayout','famous-flex/layouts/WheelLayout','famous-flex/helpers/LayoutDockHelper'],function(require) {
+define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLayoutNode','famous-flex/LayoutContext','famous-flex/LayoutController','famous-flex/LayoutNode','famous-flex/LayoutNodeManager','famous-flex/LayoutUtility','famous-flex/ScrollController','famous-flex/VirtualViewSequence','famous-flex/AnimationController','famous-flex/widgets/DatePicker','famous-flex/widgets/TabBar','famous-flex/widgets/TabBarController','famous-flex/layouts/CollectionLayout','famous-flex/layouts/CoverLayout','famous-flex/layouts/CubeLayout','famous-flex/layouts/GridLayout','famous-flex/layouts/HeaderFooterLayout','famous-flex/layouts/ListLayout','famous-flex/layouts/NavBarLayout','famous-flex/layouts/ProportionalLayout','famous-flex/layouts/WheelLayout','famous-flex/helpers/LayoutDockHelper'],function(require) {
     require('famous-flex/FlexScrollView');
     require('famous-flex/FlowLayoutNode');
     require('famous-flex/LayoutContext');
@@ -9524,6 +9832,7 @@ define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLa
 
     require('famous-flex/widgets/DatePicker');
     require('famous-flex/widgets/TabBar');
+    require('famous-flex/widgets/TabBarController');
 
     require('famous-flex/layouts/CollectionLayout');
     require('famous-flex/layouts/CoverLayout');
