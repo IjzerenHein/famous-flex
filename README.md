@@ -36,6 +36,7 @@ of renderables using a `CollectionLayout`, and change that into a `ListLayout`. 
 - [FlexScrollView](tutorials/FlexScrollView.md)
 - [DatePicker](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md)
 - [TabBar](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md)
+- [TabBarController](https://github.com/IjzerenHein/famous-flex-tabbarcontroller/blob/master/tutorial/TabBarController.md)
 
 ### [Layouts](#standard-layouts)
 - [ProportionalLayout](docs/layouts/ProportionalLayout.md)
@@ -259,6 +260,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |[FlexScrollView](tutorials/FlexScrollView.md)|Flexible scroll-view with pull-to-refresh, margins & spacing and more good stuff.|
 |[DatePicker](https://github.com/IjzerenHein/famous-flex-datepicker/blob/master/tutorial/DatePicker.md)|Date/time picker wheel.|
 |[TabBar](https://github.com/IjzerenHein/famous-flex-tabbar/blob/master/tutorial/TabBar.md)|TabBar widget.|
+|[TabBarController](https://github.com/IjzerenHein/famous-flex-tabbarcontroller/blob/master/tutorial/TabBarController.md)|TabBarController widget.|
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 |[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|

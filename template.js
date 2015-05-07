@@ -12,6 +12,7 @@ define(function(require) {
 
     require('famous-flex/widgets/DatePicker');
     require('famous-flex/widgets/TabBar');
+    require('famous-flex/widgets/TabBarController');
 
     require('famous-flex/layouts/CollectionLayout');
     require('famous-flex/layouts/CoverLayout');

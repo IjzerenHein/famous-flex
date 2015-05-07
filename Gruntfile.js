@@ -58,6 +58,7 @@ module.exports = function(grunt) {
             // widgets
             { src: 'src/widgets/DatePicker.js', dest: 'docs/widgets/DatePicker.md' },
             { src: 'src/widgets/TabBar.js', dest: 'docs/widgets/TabBar.md' },
+            { src: 'src/widgets/TabBarController.js', dest: 'docs/widgets/TabBarController.md' },
             // helpers
             { src: 'src/helpers/LayoutDockHelper.js', dest: 'docs/helpers/LayoutDockHelper.md' },
             // layouts

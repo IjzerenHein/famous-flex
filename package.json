@@ -27,6 +27,7 @@
     "datepicker",
     "datetimepicker",
     "tabbar",
+    "tabbarcontroller",
     "widgets"
   ],
   "licenses": [

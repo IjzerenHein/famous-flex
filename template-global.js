@@ -16,6 +16,7 @@ famousflex.AnimationController = require('./src/AnimationController');
 famousflex.widgets = famousflex.widgets || {};
 famousflex.widgets.DatePicker = require('./src/widgets/DatePicker');
 famousflex.widgets.TabBar = require('./src/widgets/TabBar');
+famousflex.widgets.TabBarController = require('./src/widgets/TabBarController');
 
 famousflex.layouts = famousflex.layouts || {};
 famousflex.layouts.CollectionLayout = require('./src/layouts/CollectionLayout');

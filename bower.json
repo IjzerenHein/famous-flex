@@ -30,6 +30,7 @@
     "datepicker",
     "datetimepicker",
     "tabbar",
+    "tabbarcontroller",
     "widgets"
   ],
   "license": "MIT",
