@@ -61,19 +61,21 @@ define(function(require, exports, module) {
         this._size = size;
         this._context = context;
         this._options = options;
-        this._z = (options && options.translateZ) ? options.translateZ : 0;
+        this._data = {
+            z: (options && options.translateZ) ? options.translateZ : 0
+        };
         if (options && options.margins) {
             var margins = LayoutUtility.normalizeMargins(options.margins);
-            this._left = margins[3];
-            this._top = margins[0];
-            this._right = size[0] - margins[1];
-            this._bottom = size[1] - margins[2];
+            this._data.left = margins[3];
+            this._data.top = margins[0];
+            this._data.right = size[0] - margins[1];
+            this._data.bottom = size[1] - margins[2];
         }
         else {
-            this._left = 0;
-            this._top = 0;
-            this._right = size[0];
-            this._bottom = size[1];
+            this._data.left = 0;
+            this._data.top = 0;
+            this._data.right = size[0];
+            this._data.bottom = size[1];
         }
     }
 
@@ -133,16 +135,16 @@ define(function(require, exports, module) {
             height = height[1];
         }
         if (height === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             height = size[1];
         }
         this._context.set(node, {
-            size: [this._right - this._left, height],
+            size: [this._data.right - this._data.left, height],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
-        this._top += height;
+        this._data.top += height;
         return this;
     };
 
@@ -159,16 +161,16 @@ define(function(require, exports, module) {
             width = width[0];
         }
         if (width === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             width = size[0];
         }
         this._context.set(node, {
-            size: [width, this._bottom - this._top],
+            size: [width, this._data.bottom - this._data.top],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
-        this._left += width;
+        this._data.left += width;
         return this;
     };
 
@@ -185,16 +187,16 @@ define(function(require, exports, module) {
             height = height[1];
         }
         if (height === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             height = size[1];
         }
         this._context.set(node, {
-            size: [this._right - this._left, height],
+            size: [this._data.right - this._data.left, height],
             origin: [0, 1],
             align: [0, 1],
-            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+            translate: [this._data.left, -(this._size[1] - this._data.bottom), (z === undefined) ? this._data.z : z]
         });
-        this._bottom -= height;
+        this._data.bottom -= height;
         return this;
     };
 
@@ -212,18 +214,18 @@ define(function(require, exports, module) {
         }
         if (node) {
             if (width === undefined) {
-                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+                var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
                 width = size[0];
             }
             this._context.set(node, {
-                size: [width, this._bottom - this._top],
+                size: [width, this._data.bottom - this._data.top],
                 origin: [1, 0],
                 align: [1, 0],
-                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+                translate: [-(this._size[0] - this._data.right), this._data.top, (z === undefined) ? this._data.z : z]
             });
         }
         if (width) {
-            this._right -= width;
+            this._data.right -= width;
         }
         return this;
     };
@@ -237,8 +239,8 @@ define(function(require, exports, module) {
      */
     LayoutDockHelper.prototype.fill = function(node, z) {
         this._context.set(node, {
-            size: [this._right - this._left, this._bottom - this._top],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            size: [this._data.right - this._data.left, this._data.bottom - this._data.top],
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
         return this;
     };
@@ -251,11 +253,20 @@ define(function(require, exports, module) {
      */
     LayoutDockHelper.prototype.margins = function(margins) {
         margins = LayoutUtility.normalizeMargins(margins);
-        this._left += margins[3];
-        this._top += margins[0];
-        this._right -= margins[1];
-        this._bottom -= margins[2];
+        this._data.left += margins[3];
+        this._data.top += margins[0];
+        this._data.right -= margins[1];
+        this._data.bottom -= margins[2];
         return this;
+    };
+
+    /**
+     * Gets the current left/right/top/bottom/z bounds used by the dock-helper.
+     *
+     * @return {Object} `{left: x, right: x, top: x, bottom: x, z: x}`
+     */
+    LayoutDockHelper.prototype.get = function() {
+        return this._data;
     };
 
     // Register the helper
