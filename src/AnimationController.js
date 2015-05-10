@@ -215,7 +215,7 @@ define(function(require, exports, module) {
             return;
         }
         var spec = view.getSpec(id);
-        if (spec) {
+        if (spec && !spec.trueSizeRequested) {
             callback(spec);
         }
         else {
