@@ -72,6 +72,18 @@ define(function(require, exports, module) {
         // Position background
         context.set('background', {size: context.size});
 
+        // Position back-button
+        var backIcon = context.get('backIcon');
+        if (backIcon) {
+            dock.left(backIcon, options.backIconWidth);
+            dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+        }
+        var backItem = context.get('backItem');
+        if (backItem) {
+            dock.left(backItem, options.backItemWidth);
+            dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+        }
+
         // Position right items
         var node;
         var i;
@@ -86,7 +98,7 @@ define(function(require, exports, module) {
             }
         }
 
-        // Position left item
+        // Position left items
         var leftItems = context.get('leftItems');
         if (leftItems) {
             for (i = 0; i < leftItems.length; i++) {
@@ -99,6 +111,17 @@ define(function(require, exports, module) {
         }
 
         // Position title
-        dock.fill('title');
+        var title = context.get('title');
+        if (title) {
+            var titleSize = context.resolveSize(title, context.size);
+            var left = Math.max((context.size[0] - titleSize[0]) / 2, dock.get().left);
+            var right = Math.min((context.size[0] + titleSize[0]) / 2, dock.get().right);
+            left = Math.max(left, context.size[0] - right);
+            right = Math.min(right, context.size[0] - left);
+            context.set(title, {
+                size: [right - left, context.size[1]],
+                translate: [left, 0, 0]
+            });
+        }
     };
 });
