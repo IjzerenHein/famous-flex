@@ -5,7 +5,7 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014 - 2015
+ * @copyright Gloey Apps, 2014/2015
  */
 
 /**
@@ -27,6 +27,9 @@ define(function(require, exports, module) {
     // import dependencies
     var LayoutContext = require('./LayoutContext');
     var LayoutUtility = require('./LayoutUtility');
+    var Surface = require('famous/core/Surface');
+    var RenderNode = require('famous/core/RenderNode');
+    var LayoutController = require('./LayoutController');
 
     var MAX_POOL_SIZE = 100;
 
@@ -202,6 +205,10 @@ define(function(require, exports, module) {
                     result.modified = true;
                 }
 
+                // Set meta data
+                spec.usesTrueSize = node.usesTrueSize;
+                spec.trueSizeRequested = node.trueSizeRequested;
+
                 // Add node to result output
                 specs.push(spec);
                 node = node._next;
@@ -269,10 +276,10 @@ define(function(require, exports, module) {
      */
     LayoutNodeManager.prototype.preallocateNodes = function(count, spec) {
         var nodes = [];
-        for (var i = 0; i < count ; i++) {
+        for (var i = 0; i < count; i++) {
             nodes.push(this.createNode(undefined, spec));
         }
-        for (i = 0; i < count ; i++) {
+        for (i = 0; i < count; i++) {
             _destroyNode.call(this, nodes[i]);
         }
     };
@@ -655,7 +662,40 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Resolve the size of the layout-node from the renderable itsself
+     * Helper function that recursively discovers the configured size for a
+     * given renderNode.
+     */
+    function _resolveConfigSize(renderNode) {
+        if (renderNode instanceof RenderNode) {
+            var result = null;
+            var target = renderNode.get();
+            if (target) {
+                result = _resolveConfigSize(target);
+                if (result) {
+                    return result;
+                }
+            }
+            if (renderNode._child) {
+                return _resolveConfigSize(renderNode._child);
+            }
+        }
+        else if (renderNode instanceof Surface) {
+            return {
+                renderNode: renderNode,
+                size: renderNode.size
+            };
+        }
+        else if (renderNode.options && renderNode.options.size) {
+            return {
+                renderNode: renderNode,
+                size: renderNode.options.size
+            };
+        }
+        return undefined;
+    }
+
+    /**
+     * Resolve the size of the layout-node from the renderable itsself.
      */
     function _contextResolveSize(contextNodeOrId, parentSize) {
         var contextNode = this._nodesById ? _contextGet.call(this, contextNodeOrId) : contextNodeOrId;
@@ -678,54 +718,54 @@ define(function(require, exports, module) {
         // It contains portions that ensure that the true-size of a Surface is re-evaluated
         // and also workaround code that backs up the size of a Surface, so that when the surface
         // is re-added to the DOM (e.g. when scrolling) it doesn't temporarily have a size of 0.
-        var configSize = renderNode.size && (renderNode._trueSizeCheck !== undefined) ? renderNode.size : undefined;
-        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
+        var configSize = _resolveConfigSize(renderNode);
+        if (configSize && ((configSize.size[0] === true) || (configSize.size[1] === true))) {
             contextNode.usesTrueSize = true;
-            var backupSize = renderNode._backupSize;
-            if (renderNode._contentDirty || renderNode._trueSizeCheck) {
-              this._trueSizeRequested = true;
-              contextNode.trueSizeRequested = true;
-            }
-            if (renderNode._trueSizeCheck) {
-
-                // Fix for true-size renderables. When true-size is used, the size
-                // is incorrect for one render-cycle due to the fact that Surface.commit
-                // updates the content after asking the DOM for the offsetHeight/offsetWidth.
-                // The code below backs the size up, and re-uses that when this scenario
-                // occurs.
-                if (backupSize && (configSize !== size)) {
-                    var newWidth = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
-                    var newHeight = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
-                    backupSize[0] = newWidth;
-                    backupSize[1] = newHeight;
-                    size = backupSize;
-                    renderNode._backupSize = undefined;
-                    backupSize = undefined;
+            if (configSize.renderNode instanceof Surface) {
+                var backupSize = configSize.renderNode._backupSize;
+                if (configSize.renderNode._contentDirty || configSize.renderNode._trueSizeCheck) {
+                  this._trueSizeRequested = true;
+                  contextNode.trueSizeRequested = true;
                 }
-            }
-            if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
-                renderNode._trueSizeCheck = true; // force request of true-size from DOM
-                renderNode._sizeDirty = true;
-                this._trueSizeRequested = true;
+                if (configSize.renderNode._trueSizeCheck) {
+
+                    // Fix for true-size renderables. When true-size is used, the size
+                    // is incorrect for one render-cycle due to the fact that Surface.commit
+                    // updates the content after asking the DOM for the offsetHeight/offsetWidth.
+                    // The code below backs the size up, and re-uses that when this scenario
+                    // occurs.
+                    if (backupSize && (configSize.size !== size)) {
+                        var newWidth = (configSize.size[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
+                        var newHeight = (configSize.size[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
+                        backupSize[0] = newWidth;
+                        backupSize[1] = newHeight;
+                        size = backupSize;
+                        configSize.renderNode._backupSize = undefined;
+                        backupSize = undefined;
+                    }
+                }
+                if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
+                    configSize.renderNode._trueSizeCheck = true; // force request of true-size from DOM
+                    configSize.renderNode._sizeDirty = true;
+                    this._trueSizeRequested = true;
+                }
+
+                // Backup the size of the node
+                if (!backupSize) {
+                    configSize.renderNode._backupSize = [0, 0];
+                    backupSize = configSize.renderNode._backupSize;
+                }
+                backupSize[0] = size[0];
+                backupSize[1] = size[1];
             }
 
-            // Backup the size of the node
-            if (!backupSize) {
-                renderNode._backupSize = [0, 0];
-                backupSize = renderNode._backupSize;
-            }
-            backupSize[0] = size[0];
-            backupSize[1] = size[1];
-        }
-
-        // Ensure re-layout when a child layout-controller is using true-size and it
-        // has ben changed.
-        configSize = renderNode._nodes ? renderNode.options.size : undefined;
-        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
-            if (this._reevalTrueSize || renderNode._nodes._trueSizeRequested) {
-                contextNode.usesTrueSize = true;
-                contextNode.trueSizeRequested = true;
-                this._trueSizeRequested = true;
+            // Ensure re-layout when a child layout-controller is using true-size and it
+            // has ben changed.
+            else if (configSize.renderNode instanceof LayoutController) {
+                if (this._reevalTrueSize || configSize.renderNode._nodes._trueSizeRequested) {
+                    contextNode.trueSizeRequested = true;
+                    this._trueSizeRequested = true;
+                }
             }
         }
 
