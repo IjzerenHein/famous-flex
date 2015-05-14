@@ -709,7 +709,7 @@ define(function(require, exports, module) {
      */
     LayoutController.prototype.get = function(indexOrId) {
       if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
-        return this._nodesById[indexOrId];
+        return this._nodesById ? this._nodesById[indexOrId] : undefined;
       }
       var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
       return viewSequence ? viewSequence.get() : undefined;
