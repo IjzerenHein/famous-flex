@@ -268,6 +268,9 @@ define(function(require, exports, module) {
                 callbackCount++;
             }
         }
+        if (!callbackCount) {
+            callback();
+        }
     }
     function _initTransferableAnimation(item, prevItem, sourceId, callback) {
         var target = item.options.transfer.items[sourceId];
