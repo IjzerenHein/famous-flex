@@ -8,6 +8,9 @@
  * @copyright Gloey Apps, 2014 - 2015
  */
 
+/*global console*/
+/*eslint no-console: 0*/
+
 /**
  * Scrollable layout-controller.
  *
@@ -91,7 +94,7 @@ define(function(require, exports, module) {
      * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
      * @param {String} [options.container] Options that are passed to the ContainerSurface in case `useContainer` is true.
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
-     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {Number} [options.paginationEnergyThreshold] Threshold after which pagination kicks in (default: `0.01`).
      * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
@@ -228,9 +231,9 @@ define(function(require, exports, module) {
         overscroll: true,
         paginated: false,
         paginationMode: PaginationMode.PAGE,
-        paginationEnergyThresshold: 0.01,
+        paginationEnergyThreshold: 0.01,
         alignment: 0,         // [0: top/left, 1: bottom/right]
-        touchMoveDirectionThresshold: undefined, // 0..1
+        touchMoveDirectionThreshold: undefined, // 0..1
         touchMoveNoVelocityDuration: 100,
         mouseMove: false,
         enabled: true,          // set to false to disable scrolling
@@ -245,7 +248,7 @@ define(function(require, exports, module) {
      *
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
-     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {Number} [options.paginationEnergyThreshold] Threshold after which pagination kicks in (default: `0.01`).
      * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
@@ -260,6 +263,18 @@ define(function(require, exports, module) {
      */
     ScrollController.prototype.setOptions = function(options) {
         LayoutController.prototype.setOptions.call(this, options);
+        if (options.hasOwnProperty('paginationEnergyThresshold')) {
+            console.warn('option `paginationEnergyThresshold` has been deprecated, please rename to `paginationEnergyThreshold`.');
+            this.setOptions({
+                paginationEnergyThreshold: options.paginationEnergyThresshold
+            });
+        }
+        if (options.hasOwnProperty('touchMoveDirectionThresshold')) {
+            console.warn('option `touchMoveDirectionThresshold` has been deprecated, please rename to `touchMoveDirectionThreshold`.');
+            this.setOptions({
+                touchMoveDirectionThreshold: options.touchMoveDirectionThresshold
+            });
+        }
         if (this._scroll) {
             if (options.scrollSpring) {
                 this._scroll.springForce.setOptions(options.scrollSpring);
@@ -392,7 +407,7 @@ define(function(require, exports, module) {
             Math.abs(event.clientY - this._scroll.mouseMove.prev[1]),
             Math.abs(event.clientX - this._scroll.mouseMove.prev[0])) / (Math.PI / 2.0);
         var directionDiff = Math.abs(this._direction - moveDirection);
-        if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
+        if ((this.options.touchMoveDirectionThreshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThreshold)){
             this._scroll.mouseMove.prev = this._scroll.mouseMove.current;
             this._scroll.mouseMove.current = [event.clientX, event.clientY];
             this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
@@ -522,7 +537,7 @@ define(function(require, exports, module) {
                         Math.abs(changedTouch.clientY - touch.prev[1]),
                         Math.abs(changedTouch.clientX - touch.prev[0])) / (Math.PI / 2.0);
                     var directionDiff = Math.abs(this._direction - moveDirection);
-                    if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
+                    if ((this.options.touchMoveDirectionThreshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThreshold)){
                         touch.prev = touch.current;
                         touch.current = [changedTouch.clientX, changedTouch.clientY];
                         touch.prevTime = touch.time;
@@ -922,7 +937,7 @@ define(function(require, exports, module) {
         var item;
         switch (this.options.paginationMode) {
             case PaginationMode.SCROLL:
-                if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
+                if (!this.options.paginationEnergyThreshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThreshold)) {
                     item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
                     if (item && item.renderNode) {
                         this.goToRenderNode(item.renderNode);
@@ -1640,7 +1655,7 @@ define(function(require, exports, module) {
                     if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                         this.goToRenderNode(item.renderNode);
                     }
-                    else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+                    else if (this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
                         velocity = velocity || 0;
                         if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
                             this.goToRenderNode(item._node._next.renderNode);

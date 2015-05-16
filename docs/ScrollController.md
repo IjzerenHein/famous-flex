@@ -62,7 +62,7 @@ Inherited from: [LayoutController](./LayoutController.md)
 | [options.useContainer] | <code>Bool</code> | Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`). |
 | [options.container] | <code>String</code> | Options that are passed to the ContainerSurface in case `useContainer` is true. |
 | [options.paginated] | <code>Bool</code> | Enabled pagination when set to `true` (default: `false`). |
-| [options.paginationEnergyThresshold] | <code>Number</code> | Thresshold after which pagination kicks in (default: `0.01`). |
+| [options.paginationEnergyThreshold] | <code>Number</code> | Threshold after which pagination kicks in (default: `0.01`). |
 | [options.paginationMode] | <code>PaginationMode</code> | Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`). |
 | [options.alignment] | <code>Number</code> | Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`). |
 | [options.mouseMove] | <code>Bool</code> | Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`). |
@@ -85,7 +85,7 @@ Patches the ScrollController instance's options with the passed-in ones.
 | --- | --- | --- |
 | options | <code>Object</code> | Configurable options (see LayoutController for all inherited options). |
 | [options.paginated] | <code>Bool</code> | Enabled pagination when set to `true` (default: `false`). |
-| [options.paginationEnergyThresshold] | <code>Number</code> | Thresshold after which pagination kicks in (default: `0.01`). |
+| [options.paginationEnergyThreshold] | <code>Number</code> | Threshold after which pagination kicks in (default: `0.01`). |
 | [options.paginationMode] | <code>PaginationMode</code> | Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`). |
 | [options.alignment] | <code>Number</code> | Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`). |
 | [options.mouseMove] | <code>Bool</code> | Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`). |

@@ -106,15 +106,15 @@ Pagination modes:
 |mode                   |description|
 |-----------------------|-----------|
 |`PaginationMode.PAGE`|Paginates to the page immediately after the last touch/mouse event. **(default)**|
-|`PaginationMode.SCROLL`|Scrolls the view but only paginates when the energy of the scroll-particle is below a certain thresshold.|
+|`PaginationMode.SCROLL`|Scrolls the view but only paginates when the energy of the scroll-particle is below a certain threshold.|
 
-To change the pagination-mode or thresshold use:
+To change the pagination-mode or threshold use:
 
 ```javascript
 var scrollView = new FlexScrollView({
     paginated: true,
     paginationMode: FlexScrollView.PaginationMode.SCROLL,
-    paginationEnergyThresshold: 0.01
+    paginationEnergyThreshold: 0.01
 });
 ```
 
@@ -508,10 +508,10 @@ When inserting a horizontal scrollview inside a vertical scrollview (or vice ver
 // Create vertical and horizontal scrollview and embed
 // one scrollview inside the other one.
 var vertScrollView = new FlexScrollView({
-    touchMoveDirectionThresshold: 0.5
+    touchMoveDirectionThreshold: 0.5
 });
 var horzScrollView = new FlexScrollView({
-    touchMoveDirectionThresshold: 0.5
+    touchMoveDirectionThreshold: 0.5
 });
 horzScrollView.push(vertScrollView);
 
@@ -519,22 +519,22 @@ horzScrollView.push(vertScrollView);
 // and disable scrolling on the horizontal scrollview
 vertScrollView.on('scrollstart', function(event) {
     horzScrollView.setOptions({ enabled: false });
-    vertScrollView.setOptions({ touchMoveDirectionThresshold: undefined });
+    vertScrollView.setOptions({ touchMoveDirectionThreshold: undefined });
 });
 vertScrollView.on('scrollend', function(event) {
     horzScrollView.setOptions({ enabled: true });
-    vertScrollView.setOptions({ touchMoveDirectionThresshold: 0.5 });
+    vertScrollView.setOptions({ touchMoveDirectionThreshold: 0.5 });
 });
 
 // When the horizontal scrollview starts scrolling, capture all events
 // and disable scrolling on the vertical scrollview
 horzScrollView.on('scrollstart', function(event) {
     vertScrollView.setOptions({ enabled: false });
-    horzScrollView.setOptions({ touchMoveDirectionThresshold: undefined });
+    horzScrollView.setOptions({ touchMoveDirectionThreshold: undefined });
 });
 horzScrollView.on('scrollend', function(event) {
     vertScrollView.setOptions({ enabled: true });
-    horzScrollView.setOptions({ touchMoveDirectionThresshold: 0.5 });
+    horzScrollView.setOptions({ touchMoveDirectionThreshold: 0.5 });
 });
 ```
 
