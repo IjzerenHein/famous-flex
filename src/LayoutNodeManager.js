@@ -680,10 +680,10 @@ define(function(require, exports, module) {
             }
         }
         else if (renderNode instanceof Surface) {
-            return {
+            return renderNode.size ? {
                 renderNode: renderNode,
                 size: renderNode.size
-            };
+            } : undefined;
         }
         else if (renderNode.options && renderNode.options.size) {
             return {
