@@ -1221,7 +1221,7 @@ define(function(require, exports, module) {
             this.halt();
             this._scroll.scrollDelta = 0;
             _setParticle.call(this, 0, 0, '_goToSequence');
-            this._isDirty = true;
+            this._scroll.scrollDirty = true;
         }
         else {
             this._scroll.scrollToSequence = viewSequence;
