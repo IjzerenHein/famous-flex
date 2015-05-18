@@ -29,7 +29,6 @@ define(function(require, exports, module) {
     var LayoutUtility = require('./LayoutUtility');
     var Surface = require('famous/core/Surface');
     var RenderNode = require('famous/core/RenderNode');
-    var LayoutController = require('./LayoutController');
 
     var MAX_POOL_SIZE = 100;
 
@@ -761,7 +760,7 @@ define(function(require, exports, module) {
 
             // Ensure re-layout when a child layout-controller is using true-size and it
             // has ben changed.
-            else if (configSize.renderNode instanceof LayoutController) {
+            else if (configSize.renderNode._nodes) {
                 if (this._reevalTrueSize || configSize.renderNode._nodes._trueSizeRequested) {
                     contextNode.trueSizeRequested = true;
                     this._trueSizeRequested = true;
