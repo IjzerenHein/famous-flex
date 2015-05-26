@@ -577,6 +577,9 @@ define(function(require, exports, module) {
                 _setItemOptions.call(this, item, options);
                 _updateState.call(this);
             }
+            if (callback) {
+                callback();
+            }
             return this;
         }
         if (item && (item.state !== ItemState.HIDING) && options) {
