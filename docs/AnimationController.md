@@ -9,8 +9,10 @@ Animating between famo.us views in awesome ways.
     * _instance_
       * [.show(renderable, [options], [callback])](#module_AnimationController--AnimationController#show) ⇒ <code>AnimationController</code>
       * [.hide([options], [callback])](#module_AnimationController--AnimationController#hide) ⇒ <code>AnimationController</code>
-      * [.halt()](#module_AnimationController--AnimationController#halt) ⇒ <code>AnimationController</code>
+      * [.halt([stopAnimation], [framePerc])](#module_AnimationController--AnimationController#halt) ⇒ <code>AnimationController</code>
+      * [.abort([callback])](#module_AnimationController--AnimationController#abort) ⇒ <code>AnimationController</code>
       * [.get()](#module_AnimationController--AnimationController#get) ⇒ <code>Renderable</code>
+      * [.getSize()](#module_AnimationController--AnimationController#getSize) ⇒ <code>Array.Number</code>
     * _static_
       * [.Animation](#module_AnimationController--AnimationController.Animation)
 
@@ -82,17 +84,41 @@ Hides the current view with an animation.
 | [callback] | <code>function</code> | Function that is called an completion. |
 
 <a name="module_AnimationController--AnimationController#halt"></a>
-#### animationController.halt() ⇒ <code>AnimationController</code>
+#### animationController.halt([stopAnimation], [framePerc]) ⇒ <code>AnimationController</code>
 Clears the queue of any pending show animations.
 
 **Kind**: instance method of <code>[AnimationController](#exp_module_AnimationController--AnimationController)</code>  
 **Returns**: <code>AnimationController</code> - this  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [stopAnimation] | <code>Boolean</code> | Freezes the current animation. |
+| [framePerc] | <code>Number</code> | Frame at which to freeze the animation (in percentage). |
+
+<a name="module_AnimationController--AnimationController#abort"></a>
+#### animationController.abort([callback]) ⇒ <code>AnimationController</code>
+Aborts the currently active show or hide operation, effectively
+reversing the animation.
+
+**Kind**: instance method of <code>[AnimationController](#exp_module_AnimationController--AnimationController)</code>  
+**Returns**: <code>AnimationController</code> - this  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [callback] | <code>function</code> | Function that is called on completion. |
+
 <a name="module_AnimationController--AnimationController#get"></a>
 #### animationController.get() ⇒ <code>Renderable</code>
 Gets the currently visible or being shown renderable.
 
 **Kind**: instance method of <code>[AnimationController](#exp_module_AnimationController--AnimationController)</code>  
 **Returns**: <code>Renderable</code> - currently visible view/surface  
+<a name="module_AnimationController--AnimationController#getSize"></a>
+#### animationController.getSize() ⇒ <code>Array.Number</code>
+Gets the size of the view.
+
+**Kind**: instance method of <code>[AnimationController](#exp_module_AnimationController--AnimationController)</code>  
+**Returns**: <code>Array.Number</code> - size  
 <a name="module_AnimationController--AnimationController.Animation"></a>
 #### AnimationController.Animation
 Out of the box supported animations.
