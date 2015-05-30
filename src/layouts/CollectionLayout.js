@@ -224,10 +224,22 @@ define(function(require, exports, module) {
                 console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
             }
             itemSize = [
-                (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
-                (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
+                ([undefined, true].indexOf(options.cells[0])>-1) ? options.cells[0] : (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
+                ([undefined, true].indexOf(options.cells[1])>-1) ? options.cells[1] : (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
             ];
         }
+        else if (options.columns){
+            // using itemSize[0] (only allowed to be an array, not accepting a function or other type)
+            var w = (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.columns - 1)))) / options.columns;
+            itemSize = [w, true];
+            if(options.itemSize){
+                if(options.itemSize instanceof Array){
+                    itemSize = [w, options.itemSize[1]];
+                } else {
+                    console.error('requires itemSize to be an Array');
+                }
+            }
+        } 
         else if (!options.itemSize) {
             itemSize = [true, true]; // when no item-size specified, use size from renderables
         }
