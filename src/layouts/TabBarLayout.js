@@ -15,7 +15,7 @@
  * |---|---|---|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number|Space in between items|
- * |`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 0.001)|
+ * |`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 2)|
  * |`[itemSize]`|Number/Bool|Width or height of the item (see below)|
  *
  * `itemSize` can have of the following values:
@@ -100,7 +100,7 @@ define(function(require, exports, module) {
         items = context.get('items');
         spacers = context.get('spacers');
         margins = LayoutUtility.normalizeMargins(options.margins);
-        zIncrement = options.zIncrement || 0.001;
+        zIncrement = options.zIncrement || 2;
         set.size[0] = context.size[0];
         set.size[1] = context.size[1];
         set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
