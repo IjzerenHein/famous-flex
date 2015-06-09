@@ -5,11 +5,8 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
-
-/*global console*/
-/*eslint no-console: 0*/
 
 /**
  * Lays a collection of renderables from left to right or top to bottom, and when the right/bottom edge is reached,
@@ -18,7 +15,7 @@
  * |options|type|description|
  * |---|---|---|
  * |`[itemSize]`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
- * |`[cells]`|Array.Number|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
+ * |`[cells]`|Array.[Number,true,undefined]|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number/Array|Spacing between items (e.g. 5, [10, 10])|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
@@ -194,8 +191,8 @@ define(function(require, exports, module) {
         direction = context.direction;
         alignment = context.alignment;
         lineDirection = (direction + 1) % 2;
-        if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) {
-            console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
+        if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) { //eslint-disable-line no-console
+            console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead'); //eslint-disable-line no-console
         }
         if (options.gutter && !options.margins && !options.spacing) {
             var gutter = Array.isArray(options.gutter) ? options.gutter : [options.gutter, options.gutter];
@@ -220,12 +217,12 @@ define(function(require, exports, module) {
         // Prepare item-size
         //
         if (options.cells) {
-            if (options.itemSize && console.warn && !options.suppressWarnings) {
-                console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
+            if (options.itemSize && console.warn && !options.suppressWarnings) { //eslint-disable-line no-console
+                console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two'); //eslint-disable-line no-console
             }
             itemSize = [
-                (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
-                (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
+                ([undefined, true].indexOf(options.cells[0]) >-1) ? options.cells[0] : (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
+                ([undefined, true].indexOf(options.cells[1]) >-1) ? options.cells[1] : (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
             ];
         }
         else if (!options.itemSize) {
