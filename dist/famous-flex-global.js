@@ -8,21 +8,24 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.2
-* @generated 07-05-2015
+* @version 0.3.3
+* @generated 09-06-2015
 */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (global){
-var View = typeof window !== 'undefined' ? window.famous.core.View : typeof global !== 'undefined' ? global.famous.core.View : null;
+var View = window.famous.core.View;
 var LayoutController = require('./LayoutController');
-var Transform = typeof window !== 'undefined' ? window.famous.core.Transform : typeof global !== 'undefined' ? global.famous.core.Transform : null;
-var Modifier = typeof window !== 'undefined' ? window.famous.core.Modifier : typeof global !== 'undefined' ? global.famous.core.Modifier : null;
-var StateModifier = typeof window !== 'undefined' ? window.famous.modifiers.StateModifier : typeof global !== 'undefined' ? global.famous.modifiers.StateModifier : null;
-var RenderNode = typeof window !== 'undefined' ? window.famous.core.RenderNode : typeof global !== 'undefined' ? global.famous.core.RenderNode : null;
-var Timer = typeof window !== 'undefined' ? window.famous.utilities.Timer : typeof global !== 'undefined' ? global.famous.utilities.Timer : null;
-var Easing = typeof window !== 'undefined' ? window.famous.transitions.Easing : typeof global !== 'undefined' ? global.famous.transitions.Easing : null;
+var Transform = window.famous.core.Transform;
+var Modifier = window.famous.core.Modifier;
+var StateModifier = window.famous.modifiers.StateModifier;
+var RenderNode = window.famous.core.RenderNode;
+var Timer = window.famous.utilities.Timer;
+var Easing = window.famous.transitions.Easing;
 function AnimationController(options) {
     View.apply(this, arguments);
+    this._size = [
+        0,
+        0
+    ];
     _createLayout.call(this);
     if (options) {
         this.setOptions(options);
@@ -110,6 +113,8 @@ function ViewStackLayout(context, options) {
                 0
             ]
         };
+    this._size[0] = context.size[0];
+    this._size[1] = context.size[1];
     var views = context.get('views');
     var transferables = context.get('transferables');
     for (var i = 0; i < Math.min(views.length, 2); i++) {
@@ -156,14 +161,14 @@ function _createLayout() {
         dataSource: this._renderables
     });
     this.add(this.layout);
-    this.layout.on('layoutend', _startAnimations.bind(this));
+    this.layout.on('layoutend', _processAnimations.bind(this));
 }
 function _getViewSpec(item, view, id, callback) {
     if (!item.view) {
         return;
     }
     var spec = view.getSpec(id);
-    if (spec) {
+    if (spec && !spec.trueSizeRequested) {
         callback(spec);
     } else {
         Timer.after(_getViewSpec.bind(this, item, view, id, callback), 1);
@@ -190,12 +195,24 @@ function _getTransferable(item, view, id) {
         return _getTransferable.call(this, item, view.layout, id);
     }
 }
-function _startTransferableAnimations(item, prevItem) {
+function _initTransferableAnimations(item, prevItem, callback) {
+    var callbackCount = 0;
+    function waitForAll() {
+        callbackCount--;
+        if (callbackCount === 0) {
+            callback();
+        }
+    }
     for (var sourceId in item.options.transfer.items) {
-        _startTransferableAnimation.call(this, item, prevItem, sourceId);
+        if (_initTransferableAnimation.call(this, item, prevItem, sourceId, waitForAll)) {
+            callbackCount++;
+        }
+    }
+    if (!callbackCount) {
+        callback();
     }
 }
-function _startTransferableAnimation(item, prevItem, sourceId) {
+function _initTransferableAnimation(item, prevItem, sourceId, callback) {
     var target = item.options.transfer.items[sourceId];
     var transferable = {};
     transferable.source = _getTransferable.call(this, prevItem, prevItem.view, sourceId);
@@ -211,6 +228,7 @@ function _startTransferableAnimation(item, prevItem, sourceId) {
     }
     if (transferable.source && transferable.target) {
         transferable.source.getSpec(function (sourceSpec) {
+            transferable.sourceSpec = sourceSpec;
             transferable.originalSource = transferable.source.get();
             transferable.source.show(new RenderNode(new Modifier(sourceSpec)));
             transferable.originalTarget = transferable.target.get();
@@ -218,37 +236,57 @@ function _startTransferableAnimation(item, prevItem, sourceId) {
             targetNode.add(transferable.originalTarget);
             transferable.target.show(targetNode);
             var zIndexMod = new Modifier({ transform: Transform.translate(0, 0, item.options.transfer.zIndex) });
-            var mod = new StateModifier(sourceSpec);
+            transferable.mod = new StateModifier(sourceSpec);
             transferable.renderNode = new RenderNode(zIndexMod);
-            transferable.renderNode.add(mod).add(transferable.originalSource);
+            transferable.renderNode.add(transferable.mod).add(transferable.originalSource);
             item.transferables.push(transferable);
             this._renderables.transferables.push(transferable.renderNode);
             this.layout.reflowLayout();
             Timer.after(function () {
+                var callbackCalled;
                 transferable.target.getSpec(function (targetSpec, transition) {
-                    mod.halt();
-                    if (sourceSpec.opacity !== undefined || targetSpec.opacity !== undefined) {
-                        mod.setOpacity(targetSpec.opacity === undefined ? 1 : targetSpec.opacity, transition || item.options.transfer.transition);
-                    }
-                    if (item.options.transfer.fastResize) {
-                        if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
-                            var transform = targetSpec.transform || Transform.identity;
-                            if (sourceSpec.size && targetSpec.size) {
-                                transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
-                            }
-                            mod.setTransform(transform, transition || item.options.transfer.transition);
-                        }
-                    } else {
-                        if (sourceSpec.transform || targetSpec.transform) {
-                            mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
-                        }
-                        if (sourceSpec.size || targetSpec.size) {
-                            mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
-                        }
+                    transferable.targetSpec = targetSpec;
+                    transferable.transition = transition;
+                    if (!callbackCalled) {
+                        callback();
                     }
                 }, true);
             }, 1);
         }.bind(this), false);
+        return true;
+    } else {
+        return false;
+    }
+}
+function _startTransferableAnimations(item, callback) {
+    for (var j = 0; j < item.transferables.length; j++) {
+        var transferable = item.transferables[j];
+        transferable.mod.halt();
+        if (transferable.sourceSpec.opacity !== undefined || transferable.targetSpec.opacity !== undefined) {
+            transferable.mod.setOpacity(transferable.targetSpec.opacity === undefined ? 1 : transferable.targetSpec.opacity, transferable.transition || item.options.transfer.transition);
+        }
+        if (item.options.transfer.fastResize) {
+            if (transferable.sourceSpec.transform || transferable.targetSpec.transform || transferable.sourceSpec.size || transferable.targetSpec.size) {
+                var transform = transferable.targetSpec.transform || Transform.identity;
+                if (transferable.sourceSpec.size && transferable.targetSpec.size) {
+                    transform = Transform.multiply(transform, Transform.scale(transferable.targetSpec.size[0] / transferable.sourceSpec.size[0], transferable.targetSpec.size[1] / transferable.sourceSpec.size[1], 1));
+                }
+                transferable.mod.setTransform(transform, transferable.transition || item.options.transfer.transition, callback);
+                callback = undefined;
+            }
+        } else {
+            if (transferable.sourceSpec.transform || transferable.targetSpec.transform) {
+                transferable.mod.setTransform(transferable.targetSpec.transform || Transform.identity, transferable.transition || item.options.transfer.transition, callback);
+                callback = undefined;
+            }
+            if (transferable.sourceSpec.size || transferable.targetSpec.size) {
+                transferable.mod.setSize(transferable.targetSpec.size || transferable.sourceSpec.size, transferable.transition || item.options.transfer.transition, callback);
+                callback = undefined;
+            }
+        }
+    }
+    if (callback) {
+        callback();
     }
 }
 function _endTransferableAnimations(item) {
@@ -266,56 +304,94 @@ function _endTransferableAnimations(item) {
     item.transferables = [];
     this.layout.reflowLayout();
 }
-function _startAnimations(event) {
+function _processAnimations(event) {
     var prevItem;
     for (var i = 0; i < this._viewStack.length; i++) {
         var item = this._viewStack[i];
         switch (item.state) {
         case ItemState.HIDE:
             item.state = ItemState.HIDING;
-            _startAnimation.call(this, item, prevItem, event.size, false);
+            _startHideAnimation.call(this, item, prevItem, event.size);
             _updateState.call(this);
             break;
         case ItemState.SHOW:
             item.state = ItemState.SHOWING;
-            _startAnimation.call(this, item, prevItem, event.size, true);
+            _initShowAnimation.call(this, item, prevItem, event.size);
             _updateState.call(this);
             break;
         }
         prevItem = item;
     }
 }
-function _startAnimation(item, prevItem, size, show) {
-    var animation = show ? item.options.show.animation : item.options.hide.animation;
-    var spec = animation ? animation.call(undefined, show, size) : {};
+function _initShowAnimation(item, prevItem, size) {
+    var spec = item.options.show.animation ? item.options.show.animation.call(undefined, true, size) : {};
+    item.startSpec = spec;
+    item.endSpec = {
+        opacity: 1,
+        transform: Transform.identity
+    };
     item.mod.halt();
-    var callback;
-    if (show) {
-        callback = item.showCallback;
+    if (spec.transform) {
+        item.mod.setTransform(spec.transform);
+    }
+    if (spec.opacity !== undefined) {
+        item.mod.setOpacity(spec.opacity);
+    }
+    if (spec.align) {
+        item.mod.setAlign(spec.align);
+    }
+    if (spec.origin) {
+        item.mod.setOrigin(spec.origin);
+    }
+    if (prevItem) {
+        _initTransferableAnimations.call(this, item, prevItem, _startShowAnimation.bind(this, item, spec));
+    } else {
+        _startShowAnimation.call(this, item, spec);
+    }
+}
+function _startShowAnimation(item, spec) {
+    if (!item.halted) {
+        var callback = item.showCallback;
         if (spec.transform) {
-            item.mod.setTransform(spec.transform);
             item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
             callback = undefined;
         }
         if (spec.opacity !== undefined) {
-            item.mod.setOpacity(spec.opacity);
             item.mod.setOpacity(1, item.options.show.transition, callback);
             callback = undefined;
         }
-        if (spec.align) {
-            item.mod.setAlign(spec.align);
+        _startTransferableAnimations.call(this, item, callback);
+    }
+}
+function _interpolate(start, end, perc) {
+    return start + (end - start) * perc;
+}
+function _haltItemAtFrame(item, perc) {
+    item.mod.halt();
+    item.halted = true;
+    if (item.startSpec && perc !== undefined) {
+        if (item.startSpec.opacity !== undefined && item.endSpec.opacity !== undefined) {
+            item.mod.setOpacity(_interpolate(item.startSpec.opacity, item.endSpec.opacity, perc));
         }
-        if (spec.origin) {
-            item.mod.setOrigin(spec.origin);
+        if (item.startSpec.transform && item.endSpec.transform) {
+            var transform = [];
+            for (var i = 0; i < item.startSpec.transform.length; i++) {
+                transform.push(_interpolate(item.startSpec.transform[i], item.endSpec.transform[i], perc));
+            }
+            item.mod.setTransform(transform);
         }
-        if (prevItem) {
-            _startTransferableAnimations.call(this, item, prevItem);
-        }
-        if (callback) {
-            callback();
-        }
-    } else {
-        callback = item.hideCallback;
+    }
+}
+function _startHideAnimation(item, prevItem, size) {
+    var spec = item.options.hide.animation ? item.options.hide.animation.call(undefined, false, size) : {};
+    item.endSpec = spec;
+    item.startSpec = {
+        opacity: 1,
+        transform: Transform.identity
+    };
+    if (!item.halted) {
+        item.mod.halt();
+        var callback = item.hideCallback;
         if (spec.transform) {
             item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
             callback = undefined;
@@ -386,7 +462,40 @@ function _updateState() {
         this.layout.reflowLayout();
     }
 }
+function _resume() {
+    for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+        var item = this._viewStack[i];
+        if (item.halted) {
+            item.halted = false;
+            if (item.endSpec) {
+                var callback;
+                switch (item.state) {
+                case ItemState.HIDE:
+                case ItemState.HIDING:
+                    callback = item.hideCallback;
+                    break;
+                case ItemState.SHOW:
+                case ItemState.SHOWING:
+                    callback = item.showCallback;
+                    break;
+                }
+                item.mod.halt();
+                if (item.endSpec.transform) {
+                    item.mod.setTransform(item.endSpec.transform, item.options.show.transition, callback);
+                    callback = undefined;
+                }
+                if (item.endSpec.opacity !== undefined) {
+                    item.mod.setOpacity(item.endSpec.opacity, item.options.show.transition, callback);
+                }
+                if (callback) {
+                    callback();
+                }
+            }
+        }
+    }
+}
 AnimationController.prototype.show = function (renderable, options, callback) {
+    _resume.call(this, renderable);
     if (!renderable) {
         return this.hide(options, callback);
     }
@@ -397,6 +506,9 @@ AnimationController.prototype.show = function (renderable, options, callback) {
             item.state = ItemState.QUEUED;
             _setItemOptions.call(this, item, options);
             _updateState.call(this);
+        }
+        if (callback) {
+            callback();
         }
         return this;
     }
@@ -419,14 +531,18 @@ AnimationController.prototype.show = function (renderable, options, callback) {
     item.node.add(renderable);
     _setItemOptions.call(this, item, options);
     item.showCallback = function () {
+        item.showCallback = undefined;
         item.state = ItemState.VISIBLE;
         _updateState.call(this);
         _endTransferableAnimations.call(this, item);
+        item.endSpec = undefined;
+        item.startSpec = undefined;
         if (callback) {
             callback();
         }
     }.bind(this);
     item.hideCallback = function () {
+        item.hideCallback = undefined;
         var index = this._viewStack.indexOf(item);
         this._renderables.views.splice(index, 1);
         this._viewStack.splice(index, 1);
@@ -440,6 +556,7 @@ AnimationController.prototype.show = function (renderable, options, callback) {
     return this;
 };
 AnimationController.prototype.hide = function (options, callback) {
+    _resume.call(this);
     var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
     if (!item || item.state === ItemState.HIDING) {
         return this;
@@ -467,16 +584,69 @@ AnimationController.prototype.hide = function (options, callback) {
     _updateState.call(this);
     return this;
 };
-AnimationController.prototype.halt = function () {
+AnimationController.prototype.halt = function (stopAnimation, framePerc) {
+    var item;
     for (var i = 0; i < this._viewStack.length; i++) {
-        var item = this._viewStack[this._viewStack.length - 1];
-        if (item.state === ItemState.QUEUED || item.state === ItemState.SHOW) {
-            this._renderables.views.splice(this._viewStack.length - 1, 1);
-            this._viewStack.splice(this._viewStack.length - 1, 1);
-            item.view = undefined;
+        if (stopAnimation) {
+            item = this._viewStack[i];
+            switch (item.state) {
+            case ItemState.SHOW:
+            case ItemState.SHOWING:
+            case ItemState.HIDE:
+            case ItemState.HIDING:
+            case ItemState.VISIBLE:
+                _haltItemAtFrame(item, framePerc);
+                break;
+            }
         } else {
-            break;
+            item = this._viewStack[this._viewStack.length - 1];
+            if (item.state === ItemState.QUEUED || item.state === ItemState.SHOW) {
+                this._renderables.views.splice(this._viewStack.length - 1, 1);
+                this._viewStack.splice(this._viewStack.length - 1, 1);
+                item.view = undefined;
+            } else {
+                break;
+            }
         }
+    }
+    return this;
+};
+AnimationController.prototype.abort = function (callback) {
+    if (this._viewStack.length >= 2 && this._viewStack[0].state === ItemState.HIDING && this._viewStack[1].state === ItemState.SHOWING) {
+        var prevItem = this._viewStack[0];
+        var item = this._viewStack[1];
+        var swapSpec;
+        item.halted = true;
+        swapSpec = item.endSpec;
+        item.endSpec = item.startSpec;
+        item.startSpec = swapSpec;
+        item.state = ItemState.HIDING;
+        item.hideCallback = function () {
+            item.hideCallback = undefined;
+            var index = this._viewStack.indexOf(item);
+            this._renderables.views.splice(index, 1);
+            this._viewStack.splice(index, 1);
+            item.view = undefined;
+            _updateState.call(this);
+            this.layout.reflowLayout();
+        }.bind(this);
+        prevItem.halted = true;
+        swapSpec = prevItem.endSpec;
+        prevItem.endSpec = prevItem.startSpec;
+        prevItem.startSpec = swapSpec;
+        prevItem.state = ItemState.SHOWING;
+        prevItem.showCallback = function () {
+            prevItem.showCallback = undefined;
+            prevItem.state = ItemState.VISIBLE;
+            _updateState.call(this);
+            _endTransferableAnimations.call(this, prevItem);
+            prevItem.endSpec = undefined;
+            prevItem.startSpec = undefined;
+            if (callback) {
+                callback();
+            }
+        }.bind(this);
+        _resume.call(this);
     }
     return this;
 };
@@ -489,8 +659,10 @@ AnimationController.prototype.get = function () {
     }
     return undefined;
 };
+AnimationController.prototype.getSize = function () {
+    return this._size || this.options.size;
+};
 module.exports = AnimationController;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./LayoutController":5}],2:[function(require,module,exports){
 var LayoutUtility = require('./LayoutUtility');
 var ScrollController = require('./ScrollController');
@@ -900,15 +1072,14 @@ FlexScrollView.prototype.commit = function (context) {
 };
 module.exports = FlexScrollView;
 },{"./LayoutUtility":8,"./ScrollController":9,"./layouts/ListLayout":17}],3:[function(require,module,exports){
-(function (global){
-var OptionsManager = typeof window !== 'undefined' ? window.famous.core.OptionsManager : typeof global !== 'undefined' ? global.famous.core.OptionsManager : null;
-var Transform = typeof window !== 'undefined' ? window.famous.core.Transform : typeof global !== 'undefined' ? global.famous.core.Transform : null;
-var Vector = typeof window !== 'undefined' ? window.famous.math.Vector : typeof global !== 'undefined' ? global.famous.math.Vector : null;
-var Particle = typeof window !== 'undefined' ? window.famous.physics.bodies.Particle : typeof global !== 'undefined' ? global.famous.physics.bodies.Particle : null;
-var Spring = typeof window !== 'undefined' ? window.famous.physics.forces.Spring : typeof global !== 'undefined' ? global.famous.physics.forces.Spring : null;
-var PhysicsEngine = typeof window !== 'undefined' ? window.famous.physics.PhysicsEngine : typeof global !== 'undefined' ? global.famous.physics.PhysicsEngine : null;
+var OptionsManager = window.famous.core.OptionsManager;
+var Transform = window.famous.core.Transform;
+var Vector = window.famous.math.Vector;
+var Particle = window.famous.physics.bodies.Particle;
+var Spring = window.famous.physics.forces.Spring;
+var PhysicsEngine = window.famous.physics.PhysicsEngine;
 var LayoutNode = require('./LayoutNode');
-var Transitionable = typeof window !== 'undefined' ? window.famous.transitions.Transitionable : typeof global !== 'undefined' ? global.famous.transitions.Transitionable : null;
+var Transitionable = window.famous.transitions.Transitionable;
 function FlowLayoutNode(renderNode, spec) {
     LayoutNode.apply(this, arguments);
     if (!this.options) {
@@ -1342,7 +1513,6 @@ FlowLayoutNode.prototype.set = function (set, defaultSize) {
     }
 };
 module.exports = FlowLayoutNode;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./LayoutNode":6}],4:[function(require,module,exports){
 function LayoutContext(methods) {
     for (var n in methods) {
@@ -1366,17 +1536,16 @@ LayoutContext.prototype.resolveSize = function (node) {
 };
 module.exports = LayoutContext;
 },{}],5:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
-var Entity = typeof window !== 'undefined' ? window.famous.core.Entity : typeof global !== 'undefined' ? global.famous.core.Entity : null;
-var ViewSequence = typeof window !== 'undefined' ? window.famous.core.ViewSequence : typeof global !== 'undefined' ? global.famous.core.ViewSequence : null;
-var OptionsManager = typeof window !== 'undefined' ? window.famous.core.OptionsManager : typeof global !== 'undefined' ? global.famous.core.OptionsManager : null;
-var EventHandler = typeof window !== 'undefined' ? window.famous.core.EventHandler : typeof global !== 'undefined' ? global.famous.core.EventHandler : null;
+var Utility = window.famous.utilities.Utility;
+var Entity = window.famous.core.Entity;
+var ViewSequence = window.famous.core.ViewSequence;
+var OptionsManager = window.famous.core.OptionsManager;
+var EventHandler = window.famous.core.EventHandler;
 var LayoutUtility = require('./LayoutUtility');
 var LayoutNodeManager = require('./LayoutNodeManager');
 var LayoutNode = require('./LayoutNode');
 var FlowLayoutNode = require('./FlowLayoutNode');
-var Transform = typeof window !== 'undefined' ? window.famous.core.Transform : typeof global !== 'undefined' ? global.famous.core.Transform : null;
+var Transform = window.famous.core.Transform;
 require('./helpers/LayoutDockHelper');
 function LayoutController(options, nodeManager) {
     this.id = Entity.register(this);
@@ -1761,7 +1930,7 @@ function _getDataSourceArray() {
 }
 LayoutController.prototype.get = function (indexOrId) {
     if (this._nodesById || indexOrId instanceof String || typeof indexOrId === 'string') {
-        return this._nodesById[indexOrId];
+        return this._nodesById ? this._nodesById[indexOrId] : undefined;
     }
     var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
     return viewSequence ? viewSequence.get() : undefined;
@@ -2018,10 +2187,8 @@ LayoutController.prototype.cleanup = function (context) {
     }
 };
 module.exports = LayoutController;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./FlowLayoutNode":3,"./LayoutNode":6,"./LayoutNodeManager":7,"./LayoutUtility":8,"./helpers/LayoutDockHelper":11}],6:[function(require,module,exports){
-(function (global){
-var Transform = typeof window !== 'undefined' ? window.famous.core.Transform : typeof global !== 'undefined' ? global.famous.core.Transform : null;
+var Transform = window.famous.core.Transform;
 var LayoutUtility = require('./LayoutUtility');
 function LayoutNode(renderNode, spec) {
     this.renderNode = renderNode;
@@ -2178,10 +2345,11 @@ LayoutNode.prototype.remove = function (removeSpec) {
     this._removing = true;
 };
 module.exports = LayoutNode;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./LayoutUtility":8}],7:[function(require,module,exports){
 var LayoutContext = require('./LayoutContext');
 var LayoutUtility = require('./LayoutUtility');
+var Surface = window.famous.core.Surface;
+var RenderNode = window.famous.core.RenderNode;
 var MAX_POOL_SIZE = 100;
 function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
     this.LayoutNode = LayoutNode;
@@ -2287,6 +2455,8 @@ LayoutNodeManager.prototype.buildSpecAndDestroyUnrenderedNodes = function (trans
                 }
                 result.modified = true;
             }
+            spec.usesTrueSize = node.usesTrueSize;
+            spec.trueSizeRequested = node.trueSizeRequested;
             specs.push(spec);
             node = node._next;
         }
@@ -2584,6 +2754,32 @@ function _contextSet(contextNodeOrId, set) {
     }
     return set;
 }
+function _resolveConfigSize(renderNode) {
+    if (renderNode instanceof RenderNode) {
+        var result = null;
+        var target = renderNode.get();
+        if (target) {
+            result = _resolveConfigSize(target);
+            if (result) {
+                return result;
+            }
+        }
+        if (renderNode._child) {
+            return _resolveConfigSize(renderNode._child);
+        }
+    } else if (renderNode instanceof Surface) {
+        return renderNode.size ? {
+            renderNode: renderNode,
+            size: renderNode.size
+        } : undefined;
+    } else if (renderNode.options && renderNode.options.size) {
+        return {
+            renderNode: renderNode,
+            size: renderNode.options.size
+        };
+    }
+    return undefined;
+}
 function _contextResolveSize(contextNodeOrId, parentSize) {
     var contextNode = this._nodesById ? _contextGet.call(this, contextNodeOrId) : contextNodeOrId;
     var resolveSize = this._pool.resolveSize;
@@ -2597,46 +2793,45 @@ function _contextResolveSize(contextNodeOrId, parentSize) {
     if (!size) {
         return parentSize;
     }
-    var configSize = renderNode.size && renderNode._trueSizeCheck !== undefined ? renderNode.size : undefined;
-    if (configSize && (configSize[0] === true || configSize[1] === true)) {
+    var configSize = _resolveConfigSize(renderNode);
+    if (configSize && (configSize.size[0] === true || configSize.size[1] === true)) {
         contextNode.usesTrueSize = true;
-        var backupSize = renderNode._backupSize;
-        if (renderNode._contentDirty || renderNode._trueSizeCheck) {
-            this._trueSizeRequested = true;
-            contextNode.trueSizeRequested = true;
-        }
-        if (renderNode._trueSizeCheck) {
-            if (backupSize && configSize !== size) {
-                var newWidth = configSize[0] === true ? Math.max(backupSize[0], size[0]) : size[0];
-                var newHeight = configSize[1] === true ? Math.max(backupSize[1], size[1]) : size[1];
-                backupSize[0] = newWidth;
-                backupSize[1] = newHeight;
-                size = backupSize;
-                renderNode._backupSize = undefined;
-                backupSize = undefined;
+        if (configSize.renderNode instanceof Surface) {
+            var backupSize = configSize.renderNode._backupSize;
+            if (configSize.renderNode._contentDirty || configSize.renderNode._trueSizeCheck) {
+                this._trueSizeRequested = true;
+                contextNode.trueSizeRequested = true;
             }
-        }
-        if (this._reevalTrueSize || backupSize && (backupSize[0] !== size[0] || backupSize[1] !== size[1])) {
-            renderNode._trueSizeCheck = true;
-            renderNode._sizeDirty = true;
-            this._trueSizeRequested = true;
-        }
-        if (!backupSize) {
-            renderNode._backupSize = [
-                0,
-                0
-            ];
-            backupSize = renderNode._backupSize;
-        }
-        backupSize[0] = size[0];
-        backupSize[1] = size[1];
-    }
-    configSize = renderNode._nodes ? renderNode.options.size : undefined;
-    if (configSize && (configSize[0] === true || configSize[1] === true)) {
-        if (this._reevalTrueSize || renderNode._nodes._trueSizeRequested) {
-            contextNode.usesTrueSize = true;
-            contextNode.trueSizeRequested = true;
-            this._trueSizeRequested = true;
+            if (configSize.renderNode._trueSizeCheck) {
+                if (backupSize && configSize.size !== size) {
+                    var newWidth = configSize.size[0] === true ? Math.max(backupSize[0], size[0]) : size[0];
+                    var newHeight = configSize.size[1] === true ? Math.max(backupSize[1], size[1]) : size[1];
+                    backupSize[0] = newWidth;
+                    backupSize[1] = newHeight;
+                    size = backupSize;
+                    configSize.renderNode._backupSize = undefined;
+                    backupSize = undefined;
+                }
+            }
+            if (this._reevalTrueSize || backupSize && (backupSize[0] !== size[0] || backupSize[1] !== size[1])) {
+                configSize.renderNode._trueSizeCheck = true;
+                configSize.renderNode._sizeDirty = true;
+                this._trueSizeRequested = true;
+            }
+            if (!backupSize) {
+                configSize.renderNode._backupSize = [
+                    0,
+                    0
+                ];
+                backupSize = configSize.renderNode._backupSize;
+            }
+            backupSize[0] = size[0];
+            backupSize[1] = size[1];
+        } else if (configSize.renderNode._nodes) {
+            if (this._reevalTrueSize || configSize.renderNode._nodes._trueSizeRequested) {
+                contextNode.trueSizeRequested = true;
+                this._trueSizeRequested = true;
+            }
         }
     }
     if (size[0] === undefined || size[0] === true || size[1] === undefined || size[1] === true) {
@@ -2662,8 +2857,7 @@ function _contextResolveSize(contextNodeOrId, parentSize) {
 }
 module.exports = LayoutNodeManager;
 },{"./LayoutContext":4,"./LayoutUtility":8}],8:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 function LayoutUtility() {
 }
 LayoutUtility.registeredHelpers = {};
@@ -2837,25 +3031,23 @@ LayoutUtility.getRegisteredHelper = function (name) {
     return this.registeredHelpers[name];
 };
 module.exports = LayoutUtility;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],9:[function(require,module,exports){
-(function (global){
 var LayoutUtility = require('./LayoutUtility');
 var LayoutController = require('./LayoutController');
 var LayoutNode = require('./LayoutNode');
 var FlowLayoutNode = require('./FlowLayoutNode');
 var LayoutNodeManager = require('./LayoutNodeManager');
-var ContainerSurface = typeof window !== 'undefined' ? window.famous.surfaces.ContainerSurface : typeof global !== 'undefined' ? global.famous.surfaces.ContainerSurface : null;
-var Transform = typeof window !== 'undefined' ? window.famous.core.Transform : typeof global !== 'undefined' ? global.famous.core.Transform : null;
-var EventHandler = typeof window !== 'undefined' ? window.famous.core.EventHandler : typeof global !== 'undefined' ? global.famous.core.EventHandler : null;
-var Group = typeof window !== 'undefined' ? window.famous.core.Group : typeof global !== 'undefined' ? global.famous.core.Group : null;
-var Vector = typeof window !== 'undefined' ? window.famous.math.Vector : typeof global !== 'undefined' ? global.famous.math.Vector : null;
-var PhysicsEngine = typeof window !== 'undefined' ? window.famous.physics.PhysicsEngine : typeof global !== 'undefined' ? global.famous.physics.PhysicsEngine : null;
-var Particle = typeof window !== 'undefined' ? window.famous.physics.bodies.Particle : typeof global !== 'undefined' ? global.famous.physics.bodies.Particle : null;
-var Drag = typeof window !== 'undefined' ? window.famous.physics.forces.Drag : typeof global !== 'undefined' ? global.famous.physics.forces.Drag : null;
-var Spring = typeof window !== 'undefined' ? window.famous.physics.forces.Spring : typeof global !== 'undefined' ? global.famous.physics.forces.Spring : null;
-var ScrollSync = typeof window !== 'undefined' ? window.famous.inputs.ScrollSync : typeof global !== 'undefined' ? global.famous.inputs.ScrollSync : null;
-var ViewSequence = typeof window !== 'undefined' ? window.famous.core.ViewSequence : typeof global !== 'undefined' ? global.famous.core.ViewSequence : null;
+var ContainerSurface = window.famous.surfaces.ContainerSurface;
+var Transform = window.famous.core.Transform;
+var EventHandler = window.famous.core.EventHandler;
+var Group = window.famous.core.Group;
+var Vector = window.famous.math.Vector;
+var PhysicsEngine = window.famous.physics.PhysicsEngine;
+var Particle = window.famous.physics.bodies.Particle;
+var Drag = window.famous.physics.forces.Drag;
+var Spring = window.famous.physics.forces.Spring;
+var ScrollSync = window.famous.inputs.ScrollSync;
+var ViewSequence = window.famous.core.ViewSequence;
 var Bounds = {
         NONE: 0,
         PREV: 1,
@@ -2970,9 +3162,9 @@ ScrollController.DEFAULT_OPTIONS = {
     overscroll: true,
     paginated: false,
     paginationMode: PaginationMode.PAGE,
-    paginationEnergyThresshold: 0.01,
+    paginationEnergyThreshold: 0.01,
     alignment: 0,
-    touchMoveDirectionThresshold: undefined,
+    touchMoveDirectionThreshold: undefined,
     touchMoveNoVelocityDuration: 100,
     mouseMove: false,
     enabled: true,
@@ -2986,6 +3178,14 @@ ScrollController.DEFAULT_OPTIONS = {
 };
 ScrollController.prototype.setOptions = function (options) {
     LayoutController.prototype.setOptions.call(this, options);
+    if (options.hasOwnProperty('paginationEnergyThresshold')) {
+        console.warn('option `paginationEnergyThresshold` has been deprecated, please rename to `paginationEnergyThreshold`.');
+        this.setOptions({ paginationEnergyThreshold: options.paginationEnergyThresshold });
+    }
+    if (options.hasOwnProperty('touchMoveDirectionThresshold')) {
+        console.warn('option `touchMoveDirectionThresshold` has been deprecated, please rename to `touchMoveDirectionThreshold`.');
+        this.setOptions({ touchMoveDirectionThreshold: options.touchMoveDirectionThresshold });
+    }
     if (this._scroll) {
         if (options.scrollSpring) {
             this._scroll.springForce.setOptions(options.scrollSpring);
@@ -3056,7 +3256,7 @@ function _mouseMove(event) {
     }
     var moveDirection = Math.atan2(Math.abs(event.clientY - this._scroll.mouseMove.prev[1]), Math.abs(event.clientX - this._scroll.mouseMove.prev[0])) / (Math.PI / 2);
     var directionDiff = Math.abs(this._direction - moveDirection);
-    if (this.options.touchMoveDirectionThresshold === undefined || directionDiff <= this.options.touchMoveDirectionThresshold) {
+    if (this.options.touchMoveDirectionThreshold === undefined || directionDiff <= this.options.touchMoveDirectionThreshold) {
         this._scroll.mouseMove.prev = this._scroll.mouseMove.current;
         this._scroll.mouseMove.current = [
             event.clientX,
@@ -3153,7 +3353,7 @@ function _touchMove(event) {
             if (touch.id === changedTouch.identifier) {
                 var moveDirection = Math.atan2(Math.abs(changedTouch.clientY - touch.prev[1]), Math.abs(changedTouch.clientX - touch.prev[0])) / (Math.PI / 2);
                 var directionDiff = Math.abs(this._direction - moveDirection);
-                if (this.options.touchMoveDirectionThresshold === undefined || directionDiff <= this.options.touchMoveDirectionThresshold) {
+                if (this.options.touchMoveDirectionThreshold === undefined || directionDiff <= this.options.touchMoveDirectionThreshold) {
                     touch.prev = touch.current;
                     touch.current = [
                         changedTouch.clientX,
@@ -3444,7 +3644,7 @@ function _snapToPage() {
     var item;
     switch (this.options.paginationMode) {
     case PaginationMode.SCROLL:
-        if (!this.options.paginationEnergyThresshold || Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold) {
+        if (!this.options.paginationEnergyThreshold || Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThreshold) {
             item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
             if (item && item.renderNode) {
                 this.goToRenderNode(item.renderNode);
@@ -3662,7 +3862,7 @@ function _goToSequence(viewSequence, next, noAnimation) {
         this.halt();
         this._scroll.scrollDelta = 0;
         _setParticle.call(this, 0, 0, '_goToSequence');
-        this._isDirty = true;
+        this._scroll.scrollDirty = true;
     } else {
         this._scroll.scrollToSequence = viewSequence;
         this._scroll.scrollToRenderNode = viewSequence.get();
@@ -3903,7 +4103,7 @@ ScrollController.prototype.releaseScrollForce = function (delta, velocity) {
             if (item) {
                 if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                     this.goToRenderNode(item.renderNode);
-                } else if (this.options.paginationEnergyThresshold && Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold) {
+                } else if (this.options.paginationEnergyThreshold && Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold) {
                     velocity = velocity || 0;
                     if (velocity < 0 && item._node._next && item._node._next.renderNode) {
                         this.goToRenderNode(item._node._next.renderNode);
@@ -4143,10 +4343,8 @@ ScrollController.prototype.render = function render() {
     }
 };
 module.exports = ScrollController;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./FlowLayoutNode":3,"./LayoutController":5,"./LayoutNode":6,"./LayoutNodeManager":7,"./LayoutUtility":8}],10:[function(require,module,exports){
-(function (global){
-var EventHandler = typeof window !== 'undefined' ? window.famous.core.EventHandler : typeof global !== 'undefined' ? global.famous.core.EventHandler : null;
+var EventHandler = window.famous.core.EventHandler;
 function VirtualViewSequence(options) {
     options = options || {};
     this._ = options._ || new this.constructor.Backing(options);
@@ -4269,7 +4467,6 @@ VirtualViewSequence.prototype.swap = function () {
     }
 };
 module.exports = VirtualViewSequence;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],11:[function(require,module,exports){
 var LayoutUtility = require('../LayoutUtility');
 function LayoutDockHelper(context, options) {
@@ -4277,18 +4474,18 @@ function LayoutDockHelper(context, options) {
     this._size = size;
     this._context = context;
     this._options = options;
-    this._z = options && options.translateZ ? options.translateZ : 0;
+    this._data = { z: options && options.translateZ ? options.translateZ : 0 };
     if (options && options.margins) {
         var margins = LayoutUtility.normalizeMargins(options.margins);
-        this._left = margins[3];
-        this._top = margins[0];
-        this._right = size[0] - margins[1];
-        this._bottom = size[1] - margins[2];
+        this._data.left = margins[3];
+        this._data.top = margins[0];
+        this._data.right = size[0] - margins[1];
+        this._data.bottom = size[1] - margins[2];
     } else {
-        this._left = 0;
-        this._top = 0;
-        this._right = size[0];
-        this._bottom = size[1];
+        this._data.left = 0;
+        this._data.top = 0;
+        this._data.right = size[0];
+        this._data.bottom = size[1];
     }
 }
 LayoutDockHelper.prototype.parse = function (data) {
@@ -4316,14 +4513,14 @@ LayoutDockHelper.prototype.top = function (node, height, z) {
     }
     if (height === undefined) {
         var size = this._context.resolveSize(node, [
-                this._right - this._left,
-                this._bottom - this._top
+                this._data.right - this._data.left,
+                this._data.bottom - this._data.top
             ]);
         height = size[1];
     }
     this._context.set(node, {
         size: [
-            this._right - this._left,
+            this._data.right - this._data.left,
             height
         ],
         origin: [
@@ -4335,12 +4532,12 @@ LayoutDockHelper.prototype.top = function (node, height, z) {
             0
         ],
         translate: [
-            this._left,
-            this._top,
-            z === undefined ? this._z : z
+            this._data.left,
+            this._data.top,
+            z === undefined ? this._data.z : z
         ]
     });
-    this._top += height;
+    this._data.top += height;
     return this;
 };
 LayoutDockHelper.prototype.left = function (node, width, z) {
@@ -4349,15 +4546,15 @@ LayoutDockHelper.prototype.left = function (node, width, z) {
     }
     if (width === undefined) {
         var size = this._context.resolveSize(node, [
-                this._right - this._left,
-                this._bottom - this._top
+                this._data.right - this._data.left,
+                this._data.bottom - this._data.top
             ]);
         width = size[0];
     }
     this._context.set(node, {
         size: [
             width,
-            this._bottom - this._top
+            this._data.bottom - this._data.top
         ],
         origin: [
             0,
@@ -4368,12 +4565,12 @@ LayoutDockHelper.prototype.left = function (node, width, z) {
             0
         ],
         translate: [
-            this._left,
-            this._top,
-            z === undefined ? this._z : z
+            this._data.left,
+            this._data.top,
+            z === undefined ? this._data.z : z
         ]
     });
-    this._left += width;
+    this._data.left += width;
     return this;
 };
 LayoutDockHelper.prototype.bottom = function (node, height, z) {
@@ -4382,14 +4579,14 @@ LayoutDockHelper.prototype.bottom = function (node, height, z) {
     }
     if (height === undefined) {
         var size = this._context.resolveSize(node, [
-                this._right - this._left,
-                this._bottom - this._top
+                this._data.right - this._data.left,
+                this._data.bottom - this._data.top
             ]);
         height = size[1];
     }
     this._context.set(node, {
         size: [
-            this._right - this._left,
+            this._data.right - this._data.left,
             height
         ],
         origin: [
@@ -4401,12 +4598,12 @@ LayoutDockHelper.prototype.bottom = function (node, height, z) {
             1
         ],
         translate: [
-            this._left,
-            -(this._size[1] - this._bottom),
-            z === undefined ? this._z : z
+            this._data.left,
+            -(this._size[1] - this._data.bottom),
+            z === undefined ? this._data.z : z
         ]
     });
-    this._bottom -= height;
+    this._data.bottom -= height;
     return this;
 };
 LayoutDockHelper.prototype.right = function (node, width, z) {
@@ -4416,15 +4613,15 @@ LayoutDockHelper.prototype.right = function (node, width, z) {
     if (node) {
         if (width === undefined) {
             var size = this._context.resolveSize(node, [
-                    this._right - this._left,
-                    this._bottom - this._top
+                    this._data.right - this._data.left,
+                    this._data.bottom - this._data.top
                 ]);
             width = size[0];
         }
         this._context.set(node, {
             size: [
                 width,
-                this._bottom - this._top
+                this._data.bottom - this._data.top
             ],
             origin: [
                 1,
@@ -4435,44 +4632,46 @@ LayoutDockHelper.prototype.right = function (node, width, z) {
                 0
             ],
             translate: [
-                -(this._size[0] - this._right),
-                this._top,
-                z === undefined ? this._z : z
+                -(this._size[0] - this._data.right),
+                this._data.top,
+                z === undefined ? this._data.z : z
             ]
         });
     }
     if (width) {
-        this._right -= width;
+        this._data.right -= width;
     }
     return this;
 };
 LayoutDockHelper.prototype.fill = function (node, z) {
     this._context.set(node, {
         size: [
-            this._right - this._left,
-            this._bottom - this._top
+            this._data.right - this._data.left,
+            this._data.bottom - this._data.top
         ],
         translate: [
-            this._left,
-            this._top,
-            z === undefined ? this._z : z
+            this._data.left,
+            this._data.top,
+            z === undefined ? this._data.z : z
         ]
     });
     return this;
 };
 LayoutDockHelper.prototype.margins = function (margins) {
     margins = LayoutUtility.normalizeMargins(margins);
-    this._left += margins[3];
-    this._top += margins[0];
-    this._right -= margins[1];
-    this._bottom -= margins[2];
+    this._data.left += margins[3];
+    this._data.top += margins[0];
+    this._data.right -= margins[1];
+    this._data.bottom -= margins[2];
     return this;
+};
+LayoutDockHelper.prototype.get = function () {
+    return this._data;
 };
 LayoutUtility.registerHelper('dock', LayoutDockHelper);
 module.exports = LayoutDockHelper;
 },{"../LayoutUtility":8}],12:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var LayoutUtility = require('../LayoutUtility');
 var capabilities = {
         sequence: true,
@@ -4616,8 +4815,14 @@ function CollectionLayout(context_, options) {
             console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
         }
         itemSize = [
-            (size[0] - (margins[1] + margins[3] + spacing[0] * (options.cells[0] - 1))) / options.cells[0],
-            (size[1] - (margins[0] + margins[2] + spacing[1] * (options.cells[1] - 1))) / options.cells[1]
+            [
+                undefined,
+                true
+            ].indexOf(options.cells[0]) > -1 ? options.cells[0] : (size[0] - (margins[1] + margins[3] + spacing[0] * (options.cells[0] - 1))) / options.cells[0],
+            [
+                undefined,
+                true
+            ].indexOf(options.cells[1]) > -1 ? options.cells[1] : (size[1] - (margins[0] + margins[2] + spacing[1] * (options.cells[1] - 1))) / options.cells[1]
         ];
     } else if (!options.itemSize) {
         itemSize = [
@@ -4681,10 +4886,8 @@ CollectionLayout.Capabilities = capabilities;
 CollectionLayout.Name = 'CollectionLayout';
 CollectionLayout.Description = 'Multi-cell collection-layout with margins & spacing';
 module.exports = CollectionLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutUtility":8}],13:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var capabilities = {
         sequence: true,
         direction: [
@@ -4790,7 +4993,6 @@ function CoverLayout(context, options) {
 }
 CoverLayout.Capabilities = capabilities;
 module.exports = CoverLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],14:[function(require,module,exports){
 module.exports = function CubeLayout(context, options) {
     var itemSize = options.itemSize;
@@ -4877,8 +5079,7 @@ module.exports = function HeaderFooterLayout(context, options) {
     dock.fill('content');
 };
 },{"../helpers/LayoutDockHelper":11}],17:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var LayoutUtility = require('../LayoutUtility');
 var capabilities = {
         sequence: true,
@@ -5055,15 +5256,24 @@ ListLayout.Capabilities = capabilities;
 ListLayout.Name = 'ListLayout';
 ListLayout.Description = 'List-layout with margins, spacing and sticky headers';
 module.exports = ListLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutUtility":8}],18:[function(require,module,exports){
 var LayoutDockHelper = require('../helpers/LayoutDockHelper');
 module.exports = function NavBarLayout(context, options) {
     var dock = new LayoutDockHelper(context, {
             margins: options.margins,
-            translateZ: 1
+            translateZ: options.hasOwnProperty('zIncrement') ? options.zIncrement : 2
         });
     context.set('background', { size: context.size });
+    var backIcon = context.get('backIcon');
+    if (backIcon) {
+        dock.left(backIcon, options.backIconWidth);
+        dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+    }
+    var backItem = context.get('backItem');
+    if (backItem) {
+        dock.left(backItem, options.backItemWidth);
+        dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+    }
     var node;
     var i;
     var rightItems = context.get('rightItems');
@@ -5082,11 +5292,28 @@ module.exports = function NavBarLayout(context, options) {
             dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
         }
     }
-    dock.fill('title');
+    var title = context.get('title');
+    if (title) {
+        var titleSize = context.resolveSize(title, context.size);
+        var left = Math.max((context.size[0] - titleSize[0]) / 2, dock.get().left);
+        var right = Math.min((context.size[0] + titleSize[0]) / 2, dock.get().right);
+        left = Math.max(left, context.size[0] - right);
+        right = Math.min(right, context.size[0] - left);
+        context.set(title, {
+            size: [
+                right - left,
+                context.size[1]
+            ],
+            translate: [
+                left,
+                0,
+                dock.get().z
+            ]
+        });
+    }
 };
 },{"../helpers/LayoutDockHelper":11}],19:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var capabilities = {
         sequence: true,
         direction: [
@@ -5140,10 +5367,8 @@ function ProportionalLayout(context, options) {
 }
 ProportionalLayout.Capabilities = capabilities;
 module.exports = ProportionalLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],20:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var LayoutUtility = require('../LayoutUtility');
 var capabilities = {
         sequence: true,
@@ -5191,7 +5416,7 @@ function TabBarLayout(context, options) {
     items = context.get('items');
     spacers = context.get('spacers');
     margins = LayoutUtility.normalizeMargins(options.margins);
-    zIncrement = options.zIncrement || 0.001;
+    zIncrement = options.zIncrement || 2;
     set.size[0] = context.size[0];
     set.size[1] = context.size[1];
     set.size[revDirection] -= margins[1 - revDirection] + margins[3 - revDirection];
@@ -5260,10 +5485,8 @@ TabBarLayout.Capabilities = capabilities;
 TabBarLayout.Name = 'TabBarLayout';
 TabBarLayout.Description = 'TabBar widget layout';
 module.exports = TabBarLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutUtility":8}],21:[function(require,module,exports){
-(function (global){
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
+var Utility = window.famous.utilities.Utility;
 var capabilities = {
         sequence: true,
         direction: [
@@ -5371,13 +5594,11 @@ WheelLayout.Capabilities = capabilities;
 WheelLayout.Name = 'WheelLayout';
 WheelLayout.Description = 'Spinner-wheel/slot-machine layout';
 module.exports = WheelLayout;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],22:[function(require,module,exports){
-(function (global){
-var View = typeof window !== 'undefined' ? window.famous.core.View : typeof global !== 'undefined' ? global.famous.core.View : null;
-var Surface = typeof window !== 'undefined' ? window.famous.core.Surface : typeof global !== 'undefined' ? global.famous.core.Surface : null;
-var Utility = typeof window !== 'undefined' ? window.famous.utilities.Utility : typeof global !== 'undefined' ? global.famous.utilities.Utility : null;
-var ContainerSurface = typeof window !== 'undefined' ? window.famous.surfaces.ContainerSurface : typeof global !== 'undefined' ? global.famous.surfaces.ContainerSurface : null;
+var View = window.famous.core.View;
+var Surface = window.famous.core.Surface;
+var Utility = window.famous.utilities.Utility;
+var ContainerSurface = window.famous.surfaces.ContainerSurface;
 var LayoutController = require('../LayoutController');
 var ScrollController = require('../ScrollController');
 var WheelLayout = require('../layouts/WheelLayout');
@@ -5661,11 +5882,9 @@ function _createOverlay() {
     this.add(this.overlay);
 }
 module.exports = DatePicker;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutController":5,"../LayoutUtility":8,"../ScrollController":9,"../VirtualViewSequence":10,"../layouts/ProportionalLayout":19,"../layouts/WheelLayout":21,"./DatePickerComponents":23}],23:[function(require,module,exports){
-(function (global){
-var Surface = typeof window !== 'undefined' ? window.famous.core.Surface : typeof global !== 'undefined' ? global.famous.core.Surface : null;
-var EventHandler = typeof window !== 'undefined' ? window.famous.core.EventHandler : typeof global !== 'undefined' ? global.famous.core.EventHandler : null;
+var Surface = window.famous.core.Surface;
+var EventHandler = window.famous.core.EventHandler;
 function decimal1(date) {
     return '' + date[this.get]();
 }
@@ -5951,11 +6170,9 @@ module.exports = {
     Second: Second,
     Millisecond: Millisecond
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],24:[function(require,module,exports){
-(function (global){
-var Surface = typeof window !== 'undefined' ? window.famous.core.Surface : typeof global !== 'undefined' ? global.famous.core.Surface : null;
-var View = typeof window !== 'undefined' ? window.famous.core.View : typeof global !== 'undefined' ? global.famous.core.View : null;
+var Surface = window.famous.core.Surface;
+var View = window.famous.core.View;
 var LayoutController = require('../LayoutController');
 var TabBarLayout = require('../layouts/TabBarLayout');
 function TabBar(options) {
@@ -6115,15 +6332,13 @@ TabBar.prototype.getSize = function () {
     return this.options.size || (this.layout ? this.layout.getSize() : View.prototype.getSize.call(this));
 };
 module.exports = TabBar;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../LayoutController":5,"../layouts/TabBarLayout":20}],25:[function(require,module,exports){
-(function (global){
-var View = typeof window !== 'undefined' ? window.famous.core.View : typeof global !== 'undefined' ? global.famous.core.View : null;
+var View = window.famous.core.View;
 var AnimationController = require('../AnimationController');
 var TabBar = require('./TabBar');
 var LayoutDockHelper = require('../helpers/LayoutDockHelper');
 var LayoutController = require('../LayoutController');
-var Easing = typeof window !== 'undefined' ? window.famous.transitions.Easing : typeof global !== 'undefined' ? global.famous.transitions.Easing : null;
+var Easing = window.famous.transitions.Easing;
 function TabBarController(options) {
     View.apply(this, arguments);
     _createRenderables.call(this);
@@ -6245,7 +6460,6 @@ TabBarController.prototype.getSelectedItemIndex = function () {
     return this.tabBar.getSelectedItemIndex();
 };
 module.exports = TabBarController;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../AnimationController":1,"../LayoutController":5,"../helpers/LayoutDockHelper":11,"./TabBar":24}],26:[function(require,module,exports){
 if (typeof famousflex === 'undefined') {
     famousflex = {};

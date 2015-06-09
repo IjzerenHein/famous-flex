@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.2
-* @generated 07-05-2015
+* @version 0.3.3
+* @generated 09-06-2015
 */
 /**
  * This Source Code is licensed under the MIT license. If a copy of the
@@ -571,7 +571,7 @@ define('famous-flex/LayoutContext',['require','exports','module'],function(requi
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014 - 2015
+ * @copyright Gloey Apps, 2014/2015
  */
 
 /**
@@ -588,11 +588,13 @@ define('famous-flex/LayoutContext',['require','exports','module'],function(requi
  *
  * @module
  */
-define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutContext','./LayoutUtility'],function(require, exports, module) {
+define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutContext','./LayoutUtility','famous/core/Surface','famous/core/RenderNode'],function(require, exports, module) {
 
     // import dependencies
     var LayoutContext = require('./LayoutContext');
     var LayoutUtility = require('./LayoutUtility');
+    var Surface = require('famous/core/Surface');
+    var RenderNode = require('famous/core/RenderNode');
 
     var MAX_POOL_SIZE = 100;
 
@@ -768,6 +770,10 @@ define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutCo
                     result.modified = true;
                 }
 
+                // Set meta data
+                spec.usesTrueSize = node.usesTrueSize;
+                spec.trueSizeRequested = node.trueSizeRequested;
+
                 // Add node to result output
                 specs.push(spec);
                 node = node._next;
@@ -835,10 +841,10 @@ define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutCo
      */
     LayoutNodeManager.prototype.preallocateNodes = function(count, spec) {
         var nodes = [];
-        for (var i = 0; i < count ; i++) {
+        for (var i = 0; i < count; i++) {
             nodes.push(this.createNode(undefined, spec));
         }
-        for (i = 0; i < count ; i++) {
+        for (i = 0; i < count; i++) {
             _destroyNode.call(this, nodes[i]);
         }
     };
@@ -1221,7 +1227,40 @@ define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutCo
     }
 
     /**
-     * Resolve the size of the layout-node from the renderable itsself
+     * Helper function that recursively discovers the configured size for a
+     * given renderNode.
+     */
+    function _resolveConfigSize(renderNode) {
+        if (renderNode instanceof RenderNode) {
+            var result = null;
+            var target = renderNode.get();
+            if (target) {
+                result = _resolveConfigSize(target);
+                if (result) {
+                    return result;
+                }
+            }
+            if (renderNode._child) {
+                return _resolveConfigSize(renderNode._child);
+            }
+        }
+        else if (renderNode instanceof Surface) {
+            return renderNode.size ? {
+                renderNode: renderNode,
+                size: renderNode.size
+            } : undefined;
+        }
+        else if (renderNode.options && renderNode.options.size) {
+            return {
+                renderNode: renderNode,
+                size: renderNode.options.size
+            };
+        }
+        return undefined;
+    }
+
+    /**
+     * Resolve the size of the layout-node from the renderable itsself.
      */
     function _contextResolveSize(contextNodeOrId, parentSize) {
         var contextNode = this._nodesById ? _contextGet.call(this, contextNodeOrId) : contextNodeOrId;
@@ -1244,54 +1283,54 @@ define('famous-flex/LayoutNodeManager',['require','exports','module','./LayoutCo
         // It contains portions that ensure that the true-size of a Surface is re-evaluated
         // and also workaround code that backs up the size of a Surface, so that when the surface
         // is re-added to the DOM (e.g. when scrolling) it doesn't temporarily have a size of 0.
-        var configSize = renderNode.size && (renderNode._trueSizeCheck !== undefined) ? renderNode.size : undefined;
-        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
+        var configSize = _resolveConfigSize(renderNode);
+        if (configSize && ((configSize.size[0] === true) || (configSize.size[1] === true))) {
             contextNode.usesTrueSize = true;
-            var backupSize = renderNode._backupSize;
-            if (renderNode._contentDirty || renderNode._trueSizeCheck) {
-              this._trueSizeRequested = true;
-              contextNode.trueSizeRequested = true;
-            }
-            if (renderNode._trueSizeCheck) {
-
-                // Fix for true-size renderables. When true-size is used, the size
-                // is incorrect for one render-cycle due to the fact that Surface.commit
-                // updates the content after asking the DOM for the offsetHeight/offsetWidth.
-                // The code below backs the size up, and re-uses that when this scenario
-                // occurs.
-                if (backupSize && (configSize !== size)) {
-                    var newWidth = (configSize[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
-                    var newHeight = (configSize[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
-                    backupSize[0] = newWidth;
-                    backupSize[1] = newHeight;
-                    size = backupSize;
-                    renderNode._backupSize = undefined;
-                    backupSize = undefined;
+            if (configSize.renderNode instanceof Surface) {
+                var backupSize = configSize.renderNode._backupSize;
+                if (configSize.renderNode._contentDirty || configSize.renderNode._trueSizeCheck) {
+                  this._trueSizeRequested = true;
+                  contextNode.trueSizeRequested = true;
                 }
-            }
-            if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
-                renderNode._trueSizeCheck = true; // force request of true-size from DOM
-                renderNode._sizeDirty = true;
-                this._trueSizeRequested = true;
+                if (configSize.renderNode._trueSizeCheck) {
+
+                    // Fix for true-size renderables. When true-size is used, the size
+                    // is incorrect for one render-cycle due to the fact that Surface.commit
+                    // updates the content after asking the DOM for the offsetHeight/offsetWidth.
+                    // The code below backs the size up, and re-uses that when this scenario
+                    // occurs.
+                    if (backupSize && (configSize.size !== size)) {
+                        var newWidth = (configSize.size[0] === true) ? Math.max(backupSize[0], size[0]) : size[0];
+                        var newHeight = (configSize.size[1] === true) ? Math.max(backupSize[1], size[1]) : size[1];
+                        backupSize[0] = newWidth;
+                        backupSize[1] = newHeight;
+                        size = backupSize;
+                        configSize.renderNode._backupSize = undefined;
+                        backupSize = undefined;
+                    }
+                }
+                if (this._reevalTrueSize || (backupSize && ((backupSize[0] !== size[0]) || (backupSize[1] !== size[1])))) {
+                    configSize.renderNode._trueSizeCheck = true; // force request of true-size from DOM
+                    configSize.renderNode._sizeDirty = true;
+                    this._trueSizeRequested = true;
+                }
+
+                // Backup the size of the node
+                if (!backupSize) {
+                    configSize.renderNode._backupSize = [0, 0];
+                    backupSize = configSize.renderNode._backupSize;
+                }
+                backupSize[0] = size[0];
+                backupSize[1] = size[1];
             }
 
-            // Backup the size of the node
-            if (!backupSize) {
-                renderNode._backupSize = [0, 0];
-                backupSize = renderNode._backupSize;
-            }
-            backupSize[0] = size[0];
-            backupSize[1] = size[1];
-        }
-
-        // Ensure re-layout when a child layout-controller is using true-size and it
-        // has ben changed.
-        configSize = renderNode._nodes ? renderNode.options.size : undefined;
-        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
-            if (this._reevalTrueSize || renderNode._nodes._trueSizeRequested) {
-                contextNode.usesTrueSize = true;
-                contextNode.trueSizeRequested = true;
-                this._trueSizeRequested = true;
+            // Ensure re-layout when a child layout-controller is using true-size and it
+            // has ben changed.
+            else if (configSize.renderNode._nodes) {
+                if (this._reevalTrueSize || configSize.renderNode._nodes._trueSizeRequested) {
+                    contextNode.trueSizeRequested = true;
+                    this._trueSizeRequested = true;
+                }
             }
         }
 
@@ -2147,19 +2186,21 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
         this._size = size;
         this._context = context;
         this._options = options;
-        this._z = (options && options.translateZ) ? options.translateZ : 0;
+        this._data = {
+            z: (options && options.translateZ) ? options.translateZ : 0
+        };
         if (options && options.margins) {
             var margins = LayoutUtility.normalizeMargins(options.margins);
-            this._left = margins[3];
-            this._top = margins[0];
-            this._right = size[0] - margins[1];
-            this._bottom = size[1] - margins[2];
+            this._data.left = margins[3];
+            this._data.top = margins[0];
+            this._data.right = size[0] - margins[1];
+            this._data.bottom = size[1] - margins[2];
         }
         else {
-            this._left = 0;
-            this._top = 0;
-            this._right = size[0];
-            this._bottom = size[1];
+            this._data.left = 0;
+            this._data.top = 0;
+            this._data.right = size[0];
+            this._data.bottom = size[1];
         }
     }
 
@@ -2219,16 +2260,16 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
             height = height[1];
         }
         if (height === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             height = size[1];
         }
         this._context.set(node, {
-            size: [this._right - this._left, height],
+            size: [this._data.right - this._data.left, height],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
-        this._top += height;
+        this._data.top += height;
         return this;
     };
 
@@ -2245,16 +2286,16 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
             width = width[0];
         }
         if (width === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             width = size[0];
         }
         this._context.set(node, {
-            size: [width, this._bottom - this._top],
+            size: [width, this._data.bottom - this._data.top],
             origin: [0, 0],
             align: [0, 0],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
-        this._left += width;
+        this._data.left += width;
         return this;
     };
 
@@ -2271,16 +2312,16 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
             height = height[1];
         }
         if (height === undefined) {
-            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+            var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
             height = size[1];
         }
         this._context.set(node, {
-            size: [this._right - this._left, height],
+            size: [this._data.right - this._data.left, height],
             origin: [0, 1],
             align: [0, 1],
-            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+            translate: [this._data.left, -(this._size[1] - this._data.bottom), (z === undefined) ? this._data.z : z]
         });
-        this._bottom -= height;
+        this._data.bottom -= height;
         return this;
     };
 
@@ -2298,18 +2339,18 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
         }
         if (node) {
             if (width === undefined) {
-                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+                var size = this._context.resolveSize(node, [this._data.right - this._data.left, this._data.bottom - this._data.top]);
                 width = size[0];
             }
             this._context.set(node, {
-                size: [width, this._bottom - this._top],
+                size: [width, this._data.bottom - this._data.top],
                 origin: [1, 0],
                 align: [1, 0],
-                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+                translate: [-(this._size[0] - this._data.right), this._data.top, (z === undefined) ? this._data.z : z]
             });
         }
         if (width) {
-            this._right -= width;
+            this._data.right -= width;
         }
         return this;
     };
@@ -2323,8 +2364,8 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
      */
     LayoutDockHelper.prototype.fill = function(node, z) {
         this._context.set(node, {
-            size: [this._right - this._left, this._bottom - this._top],
-            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+            size: [this._data.right - this._data.left, this._data.bottom - this._data.top],
+            translate: [this._data.left, this._data.top, (z === undefined) ? this._data.z : z]
         });
         return this;
     };
@@ -2337,11 +2378,20 @@ define('famous-flex/helpers/LayoutDockHelper',['require','exports','module','../
      */
     LayoutDockHelper.prototype.margins = function(margins) {
         margins = LayoutUtility.normalizeMargins(margins);
-        this._left += margins[3];
-        this._top += margins[0];
-        this._right -= margins[1];
-        this._bottom -= margins[2];
+        this._data.left += margins[3];
+        this._data.top += margins[0];
+        this._data.right -= margins[1];
+        this._data.bottom -= margins[2];
         return this;
+    };
+
+    /**
+     * Gets the current left/right/top/bottom/z bounds used by the dock-helper.
+     *
+     * @return {Object} `{left: x, right: x, top: x, bottom: x, z: x}`
+     */
+    LayoutDockHelper.prototype.get = function() {
+        return this._data;
     };
 
     // Register the helper
@@ -3061,7 +3111,7 @@ define('famous-flex/LayoutController',['require','exports','module','famous/util
      */
     LayoutController.prototype.get = function(indexOrId) {
       if (this._nodesById || (indexOrId instanceof String) || (typeof indexOrId === 'string')) {
-        return this._nodesById[indexOrId];
+        return this._nodesById ? this._nodesById[indexOrId] : undefined;
       }
       var viewSequence = _getViewSequenceAtIndex.call(this, indexOrId);
       return viewSequence ? viewSequence.get() : undefined;
@@ -3481,6 +3531,9 @@ define('famous-flex/LayoutController',['require','exports','module','famous/util
  * @copyright Gloey Apps, 2014 - 2015
  */
 
+/*global console*/
+/*eslint no-console: 0*/
+
 /**
  * Scrollable layout-controller.
  *
@@ -3564,7 +3617,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
      * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
      * @param {String} [options.container] Options that are passed to the ContainerSurface in case `useContainer` is true.
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
-     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {Number} [options.paginationEnergyThreshold] Threshold after which pagination kicks in (default: `0.01`).
      * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
@@ -3701,9 +3754,9 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         overscroll: true,
         paginated: false,
         paginationMode: PaginationMode.PAGE,
-        paginationEnergyThresshold: 0.01,
+        paginationEnergyThreshold: 0.01,
         alignment: 0,         // [0: top/left, 1: bottom/right]
-        touchMoveDirectionThresshold: undefined, // 0..1
+        touchMoveDirectionThreshold: undefined, // 0..1
         touchMoveNoVelocityDuration: 100,
         mouseMove: false,
         enabled: true,          // set to false to disable scrolling
@@ -3718,7 +3771,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
      *
      * @param {Object} options Configurable options (see LayoutController for all inherited options).
      * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
-     * @param {Number} [options.paginationEnergyThresshold] Thresshold after which pagination kicks in (default: `0.01`).
+     * @param {Number} [options.paginationEnergyThreshold] Threshold after which pagination kicks in (default: `0.01`).
      * @param {PaginationMode} [options.paginationMode] Pagination-mode (either page-based or scroll-based) (default: `PaginationMode.PAGE`).
      * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
      * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
@@ -3733,6 +3786,18 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
      */
     ScrollController.prototype.setOptions = function(options) {
         LayoutController.prototype.setOptions.call(this, options);
+        if (options.hasOwnProperty('paginationEnergyThresshold')) {
+            console.warn('option `paginationEnergyThresshold` has been deprecated, please rename to `paginationEnergyThreshold`.');
+            this.setOptions({
+                paginationEnergyThreshold: options.paginationEnergyThresshold
+            });
+        }
+        if (options.hasOwnProperty('touchMoveDirectionThresshold')) {
+            console.warn('option `touchMoveDirectionThresshold` has been deprecated, please rename to `touchMoveDirectionThreshold`.');
+            this.setOptions({
+                touchMoveDirectionThreshold: options.touchMoveDirectionThresshold
+            });
+        }
         if (this._scroll) {
             if (options.scrollSpring) {
                 this._scroll.springForce.setOptions(options.scrollSpring);
@@ -3865,7 +3930,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
             Math.abs(event.clientY - this._scroll.mouseMove.prev[1]),
             Math.abs(event.clientX - this._scroll.mouseMove.prev[0])) / (Math.PI / 2.0);
         var directionDiff = Math.abs(this._direction - moveDirection);
-        if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
+        if ((this.options.touchMoveDirectionThreshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThreshold)){
             this._scroll.mouseMove.prev = this._scroll.mouseMove.current;
             this._scroll.mouseMove.current = [event.clientX, event.clientY];
             this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
@@ -3995,7 +4060,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                         Math.abs(changedTouch.clientY - touch.prev[1]),
                         Math.abs(changedTouch.clientX - touch.prev[0])) / (Math.PI / 2.0);
                     var directionDiff = Math.abs(this._direction - moveDirection);
-                    if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)){
+                    if ((this.options.touchMoveDirectionThreshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThreshold)){
                         touch.prev = touch.current;
                         touch.current = [changedTouch.clientX, changedTouch.clientY];
                         touch.prevTime = touch.time;
@@ -4395,7 +4460,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         var item;
         switch (this.options.paginationMode) {
             case PaginationMode.SCROLL:
-                if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
+                if (!this.options.paginationEnergyThreshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThreshold)) {
                     item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
                     if (item && item.renderNode) {
                         this.goToRenderNode(item.renderNode);
@@ -4679,7 +4744,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
             this.halt();
             this._scroll.scrollDelta = 0;
             _setParticle.call(this, 0, 0, '_goToSequence');
-            this._isDirty = true;
+            this._scroll.scrollDirty = true;
         }
         else {
             this._scroll.scrollToSequence = viewSequence;
@@ -5113,7 +5178,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                     if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                         this.goToRenderNode(item.renderNode);
                     }
-                    else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+                    else if (this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
                         velocity = velocity || 0;
                         if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
                             this.goToRenderNode(item._node._next.renderNode);
@@ -6054,7 +6119,7 @@ define('famous-flex/FlexScrollView',['require','exports','module','./LayoutUtili
         var totalHeight;
 
         // Show/activate pull to refresh renderables
-        for (var i = 0; i < 2 ; i++) {
+        for (var i = 0; i < 2; i++) {
             var pullToRefresh = this._pullToRefresh[i];
             if (pullToRefresh) {
 
@@ -6686,6 +6751,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     var RenderNode = require('famous/core/RenderNode');
     var Timer = require('famous/utilities/Timer');
     var Easing = require('famous/transitions/Easing');
+    //var Transitionable = require('famous/animations/Transitionable');
 
     /**
      * @class
@@ -6709,6 +6775,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     function AnimationController(options) {
         View.apply(this, arguments);
 
+        this._size = [0, 0];
         _createLayout.call(this);
 
         if (options) {
@@ -6817,6 +6884,8 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             size: context.size,
             translate: [0, 0, 0]
         };
+        this._size[0] = context.size[0];
+        this._size[1] = context.size[1];
         var views = context.get('views');
         var transferables = context.get('transferables');
         for (var i = 0; i < Math.min(views.length, 2); i++) {
@@ -6866,7 +6935,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             dataSource: this._renderables
         });
         this.add(this.layout);
-        this.layout.on('layoutend', _startAnimations.bind(this));
+        this.layout.on('layoutend', _processAnimations.bind(this));
     }
 
     /**
@@ -6877,7 +6946,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             return;
         }
         var spec = view.getSpec(id);
-        if (spec) {
+        if (spec && !spec.trueSizeRequested) {
             callback(spec);
         }
         else {
@@ -6917,12 +6986,24 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * Begins visual transfer or renderables from the previous item
      * to the new item.
      */
-    function _startTransferableAnimations(item, prevItem) {
+    function _initTransferableAnimations(item, prevItem, callback) {
+        var callbackCount = 0;
+        function waitForAll() {
+            callbackCount--;
+            if (callbackCount === 0) {
+                callback();
+            }
+        }
         for (var sourceId in item.options.transfer.items) {
-            _startTransferableAnimation.call(this, item, prevItem, sourceId);
+            if (_initTransferableAnimation.call(this, item, prevItem, sourceId, waitForAll)) {
+                callbackCount++;
+            }
+        }
+        if (!callbackCount) {
+            callback();
         }
     }
-    function _startTransferableAnimation(item, prevItem, sourceId) {
+    function _initTransferableAnimation(item, prevItem, sourceId, callback) {
         var target = item.options.transfer.items[sourceId];
         var transferable = {};
         transferable.source = _getTransferable.call(this, prevItem, prevItem.view, sourceId);
@@ -6943,6 +7024,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 // Replace source & target renderables in the views
                 // source: dummy-node
                 // target: target-renderable with opacity: 0.
+                transferable.sourceSpec = sourceSpec;
                 transferable.originalSource = transferable.source.get();
                 transferable.source.show(new RenderNode(new Modifier(sourceSpec)));
                 transferable.originalTarget = transferable.target.get();
@@ -6955,9 +7037,9 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 var zIndexMod = new Modifier({
                     transform: Transform.translate(0, 0, item.options.transfer.zIndex)
                 });
-                var mod = new StateModifier(sourceSpec);
+                transferable.mod = new StateModifier(sourceSpec);
                 transferable.renderNode = new RenderNode(zIndexMod);
-                transferable.renderNode.add(mod).add(transferable.originalSource);
+                transferable.renderNode.add(transferable.mod).add(transferable.originalSource);
                 item.transferables.push(transferable);
                 this._renderables.transferables.push(transferable.renderNode);
                 this.layout.reflowLayout();
@@ -6966,31 +7048,52 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 // cycles if for instance, this involves a true-size renderable or the
                 // renderable is affected by other true-size renderables around itsself.
                 Timer.after(function() {
+                    var callbackCalled;
                     transferable.target.getSpec(function(targetSpec, transition) {
-                        mod.halt();
-                        if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
-                            mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition|| item.options.transfer.transition);
-                        }
-                        if (item.options.transfer.fastResize) {
-                            if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
-                                var transform = targetSpec.transform || Transform.identity;
-                                if (sourceSpec.size && targetSpec.size) {
-                                    transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
-                                }
-                                mod.setTransform(transform, transition || item.options.transfer.transition);
-                            }
-                        }
-                        else {
-                            if (sourceSpec.transform || targetSpec.transform) {
-                                mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
-                            }
-                            if (sourceSpec.size || targetSpec.size) {
-                                mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
-                            }
+                        transferable.targetSpec = targetSpec;
+                        transferable.transition = transition;
+                        if (!callbackCalled) {
+                            callback();
                         }
                     }, true);
                 }, 1);
             }.bind(this), false);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    function _startTransferableAnimations(item, callback) {
+        for (var j = 0; j < item.transferables.length; j++) {
+            var transferable = item.transferables[j];
+            transferable.mod.halt();
+            if ((transferable.sourceSpec.opacity !== undefined) || (transferable.targetSpec.opacity !== undefined)) {
+                transferable.mod.setOpacity((transferable.targetSpec.opacity === undefined) ? 1 : transferable.targetSpec.opacity, transferable.transition || item.options.transfer.transition);
+            }
+            if (item.options.transfer.fastResize) {
+                if (transferable.sourceSpec.transform || transferable.targetSpec.transform || transferable.sourceSpec.size || transferable.targetSpec.size) {
+                    var transform = transferable.targetSpec.transform || Transform.identity;
+                    if (transferable.sourceSpec.size && transferable.targetSpec.size) {
+                        transform = Transform.multiply(transform, Transform.scale(transferable.targetSpec.size[0] / transferable.sourceSpec.size[0], transferable.targetSpec.size[1] / transferable.sourceSpec.size[1], 1));
+                    }
+                    transferable.mod.setTransform(transform, transferable.transition || item.options.transfer.transition, callback);
+                    callback = undefined;
+                }
+            }
+            else {
+                if (transferable.sourceSpec.transform || transferable.targetSpec.transform) {
+                    transferable.mod.setTransform(transferable.targetSpec.transform || Transform.identity, transferable.transition || item.options.transfer.transition, callback);
+                    callback = undefined;
+                }
+                if (transferable.sourceSpec.size || transferable.targetSpec.size) {
+                    transferable.mod.setSize(transferable.targetSpec.size || transferable.sourceSpec.size, transferable.transition || item.options.transfer.transition, callback);
+                    callback = undefined;
+                }
+            }
+        }
+        if (callback) {
+            callback();
         }
     }
 
@@ -7018,19 +7121,19 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     /**
      * Starts a show or hide animation.
      */
-    function _startAnimations(event) {
+    function _processAnimations(event) {
         var prevItem;
         for (var i = 0; i < this._viewStack.length; i++) {
             var item = this._viewStack[i];
             switch (item.state) {
                 case ItemState.HIDE:
                     item.state = ItemState.HIDING;
-                    _startAnimation.call(this, item, prevItem, event.size, false);
+                    _startHideAnimation.call(this, item, prevItem, event.size);
                     _updateState.call(this);
                     break;
                 case ItemState.SHOW:
                     item.state = ItemState.SHOWING;
-                    _startAnimation.call(this, item, prevItem, event.size, true);
+                    _initShowAnimation.call(this, item, prevItem, event.size);
                     _updateState.call(this);
                     break;
             }
@@ -7041,38 +7144,93 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     /**
      * Starts the view animation.
      */
-    function _startAnimation(item, prevItem, size, show) {
-        var animation = show ? item.options.show.animation : item.options.hide.animation;
-        var spec = animation ? animation.call(undefined, show, size) : {};
+    function _initShowAnimation(item, prevItem, size) {
+        var spec = item.options.show.animation ? item.options.show.animation.call(undefined, true, size) : {};
+        item.startSpec = spec;
+        item.endSpec = {
+            opacity: 1,
+            transform: Transform.identity
+        };
         item.mod.halt();
-        var callback;
-        if (show) {
-            callback = item.showCallback;
+        if (spec.transform) {
+            item.mod.setTransform(spec.transform);
+        }
+        if (spec.opacity !== undefined) {
+            item.mod.setOpacity(spec.opacity);
+        }
+        if (spec.align) {
+            item.mod.setAlign(spec.align);
+        }
+        if (spec.origin) {
+            item.mod.setOrigin(spec.origin);
+        }
+        if (prevItem) {
+            _initTransferableAnimations.call(this, item, prevItem, _startShowAnimation.bind(this, item, spec));
+        }
+        else {
+            _startShowAnimation.call(this, item, spec);
+        }
+    }
+
+    /**
+     * Starts the show animation whenever init has completed.
+     */
+    function _startShowAnimation(item, spec) {
+        if (!item.halted) {
+            var callback = item.showCallback;
             if (spec.transform) {
-                item.mod.setTransform(spec.transform);
                 item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
                 callback = undefined;
             }
             if (spec.opacity !== undefined) {
-                item.mod.setOpacity(spec.opacity);
                 item.mod.setOpacity(1, item.options.show.transition, callback);
                 callback = undefined;
             }
-            if (spec.align) {
-                item.mod.setAlign(spec.align);
+            _startTransferableAnimations.call(this, item, callback);
+        }
+    }
+
+    /**
+     * Helper function for interpolating between start/end state based on percentage.
+     */
+    function _interpolate(start, end, perc) {
+        return start + ((end - start) * perc);
+    }
+
+    /**
+     * Halts a item at a given frame. The frame is provided as a percentage
+     * of the whole transition.
+     */
+    function _haltItemAtFrame(item, perc) {
+        item.mod.halt();
+        item.halted = true;
+        if (item.startSpec && (perc !== undefined)) {
+            if ((item.startSpec.opacity !== undefined) && (item.endSpec.opacity !== undefined)) {
+                item.mod.setOpacity(_interpolate(item.startSpec.opacity, item.endSpec.opacity, perc));
             }
-            if (spec.origin) {
-                item.mod.setOrigin(spec.origin);
-            }
-            if (prevItem) {
-                _startTransferableAnimations.call(this, item, prevItem);
-            }
-            if (callback) {
-                callback();
+            if (item.startSpec.transform && item.endSpec.transform) {
+                var transform = [];
+                for (var i = 0; i < item.startSpec.transform.length; i++) {
+                    transform.push(_interpolate(item.startSpec.transform[i], item.endSpec.transform[i], perc));
+                }
+                item.mod.setTransform(transform);
             }
         }
-        else {
-            callback = item.hideCallback;
+    }
+
+    /**
+     * Starts the hide animation.
+     */
+    function _startHideAnimation(item, prevItem, size) {
+        var spec = item.options.hide.animation ? item.options.hide.animation.call(undefined, false, size) : {};
+        item.endSpec = spec;
+        item.startSpec = {
+            opacity: 1,
+            transform: Transform.identity
+        };
+        if (!item.halted) {
+            item.mod.halt();
+            var callback = item.hideCallback;
             if (spec.transform) {
                 item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
                 callback = undefined;
@@ -7156,6 +7314,39 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         }
     }
 
+    function _resume() {
+        for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+            var item = this._viewStack[i];
+            if (item.halted) {
+                item.halted = false;
+                if (item.endSpec) {
+                    var callback;
+                    switch (item.state) {
+                        case ItemState.HIDE:
+                        case ItemState.HIDING:
+                            callback = item.hideCallback;
+                            break;
+                        case ItemState.SHOW:
+                        case ItemState.SHOWING:
+                            callback = item.showCallback;
+                            break;
+                    }
+                    item.mod.halt();
+                    if (item.endSpec.transform) {
+                        item.mod.setTransform(item.endSpec.transform, item.options.show.transition, callback);
+                        callback = undefined;
+                    }
+                    if (item.endSpec.opacity !== undefined) {
+                        item.mod.setOpacity(item.endSpec.opacity, item.options.show.transition, callback);
+                    }
+                    if (callback) {
+                        callback();
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Shows a renderable using an animation and hides the old renderable.
      *
@@ -7181,6 +7372,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * @return {AnimationController} this
      */
     AnimationController.prototype.show = function(renderable, options, callback) {
+        _resume.call(this, renderable);
         if (!renderable) {
             return this.hide(options, callback);
         }
@@ -7191,6 +7383,9 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 item.state = ItemState.QUEUED;
                 _setItemOptions.call(this, item, options);
                 _updateState.call(this);
+            }
+            if (callback) {
+                callback();
             }
             return this;
         }
@@ -7203,7 +7398,6 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 item.options.hide.animation = options.animation;
             }
         }
-
         item = {
             view: renderable,
             mod: new StateModifier(),
@@ -7215,14 +7409,18 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         item.node.add(renderable);
         _setItemOptions.call(this, item, options);
         item.showCallback = function() {
+            item.showCallback = undefined;
             item.state = ItemState.VISIBLE;
             _updateState.call(this);
             _endTransferableAnimations.call(this, item);
+            item.endSpec = undefined;
+            item.startSpec = undefined;
             if (callback) {
                 callback();
             }
         }.bind(this);
         item.hideCallback = function() {
+            item.hideCallback = undefined;
             var index = this._viewStack.indexOf(item);
             this._renderables.views.splice(index, 1);
             this._viewStack.splice(index, 1);
@@ -7246,6 +7444,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * @return {AnimationController} this
      */
     AnimationController.prototype.hide = function(options, callback) {
+        _resume.call(this);
         var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
         if (!item || (item.state === ItemState.HIDING)) {
             return this;
@@ -7278,19 +7477,86 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     /**
      * Clears the queue of any pending show animations.
      *
+     * @param {Boolean} [stopAnimation] Freezes the current animation.
+     * @param {Number} [framePerc] Frame at which to freeze the animation (in percentage).
      * @return {AnimationController} this
      */
-    AnimationController.prototype.halt = function() {
+    AnimationController.prototype.halt = function(stopAnimation, framePerc) {
+        var item;
         for (var i = 0; i < this._viewStack.length; i++) {
-            var item = this._viewStack[this._viewStack.length - 1];
-            if ((item.state === ItemState.QUEUED) || (item.state === ItemState.SHOW)) {
-                this._renderables.views.splice(this._viewStack.length - 1, 1);
-                this._viewStack.splice(this._viewStack.length - 1, 1);
-                item.view = undefined;
+            if (stopAnimation) {
+                item = this._viewStack[i];
+                switch (item.state) {
+                    case ItemState.SHOW:
+                    case ItemState.SHOWING:
+                    case ItemState.HIDE:
+                    case ItemState.HIDING:
+                    case ItemState.VISIBLE:
+                        _haltItemAtFrame(item, framePerc);
+                        break;
+                }
             }
             else {
-                break;
+                item = this._viewStack[this._viewStack.length - 1];
+                if ((item.state === ItemState.QUEUED) || (item.state === ItemState.SHOW)) {
+                    this._renderables.views.splice(this._viewStack.length - 1, 1);
+                    this._viewStack.splice(this._viewStack.length - 1, 1);
+                    item.view = undefined;
+                }
+                else {
+                    break;
+                }
             }
+        }
+        return this;
+    };
+
+    /**
+     * Aborts the currently active show or hide operation, effectively
+     * reversing the animation.
+     *
+     * @param {Function} [callback] Function that is called on completion.
+     * @return {AnimationController} this
+     */
+    AnimationController.prototype.abort = function(callback) {
+        if ((this._viewStack.length >= 2) && (this._viewStack[0].state === ItemState.HIDING) && (this._viewStack[1].state === ItemState.SHOWING)) {
+            var prevItem = this._viewStack[0];
+            var item = this._viewStack[1];
+            var swapSpec;
+
+            item.halted = true;
+            swapSpec = item.endSpec;
+            item.endSpec = item.startSpec;
+            item.startSpec = swapSpec;
+            item.state = ItemState.HIDING;
+            item.hideCallback = function() {
+                item.hideCallback = undefined;
+                var index = this._viewStack.indexOf(item);
+                this._renderables.views.splice(index, 1);
+                this._viewStack.splice(index, 1);
+                item.view = undefined;
+                _updateState.call(this);
+                this.layout.reflowLayout();
+            }.bind(this);
+
+            prevItem.halted = true;
+            swapSpec = prevItem.endSpec;
+            prevItem.endSpec = prevItem.startSpec;
+            prevItem.startSpec = swapSpec;
+            prevItem.state = ItemState.SHOWING;
+            prevItem.showCallback = function() {
+                prevItem.showCallback = undefined;
+                prevItem.state = ItemState.VISIBLE;
+                _updateState.call(this);
+                _endTransferableAnimations.call(this, prevItem);
+                prevItem.endSpec = undefined;
+                prevItem.startSpec = undefined;
+                if (callback) {
+                    callback();
+                }
+            }.bind(this);
+
+            _resume.call(this);
         }
         return this;
     };
@@ -7310,6 +7576,15 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             }
         }
         return undefined;
+    };
+
+    /**
+     * Gets the size of the view.
+     *
+     * @return {Array.Number} size
+     */
+    AnimationController.prototype.getSize = function() {
+        return this._size || this.options.size;
     };
 
     module.exports = AnimationController;
@@ -8366,7 +8641,7 @@ define('famous-flex/widgets/DatePicker',['require','exports','module','famous/co
  * |---|---|---|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number|Space in between items|
- * |`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 0.001)|
+ * |`[zIncrement]`|Number|Z-translation increment used to stack the elements correctly (default: 2)|
  * |`[itemSize]`|Number/Bool|Width or height of the item (see below)|
  *
  * `itemSize` can have of the following values:
@@ -8451,7 +8726,7 @@ define('famous-flex/layouts/TabBarLayout',['require','exports','module','famous/
         items = context.get('items');
         spacers = context.get('spacers');
         margins = LayoutUtility.normalizeMargins(options.margins);
-        zIncrement = options.zIncrement || 0.001;
+        zIncrement = options.zIncrement || 2;
         set.size[0] = context.size[0];
         set.size[1] = context.size[1];
         set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
@@ -9121,11 +9396,8 @@ define('famous-flex/widgets/TabBarController',['require','exports','module','fam
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2014 - 2015
  */
-
-/*global console*/
-/*eslint no-console: 0*/
 
 /**
  * Lays a collection of renderables from left to right or top to bottom, and when the right/bottom edge is reached,
@@ -9134,7 +9406,7 @@ define('famous-flex/widgets/TabBarController',['require','exports','module','fam
  * |options|type|description|
  * |---|---|---|
  * |`[itemSize]`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
- * |`[cells]`|Array.Number|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
+ * |`[cells]`|Array.[Number,true,undefined]|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number/Array|Spacing between items (e.g. 5, [10, 10])|
  * |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|
@@ -9310,8 +9582,8 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         direction = context.direction;
         alignment = context.alignment;
         lineDirection = (direction + 1) % 2;
-        if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) {
-            console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
+        if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) { //eslint-disable-line no-console
+            console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead'); //eslint-disable-line no-console
         }
         if (options.gutter && !options.margins && !options.spacing) {
             var gutter = Array.isArray(options.gutter) ? options.gutter : [options.gutter, options.gutter];
@@ -9336,12 +9608,12 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         // Prepare item-size
         //
         if (options.cells) {
-            if (options.itemSize && console.warn && !options.suppressWarnings) {
-                console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
+            if (options.itemSize && console.warn && !options.suppressWarnings) { //eslint-disable-line no-console
+                console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two'); //eslint-disable-line no-console
             }
             itemSize = [
-                (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
-                (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
+                ([undefined, true].indexOf(options.cells[0]) >-1) ? options.cells[0] : (size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0],
+                ([undefined, true].indexOf(options.cells[1]) >-1) ? options.cells[1] : (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]
             ];
         }
         else if (!options.itemSize) {
@@ -9732,6 +10004,7 @@ define('famous-flex/layouts/HeaderFooterLayout',['require','exports','module','.
  * |options|type|description|
  * |---|---|---|
  * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
+ * |`[zIncrement]`|Z-translation increment used to stack the elements correctly (default: 2)|
  * |`[itemWidth]`|Number|Width of the left & right items|
  * |`[leftItemWidth]`|Number|Width of the left items|
  * |`[rightItemWidth]`|Number|Width of the right items|
@@ -9781,11 +10054,23 @@ define('famous-flex/layouts/NavBarLayout',['require','exports','module','../help
     module.exports = function NavBarLayout(context, options) {
         var dock = new LayoutDockHelper(context, {
             margins: options.margins,
-            translateZ: 1
+            translateZ: options.hasOwnProperty('zIncrement') ? options.zIncrement : 2
         });
 
         // Position background
         context.set('background', {size: context.size});
+
+        // Position back-button
+        var backIcon = context.get('backIcon');
+        if (backIcon) {
+            dock.left(backIcon, options.backIconWidth);
+            dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+        }
+        var backItem = context.get('backItem');
+        if (backItem) {
+            dock.left(backItem, options.backItemWidth);
+            dock.left(undefined, options.leftItemSpacer || options.itemSpacer);
+        }
 
         // Position right items
         var node;
@@ -9801,7 +10086,7 @@ define('famous-flex/layouts/NavBarLayout',['require','exports','module','../help
             }
         }
 
-        // Position left item
+        // Position left items
         var leftItems = context.get('leftItems');
         if (leftItems) {
             for (i = 0; i < leftItems.length; i++) {
@@ -9814,7 +10099,18 @@ define('famous-flex/layouts/NavBarLayout',['require','exports','module','../help
         }
 
         // Position title
-        dock.fill('title');
+        var title = context.get('title');
+        if (title) {
+            var titleSize = context.resolveSize(title, context.size);
+            var left = Math.max((context.size[0] - titleSize[0]) / 2, dock.get().left);
+            var right = Math.min((context.size[0] + titleSize[0]) / 2, dock.get().right);
+            left = Math.max(left, context.size[0] - right);
+            right = Math.min(right, context.size[0] - left);
+            context.set(title, {
+                size: [right - left, context.size[1]],
+                translate: [left, 0, dock.get().z]
+            });
+        }
     };
 });
 
