@@ -7,12 +7,12 @@ Animating between famo.us views in awesome ways.
   * [AnimationController](#exp_module_AnimationController--AnimationController) ⏏
     * [new AnimationController([options])](#new_module_AnimationController--AnimationController_new)
     * _instance_
-      * [.show(renderable, [options], [callback])](#module_AnimationController--AnimationController#show) ⇒ <code>AnimationController</code>
-      * [.hide([options], [callback])](#module_AnimationController--AnimationController#hide) ⇒ <code>AnimationController</code>
-      * [.halt([stopAnimation], [framePerc])](#module_AnimationController--AnimationController#halt) ⇒ <code>AnimationController</code>
-      * [.abort([callback])](#module_AnimationController--AnimationController#abort) ⇒ <code>AnimationController</code>
-      * [.get()](#module_AnimationController--AnimationController#get) ⇒ <code>Renderable</code>
-      * [.getSize()](#module_AnimationController--AnimationController#getSize) ⇒ <code>Array.Number</code>
+      * [.show(renderable, [options], [callback])](#module_AnimationController--AnimationController+show) ⇒ <code>AnimationController</code>
+      * [.hide([options], [callback])](#module_AnimationController--AnimationController+hide) ⇒ <code>AnimationController</code>
+      * [.halt([stopAnimation], [framePerc])](#module_AnimationController--AnimationController+halt) ⇒ <code>AnimationController</code>
+      * [.abort([callback])](#module_AnimationController--AnimationController+abort) ⇒ <code>AnimationController</code>
+      * [.get()](#module_AnimationController--AnimationController+get) ⇒ <code>Renderable</code>
+      * [.getSize()](#module_AnimationController--AnimationController+getSize) ⇒ <code>Array.Number</code>
     * _static_
       * [.Animation](#module_AnimationController--AnimationController.Animation)
 
@@ -40,7 +40,7 @@ Animating between famo.us views in awesome ways.
 | [options.transfer.fastResize] | <code>Bool</code> | When enabled, scales the renderable i.s.o. resizing when doing the transfer animation (default: true). |
 | [options.transfer.items] | <code>Array</code> | Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred. |
 
-<a name="module_AnimationController--AnimationController#show"></a>
+<a name="module_AnimationController--AnimationController+show"></a>
 #### animationController.show(renderable, [options], [callback]) ⇒ <code>AnimationController</code>
 Shows a renderable using an animation and hides the old renderable.
 
@@ -69,7 +69,7 @@ operations from the queue.
 | [options.transfer.items] | <code>Array</code> | Ids (key/value) pairs (source-id/target-id) of the renderables that should be transferred. |
 | [callback] | <code>function</code> | Function that is called on completion. |
 
-<a name="module_AnimationController--AnimationController#hide"></a>
+<a name="module_AnimationController--AnimationController+hide"></a>
 #### animationController.hide([options], [callback]) ⇒ <code>AnimationController</code>
 Hides the current view with an animation.
 
@@ -83,7 +83,7 @@ Hides the current view with an animation.
 | [options.animation] | <code>function</code> | Hide animation function. |
 | [callback] | <code>function</code> | Function that is called an completion. |
 
-<a name="module_AnimationController--AnimationController#halt"></a>
+<a name="module_AnimationController--AnimationController+halt"></a>
 #### animationController.halt([stopAnimation], [framePerc]) ⇒ <code>AnimationController</code>
 Clears the queue of any pending show animations.
 
@@ -95,7 +95,7 @@ Clears the queue of any pending show animations.
 | [stopAnimation] | <code>Boolean</code> | Freezes the current animation. |
 | [framePerc] | <code>Number</code> | Frame at which to freeze the animation (in percentage). |
 
-<a name="module_AnimationController--AnimationController#abort"></a>
+<a name="module_AnimationController--AnimationController+abort"></a>
 #### animationController.abort([callback]) ⇒ <code>AnimationController</code>
 Aborts the currently active show or hide operation, effectively
 reversing the animation.
@@ -107,13 +107,13 @@ reversing the animation.
 | --- | --- | --- |
 | [callback] | <code>function</code> | Function that is called on completion. |
 
-<a name="module_AnimationController--AnimationController#get"></a>
+<a name="module_AnimationController--AnimationController+get"></a>
 #### animationController.get() ⇒ <code>Renderable</code>
 Gets the currently visible or being shown renderable.
 
 **Kind**: instance method of <code>[AnimationController](#exp_module_AnimationController--AnimationController)</code>  
 **Returns**: <code>Renderable</code> - currently visible view/surface  
-<a name="module_AnimationController--AnimationController#getSize"></a>
+<a name="module_AnimationController--AnimationController+getSize"></a>
 #### animationController.getSize() ⇒ <code>Array.Number</code>
 Gets the size of the view.
 

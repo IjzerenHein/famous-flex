@@ -19,16 +19,16 @@ Inherited from: [ScrollController](./ScrollController.md)
 * [FlexScrollView](#module_FlexScrollView)
   * [FlexScrollView](#exp_module_FlexScrollView--FlexScrollView) ⇐ <code>ScrollController</code> ⏏
     * [new FlexScrollView(options)](#new_module_FlexScrollView--FlexScrollView_new)
-    * ~~[.getPosition](#module_FlexScrollView--FlexScrollView#getPosition) ⇒ <code>number</code>~~
-    * [.setOptions(options)](#module_FlexScrollView--FlexScrollView#setOptions) ⇒ <code>FlexScrollView</code>
-    * [.sequenceFrom(node)](#module_FlexScrollView--FlexScrollView#sequenceFrom) ⇒ <code>FlexScrollView</code>
-    * [.getCurrentIndex()](#module_FlexScrollView--FlexScrollView#getCurrentIndex) ⇒ <code>Number</code>
-    * [.goToPage(index, [noAnimation])](#module_FlexScrollView--FlexScrollView#goToPage) ⇒ <code>FlexScrollView</code>
-    * [.getOffset()](#module_FlexScrollView--FlexScrollView#getOffset) ⇒ <code>number</code>
-    * [.getAbsolutePosition()](#module_FlexScrollView--FlexScrollView#getAbsolutePosition) ⇒ <code>number</code>
-    * [.showPullToRefresh([footer])](#module_FlexScrollView--FlexScrollView#showPullToRefresh) ⇒ <code>FlexScrollView</code>
-    * [.hidePullToRefresh([footer])](#module_FlexScrollView--FlexScrollView#hidePullToRefresh) ⇒ <code>FlexScrollView</code>
-    * [.isPullToRefreshVisible([footer])](#module_FlexScrollView--FlexScrollView#isPullToRefreshVisible)
+    * ~~[.getPosition](#module_FlexScrollView--FlexScrollView+getPosition) ⇒ <code>number</code>~~
+    * [.setOptions(options)](#module_FlexScrollView--FlexScrollView+setOptions) ⇒ <code>FlexScrollView</code>
+    * [.sequenceFrom(node)](#module_FlexScrollView--FlexScrollView+sequenceFrom) ⇒ <code>FlexScrollView</code>
+    * [.getCurrentIndex()](#module_FlexScrollView--FlexScrollView+getCurrentIndex) ⇒ <code>Number</code>
+    * [.goToPage(index, [noAnimation])](#module_FlexScrollView--FlexScrollView+goToPage) ⇒ <code>FlexScrollView</code>
+    * [.getOffset()](#module_FlexScrollView--FlexScrollView+getOffset) ⇒ <code>number</code>
+    * [.getAbsolutePosition()](#module_FlexScrollView--FlexScrollView+getAbsolutePosition) ⇒ <code>number</code>
+    * [.showPullToRefresh([footer])](#module_FlexScrollView--FlexScrollView+showPullToRefresh) ⇒ <code>FlexScrollView</code>
+    * [.hidePullToRefresh([footer])](#module_FlexScrollView--FlexScrollView+hidePullToRefresh) ⇒ <code>FlexScrollView</code>
+    * [.isPullToRefreshVisible([footer])](#module_FlexScrollView--FlexScrollView+isPullToRefreshVisible)
 
 <a name="exp_module_FlexScrollView--FlexScrollView"></a>
 ### FlexScrollView ⇐ <code>ScrollController</code> ⏏
@@ -45,7 +45,7 @@ Inherited from: [ScrollController](./ScrollController.md)
 | [options.leadingScrollView] | <code>FlexScrollView</code> | Leading scrollview into which input events are piped (see Tutorial) |
 | [options.trailingScrollView] | <code>FlexScrollView</code> | Trailing scrollview into which input events are piped (see Tutorial) |
 
-<a name="module_FlexScrollView--FlexScrollView#getPosition"></a>
+<a name="module_FlexScrollView--FlexScrollView+getPosition"></a>
 #### ~~flexScrollView.getPosition ⇒ <code>number</code>~~
 ***Deprecated***
 
@@ -62,7 +62,7 @@ in pixels translated.
 | --- | --- | --- |
 | [node] | <code>number</code> | If specified, returns the position of the node at that index in the Scrollview instance's currently managed collection. |
 
-<a name="module_FlexScrollView--FlexScrollView#setOptions"></a>
+<a name="module_FlexScrollView--FlexScrollView+setOptions"></a>
 #### flexScrollView.setOptions(options) ⇒ <code>FlexScrollView</code>
 Patches the FlexScrollView instance's options with the passed-in ones.
 
@@ -77,7 +77,7 @@ Patches the FlexScrollView instance's options with the passed-in ones.
 | [options.leadingScrollView] | <code>FlexScrollView</code> | Leading scrollview into which input events are piped (see Tutorial). |
 | [options.trailingScrollView] | <code>FlexScrollView</code> | Trailing scrollview into which input events are piped (see Tutorial). |
 
-<a name="module_FlexScrollView--FlexScrollView#sequenceFrom"></a>
+<a name="module_FlexScrollView--FlexScrollView+sequenceFrom"></a>
 #### flexScrollView.sequenceFrom(node) ⇒ <code>FlexScrollView</code>
 Sets the data-source (alias for setDataSource).
 
@@ -90,7 +90,7 @@ This function is a shim provided for compatibility with the stock famo.us Scroll
 | --- | --- | --- |
 | node | <code>Array</code> &#124; <code>ViewSequence</code> | Either an array of renderables or a Famous viewSequence. |
 
-<a name="module_FlexScrollView--FlexScrollView#getCurrentIndex"></a>
+<a name="module_FlexScrollView--FlexScrollView+getCurrentIndex"></a>
 #### flexScrollView.getCurrentIndex() ⇒ <code>Number</code>
 Returns the index of the first visible renderable.
 
@@ -98,7 +98,7 @@ This function is a shim provided for compatibility with the stock famo.us Scroll
 
 **Kind**: instance method of <code>[FlexScrollView](#exp_module_FlexScrollView--FlexScrollView)</code>  
 **Returns**: <code>Number</code> - The current index of the ViewSequence  
-<a name="module_FlexScrollView--FlexScrollView#goToPage"></a>
+<a name="module_FlexScrollView--FlexScrollView+goToPage"></a>
 #### flexScrollView.goToPage(index, [noAnimation]) ⇒ <code>FlexScrollView</code>
 Paginates the Scrollview to an absolute page index. This function is a shim provided
 for compatibility with the stock famo.us Scrollview.
@@ -111,7 +111,7 @@ for compatibility with the stock famo.us Scrollview.
 | index | <code>Number</code> | view-sequence index to go to. |
 | [noAnimation] | <code>Bool</code> | When set to true, immediately shows the node without scrolling animation. |
 
-<a name="module_FlexScrollView--FlexScrollView#getOffset"></a>
+<a name="module_FlexScrollView--FlexScrollView+getOffset"></a>
 #### flexScrollView.getOffset() ⇒ <code>number</code>
 Returns the offset associated with the Scrollview instance's current node
 (generally the node currently at the top).
@@ -121,7 +121,7 @@ This function is a shim provided for compatibility with the stock famo.us Scroll
 **Kind**: instance method of <code>[FlexScrollView](#exp_module_FlexScrollView--FlexScrollView)</code>  
 **Returns**: <code>number</code> - The position of either the specified node, or the Scrollview's current Node,
 in pixels translated.  
-<a name="module_FlexScrollView--FlexScrollView#getAbsolutePosition"></a>
+<a name="module_FlexScrollView--FlexScrollView+getAbsolutePosition"></a>
 #### flexScrollView.getAbsolutePosition() ⇒ <code>number</code>
 Returns the absolute position associated with the Scrollview instance.
 
@@ -129,7 +129,7 @@ This function is a shim provided for compatibility with the stock famo.us Scroll
 
 **Kind**: instance method of <code>[FlexScrollView](#exp_module_FlexScrollView--FlexScrollView)</code>  
 **Returns**: <code>number</code> - The position of the Scrollview's current Node, in pixels translated.  
-<a name="module_FlexScrollView--FlexScrollView#showPullToRefresh"></a>
+<a name="module_FlexScrollView--FlexScrollView+showPullToRefresh"></a>
 #### flexScrollView.showPullToRefresh([footer]) ⇒ <code>FlexScrollView</code>
 Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
 
@@ -140,7 +140,7 @@ Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
 | --- | --- | --- |
 | [footer] | <code>Bool</code> | set to true to show pull-to-refresh at the footer (default: false). |
 
-<a name="module_FlexScrollView--FlexScrollView#hidePullToRefresh"></a>
+<a name="module_FlexScrollView--FlexScrollView+hidePullToRefresh"></a>
 #### flexScrollView.hidePullToRefresh([footer]) ⇒ <code>FlexScrollView</code>
 Hides the pull-to-refresh renderable in case it was visible.
 
@@ -151,7 +151,7 @@ Hides the pull-to-refresh renderable in case it was visible.
 | --- | --- | --- |
 | [footer] | <code>Bool</code> | set to true to hide the pull-to-refresh at the footer (default: false). |
 
-<a name="module_FlexScrollView--FlexScrollView#isPullToRefreshVisible"></a>
+<a name="module_FlexScrollView--FlexScrollView+isPullToRefreshVisible"></a>
 #### flexScrollView.isPullToRefreshVisible([footer])
 Get the visible state of the pull-to-refresh renderable.
 

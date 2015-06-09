@@ -54,13 +54,13 @@ Example css styles for a black theme:
 * [TabBar](#module_TabBar)
   * [TabBar](#exp_module_TabBar--TabBar) ⇐ <code>View</code> ⏏
     * [new TabBar(options)](#new_module_TabBar--TabBar_new)
-    * [.setOptions(options)](#module_TabBar--TabBar#setOptions) ⇒ <code>TabBar</code>
-    * [.setItems(items)](#module_TabBar--TabBar#setItems) ⇒ <code>TabBar</code>
-    * [.getItems()](#module_TabBar--TabBar#getItems) ⇒ <code>Array</code>
-    * [.getItemSpec(index)](#module_TabBar--TabBar#getItemSpec) ⇒ <code>Spec</code>
-    * [.setSelectedItemIndex(index)](#module_TabBar--TabBar#setSelectedItemIndex) ⇒ <code>TabBar</code>
-    * [.getSelectedItemIndex()](#module_TabBar--TabBar#getSelectedItemIndex) ⇒ <code>Number</code>
-    * [.getSize()](#module_TabBar--TabBar#getSize) ⇒ <code>Array</code>
+    * [.setOptions(options)](#module_TabBar--TabBar+setOptions) ⇒ <code>TabBar</code>
+    * [.setItems(items)](#module_TabBar--TabBar+setItems) ⇒ <code>TabBar</code>
+    * [.getItems()](#module_TabBar--TabBar+getItems) ⇒ <code>Array</code>
+    * [.getItemSpec(index)](#module_TabBar--TabBar+getItemSpec) ⇒ <code>Spec</code>
+    * [.setSelectedItemIndex(index)](#module_TabBar--TabBar+setSelectedItemIndex) ⇒ <code>TabBar</code>
+    * [.getSelectedItemIndex()](#module_TabBar--TabBar+getSelectedItemIndex) ⇒ <code>Number</code>
+    * [.getSize()](#module_TabBar--TabBar+getSize) ⇒ <code>Array</code>
 
 <a name="exp_module_TabBar--TabBar"></a>
 ### TabBar ⇐ <code>View</code> ⏏
@@ -77,7 +77,7 @@ Example css styles for a black theme:
 | [options.classes] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
 | [options.createRenderables] | <code>Object</code> | Options that specify which renderables should be created. |
 
-<a name="module_TabBar--TabBar#setOptions"></a>
+<a name="module_TabBar--TabBar+setOptions"></a>
 #### tabBar.setOptions(options) ⇒ <code>TabBar</code>
 Patches the TabBar instance's options with the passed-in ones.
 
@@ -90,7 +90,7 @@ Patches the TabBar instance's options with the passed-in ones.
 | [options.tabBarLayout] | <code>Object</code> | Layout-options that are passed to the TabBarLayout. |
 | [options.layoutController] | <code>Object</code> | Options that are passed to the underlying layout-controller. |
 
-<a name="module_TabBar--TabBar#setItems"></a>
+<a name="module_TabBar--TabBar+setItems"></a>
 #### tabBar.setItems(items) ⇒ <code>TabBar</code>
 Sets the items for the tab-bar.
 
@@ -134,13 +134,13 @@ CSS:
 | --- | --- | --- |
 | items | <code>Array</code> | Array of tab-item renderables. |
 
-<a name="module_TabBar--TabBar#getItems"></a>
+<a name="module_TabBar--TabBar+getItems"></a>
 #### tabBar.getItems() ⇒ <code>Array</code>
 Get the tab-item renderables for the tab-bar.
 
 **Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
 **Returns**: <code>Array</code> - tab-item renderables  
-<a name="module_TabBar--TabBar#getItemSpec"></a>
+<a name="module_TabBar--TabBar+getItemSpec"></a>
 #### tabBar.getItemSpec(index) ⇒ <code>Spec</code>
 Get the spec (size, transform, etc..) of the given tab-item.
 
@@ -151,7 +151,7 @@ Get the spec (size, transform, etc..) of the given tab-item.
 | --- | --- | --- |
 | index | <code>Number</code> | Index of the tab-item. |
 
-<a name="module_TabBar--TabBar#setSelectedItemIndex"></a>
+<a name="module_TabBar--TabBar+setSelectedItemIndex"></a>
 #### tabBar.setSelectedItemIndex(index) ⇒ <code>TabBar</code>
 Sets the index of the selected tab.
 
@@ -162,13 +162,13 @@ Sets the index of the selected tab.
 | --- | --- | --- |
 | index | <code>Number</code> | selected index. |
 
-<a name="module_TabBar--TabBar#getSelectedItemIndex"></a>
+<a name="module_TabBar--TabBar+getSelectedItemIndex"></a>
 #### tabBar.getSelectedItemIndex() ⇒ <code>Number</code>
 Get the index of the selected tab-item.
 
 **Kind**: instance method of <code>[TabBar](#exp_module_TabBar--TabBar)</code>  
 **Returns**: <code>Number</code> - selected index  
-<a name="module_TabBar--TabBar#getSize"></a>
+<a name="module_TabBar--TabBar+getSize"></a>
 #### tabBar.getSize() ⇒ <code>Array</code>
 Get the size of the widget.
 

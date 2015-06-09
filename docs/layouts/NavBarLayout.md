@@ -8,6 +8,7 @@ When no item-width is specified, the width of the renderable itsself is used.
 |options|type|description|
 |---|---|---|
 |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
+|`[zIncrement]`|Z-translation increment used to stack the elements correctly (default: 2)|
 |`[itemWidth]`|Number|Width of the left & right items|
 |`[leftItemWidth]`|Number|Width of the left items|
 |`[rightItemWidth]`|Number|Width of the right items|

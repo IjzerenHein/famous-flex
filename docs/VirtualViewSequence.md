@@ -42,12 +42,12 @@ var scrollView = new FlexScrollView({
 * [VirtualViewSequence](#module_VirtualViewSequence)
   * [VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence) ⏏
     * [new VirtualViewSequence(options)](#new_module_VirtualViewSequence--VirtualViewSequence_new)
-    * [.getPrevious()](#module_VirtualViewSequence--VirtualViewSequence#getPrevious) ⇒ <code>VirtualViewSequence</code>
-    * [.getNext()](#module_VirtualViewSequence--VirtualViewSequence#getNext) ⇒ <code>VirtualViewSequence</code>
-    * [.get()](#module_VirtualViewSequence--VirtualViewSequence#get) ⇒ <code>Renderable</code>
-    * [.getIndex()](#module_VirtualViewSequence--VirtualViewSequence#getIndex) ⇒ <code>Number</code>
-    * [.toString()](#module_VirtualViewSequence--VirtualViewSequence#toString) ⇒ <code>String</code>
-    * [.cleanup()](#module_VirtualViewSequence--VirtualViewSequence#cleanup) ⇒ <code>VirtualViewSequence</code>
+    * [.getPrevious()](#module_VirtualViewSequence--VirtualViewSequence+getPrevious) ⇒ <code>VirtualViewSequence</code>
+    * [.getNext()](#module_VirtualViewSequence--VirtualViewSequence+getNext) ⇒ <code>VirtualViewSequence</code>
+    * [.get()](#module_VirtualViewSequence--VirtualViewSequence+get) ⇒ <code>Renderable</code>
+    * [.getIndex()](#module_VirtualViewSequence--VirtualViewSequence+getIndex) ⇒ <code>Number</code>
+    * [.toString()](#module_VirtualViewSequence--VirtualViewSequence+toString) ⇒ <code>String</code>
+    * [.cleanup()](#module_VirtualViewSequence--VirtualViewSequence+cleanup) ⇒ <code>VirtualViewSequence</code>
 
 <a name="exp_module_VirtualViewSequence--VirtualViewSequence"></a>
 ### VirtualViewSequence ⏏
@@ -62,7 +62,7 @@ var scrollView = new FlexScrollView({
 | [options.value] | <code>Renderable</code> | Renderable for this node (when omitted, `factory.create()` is called) |
 | [options.index] | <code>Number</code> | Index of this node (default: 0). |
 
-<a name="module_VirtualViewSequence--VirtualViewSequence#getPrevious"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+getPrevious"></a>
 #### virtualViewSequence.getPrevious() ⇒ <code>VirtualViewSequence</code>
 Get previous node.
 
@@ -72,7 +72,7 @@ returns `undefined`, no previous-node will be created.
 
 **Kind**: instance method of <code>[VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence)</code>  
 **Returns**: <code>VirtualViewSequence</code> - previous node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#getNext"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+getNext"></a>
 #### virtualViewSequence.getNext() ⇒ <code>VirtualViewSequence</code>
 Get next node.
 
@@ -82,25 +82,25 @@ returns `undefined`, no next-node will be created.
 
 **Kind**: instance method of <code>[VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence)</code>  
 **Returns**: <code>VirtualViewSequence</code> - next node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#get"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+get"></a>
 #### virtualViewSequence.get() ⇒ <code>Renderable</code>
 Get the value of this node.
 
 **Kind**: instance method of <code>[VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence)</code>  
 **Returns**: <code>Renderable</code> - surface/view  
-<a name="module_VirtualViewSequence--VirtualViewSequence#getIndex"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+getIndex"></a>
 #### virtualViewSequence.getIndex() ⇒ <code>Number</code>
 Get the index of the node.
 
 **Kind**: instance method of <code>[VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence)</code>  
 **Returns**: <code>Number</code> - Index of node.  
-<a name="module_VirtualViewSequence--VirtualViewSequence#toString"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+toString"></a>
 #### virtualViewSequence.toString() ⇒ <code>String</code>
 Get human readable string verion of the node.
 
 **Kind**: instance method of <code>[VirtualViewSequence](#exp_module_VirtualViewSequence--VirtualViewSequence)</code>  
 **Returns**: <code>String</code> - node as a human readable string  
-<a name="module_VirtualViewSequence--VirtualViewSequence#cleanup"></a>
+<a name="module_VirtualViewSequence--VirtualViewSequence+cleanup"></a>
 #### virtualViewSequence.cleanup() ⇒ <code>VirtualViewSequence</code>
 Cleans up any un-accessed nodes since the previous call to `cleanup`.
 

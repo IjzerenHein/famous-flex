@@ -6,7 +6,7 @@ continues at the next column/row.
 |options|type|description|
 |---|---|---|
 |`[itemSize]`|Size/Function|Size of an item to layout or callback function which should return the size, e.g.: `function(renderNode, contextSize)`|
-|`[cells]`|Array.Number|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
+|`[cells]`|Array.[Number,true,undefined]|Number of columns and rows: [columns, rows]. When used causes the itemSize to be calculated from the number of number of cells that should be displayed.|
 |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
 |`[spacing]`|Number/Array|Spacing between items (e.g. 5, [10, 10])|
 |`[justify]`|Bool/Array.Bool|Justify the renderables accross the width/height|

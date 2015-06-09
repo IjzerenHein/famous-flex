@@ -43,11 +43,11 @@ CSS:
 * [DatePicker](#module_DatePicker)
   * [DatePicker](#exp_module_DatePicker--DatePicker) ⇐ <code>View</code> ⏏
     * [new DatePicker(options)](#new_module_DatePicker--DatePicker_new)
-    * [.setOptions(options)](#module_DatePicker--DatePicker#setOptions) ⇒ <code>DatePicker</code>
-    * [.setComponents(components)](#module_DatePicker--DatePicker#setComponents) ⇒ <code>DatePicker</code>
-    * [.getComponents()](#module_DatePicker--DatePicker#getComponents) ⇒ <code>Array</code>
-    * [.setDate(date)](#module_DatePicker--DatePicker#setDate) ⇒ <code>DatePicker</code>
-    * [.getDate()](#module_DatePicker--DatePicker#getDate) ⇒ <code>Date</code>
+    * [.setOptions(options)](#module_DatePicker--DatePicker+setOptions) ⇒ <code>DatePicker</code>
+    * [.setComponents(components)](#module_DatePicker--DatePicker+setComponents) ⇒ <code>DatePicker</code>
+    * [.getComponents()](#module_DatePicker--DatePicker+getComponents) ⇒ <code>Array</code>
+    * [.setDate(date)](#module_DatePicker--DatePicker+setDate) ⇒ <code>DatePicker</code>
+    * [.getDate()](#module_DatePicker--DatePicker+getDate) ⇒ <code>Date</code>
 
 <a name="exp_module_DatePicker--DatePicker"></a>
 ### DatePicker ⇐ <code>View</code> ⏏
@@ -66,7 +66,7 @@ CSS:
 | [options.classes] | <code>Array.String</code> | Css-classes that are added to the surfaces that are created. |
 | [options.createRenderables] | <code>Object</code> | Options that specify which renderables should be created. |
 
-<a name="module_DatePicker--DatePicker#setOptions"></a>
+<a name="module_DatePicker--DatePicker+setOptions"></a>
 #### datePicker.setOptions(options) ⇒ <code>DatePicker</code>
 Patches the DatePicker instance's options with the passed-in ones.
 
@@ -80,7 +80,7 @@ Patches the DatePicker instance's options with the passed-in ones.
 | [options.wheelLayout] | <code>Object</code> | Layout-options that are passed to the WheelLayout. |
 | [options.scrollController] | <code>Object</code> | Options that are passed to the underlying ScrollControllers. |
 
-<a name="module_DatePicker--DatePicker#setComponents"></a>
+<a name="module_DatePicker--DatePicker+setComponents"></a>
 #### datePicker.setComponents(components) ⇒ <code>DatePicker</code>
 Sets the components for the date-picker.
 
@@ -91,13 +91,13 @@ Sets the components for the date-picker.
 | --- | --- | --- |
 | components | <code>Array</code> | Array of DatePicker.Component objects. |
 
-<a name="module_DatePicker--DatePicker#getComponents"></a>
+<a name="module_DatePicker--DatePicker+getComponents"></a>
 #### datePicker.getComponents() ⇒ <code>Array</code>
 Get the components for the date-picker.
 
 **Kind**: instance method of <code>[DatePicker](#exp_module_DatePicker--DatePicker)</code>  
 **Returns**: <code>Array</code> - components  
-<a name="module_DatePicker--DatePicker#setDate"></a>
+<a name="module_DatePicker--DatePicker+setDate"></a>
 #### datePicker.setDate(date) ⇒ <code>DatePicker</code>
 Set the selected date.
 
@@ -108,7 +108,7 @@ Set the selected date.
 | --- | --- | --- |
 | date | <code>Date</code> | Selected date/time. |
 
-<a name="module_DatePicker--DatePicker#getDate"></a>
+<a name="module_DatePicker--DatePicker+getDate"></a>
 #### datePicker.getDate() ⇒ <code>Date</code>
 Get the selected date.
 
