@@ -263,7 +263,7 @@ define(function(require, exports, module) {
         var totalHeight;
 
         // Show/activate pull to refresh renderables
-        for (var i = 0; i < 2 ; i++) {
+        for (var i = 0; i < 2; i++) {
             var pullToRefresh = this._pullToRefresh[i];
             if (pullToRefresh) {
 
