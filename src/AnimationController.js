@@ -521,7 +521,7 @@ define(function(require, exports, module) {
     /**
      * Sets the options for an item.
      */
-    function _setItemOptions(item, options) {
+    function _setItemOptions(item, options, callback) {
         item.options = {
             show: {
                 transition: this.options.show.transition || this.options.transition,
@@ -551,6 +551,17 @@ define(function(require, exports, module) {
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
             item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
         }
+        item.showCallback = function() {
+            item.showCallback = undefined;
+            item.state = ItemState.VISIBLE;
+            _updateState.call(this);
+            _endTransferableAnimations.call(this, item);
+            item.endSpec = undefined;
+            item.startSpec = undefined;
+            if (callback) {
+                callback();
+            }
+        }.bind(this);
     }
 
     /**
@@ -654,10 +665,10 @@ define(function(require, exports, module) {
             item.hide = false;
             if (item.state === ItemState.HIDE) {
                 item.state = ItemState.QUEUED;
-                _setItemOptions.call(this, item, options);
+                _setItemOptions.call(this, item, options, callback);
                 _updateState.call(this);
             }
-            if (callback) {
+            else if (callback) {
                 callback();
             }
             return this;
@@ -680,18 +691,7 @@ define(function(require, exports, module) {
         };
         item.node = new RenderNode(item.mod);
         item.node.add(renderable);
-        _setItemOptions.call(this, item, options);
-        item.showCallback = function() {
-            item.showCallback = undefined;
-            item.state = ItemState.VISIBLE;
-            _updateState.call(this);
-            _endTransferableAnimations.call(this, item);
-            item.endSpec = undefined;
-            item.startSpec = undefined;
-            if (callback) {
-                callback();
-            }
-        }.bind(this);
+        _setItemOptions.call(this, item, options, callback);
         item.hideCallback = function() {
             item.hideCallback = undefined;
             var index = this._viewStack.indexOf(item);
@@ -733,6 +733,7 @@ define(function(require, exports, module) {
             }
         }
         item.hideCallback = function() {
+            item.hideCallback = undefined;
             var index = this._viewStack.indexOf(item);
             this._renderables.views.splice(index, 1);
             this._viewStack.splice(index, 1);
