@@ -1,4 +1,4 @@
-![Logo](logo.svg) ![famous-flex](title.png)
+![Logo](https://rawgit.com/IjzerenHein/famous-flex/master/logo.svg) ![famous-flex](title.png)
 
 Animatable layouts, FlexScrollView & widgets for famo.us.
 
