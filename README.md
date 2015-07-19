@@ -10,6 +10,14 @@ the renderables from one layout to another. For instance, you can layout a colle
 of renderables using a `CollectionLayout`, and change that into a `ListLayout`. When using
 `flow`-mode the renderables will smoothly transition from the old state to the new state using physics, particles and springs.
 
+## Mixed-mode support
+
+famous-flex was written for the v0.3.x API of famo.us. The new mixed-mode API of famo.us is drastically different
+and famous-flex therefore needs to be ported to the new API and engine. Some parts will need to be upgraded while others will need to be rewritten from scratch. Also, BEST integration needs to be added. A new branch called 'mixed-mode' will be created on which all mixed-mode development will take place, starting with a LayoutController and the core layouts. After that the Scrolling support shall be added and finally the widgets.
+
+In order to make this happen, community contributions would be very welcome to speed up the process. If you want to help, please drop me a line at hrutjes@gmail.com. Also, donations are very welcome and will allow me to spent more time on migrating to mixed-mode and on new famous-flex features. If you want to donate, [click here](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6PV9ACCZS43VJ).
+
+
 ### Demos
 
 - [famous-flex-demo](https://rawgit.com/IjzerenHein/famous-flex-demo/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-demo))
