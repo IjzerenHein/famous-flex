@@ -1,5 +1,4 @@
-famous-flex
-==========
+![Logo](logo.svg) ![famous-flex](title.png)
 
 Animatable layouts, FlexScrollView & widgets for famo.us.
 
@@ -19,6 +18,7 @@ of renderables using a `CollectionLayout`, and change that into a `ListLayout`. 
 - [DatePicker demo](https://rawgit.com/IjzerenHein/famous-flex-datepicker/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-datepicker))
 - [TabBar demo](https://rawgit.com/IjzerenHein/famous-flex-tabbar/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-tabbar))
 - [TabBarController demo](https://rawgit.com/IjzerenHein/famous-flex-tabbarcontroller/master/dist/index.html) ([source](https://github.com/IjzerenHein/famous-flex-tabbarcontroller))
+
 
 ### Getting started
 - [Installation](#installation)
