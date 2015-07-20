@@ -257,7 +257,7 @@ define(function(require, exports, module) {
             }
             nodeSize = _resolveNodeSize(node);
             lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-            if (lineOffset > lineLength) {
+            if ((Math.round(lineOffset * 100) / 100) > lineLength) {
                 offset += _layoutLine(true, !node);
                 lineOffset = nodeSize[lineDirection];
             }
@@ -279,7 +279,7 @@ define(function(require, exports, module) {
             }
             nodeSize = _resolveNodeSize(node);
             lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-            if (lineOffset > lineLength) {
+            if ((Math.round(lineOffset * 100) / 100) > lineLength) {
                 offset -= _layoutLine(false, !node);
                 lineOffset = nodeSize[lineDirection];
             }
