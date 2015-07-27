@@ -69,7 +69,8 @@ module.exports = function(grunt) {
             { src: 'src/layouts/NavBarLayout.js', dest: 'docs/layouts/NavBarLayout.md' },
             { src: 'src/layouts/WheelLayout.js', dest: 'docs/layouts/WheelLayout.md' },
             { src: 'src/layouts/ProportionalLayout.js', dest: 'docs/layouts/ProportionalLayout.md' },
-            { src: 'src/layouts/TabBarLayout.js', dest: 'docs/layouts/TabBarLayout.md' }
+            { src: 'src/layouts/TabBarLayout.js', dest: 'docs/layouts/TabBarLayout.md' },
+            { src: 'src/layouts/vflToLayout.js', dest: 'docs/layouts/vflToLayout.md' }
         ]
       }
     },
