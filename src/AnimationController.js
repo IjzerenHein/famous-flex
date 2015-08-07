@@ -401,7 +401,7 @@ define(function(require, exports, module) {
             switch (item.state) {
                 case ItemState.HIDE:
                     item.state = ItemState.HIDING;
-                    _startHideAnimation.call(this, item, prevItem, event.size);
+                    _initHideAnimation.call(this, item, prevItem, event.size);
                     _updateState.call(this);
                     break;
                 case ItemState.SHOW:
@@ -437,11 +437,15 @@ define(function(require, exports, module) {
         if (spec.origin) {
             item.mod.setOrigin(spec.origin);
         }
+        var startShowAnimation = _startShowAnimation.bind(this, item, spec);
+        var waitAndShow = item.wait ? function() {
+            item.wait.then(startShowAnimation, startShowAnimation);
+        } : startShowAnimation;
         if (prevItem) {
-            _initTransferableAnimations.call(this, item, prevItem, _startShowAnimation.bind(this, item, spec));
+            _initTransferableAnimations.call(this, item, prevItem, waitAndShow);
         }
         else {
-            _startShowAnimation.call(this, item, spec);
+            waitAndShow();
         }
     }
 
@@ -488,6 +492,19 @@ define(function(require, exports, module) {
                 }
                 item.mod.setTransform(transform);
             }
+        }
+    }
+
+    /**
+     * Waits for the animation to start.
+     */
+    function _initHideAnimation(item, prevItem, size) {
+        var startHideAnimation = _startHideAnimation.bind(this, item, prevItem, size);
+        if (item.wait) {
+            item.wait.then(startHideAnimation, startHideAnimation);
+        }
+        else {
+            startHideAnimation();
         }
     }
 
@@ -578,6 +595,7 @@ define(function(require, exports, module) {
                     (prevItem.state === ItemState.HIDING)) {
                     if (prevItem && (prevItem.state === ItemState.VISIBLE)) {
                         prevItem.state = ItemState.HIDE;
+                        prevItem.wait = item.wait;
                     }
                     item.state = ItemState.SHOW;
                     invalidated = true;
@@ -642,6 +660,7 @@ define(function(require, exports, module) {
      * @param {Object} [options] Options.
      * @param {Object} [options.transition] Transition options for both show & hide.
      * @param {Function} [options.animation] Animation function for both show & hide.
+     * @param {Promise} [options.wait] A promise to wait for before running the animation.
      * @param {Object} [options.show] Show specific options.
      * @param {Object} [options.show.transition] Show specific transition options.
      * @param {Function} [options.show.animation] Show specific animation function.
@@ -687,7 +706,8 @@ define(function(require, exports, module) {
             mod: new StateModifier(),
             state: ItemState.QUEUED,
             callback: callback,
-            transferables: [] // renderables currently being transfered
+            transferables: [], // renderables currently being transfered
+            wait: options ? options.wait : undefined
         };
         item.node = new RenderNode(item.mod);
         item.node.add(renderable);
