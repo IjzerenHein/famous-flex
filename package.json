@@ -1,0 +1,65 @@
+{
+  "name": "famous-flex",
+  "version": "0.7.0",
+  "homepage": "https://github.com/IjzerenHein/famous-flex",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/IjzerenHein/famous-flex.git"
+  },
+  "main": "dist/famous-flex-global.template.js",
+  "author": {
+    "name": "Hein Rutjes <hrutjes@gmail.com>"
+  },
+  "description": "UI Framework for famo.us",
+  "keywords": [
+    "famo.us",
+    "famous",
+    "flex",
+    "famous-flex",
+    "famousflex",
+    "layoutcontroller",
+    "scrollcontroller",
+    "animationcontroller",
+    "scrollview",
+    "datewheel",
+    "datepicker",
+    "datetimepicker",
+    "tabbar",
+    "tabbarcontroller",
+    "widgets",
+    "autolayout",
+    "cassowary",
+    "visualformat",
+    "vfl"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/IjzerenHein/famous-flex/blob/master/LICENSE"
+    }
+  ],
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/IjzerenHein/famous-flex/issues"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^4.1.0",
+    "grunt": "^0.4.5",
+    "grunt-contrib-csslint": "^0.5.0",
+    "grunt-esdoc": "0.0.1",
+    "grunt-eslint": "^17.1.0",
+    "grunt-jscs": "^2.1.0",
+    "grunt-jsdoc-to-markdown": "^1.1.1",
+    "jscs-jsdoc": "^1.1.0"
+  },
+  "files": [
+    "dist",
+    "core",
+    "controls",
+    "widgets",
+    "LICENSE"
+  ]
+}

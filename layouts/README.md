@@ -1,0 +1,3 @@
+# Layouts
+
+Layouts, id- or variable length data-source based, e.g. CollectionLayout, HeaderFooterLayout, etc...

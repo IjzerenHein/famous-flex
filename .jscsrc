@@ -1,0 +1,23 @@
+{
+    "esnext": true,
+    "preset": "airbnb",
+    "requirePaddingNewLinesAfterBlocks": false,
+    "requireTrailingComma": false,
+    "jsDoc": {
+        "checkAnnotations": "closurecompiler",
+        "checkTypes": "strictNativeCase",
+        "enforceExistence": true,
+        "checkAnnotations": "closurecompiler",
+        "checkParamNames": true,
+        "requireParamTypes": true,
+        "requireParamDescription": true,
+        "checkRedundantParams": true,
+        "checkReturnTypes": true,
+        "checkRedundantReturns": true,
+        "requireReturnTypes": true,
+        "requireReturnDescription": true,
+        "checkTypes": "capitalizedNativeCase",
+        "checkRedundantAccess": true,
+        "requireNewlineAfterDescription": true
+    }
+}
