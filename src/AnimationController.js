@@ -24,7 +24,6 @@ define(function(require, exports, module) {
     var RenderNode = require('famous/core/RenderNode');
     var Timer = require('famous/utilities/Timer');
     var Easing = require('famous/transitions/Easing');
-    //var Transitionable = require('famous/animations/Transitionable');
 
     /**
      * @class
@@ -32,6 +31,7 @@ define(function(require, exports, module) {
      * @param {Object} [options.transition] Transition options (default: `{duration: 400, curve: Easing.inOutQuad}`).
      * @param {Function} [options.animation] Animation function (default: `AnimationController.Animation.Slide.Left`).
      * @param {Number} [options.zIndexOffset] Optional z-index difference between the hiding & showing renderable (default: 0).
+     * @param {Number} [options.keepHiddenViewsInDOMCount] Keeps views in the DOM after they have been hidden (default: 0).
      * @param {Object} [options.show] Show specific options.
      * @param {Object} [options.show.transition] Show specific transition options.
      * @param {Function} [options.show.animation] Show specific animation function.
@@ -135,17 +135,19 @@ define(function(require, exports, module) {
             //   'image': ['image', 'image2']
             // }
         },
-        zIndexOffset: 0
+        zIndexOffset: 0,
+        keepHiddenViewsInDOMCount: 0
     };
 
     var ItemState = {
         NONE: 0,
         HIDE: 1,
         HIDING: 2,
-        SHOW: 3,
-        SHOWING: 4,
-        VISIBLE: 5,
-        QUEUED: 6
+        HIDDEN: 3,
+        SHOW: 4,
+        SHOWING: 5,
+        VISIBLE: 6,
+        QUEUED: 7
     };
 
     /**
@@ -161,33 +163,44 @@ define(function(require, exports, module) {
         this._size[1] = context.size[1];
         var views = context.get('views');
         var transferables = context.get('transferables');
-        for (var i = 0; i < Math.min(views.length, 2); i++) {
+        var visibleCount = 0;
+        for (var i = 0; i < views.length; i++) {
             var item = this._viewStack[i];
             switch (item.state) {
+                case ItemState.HIDDEN:
+                    context.set(views[i], {
+                        size: context.size,
+                        translate: [context.size[0] * 2, context.size[1] * 2, 0]
+                    });
+                    break;
+
                 case ItemState.HIDE:
                 case ItemState.HIDING:
                 case ItemState.VISIBLE:
                 case ItemState.SHOW:
                 case ItemState.SHOWING:
+                    if (visibleCount < 2) {
+                        visibleCount++;
 
-                    // Layout view
-                    var view = views[i];
-                    context.set(view, set);
+                        // Layout view
+                        var view = views[i];
+                        context.set(view, set);
 
-                    // Layout any transferables
-                    for (var j = 0; j < transferables.length; j++) {
-                        for (var k = 0; k < item.transferables.length; k++) {
-                            if (transferables[j].renderNode === item.transferables[k].renderNode) {
-                                context.set(transferables[j], {
-                                    translate: [0, 0, set.translate[2]],
-                                    size: [context.size[0], context.size[1]]
-                                });
+                        // Layout any transferables
+                        for (var j = 0; j < transferables.length; j++) {
+                            for (var k = 0; k < item.transferables.length; k++) {
+                                if (transferables[j].renderNode === item.transferables[k].renderNode) {
+                                    context.set(transferables[j], {
+                                        translate: [0, 0, set.translate[2]],
+                                        size: [context.size[0], context.size[1]]
+                                    });
+                                }
                             }
                         }
-                    }
 
-                    // Increase z-index for next view
-                    set.translate[2] += options.zIndexOffset;
+                        // Increase z-index for next view
+                        set.translate[2] += options.zIndexOffset;
+                    }
                     break;
             }
         }
@@ -587,7 +600,32 @@ define(function(require, exports, module) {
     function _updateState() {
         var prevItem;
         var invalidated = false;
-        for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+        var hiddenViewCount = 0;
+        var i = 0;
+        while (i < this._viewStack.length) {
+            if (this._viewStack[i].state === ItemState.HIDDEN) {
+                hiddenViewCount++;
+                for (var j = 0; j < this._viewStack.length; j++) {
+                    if ((this._viewStack[j].state !== ItemState.HIDDEN) &&
+                        (this._viewStack[j].view === this._viewStack[i].view)) {
+                        this._viewStack[i].view = undefined
+                        this._renderables.views.splice(i, 1);
+                        this._viewStack.splice(i, 1);
+                        i--;
+                        hiddenViewCount--;
+                        break;
+                    }
+                }
+            }
+            i++;
+        }
+        while (hiddenViewCount > this.options.keepHiddenViewsInDOMCount) {
+            this._viewStack[0].view = undefined
+            this._renderables.views.splice(0, 1);
+            this._viewStack.splice(0, 1);
+            hiddenViewCount--;
+        }
+        for (i = hiddenViewCount; i < (Math.min(this._viewStack.length - hiddenViewCount, 2) + hiddenViewCount); i++) {
             var item = this._viewStack[i];
             if (item.state === ItemState.QUEUED) {
                 if (!prevItem ||
@@ -680,7 +718,7 @@ define(function(require, exports, module) {
             return this.hide(options, callback);
         }
         var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
-        if (item && (item.view === renderable)) {
+        if (item && (item.view === renderable) && (item.state !== ItemState.HIDDEN)) {
             item.hide = false;
             if (item.state === ItemState.HIDE) {
                 item.state = ItemState.QUEUED;
@@ -714,10 +752,7 @@ define(function(require, exports, module) {
         _setItemOptions.call(this, item, options, callback);
         item.hideCallback = function() {
             item.hideCallback = undefined;
-            var index = this._viewStack.indexOf(item);
-            this._renderables.views.splice(index, 1);
-            this._viewStack.splice(index, 1);
-            item.view = undefined;
+            item.state = ItemState.HIDDEN;
             _updateState.call(this);
             this.layout.reflowLayout();
         }.bind(this);
@@ -754,10 +789,7 @@ define(function(require, exports, module) {
         }
         item.hideCallback = function() {
             item.hideCallback = undefined;
-            var index = this._viewStack.indexOf(item);
-            this._renderables.views.splice(index, 1);
-            this._viewStack.splice(index, 1);
-            item.view = undefined;
+            item.state = ItemState.HIDDEN;
             _updateState.call(this);
             this.layout.reflowLayout();
             if (callback) {
@@ -825,10 +857,7 @@ define(function(require, exports, module) {
             item.state = ItemState.HIDING;
             item.hideCallback = function() {
                 item.hideCallback = undefined;
-                var index = this._viewStack.indexOf(item);
-                this._renderables.views.splice(index, 1);
-                this._viewStack.splice(index, 1);
-                item.view = undefined;
+                item.state = ItemState.HIDDEN;
                 _updateState.call(this);
                 this.layout.reflowLayout();
             }.bind(this);
