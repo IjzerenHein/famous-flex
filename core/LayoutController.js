@@ -42,8 +42,8 @@ export default class LayoutController extends Node {
         if (options.layoutOptions) {
           this.layoutOptions = options.layoutOptions;
         }
-        if (options.dataSource) {
-          this.dataSource = options.dataSource;
+        if (options.nodes) {
+          this.nodes = options.nodes;
         }
       }
     }
@@ -76,11 +76,11 @@ export default class LayoutController extends Node {
       this.reflowLayout();
     }
 
-    get dataSource() {
+    get nodes() {
       return this._data.source;
     }
 
-    set dataSource(dataSource) {
+    set nodes(dataSource) {
       if (this._data.source === dataSource) {
         return;
       }
