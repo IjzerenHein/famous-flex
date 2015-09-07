@@ -98,7 +98,6 @@
     "famous/utilities/Timer": "global:famous.utilities.Timer",
     "famous/core/RenderNode": "global:famous.core.RenderNode",
     "famous/core/Modifier": "global:famous.core.Modifier",
-    "famous/modifiers/StateModifier": "global:famous.modifiers.StateModifier",
-    "autolayout": "global:AutoLayout"
+    "famous/modifiers/StateModifier": "global:famous.modifiers.StateModifier"
   }
 }
