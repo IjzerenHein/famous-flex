@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.3
-* @generated 09-06-2015
+* @version 0.3.5
+* @generated 07-09-2015
 */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var View = window.famous.core.View;
@@ -93,16 +93,18 @@ AnimationController.DEFAULT_OPTIONS = {
         fastResize: true,
         zIndex: 10
     },
-    zIndexOffset: 0
+    zIndexOffset: 0,
+    keepHiddenViewsInDOMCount: 0
 };
 var ItemState = {
         NONE: 0,
         HIDE: 1,
         HIDING: 2,
-        SHOW: 3,
-        SHOWING: 4,
-        VISIBLE: 5,
-        QUEUED: 6
+        HIDDEN: 3,
+        SHOW: 4,
+        SHOWING: 5,
+        VISIBLE: 6,
+        QUEUED: 7
     };
 function ViewStackLayout(context, options) {
     var set = {
@@ -117,34 +119,48 @@ function ViewStackLayout(context, options) {
     this._size[1] = context.size[1];
     var views = context.get('views');
     var transferables = context.get('transferables');
-    for (var i = 0; i < Math.min(views.length, 2); i++) {
+    var visibleCount = 0;
+    for (var i = 0; i < views.length; i++) {
         var item = this._viewStack[i];
         switch (item.state) {
+        case ItemState.HIDDEN:
+            context.set(views[i], {
+                size: context.size,
+                translate: [
+                    context.size[0] * 2,
+                    context.size[1] * 2,
+                    0
+                ]
+            });
+            break;
         case ItemState.HIDE:
         case ItemState.HIDING:
         case ItemState.VISIBLE:
         case ItemState.SHOW:
         case ItemState.SHOWING:
-            var view = views[i];
-            context.set(view, set);
-            for (var j = 0; j < transferables.length; j++) {
-                for (var k = 0; k < item.transferables.length; k++) {
-                    if (transferables[j].renderNode === item.transferables[k].renderNode) {
-                        context.set(transferables[j], {
-                            translate: [
-                                0,
-                                0,
-                                set.translate[2]
-                            ],
-                            size: [
-                                context.size[0],
-                                context.size[1]
-                            ]
-                        });
+            if (visibleCount < 2) {
+                visibleCount++;
+                var view = views[i];
+                context.set(view, set);
+                for (var j = 0; j < transferables.length; j++) {
+                    for (var k = 0; k < item.transferables.length; k++) {
+                        if (transferables[j].renderNode === item.transferables[k].renderNode) {
+                            context.set(transferables[j], {
+                                translate: [
+                                    0,
+                                    0,
+                                    set.translate[2]
+                                ],
+                                size: [
+                                    context.size[0],
+                                    context.size[1]
+                                ]
+                            });
+                        }
                     }
                 }
+                set.translate[2] += options.zIndexOffset;
             }
-            set.translate[2] += options.zIndexOffset;
             break;
         }
     }
@@ -311,7 +327,7 @@ function _processAnimations(event) {
         switch (item.state) {
         case ItemState.HIDE:
             item.state = ItemState.HIDING;
-            _startHideAnimation.call(this, item, prevItem, event.size);
+            _initHideAnimation.call(this, item, prevItem, event.size);
             _updateState.call(this);
             break;
         case ItemState.SHOW:
@@ -343,10 +359,14 @@ function _initShowAnimation(item, prevItem, size) {
     if (spec.origin) {
         item.mod.setOrigin(spec.origin);
     }
+    var startShowAnimation = _startShowAnimation.bind(this, item, spec);
+    var waitAndShow = item.wait ? function () {
+            item.wait.then(startShowAnimation, startShowAnimation);
+        } : startShowAnimation;
     if (prevItem) {
-        _initTransferableAnimations.call(this, item, prevItem, _startShowAnimation.bind(this, item, spec));
+        _initTransferableAnimations.call(this, item, prevItem, waitAndShow);
     } else {
-        _startShowAnimation.call(this, item, spec);
+        waitAndShow();
     }
 }
 function _startShowAnimation(item, spec) {
@@ -382,6 +402,14 @@ function _haltItemAtFrame(item, perc) {
         }
     }
 }
+function _initHideAnimation(item, prevItem, size) {
+    var startHideAnimation = _startHideAnimation.bind(this, item, prevItem, size);
+    if (item.wait) {
+        item.wait.then(startHideAnimation, startHideAnimation);
+    } else {
+        startHideAnimation();
+    }
+}
 function _startHideAnimation(item, prevItem, size) {
     var spec = item.options.hide.animation ? item.options.hide.animation.call(undefined, false, size) : {};
     item.endSpec = spec;
@@ -405,7 +433,7 @@ function _startHideAnimation(item, prevItem, size) {
         }
     }
 }
-function _setItemOptions(item, options) {
+function _setItemOptions(item, options, callback) {
     item.options = {
         show: {
             transition: this.options.show.transition || this.options.transition,
@@ -434,16 +462,52 @@ function _setItemOptions(item, options) {
         item.options.transfer.zIndex = options.transfer && options.transfer.zIndex !== undefined ? options.transfer.zIndex : item.options.transfer.zIndex;
         item.options.transfer.fastResize = options.transfer && options.transfer.fastResize !== undefined ? options.transfer.fastResize : item.options.transfer.fastResize;
     }
+    item.showCallback = function () {
+        item.showCallback = undefined;
+        item.state = ItemState.VISIBLE;
+        _updateState.call(this);
+        _endTransferableAnimations.call(this, item);
+        item.endSpec = undefined;
+        item.startSpec = undefined;
+        if (callback) {
+            callback();
+        }
+    }.bind(this);
 }
 function _updateState() {
     var prevItem;
     var invalidated = false;
-    for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+    var hiddenViewCount = 0;
+    var i = 0;
+    while (i < this._viewStack.length) {
+        if (this._viewStack[i].state === ItemState.HIDDEN) {
+            hiddenViewCount++;
+            for (var j = 0; j < this._viewStack.length; j++) {
+                if (this._viewStack[j].state !== ItemState.HIDDEN && this._viewStack[j].view === this._viewStack[i].view) {
+                    this._viewStack[i].view = undefined;
+                    this._renderables.views.splice(i, 1);
+                    this._viewStack.splice(i, 1);
+                    i--;
+                    hiddenViewCount--;
+                    break;
+                }
+            }
+        }
+        i++;
+    }
+    while (hiddenViewCount > this.options.keepHiddenViewsInDOMCount) {
+        this._viewStack[0].view = undefined;
+        this._renderables.views.splice(0, 1);
+        this._viewStack.splice(0, 1);
+        hiddenViewCount--;
+    }
+    for (i = hiddenViewCount; i < Math.min(this._viewStack.length - hiddenViewCount, 2) + hiddenViewCount; i++) {
         var item = this._viewStack[i];
         if (item.state === ItemState.QUEUED) {
             if (!prevItem || prevItem.state === ItemState.VISIBLE || prevItem.state === ItemState.HIDING) {
                 if (prevItem && prevItem.state === ItemState.VISIBLE) {
                     prevItem.state = ItemState.HIDE;
+                    prevItem.wait = item.wait;
                 }
                 item.state = ItemState.SHOW;
                 invalidated = true;
@@ -500,14 +564,13 @@ AnimationController.prototype.show = function (renderable, options, callback) {
         return this.hide(options, callback);
     }
     var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
-    if (item && item.view === renderable) {
+    if (item && item.view === renderable && item.state !== ItemState.HIDDEN) {
         item.hide = false;
         if (item.state === ItemState.HIDE) {
             item.state = ItemState.QUEUED;
-            _setItemOptions.call(this, item, options);
+            _setItemOptions.call(this, item, options, callback);
             _updateState.call(this);
-        }
-        if (callback) {
+        } else if (callback) {
             callback();
         }
         return this;
@@ -525,28 +588,15 @@ AnimationController.prototype.show = function (renderable, options, callback) {
         mod: new StateModifier(),
         state: ItemState.QUEUED,
         callback: callback,
-        transferables: []
+        transferables: [],
+        wait: options ? options.wait : undefined
     };
     item.node = new RenderNode(item.mod);
     item.node.add(renderable);
-    _setItemOptions.call(this, item, options);
-    item.showCallback = function () {
-        item.showCallback = undefined;
-        item.state = ItemState.VISIBLE;
-        _updateState.call(this);
-        _endTransferableAnimations.call(this, item);
-        item.endSpec = undefined;
-        item.startSpec = undefined;
-        if (callback) {
-            callback();
-        }
-    }.bind(this);
+    _setItemOptions.call(this, item, options, callback);
     item.hideCallback = function () {
         item.hideCallback = undefined;
-        var index = this._viewStack.indexOf(item);
-        this._renderables.views.splice(index, 1);
-        this._viewStack.splice(index, 1);
-        item.view = undefined;
+        item.state = ItemState.HIDDEN;
         _updateState.call(this);
         this.layout.reflowLayout();
     }.bind(this);
@@ -571,10 +621,8 @@ AnimationController.prototype.hide = function (options, callback) {
         }
     }
     item.hideCallback = function () {
-        var index = this._viewStack.indexOf(item);
-        this._renderables.views.splice(index, 1);
-        this._viewStack.splice(index, 1);
-        item.view = undefined;
+        item.hideCallback = undefined;
+        item.state = ItemState.HIDDEN;
         _updateState.call(this);
         this.layout.reflowLayout();
         if (callback) {
@@ -623,10 +671,7 @@ AnimationController.prototype.abort = function (callback) {
         item.state = ItemState.HIDING;
         item.hideCallback = function () {
             item.hideCallback = undefined;
-            var index = this._viewStack.indexOf(item);
-            this._renderables.views.splice(index, 1);
-            this._viewStack.splice(index, 1);
-            item.view = undefined;
+            item.state = ItemState.HIDDEN;
             _updateState.call(this);
             this.layout.reflowLayout();
         }.bind(this);
@@ -3074,7 +3119,7 @@ function ScrollController(options) {
     LayoutController.call(this, options, layoutManager);
     this._scroll = {
         activeTouches: [],
-        pe: new PhysicsEngine(),
+        pe: new PhysicsEngine(this.options.scrollPhysicsEngine),
         particle: new Particle(this.options.scrollParticle),
         dragForce: new Drag(this.options.scrollDrag),
         frictionForce: new Drag(this.options.scrollFriction),
@@ -3143,6 +3188,7 @@ ScrollController.PaginationMode = PaginationMode;
 ScrollController.DEFAULT_OPTIONS = {
     useContainer: false,
     container: { properties: { overflow: 'hidden' } },
+    scrollPhysicsEngine: {},
     scrollParticle: {},
     scrollDrag: {
         forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
@@ -4839,7 +4885,7 @@ function CollectionLayout(context_, options) {
     } else {
         itemSize = options.itemSize;
     }
-    offset = context.scrollOffset + (alignment ? 0 : margin[alignment]);
+    offset = context.scrollOffset + margin[alignment] + (alignment ? spacing[direction] : 0);
     bound = context.scrollEnd + (alignment ? 0 : margin[alignment]);
     lineOffset = 0;
     lineNodes = [];
@@ -4851,7 +4897,7 @@ function CollectionLayout(context_, options) {
         }
         nodeSize = _resolveNodeSize(node);
         lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-        if (lineOffset > lineLength) {
+        if (Math.round(lineOffset * 100) / 100 > lineLength) {
             offset += _layoutLine(true, !node);
             lineOffset = nodeSize[lineDirection];
         }
@@ -4860,7 +4906,7 @@ function CollectionLayout(context_, options) {
             size: nodeSize
         });
     }
-    offset = context.scrollOffset + (alignment ? margin[alignment] : 0);
+    offset = context.scrollOffset + margin[alignment] - (alignment ? 0 : spacing[direction]);
     bound = context.scrollStart + (alignment ? margin[alignment] : 0);
     lineOffset = 0;
     lineNodes = [];
@@ -4872,7 +4918,7 @@ function CollectionLayout(context_, options) {
         }
         nodeSize = _resolveNodeSize(node);
         lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-        if (lineOffset > lineLength) {
+        if (Math.round(lineOffset * 100) / 100 > lineLength) {
             offset -= _layoutLine(false, !node);
             lineOffset = nodeSize[lineDirection];
         }
@@ -5129,6 +5175,9 @@ function ListLayout(context, options) {
     var lastCellOffsetInFirstVisibleSection;
     var isSectionCallback = options.isSectionCallback;
     var bound;
+    if (spacing && typeof spacing !== 'number') {
+        console.log('Famous-flex warning: ListLayout was initialized with a non-numeric spacing option. ' + 'The CollectionLayout supports an array spacing argument, but the ListLayout does not.');
+    }
     set.size[0] = size[0];
     set.size[1] = size[1];
     set.size[revDirection] -= margins[1 - revDirection] + margins[3 - revDirection];

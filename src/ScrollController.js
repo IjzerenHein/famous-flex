@@ -116,7 +116,7 @@ define(function(require, exports, module) {
         this._scroll = {
             activeTouches: [],
             // physics-engine to use for scrolling
-            pe: new PhysicsEngine(),
+            pe: new PhysicsEngine(this.options.scrollPhysicsEngine),
             // particle that represents the scroll-offset
             particle: new Particle(this.options.scrollParticle),
             // drag-force that slows the particle down after a "flick"
@@ -208,8 +208,14 @@ define(function(require, exports, module) {
                 overflow: 'hidden' // overflow mode when useContainer is enabled
             }
         },
+        scrollPhysicsEngine: {
+            // use defaults
+            //velocityCap: undefined,
+            //angularVelocityCap: undefined
+        },
         scrollParticle: {
             // use defaults
+            //mass: 1
         },
         scrollDrag: {
             forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,

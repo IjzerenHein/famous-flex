@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.3
-* @generated 09-06-2015
+* @version 0.3.5
+* @generated 07-09-2015
 */
 /**
  * This Source Code is licensed under the MIT license. If a copy of the
@@ -3639,7 +3639,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         this._scroll = {
             activeTouches: [],
             // physics-engine to use for scrolling
-            pe: new PhysicsEngine(),
+            pe: new PhysicsEngine(this.options.scrollPhysicsEngine),
             // particle that represents the scroll-offset
             particle: new Particle(this.options.scrollParticle),
             // drag-force that slows the particle down after a "flick"
@@ -3731,8 +3731,14 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                 overflow: 'hidden' // overflow mode when useContainer is enabled
             }
         },
+        scrollPhysicsEngine: {
+            // use defaults
+            //velocityCap: undefined,
+            //angularVelocityCap: undefined
+        },
         scrollParticle: {
             // use defaults
+            //mass: 1
         },
         scrollDrag: {
             forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
@@ -5666,7 +5672,15 @@ define('famous-flex/layouts/ListLayout',['require','exports','module','famous/ut
         var bound;
 
         //
-        // reset size & translation
+        // Sanity checks
+        //
+        if (spacing && typeof spacing !== 'number') {
+            console.log('Famous-flex warning: ListLayout was initialized with a non-numeric spacing option. ' + // eslint-disable-line no-console
+                'The CollectionLayout supports an array spacing argument, but the ListLayout does not.');
+        }
+
+        //
+        // Reset size & translation
         //
         set.size[0] = size[0];
         set.size[1] = size[1];
@@ -6751,7 +6765,6 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     var RenderNode = require('famous/core/RenderNode');
     var Timer = require('famous/utilities/Timer');
     var Easing = require('famous/transitions/Easing');
-    //var Transitionable = require('famous/animations/Transitionable');
 
     /**
      * @class
@@ -6759,6 +6772,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * @param {Object} [options.transition] Transition options (default: `{duration: 400, curve: Easing.inOutQuad}`).
      * @param {Function} [options.animation] Animation function (default: `AnimationController.Animation.Slide.Left`).
      * @param {Number} [options.zIndexOffset] Optional z-index difference between the hiding & showing renderable (default: 0).
+     * @param {Number} [options.keepHiddenViewsInDOMCount] Keeps views in the DOM after they have been hidden (default: 0).
      * @param {Object} [options.show] Show specific options.
      * @param {Object} [options.show.transition] Show specific transition options.
      * @param {Function} [options.show.animation] Show specific animation function.
@@ -6862,17 +6876,19 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             //   'image': ['image', 'image2']
             // }
         },
-        zIndexOffset: 0
+        zIndexOffset: 0,
+        keepHiddenViewsInDOMCount: 0
     };
 
     var ItemState = {
         NONE: 0,
         HIDE: 1,
         HIDING: 2,
-        SHOW: 3,
-        SHOWING: 4,
-        VISIBLE: 5,
-        QUEUED: 6
+        HIDDEN: 3,
+        SHOW: 4,
+        SHOWING: 5,
+        VISIBLE: 6,
+        QUEUED: 7
     };
 
     /**
@@ -6888,33 +6904,44 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         this._size[1] = context.size[1];
         var views = context.get('views');
         var transferables = context.get('transferables');
-        for (var i = 0; i < Math.min(views.length, 2); i++) {
+        var visibleCount = 0;
+        for (var i = 0; i < views.length; i++) {
             var item = this._viewStack[i];
             switch (item.state) {
+                case ItemState.HIDDEN:
+                    context.set(views[i], {
+                        size: context.size,
+                        translate: [context.size[0] * 2, context.size[1] * 2, 0]
+                    });
+                    break;
+
                 case ItemState.HIDE:
                 case ItemState.HIDING:
                 case ItemState.VISIBLE:
                 case ItemState.SHOW:
                 case ItemState.SHOWING:
+                    if (visibleCount < 2) {
+                        visibleCount++;
 
-                    // Layout view
-                    var view = views[i];
-                    context.set(view, set);
+                        // Layout view
+                        var view = views[i];
+                        context.set(view, set);
 
-                    // Layout any transferables
-                    for (var j = 0; j < transferables.length; j++) {
-                        for (var k = 0; k < item.transferables.length; k++) {
-                            if (transferables[j].renderNode === item.transferables[k].renderNode) {
-                                context.set(transferables[j], {
-                                    translate: [0, 0, set.translate[2]],
-                                    size: [context.size[0], context.size[1]]
-                                });
+                        // Layout any transferables
+                        for (var j = 0; j < transferables.length; j++) {
+                            for (var k = 0; k < item.transferables.length; k++) {
+                                if (transferables[j].renderNode === item.transferables[k].renderNode) {
+                                    context.set(transferables[j], {
+                                        translate: [0, 0, set.translate[2]],
+                                        size: [context.size[0], context.size[1]]
+                                    });
+                                }
                             }
                         }
-                    }
 
-                    // Increase z-index for next view
-                    set.translate[2] += options.zIndexOffset;
+                        // Increase z-index for next view
+                        set.translate[2] += options.zIndexOffset;
+                    }
                     break;
             }
         }
@@ -7128,7 +7155,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             switch (item.state) {
                 case ItemState.HIDE:
                     item.state = ItemState.HIDING;
-                    _startHideAnimation.call(this, item, prevItem, event.size);
+                    _initHideAnimation.call(this, item, prevItem, event.size);
                     _updateState.call(this);
                     break;
                 case ItemState.SHOW:
@@ -7164,11 +7191,15 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
         if (spec.origin) {
             item.mod.setOrigin(spec.origin);
         }
+        var startShowAnimation = _startShowAnimation.bind(this, item, spec);
+        var waitAndShow = item.wait ? function() {
+            item.wait.then(startShowAnimation, startShowAnimation);
+        } : startShowAnimation;
         if (prevItem) {
-            _initTransferableAnimations.call(this, item, prevItem, _startShowAnimation.bind(this, item, spec));
+            _initTransferableAnimations.call(this, item, prevItem, waitAndShow);
         }
         else {
-            _startShowAnimation.call(this, item, spec);
+            waitAndShow();
         }
     }
 
@@ -7219,6 +7250,19 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     }
 
     /**
+     * Waits for the animation to start.
+     */
+    function _initHideAnimation(item, prevItem, size) {
+        var startHideAnimation = _startHideAnimation.bind(this, item, prevItem, size);
+        if (item.wait) {
+            item.wait.then(startHideAnimation, startHideAnimation);
+        }
+        else {
+            startHideAnimation();
+        }
+    }
+
+    /**
      * Starts the hide animation.
      */
     function _startHideAnimation(item, prevItem, size) {
@@ -7248,7 +7292,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     /**
      * Sets the options for an item.
      */
-    function _setItemOptions(item, options) {
+    function _setItemOptions(item, options, callback) {
         item.options = {
             show: {
                 transition: this.options.show.transition || this.options.transition,
@@ -7278,6 +7322,17 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
             item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
         }
+        item.showCallback = function() {
+            item.showCallback = undefined;
+            item.state = ItemState.VISIBLE;
+            _updateState.call(this);
+            _endTransferableAnimations.call(this, item);
+            item.endSpec = undefined;
+            item.startSpec = undefined;
+            if (callback) {
+                callback();
+            }
+        }.bind(this);
     }
 
     /**
@@ -7286,7 +7341,32 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
     function _updateState() {
         var prevItem;
         var invalidated = false;
-        for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+        var hiddenViewCount = 0;
+        var i = 0;
+        while (i < this._viewStack.length) {
+            if (this._viewStack[i].state === ItemState.HIDDEN) {
+                hiddenViewCount++;
+                for (var j = 0; j < this._viewStack.length; j++) {
+                    if ((this._viewStack[j].state !== ItemState.HIDDEN) &&
+                        (this._viewStack[j].view === this._viewStack[i].view)) {
+                        this._viewStack[i].view = undefined;
+                        this._renderables.views.splice(i, 1);
+                        this._viewStack.splice(i, 1);
+                        i--;
+                        hiddenViewCount--;
+                        break;
+                    }
+                }
+            }
+            i++;
+        }
+        while (hiddenViewCount > this.options.keepHiddenViewsInDOMCount) {
+            this._viewStack[0].view = undefined;
+            this._renderables.views.splice(0, 1);
+            this._viewStack.splice(0, 1);
+            hiddenViewCount--;
+        }
+        for (i = hiddenViewCount; i < (Math.min(this._viewStack.length - hiddenViewCount, 2) + hiddenViewCount); i++) {
             var item = this._viewStack[i];
             if (item.state === ItemState.QUEUED) {
                 if (!prevItem ||
@@ -7294,6 +7374,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                     (prevItem.state === ItemState.HIDING)) {
                     if (prevItem && (prevItem.state === ItemState.VISIBLE)) {
                         prevItem.state = ItemState.HIDE;
+                        prevItem.wait = item.wait;
                     }
                     item.state = ItemState.SHOW;
                     invalidated = true;
@@ -7358,6 +7439,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * @param {Object} [options] Options.
      * @param {Object} [options.transition] Transition options for both show & hide.
      * @param {Function} [options.animation] Animation function for both show & hide.
+     * @param {Promise} [options.wait] A promise to wait for before running the animation.
      * @param {Object} [options.show] Show specific options.
      * @param {Object} [options.show.transition] Show specific transition options.
      * @param {Function} [options.show.animation] Show specific animation function.
@@ -7377,14 +7459,14 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             return this.hide(options, callback);
         }
         var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
-        if (item && (item.view === renderable)) {
+        if (item && (item.view === renderable) && (item.state !== ItemState.HIDDEN)) {
             item.hide = false;
             if (item.state === ItemState.HIDE) {
                 item.state = ItemState.QUEUED;
-                _setItemOptions.call(this, item, options);
+                _setItemOptions.call(this, item, options, callback);
                 _updateState.call(this);
             }
-            if (callback) {
+            else if (callback) {
                 callback();
             }
             return this;
@@ -7403,28 +7485,15 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             mod: new StateModifier(),
             state: ItemState.QUEUED,
             callback: callback,
-            transferables: [] // renderables currently being transfered
+            transferables: [], // renderables currently being transfered
+            wait: options ? options.wait : undefined
         };
         item.node = new RenderNode(item.mod);
         item.node.add(renderable);
-        _setItemOptions.call(this, item, options);
-        item.showCallback = function() {
-            item.showCallback = undefined;
-            item.state = ItemState.VISIBLE;
-            _updateState.call(this);
-            _endTransferableAnimations.call(this, item);
-            item.endSpec = undefined;
-            item.startSpec = undefined;
-            if (callback) {
-                callback();
-            }
-        }.bind(this);
+        _setItemOptions.call(this, item, options, callback);
         item.hideCallback = function() {
             item.hideCallback = undefined;
-            var index = this._viewStack.indexOf(item);
-            this._renderables.views.splice(index, 1);
-            this._viewStack.splice(index, 1);
-            item.view = undefined;
+            item.state = ItemState.HIDDEN;
             _updateState.call(this);
             this.layout.reflowLayout();
         }.bind(this);
@@ -7460,10 +7529,8 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             }
         }
         item.hideCallback = function() {
-            var index = this._viewStack.indexOf(item);
-            this._renderables.views.splice(index, 1);
-            this._viewStack.splice(index, 1);
-            item.view = undefined;
+            item.hideCallback = undefined;
+            item.state = ItemState.HIDDEN;
             _updateState.call(this);
             this.layout.reflowLayout();
             if (callback) {
@@ -7531,10 +7598,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
             item.state = ItemState.HIDING;
             item.hideCallback = function() {
                 item.hideCallback = undefined;
-                var index = this._viewStack.indexOf(item);
-                this._renderables.views.splice(index, 1);
-                this._viewStack.splice(index, 1);
-                item.view = undefined;
+                item.state = ItemState.HIDDEN;
                 _updateState.call(this);
                 this.layout.reflowLayout();
             }.bind(this);
@@ -9636,7 +9700,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         //
         // Process all next nodes
         //
-        offset = context.scrollOffset + (alignment ? 0 : margin[alignment]);
+        offset = context.scrollOffset + margin[alignment] + (alignment ? spacing[direction] : 0);
         bound = context.scrollEnd + (alignment ? 0 : margin[alignment]);
         lineOffset = 0;
         lineNodes = [];
@@ -9648,7 +9712,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
             }
             nodeSize = _resolveNodeSize(node);
             lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-            if (lineOffset > lineLength) {
+            if ((Math.round(lineOffset * 100) / 100) > lineLength) {
                 offset += _layoutLine(true, !node);
                 lineOffset = nodeSize[lineDirection];
             }
@@ -9658,7 +9722,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
         //
         // Process previous nodes
         //
-        offset = context.scrollOffset + (alignment ? margin[alignment] : 0);
+        offset = context.scrollOffset + margin[alignment] - (alignment ? 0 : spacing[direction]);
         bound = context.scrollStart + (alignment ? margin[alignment] : 0);
         lineOffset = 0;
         lineNodes = [];
@@ -9670,7 +9734,7 @@ define('famous-flex/layouts/CollectionLayout',['require','exports','module','fam
             }
             nodeSize = _resolveNodeSize(node);
             lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
-            if (lineOffset > lineLength) {
+            if ((Math.round(lineOffset * 100) / 100) > lineLength) {
                 offset -= _layoutLine(false, !node);
                 lineOffset = nodeSize[lineDirection];
             }
