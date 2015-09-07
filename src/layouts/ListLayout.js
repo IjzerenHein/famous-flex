@@ -115,8 +115,8 @@ define(function(require, exports, module) {
         //
         // Sanity checks
         //
-        if(spacing && typeof spacing !== 'number'){
-            console.log('Famous-flex warning: ListLayout was initialized with a non-numeric spacing option. ' +
+        if (spacing && typeof spacing !== 'number') {
+            console.log('Famous-flex warning: ListLayout was initialized with a non-numeric spacing option. ' + // eslint-disable-line no-console
                 'The CollectionLayout supports an array spacing argument, but the ListLayout does not.');
         }
 

@@ -608,7 +608,7 @@ define(function(require, exports, module) {
                 for (var j = 0; j < this._viewStack.length; j++) {
                     if ((this._viewStack[j].state !== ItemState.HIDDEN) &&
                         (this._viewStack[j].view === this._viewStack[i].view)) {
-                        this._viewStack[i].view = undefined
+                        this._viewStack[i].view = undefined;
                         this._renderables.views.splice(i, 1);
                         this._viewStack.splice(i, 1);
                         i--;
@@ -620,7 +620,7 @@ define(function(require, exports, module) {
             i++;
         }
         while (hiddenViewCount > this.options.keepHiddenViewsInDOMCount) {
-            this._viewStack[0].view = undefined
+            this._viewStack[0].view = undefined;
             this._renderables.views.splice(0, 1);
             this._viewStack.splice(0, 1);
             hiddenViewCount--;
