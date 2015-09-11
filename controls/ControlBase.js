@@ -10,6 +10,7 @@
 
 import {Node} from 'famous/core';
 import Margins from './Margins';
+import Animation from '../core/Animation';
 
 export default class ControlBase extends Node {
   constructor(options) {
@@ -21,8 +22,8 @@ export default class ControlBase extends Node {
     this._content = undefined;
     this._layout = (options && options.layout) ? options.layout : () => {};
     this._comp = this.addComponent({
-      onUpdate: () => this._layout(this, this.getSize()),
-      onSizeChange: () => this._layout(this, this.getSize())
+      onUpdate: () => this._layout(this.getSize()),
+      onSizeChange: () => this._layout(this.getSize())
     });
     if (options) {
       if (options.margins) {
@@ -51,11 +52,8 @@ export default class ControlBase extends Node {
           this._addDOMNode(options.domNodes[i]);
         }
       }
+      this.animated = options.animated || false;
     }
-  }
-
-  get domNodes() {
-    return this._domNodes;
   }
 
   _addDOMNode(node) {
@@ -64,21 +62,22 @@ export default class ControlBase extends Node {
       node.el.setContent(this._content);
     }
     for (let i = 0; i < this._classes.length; i++) {
-      node.el.addClass(this._classes[i]);
+      node.addClass(this._classes[i]);
     }
     for (let style in this._styles) {
-      node.el.setProperty(style, this._styles[style]);
+      node.setStyle(style, this._styles[style]);
     }
     for (let attr in this._attributes) {
-      this.el.setAttribute(attr, this._attributes[attr]);
+      this.setAttribute(attr, this._attributes[attr]);
     }
     this.addChild(node);
   }
 
-  _removeDOMNode(domElementNode) {
-    const index = this._domNodes.indexOf(domElementNode);
+  _removeDOMNode(node) {
+    const index = this._domNodes.indexOf(node);
     if (index >= 0) {
       this._domNodes.splice(index, 1);
+      this.removeChild(node);
     }
   }
 
@@ -155,5 +154,17 @@ export default class ControlBase extends Node {
 
   hasClass(cls) {
     return this._classes.indexOf(cls) !== -1;
+  }
+
+  get animated() {
+    return this._animated;
+  }
+
+  set animated(value) {
+    this._animated = value;
+  }
+
+  _animate(collectFn) {
+    return Animation.start(this.animationDuration, this.animationCurve, collectFn);
   }
 }

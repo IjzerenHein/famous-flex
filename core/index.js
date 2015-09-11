@@ -1,5 +1,10 @@
 import LayoutController from './LayoutController';
 import DOMNode from './DOMNode';
+import Animation from './Animation';
 
-export {LayoutController as LayoutController};
-export {DOMNode as DOMNode};
+export {
+  LayoutController,
+  DOMNode,
+  Animation
+};
+

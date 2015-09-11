@@ -1,4 +1,5 @@
-import DOMNode from '../core/DOMNode';
+import {Opacity} from 'famous/components';
+import {DOMNode, Animation} from '../core';
 import ControlBase from './ControlBase';
 import Margins from './Margins';
 
@@ -20,20 +21,16 @@ export default class Label extends ControlBase {
    */
   constructor(options) {
     super(options);
-    this._setLayout(Label.layout);
-    this._primaryDOMNode = new DOMNode();
-    this._primaryDOMNode.setSizeMode('absolute', 'absolute');
-    this._addDOMNode(this._primaryDOMNode);
+    this._setLayout(Label.layout.bind(this));
+    this._primaryText = new DOMNode();
+    this._frontText = this._primaryText;
+    this._addDOMNode(this._primaryText);
     if (options) {
-      if (options.animate || options.autoScale) {
-        this._secondaryDOMNode = new DOMNode();
-        this._addDOMNode(this._secondaryDOMNode);
-      }
+      if (options.autoScale) this.autoScale = true;
       if (options.text) this.text = options.text
       if (options.background) {
-        this._backgroundDOMNode = new DOMNode();
-        this._backgroundDOMNode.setSizeMode('absolute', 'absolute');
-        this._addDOMNode(this._backgroundDOMNode);
+        this._backgroundText = new DOMNode();
+        this._addDOMNode(this._backgroundText);
       }
     }
     this.addClass('label');
@@ -42,30 +39,59 @@ export default class Label extends ControlBase {
   /**
    * @private
    */
-  static layout(label, size) {
+  static layout(size) {
     let zIndex = 0;
-    if (label._backgroundDOMNode) {
-      label._backgroundDOMNode
-        .setAbsoluteSize(size[0] - Margins.outerWidth(this._margins), size[1] - Margins.outerHeight(this._margins))
-        .setPosition(Margins.outerLeft(this._margins), Margins.outerTop(this._margins), zIndex);
+    const left = Margins.outerLeft(this._margins);
+    const top = Margins.outerTop(this._margins);
+    const width = size[0] - Margins.outerWidth(this._margins);
+    const height = size[1] - Margins.outerHeight(this._margins);
+    if (this._backgroundText) {
+      this._backgroundText.setRect(left, top, width, height);
+      this._backgroundText.zIndex = zIndex;
       zIndex += 2;
     }
-    if (label._secondaryDOMNode) {
-      label._secondaryDOMNode
-        .setAbsoluteSize(size[0] - Margins.innerWidth(this._margins), size[1] - Margins.innerHeight(this._margins))
-        .setPosition(Margins.innerLeft(this._margins), Margins.innerTop(this._margins), zIndex);
+    if (this._secondaryText) {
+      this._secondaryText.setRect(left, top, width, height);
+      this._secondaryText.zIndex = zIndex;
       zIndex += 2;
     }
-    label._primaryDOMNode
-      .setAbsoluteSize(size[0] - Margins.innerWidth(this._margins), size[1] - Margins.innerHeight(this._margins))
-      .setPosition(Margins.innerLeft(this._margins), Margins.innerTop(this._margins), zIndex);
+    this._primaryText.setRect(left, top, width, height);
+    this._primaryText.zIndex = zIndex;
+  }
+
+  _updateSecondaryText() {
+    if ((this.animated || this._autoScale) && !this._secondaryText) {
+      this._secondaryText = new DOMNode({opacity: 0});
+      this._addDOMNode(this._secondaryText);
+    }
+    else if (!this.animated && !this._autoScale && this._secondaryText) {
+      this._removeDOMNode(this._secondaryText);
+      this._secondaryText = undefined;
+    }
+  }
+
+  get animated() {
+    return super.animated;
+  }
+
+  set animated(value) {
+    super.animated = value;
+    this._updateSecondaryText();
+  }
+
+  get autoScale() {
+    return this._autoScale;
+  }
+
+  set autoScale(value) {
+    this._autoScale = value;
+    this._updateSecondaryText();
   }
 
   /**
    * Text that is displayed in the label.
    *
    * @type {String}
-   * @readonly
    */
   get text() {
     return this._text;
@@ -80,7 +106,32 @@ export default class Label extends ControlBase {
     text = text || '';
     if (this._text !== text) {
       this._text = text;
-      this._setContent('<div>' + this._text + '</div>');
+      if (this.animated) {
+        if (this._frontDOMNode === this._primaryDOMNode) {
+          this._frontDOMNode = this._secondaryDOMNode;
+          this._animate(() => {
+            this._primaryDOMNode.opacity = 0;
+            this._secondaryDOMNode.opacity = 1;
+          });
+        } else {
+          this._frontDOMNode = this._primaryDOMNode;
+          this._animate(() => {
+            this._primaryDOMNode.opacity = 1;
+            this._secondaryDOMNode.opacity = 0;
+          });
+        }
+        this._frontDOMNode.el.setContent('<div>' + this._text + '</div>');
+      }
+      else {
+        this._setContent('<div>' + this._text + '</div>');
+      }
     }
   }
 }
+
+Label.DEFAULT_OPTIONS = {
+  animationTransition: {
+    duration: 300,
+    curve: 'easeIn'
+  }
+};
