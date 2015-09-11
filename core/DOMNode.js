@@ -18,6 +18,11 @@ export default class DOMNode extends Node {
       super();
       this.setSizeMode('absolute', 'absolute');
       this._domElement = new DOMElement(this, options);
+      if (options && options.styles) {
+        for (var key in options.styles) {
+          this._domElement.setProperty(key, options.styles[key]);
+        }
+      }
     }
 
     get el() {

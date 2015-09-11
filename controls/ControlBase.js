@@ -11,14 +11,18 @@
 import {Node} from 'famous/core';
 import Margins from './Margins';
 import Animation from '../core/Animation';
+import DOMNode from '../core/DOMNode';
 
 export default class ControlBase extends Node {
   constructor(options) {
     super();
-    this._domNodes = [];
     this._classes = ['ff-control'];
     this._styles = {};
     this._attributes = {};
+    this._sharedContentNodes = [];
+    this._sharedStylesNodes = [];
+    this._sharedClassesNodes = [];
+    this._sharedAttrNodes = [];
     this._content = undefined;
     this._layout = (options && options.layout) ? options.layout : () => {};
     this._comp = this.addComponent({
@@ -47,38 +51,60 @@ export default class ControlBase extends Node {
           this.setAttribute(attr, options.attributes[attr]);
         }
       }
-      if (options.domNodes) {
-        for (let i = 0; i < options.domNodes.length; i++) {
-          this._addDOMNode(options.domNodes[i]);
-        }
-      }
       this.animated = options.animated || false;
     }
   }
 
-  _addDOMNode(node) {
-    this._domNodes.push(node);
-    if (this._content !== undefined) {
-      node.el.setContent(this._content);
+  _createDOMNode(inherit) {
+    const domNode = new DOMNode();
+    if (inherit && inherit.length) {
+      if (inherit.indexOf('content') >= 0) {
+        this._sharedContentNodes.push(domNode);
+        if (this._content !== undefined) {
+          domNode.el.setContent(this._content);
+        }
+      }
+      if (inherit.indexOf('classes') >= 0) {
+        this._sharedClassesNodes.push(domNode);
+        for (let i = 0; i < this._classes.length; i++) {
+          domNode.addClass(this._classes[i]);
+        }
+      }
+      if (inherit.indexOf('attributes') >= 0) {
+        this._sharedAttrNodes.push(domNode);
+        for (let attr in this._attributes) {
+          domNode.setAttribute(attr, this._attributes[attr]);
+        }
+      }
+      if (inherit.indexOf('styles') >= 0) {
+        this._sharedStylesNodes.push(domNode);
+        for (let style in this._styles) {
+          domNode.setStyle(style, this._styles[style]);
+        }
+      }
     }
-    for (let i = 0; i < this._classes.length; i++) {
-      node.addClass(this._classes[i]);
-    }
-    for (let style in this._styles) {
-      node.setStyle(style, this._styles[style]);
-    }
-    for (let attr in this._attributes) {
-      this.setAttribute(attr, this._attributes[attr]);
-    }
-    this.addChild(node);
+    this.addChild(domNode);
+    return domNode;
   }
 
   _removeDOMNode(node) {
-    const index = this._domNodes.indexOf(node);
+    let index = this._sharedContentNodes.indexOf(node);
     if (index >= 0) {
-      this._domNodes.splice(index, 1);
-      this.removeChild(node);
+      this._sharedContentNodes.splice(index, 1);
     }
+    index = this._sharedClassesNodes.indexOf(node);
+    if (index >= 0) {
+      this._sharedClassesNodes.splice(index, 1);
+    }
+    index = this._sharedAttrNodes.indexOf(node);
+    if (index >= 0) {
+      this._sharedAttrNodes.splice(index, 1);
+    }
+    index = this._sharedStylesNodes.indexOf(node);
+    if (index >= 0) {
+      this._sharedStylesNodes.splice(index, 1);
+    }
+    this.removeChild(node);
   }
 
   _setLayout(layout) {
@@ -93,8 +119,8 @@ export default class ControlBase extends Node {
 
   _setContent(content) {
     this._content = content;
-    for (let i = 0; i < this._domNodes.length; i++) {
-      this._domNodes[i].el.setContent(content);
+    for (let i = 0; i < this._sharedContentNodes.length; i++) {
+      this._sharedContentNodes[i].el.setContent(content);
     }
   }
 
@@ -110,8 +136,8 @@ export default class ControlBase extends Node {
   setStyle(style, value) {
     if (this._styles[style] !== value) {
       this._styles[style] = value;
-      for (let i = 0; i < this._domNodes.length; i++) {
-        this._domNodes[i].el.setProperty(style, value);
+      for (let i = 0; i < this._sharedStylesNodes.length; i++) {
+        this._sharedStylesNodes[i].el.setProperty(style, value);
       }
     }
   }
@@ -123,8 +149,8 @@ export default class ControlBase extends Node {
   setAttribute(attr, value) {
     if (this._attributes[attr] !== value) {
       this._attributes[attr] = value;
-      for (let i = 0; i < this._domNodes.length; i++) {
-        this._domNodes[i].el.setAttribute(attr, value);
+      for (let i = 0; i < this._sharedAttrNodes.length; i++) {
+        this._sharedAttrNodes[i].el.setAttribute(attr, value);
       }
     }
   }
@@ -136,8 +162,8 @@ export default class ControlBase extends Node {
   addClass(cls) {
     if (this._classes.indexOf(cls) < 0) {
       this._classes.push(cls);
-      for (let i = 0; i < this._domNodes.length; i++) {
-        this._domNodes[i].el.addClass(cls);
+      for (let i = 0; i < this._sharedClassesNodes.length; i++) {
+        this._sharedClassesNodes[i].el.addClass(cls);
       }
     }
   }
@@ -146,8 +172,8 @@ export default class ControlBase extends Node {
     const index = this._classes.indexOf(cls);
     if (index >= 0) {
       this._classes.splice(index, 1);
-      for (let i = 0; i < this._domNodes.length; i++) {
-        this._domNodes[i].el.removeClass(cls);
+      for (let i = 0; i < this._sharedClassesNodes.length; i++) {
+        this._sharedClassesNodes[i].el.removeClass(cls);
       }
     }
   }

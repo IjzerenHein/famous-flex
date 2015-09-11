@@ -22,15 +22,14 @@ export default class Label extends ControlBase {
   constructor(options) {
     super(options);
     this._setLayout(Label.layout.bind(this));
-    this._primaryText = new DOMNode();
+    this._primaryText = this._createDOMNode(['classes', 'styles', 'attributes']);
     this._frontText = this._primaryText;
-    this._addDOMNode(this._primaryText);
     if (options) {
-      if (options.autoScale) this.autoScale = true;
+      if (options.autoScale) this.autoScale = options.autoScale;
       if (options.text) this.text = options.text
       if (options.background) {
-        this._backgroundText = new DOMNode();
-        this._addDOMNode(this._backgroundText);
+        this._background = this._createDOMNode(['classes', 'styles']);
+        this._background.addClass('background')
       }
     }
     this.addClass('label');
@@ -61,8 +60,8 @@ export default class Label extends ControlBase {
 
   _updateSecondaryText() {
     if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = new DOMNode({opacity: 0});
-      this._addDOMNode(this._secondaryText);
+      this._secondaryText = this._createDOMNode(['classes', 'styles', 'attributes']);
+      this._secondaryText.opacity = 0;
     }
     else if (!this.animated && !this._autoScale && this._secondaryText) {
       this._removeDOMNode(this._secondaryText);
@@ -70,23 +69,30 @@ export default class Label extends ControlBase {
     }
   }
 
+  /**
+   * @private
+   */
   get animated() {
     return super.animated;
   }
 
+  /**
+   * @private
+   * Overriden in order to create/destroy secondary-text if needed.
+   */
   set animated(value) {
     super.animated = value;
     this._updateSecondaryText();
   }
 
-  get autoScale() {
+  /*get autoScale() {
     return this._autoScale;
   }
 
   set autoScale(value) {
     this._autoScale = value;
     this._updateSecondaryText();
-  }
+  }*/
 
   /**
    * Text that is displayed in the label.
@@ -107,20 +113,13 @@ export default class Label extends ControlBase {
     if (this._text !== text) {
       this._text = text;
       if (this.animated) {
-        if (this._frontDOMNode === this._primaryDOMNode) {
-          this._frontDOMNode = this._secondaryDOMNode;
-          this._animate(() => {
-            this._primaryDOMNode.opacity = 0;
-            this._secondaryDOMNode.opacity = 1;
-          });
-        } else {
-          this._frontDOMNode = this._primaryDOMNode;
-          this._animate(() => {
-            this._primaryDOMNode.opacity = 1;
-            this._secondaryDOMNode.opacity = 0;
-          });
-        }
-        this._frontDOMNode.el.setContent('<div>' + this._text + '</div>');
+        const showSecondary = (this._frontText === this._primaryText);
+        this._frontText = showSecondary ? this._secondaryText : this._primaryText;
+        this._animate(() => {
+          this._primaryText.opacity = showSecondary ? 0 : 1;
+          this._secondaryText.opacity = showSecondary ? 1 : 0;
+        });
+        this._frontText.el.setContent('<div>' + this._text + '</div>');
       }
       else {
         this._setContent('<div>' + this._text + '</div>');
@@ -128,10 +127,3 @@ export default class Label extends ControlBase {
     }
   }
 }
-
-Label.DEFAULT_OPTIONS = {
-  animationTransition: {
-    duration: 300,
-    curve: 'easeIn'
-  }
-};
