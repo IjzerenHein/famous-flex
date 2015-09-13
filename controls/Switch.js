@@ -1,9 +1,18 @@
 import ControlBase from './ControlBase';
 import {Animation} from '../core';
-import {Margins, Color} from '../utilities';
+import {Color} from '../utilities';
 
-const NEUTRAL_COLOR = Color.parse('#FFFFFF');
-const BORDER_COLOR = Color.parse('#E8E8E8');
+const defaults = {
+  checked: false,
+  intrinsicSize: [60, 35],
+  animated: true,
+  animationDuration: 300,
+  animationCurve: 'inOutQuad',
+  padding: 1,
+  color: '#3d59fd',
+  backgroundColor: '#FFFFFF',
+  borderColor: '#E8E8E8'
+};
 
 export default class Switch extends ControlBase {
 
@@ -12,49 +21,29 @@ export default class Switch extends ControlBase {
    * @param {Bool} [options.checked] Checked state of the switch.
    */
   constructor(options) {
-    super(options);
-    this._setLayout(Switch.layout.bind(this));
-    this.intrinsicSize = (options && (options.intrinsicSize !== undefined)) ? options.intrinsicSize : [60, 35];
-    this.animationDuration = (options && options.animationDuration) ? options.animationDuration : 300;
-    this.animationCurve = (options && options.animationDuration) ? options.animationDuration : 'inOutQuad';
-    this.padding = 1;
-    this.color = '#3d59fd';
-    this._checked = false;
-    this._checkedRatio = 0;
-    this._handle = this._createDOMNode(['classes']);
-    this._handle.addClass('handle');
-    this._background = this._createDOMNode(['classes']);
-    this._background.addClass('background');
-    if (options) {
-      if (options.checked) this.checked = options.checked;
-    }
-    this.addClass('switch');
-    this.animated = (options && (options.animated !== undefined)) ? options.animated : true;
+    super();
+    this._handle = this._createDOMNode(['switch', 'handle']);
+    this._background = this._createDOMNode(['switch', 'background']);
     this._handle.on('tap', () => this.checked = !this.checked);
     this._background.on('tap', () => this.checked = !this.checked);
+    this._setProperties(options, defaults);
     this._updateColor();
   }
 
-  /**
-   * @private
-   */
-  static layout(left, top, width, height) {
-    let zIndex = 0;
-    this._background.setRect(left, top, width, height);
-    zIndex += 2;
-    left += Margins.getLeft(this.padding, width);
-    top += Margins.getTop(this.padding, height);
-    width = Margins.getWidth(this.padding, width);
-    height = Margins.getHeight(this.padding, height);
-    const handleWidth = Math.min(width, height);
-    const handleLeft = left + ((width - handleWidth) * this._checkedRatio);
-    this._handle.setRect(handleLeft, top, handleWidth, height);
-    this._handle.zIndex = zIndex;
+  static layout(spec) {
+    this._background.setSpec(spec, true);
+    this._applyPadding(spec);
+    const handleWidth = Math.min(spec.width, spec.height);
+    spec.x += ((spec.width - handleWidth) * this._checkedRatio);
+    spec.width = handleWidth;
+    this._handle.setSpec(spec);
   }
 
   _updateColor() {
-    this._background.backgroundColor = this._checked ? this._color : NEUTRAL_COLOR;
-    this._background.borderColor = this._checked ? this._color : BORDER_COLOR;
+    if (this._background) {
+      this._background.backgroundColor = this.checked ? this.color : this.backgroundColor;
+      this._background.borderColor = this.checked ? this.color : this.borderColor;
+    }
   }
 
   get checked() {
@@ -63,13 +52,14 @@ export default class Switch extends ControlBase {
 
   set checked(checked) {
     if (this._checked !== checked) {
-      this._checked = checked;
-      if (this.animated) {
+      if (this.animated && (this._checked !== undefined)) {
+        this._checked = checked;
         this._animate(() => {
-          this.checkedRatio = this._checked ? 1 : 0;
+          this.checkedRatio = checked ? 1 : 0;
           this._updateColor();
         });
       } else {
+        this._checked = checked;
         this.checkedRatio = this._checked ? 1 : 0;
         this._updateColor();
       }
@@ -82,9 +72,16 @@ export default class Switch extends ControlBase {
 
   set color(color) {
     this._color = Color.parse(color);
-    if (this._background) {
-      this._updateColor();
-    }
+    this._updateColor();
+  }
+
+  get backgroundColor() {
+    return this._backgroundColor;
+  }
+
+  set backgroundColor(color) {
+    this._backgroundColor = Color.parse(color);
+    this._updateColor();
   }
 
   get checkedRatio() {
@@ -102,3 +99,5 @@ export default class Switch extends ControlBase {
     }
   }
 }
+Switch.defaults = defaults;
+Switch.defaults.layout = Switch.layout;

@@ -2,6 +2,9 @@ import ControlBase from './ControlBase';
 import {Animation} from '../core';
 import {Margins} from '../utilities';
 
+const defaults = {
+};
+
 /**
  * Static text label.
  */
@@ -14,48 +17,22 @@ export default class Label extends ControlBase {
    * @param {Bool} [options.hasBackground] Set to `true` when using css-classes to style the background.
    */
   constructor(options) {
-    super(options);
-    this._setLayout(Label.layout.bind(this));
-    this._primaryText = this._createDOMNode(['classes', 'styles', 'attributes', 'content']);
+    super();
+    this._primaryText = this._createDOMNode(['label', 'text']);
     this._frontText = this._primaryText;
-    if (options) {
-      if (options.autoScale) this.autoScale = options.autoScale;
-      if (options.text) this.text = options.text;
-      if (options.hasBackground) {
-        this._background = this._createDOMNode(['classes', 'styles']);
-        this._background.addClass('background');
-      }
-      if (options.color) this.color = options.color;
-      if (options.backgroundColor) this.backgroundColor = options.backgroundColor;
-    }
-    this.addClass('label');
+    this._setProperties(options, defaults);
   }
 
-  /**
-   * @private
-   */
-  static layout(left, top, width, height) {
-    let zIndex = 0;
-    if (this._background) {
-      this._background.setRect(left, top, width, height);
-      zIndex += 2;
-    }
-    left += Margins.getLeft(this.padding, width);
-    top += Margins.getTop(this.padding, height);
-    width = Margins.getWidth(this.padding, width);
-    height = Margins.getHeight(this.padding, height);
-    if (this._secondaryText) {
-      this._secondaryText.setRect(left, top, width, height);
-      this._secondaryText.zIndex = zIndex;
-      zIndex += 2;
-    }
-    this._primaryText.setRect(left, top, width, height);
-    this._primaryText.zIndex = zIndex;
+  static layout(spec) {
+    if (this._background) this._background.setSpec(spec, true);
+    this._applyPadding(spec);
+    if (this._secondaryText) this._secondaryText.setSpec(spec, true);
+    this._primaryText.setSpec(spec);
   }
 
   _updateSecondaryText() {
     if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = this._createDOMNode(['classes', 'styles', 'attributes', 'content']);
+      this._secondaryText = this._createDOMNode(['label', 'text']);
       this._secondaryText.opacity = 0;
     } else if (!this.animated && !this._autoScale && this._secondaryText) {
       this._removeDOMNode(this._secondaryText);
@@ -63,16 +40,10 @@ export default class Label extends ControlBase {
     }
   }
 
-  /**
-   * @private
-   */
   get animated() {
     return super.animated;
   }
 
-  /**
-   * @private
-   */
   set animated(value) {
     super.animated = value;
     this._updateSecondaryText();
@@ -112,10 +83,22 @@ export default class Label extends ControlBase {
           this._primaryText.opacity = showSecondary ? 0 : 1;
           this._secondaryText.opacity = showSecondary ? 1 : 0;
         });
-        this._frontText.el.setContent('<div>' + this._text + '</div>');
-      } else {
-        this._setContent('<div>' + this._text + '</div>');
       }
+      this._primaryText.innerHTML = '<div>' + this._text + '</div>';
+      if (this._secondaryText) {
+        this._secondaryText.innerHTML = '<div>' + this._text + '</div>';
+      }
+    }
+  }
+
+  get styles() {
+    return this._primaryText.styles;
+  }
+
+  setStyle(style, value) {
+    this._primaryText.setStyle(style, value);
+    if (this._secondaryText) {
+      this._secondaryText.setStyle(style, value);
     }
   }
 
@@ -134,11 +117,14 @@ export default class Label extends ControlBase {
     return !!this._background;
   }
 
-  get background() {
-    if (!this._background) {
-      this._background = this._createDOMNode(['classes', 'styles']);
-      this._background.addClass('background');
+  set hasBackground(value) {
+    if (value) {
+      this._background = this._background || this._createDOMNode(['label', 'background']);
     }
+  }
+
+  get background() {
+    this.hasBackground = true;
     return this._background;
   }
 
@@ -150,3 +136,5 @@ export default class Label extends ControlBase {
     this.background.backgroundColor = value;
   }
 }
+Label.defaults = defaults;
+Label.defaults.layout = Label.layout;

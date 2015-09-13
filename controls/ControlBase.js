@@ -9,93 +9,81 @@
  */
 
 import {Node} from 'famous/core';
-import {Margins} from '../utilities';
+import {Margins, assert} from '../utilities';
 import Animation from '../core/Animation';
 import DOMNode from '../core/DOMNode';
 
 export default class ControlBase extends Node {
 
-  /**
-   * @param {Object} options Configuration options.
-   * @param {Array.String} [options.classes] Initial css-classes.
-   * @param {Object} [options.styles] Initial css-styles.
-   * @param {Object} [options.attributes] Initial element attributes.
-   * @param {Bool} [options.animated] Enables or disables animations for the control.
-   * @param {Number|String|Array} [options.padding] Sets the internal padding for the control.
-   * @param {Array} [options.intrinsicsize] Sets the intrinsic-size of the control.
-   */
-  constructor(options) {
+  constructor() {
     super();
     this._classes = ['ff-control'];
-    this._styles = {};
-    this._attributes = {};
-    this._sharedContentNodes = [];
-    this._sharedStylesNodes = [];
     this._sharedClassesNodes = [];
-    this._sharedAttrNodes = [];
-    this._content = undefined;
     this._intrinsicSize = [undefined, undefined];
-    this._layout = (options && options.layout) ? options.layout : () => {};
+    this._spec = {};
     this._comp = this.addComponent({
       onUpdate: () => this._relayout(this.getSize()),
       onSizeChange: () => this._relayout(this.getSize())
     });
+  }
+
+  /**
+   * @param {Object} options Configuration options.
+   * @param {Array.String} [options.classes] Initial css-classes.
+   * @param {Bool} [options.animated] Enables or disables animations for the control.
+   * @param {Number|String|Array} [options.padding] Sets the internal padding for the control.
+   * @param {Array} [options.intrinsicsize] Sets the intrinsic-size of the control.
+   */
+  _setProperties(options, defaults) {
+    if (defaults) {
+      for (var key in defaults) {
+        if (!options || (options[key] === undefined)) {
+          // TODO
+          //if (!Object.getOwnPropertyDescriptor(this, key)) {
+          //console.warn('Property "' + key + '" specified in defaults, but not implemented by class');
+          //}
+          this[key] = defaults[key];
+        }
+      }
+    }
     if (options) {
-      if (options.padding) this.padding = options.padding;
-      if (options.intrinsicSize) this.intrinsicSize = options.intrinsicSize;
-      if (options.content !== undefined) this._setContent(options.content);
-      if (options.classes) {
-        for (let i = 0; i < options.classes.length; i++) {
-          this.addClass(options.classes[i]);
+      for (var key in options) {
+        if (key === 'classes') {
+          for (let i = 0; i < options.classes.length; i++) {
+            this.addClass(options.classes[i]);
+          }
+        } else if (!Object.getOwnPropertyDescriptor(this, key)) {
+          //console.warn('option "' + key + '" specified, but not supported by class: ');
+          this[key] = options[key];
+        } else {
+          this[key] = options[key];
         }
       }
-      if (options.styles) {
-        for (let style in options.styles) {
-          this.setStyle(style, options.styles[style]);
-        }
-      }
-      if (options.attributes) {
-        for (let attr in options.attributes) {
-          this.setAttribute(attr, options.attributes[attr]);
-        }
-      }
-      this.animated = options.animated || false;
     }
   }
 
   _relayout(size) {
-    const width = (this._intrinsicSize[0] !== undefined) ? this._intrinsicSize[0] : size[0];
-    const height = (this._intrinsicSize[1] !== undefined) ? this._intrinsicSize[1] : size[1];
-    this._layout((size[0] - width) / 2, (size[1] - height) / 2, width, height);
+    const spec = this._spec;
+    spec.width = (this._intrinsicSize[0] !== undefined) ? this._intrinsicSize[0] : size[0];
+    spec.height = (this._intrinsicSize[1] !== undefined) ? this._intrinsicSize[1] : size[1];
+    spec.x = (size[0] - spec.width) / 2;
+    spec.y = (size[1] - spec.height) / 2;
+    spec.z = 0;
+    this._layout(this._spec);
   }
 
-  _createDOMNode(inherit) {
+  _applyPadding(rect) {
+    return this._padding ? Margins.apply(this._padding, rect) : rect;
+  }
+
+  _createDOMNode(classes) {
     const domNode = new DOMNode();
-    if (inherit && inherit.length) {
-      if (inherit.indexOf('content') >= 0) {
-        this._sharedContentNodes.push(domNode);
-        if (this._content !== undefined) {
-          domNode.el.setContent(this._content);
-        }
-      }
-      if (inherit.indexOf('classes') >= 0) {
-        this._sharedClassesNodes.push(domNode);
-        for (let i = 0; i < this._classes.length; i++) {
-          domNode.addClass(this._classes[i]);
-        }
-      }
-      if (inherit.indexOf('attributes') >= 0) {
-        this._sharedAttrNodes.push(domNode);
-        for (let attr in this._attributes) {
-          domNode.setAttribute(attr, this._attributes[attr]);
-        }
-      }
-      if (inherit.indexOf('styles') >= 0) {
-        this._sharedStylesNodes.push(domNode);
-        for (let style in this._styles) {
-          domNode.setStyle(style, this._styles[style]);
-        }
-      }
+    this._sharedClassesNodes.push(domNode);
+    for (let i = 0; i < classes.length; i++) {
+      domNode.addClass(classes[i]);
+    }
+    for (let i = 0; i < this._classes.length; i++) {
+      domNode.addClass(this._classes[i]);
     }
     this.addChild(domNode);
     this.reflowLayout();
@@ -103,40 +91,26 @@ export default class ControlBase extends Node {
   }
 
   _removeDOMNode(node) {
-    let index = this._sharedContentNodes.indexOf(node);
-    if (index >= 0) {
-      this._sharedContentNodes.splice(index, 1);
-    }
-    index = this._sharedClassesNodes.indexOf(node);
+    let index = this._sharedClassesNodes.indexOf(node);
     if (index >= 0) {
       this._sharedClassesNodes.splice(index, 1);
-    }
-    index = this._sharedAttrNodes.indexOf(node);
-    if (index >= 0) {
-      this._sharedAttrNodes.splice(index, 1);
-    }
-    index = this._sharedStylesNodes.indexOf(node);
-    if (index >= 0) {
-      this._sharedStylesNodes.splice(index, 1);
     }
     this.removeChild(node);
   }
 
-  _setLayout(layout) {
+  get layout() {
+    return this._layout;
+  }
+
+  set layout(layout) {
     if (layout !== this._layout) {
       this._layout = layout;
+      this.reflowLayout();
     }
   }
 
   reflowLayout() {
     this.requestUpdate(this._comp);
-  }
-
-  _setContent(content) {
-    this._content = content;
-    for (let i = 0; i < this._sharedContentNodes.length; i++) {
-      this._sharedContentNodes[i].el.setContent(content);
-    }
   }
 
   get padding() {
@@ -151,32 +125,6 @@ export default class ControlBase extends Node {
     } else {
       this._padding = Margins.parse(padding);
       this.reflowLayout();
-    }
-  }
-
-  get styles() {
-    return this._styles;
-  }
-
-  setStyle(style, value) {
-    if (this._styles[style] !== value) {
-      this._styles[style] = value;
-      for (let i = 0; i < this._sharedStylesNodes.length; i++) {
-        this._sharedStylesNodes[i].el.setProperty(style, value);
-      }
-    }
-  }
-
-  get attributes() {
-    return this._attributes;
-  }
-
-  setAttribute(attr, value) {
-    if (this._attributes[attr] !== value) {
-      this._attributes[attr] = value;
-      for (let i = 0; i < this._sharedAttrNodes.length; i++) {
-        this._sharedAttrNodes[i].el.setAttribute(attr, value);
-      }
     }
   }
 

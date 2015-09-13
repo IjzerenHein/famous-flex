@@ -1,26 +1,10 @@
 export default class Margins {
 
-  /**
-   * Gets the left padding.
-   *
-   * @param {Array.4} margins
-   * @param {Array.2} size
-   * @return {Number}
-   */
-  static getLeft(margins, width) {
-    return margins[3][0] + (margins[3][1] * width);
-  }
-
-  static getTop(margins, height) {
-    return margins[0][0] + (margins[0][1] * height);
-  }
-
-  static getWidth(margins, width) {
-    return width - (margins[3][0] + (margins[3][1] * width)) - (margins[1][0] + (margins[1][1] * width));
-  }
-
-  static getHeight(margins, height) {
-    return height - (margins[0][0] + (margins[0][1] * height)) - (margins[2][0] + (margins[2][1] * height));
+  static apply(margins, spec) {
+    spec.x += margins[3][0] + (margins[3][1] * spec.width);
+    spec.y += margins[0][0] + (margins[0][1] * spec.height);
+    spec.width -= (margins[3][0] + (margins[3][1] * spec.width)) + (margins[1][0] + (margins[1][1] * spec.width));
+    spec.height -= (margins[0][0] + (margins[0][1] * spec.height)) + (margins[2][0] + (margins[2][1] * spec.height));
   }
 
   /**

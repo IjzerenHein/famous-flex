@@ -35,6 +35,14 @@ export default class DOMNode extends Node {
       this._gestureHandler.on(event, callback);
     }
 
+    get innerHTML() {
+      return this.el.getContent();
+    }
+
+    set innerHTML(value) {
+      this.el.setContent(value);
+    }
+
     setStyle(style, value) {
       this.el.setProperty(style, value);
       return this;
@@ -111,9 +119,10 @@ export default class DOMNode extends Node {
       this.setPosition(undefined, undefined, value);
     }
 
-    setRect(left, top, width, height) {
-      this.setPosition(left, top);
-      this.setAbsoluteSize(width, height);
+    setSpec(spec, incrementZ) {
+      this.setPosition(spec.x, spec.y, spec.z);
+      this.setAbsoluteSize(spec.width, spec.height);
+      spec.z += incrementZ ? 2 : 0;
     }
 
     get color() {
