@@ -1,3 +1,6 @@
+import Color from './Color';
+import Margins from './Margins';
+
 function assert(value, message) {
   if (!value) {
     throw new Error(message);
@@ -5,5 +8,7 @@ function assert(value, message) {
 }
 
 export {
+  Color,
+  Margins,
   assert
 };

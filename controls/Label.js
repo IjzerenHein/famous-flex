@@ -1,7 +1,6 @@
-import {Opacity} from 'famous/components';
-import {DOMNode, Animation} from '../core';
 import ControlBase from './ControlBase';
-import Margins from './Margins';
+import {Animation} from '../core';
+import {Margins} from '../utilities';
 
 /**
  * Static text label.
@@ -9,28 +8,25 @@ import Margins from './Margins';
 export default class Label extends ControlBase {
 
   /**
-   * @param {Object} options
+   * @param {Object} options Configuration options.
    * @param {String} [options.text] Text displayed in the label.
    * @param {Bool} [options.autoScale] Automatically scales the font when text doesn't fit.
-   * @param {Bool} [options.animate] Animates the text (fade-effect) when it changes.
-   * @param {Bool} [options.innerMargins]
-   * @param {Bool} [options.outerMargins]
-   * @param {Bool} [options.background]
-   * @param {Array.String} [options.classes] Initial css-classes.
-   * @param {Object} [options.styles] Initial css-styles.
+   * @param {Bool} [options.hasBackground] Set to `true` when using css-classes to style the background.
    */
   constructor(options) {
     super(options);
     this._setLayout(Label.layout.bind(this));
-    this._primaryText = this._createDOMNode(['classes', 'styles', 'attributes']);
+    this._primaryText = this._createDOMNode(['classes', 'styles', 'attributes', 'content']);
     this._frontText = this._primaryText;
     if (options) {
       if (options.autoScale) this.autoScale = options.autoScale;
-      if (options.text) this.text = options.text
-      if (options.background) {
+      if (options.text) this.text = options.text;
+      if (options.hasBackground) {
         this._background = this._createDOMNode(['classes', 'styles']);
-        this._background.addClass('background')
+        this._background.addClass('background');
       }
+      if (options.color) this.color = options.color;
+      if (options.backgroundColor) this.backgroundColor = options.backgroundColor;
     }
     this.addClass('label');
   }
@@ -38,15 +34,10 @@ export default class Label extends ControlBase {
   /**
    * @private
    */
-  static layout(size) {
+  static layout(left, top, width, height) {
     let zIndex = 0;
-    const left = Margins.outerLeft(this._margins);
-    const top = Margins.outerTop(this._margins);
-    const width = size[0] - Margins.outerWidth(this._margins);
-    const height = size[1] - Margins.outerHeight(this._margins);
-    if (this._backgroundText) {
-      this._backgroundText.setRect(left, top, width, height);
-      this._backgroundText.zIndex = zIndex;
+    if (this._background) {
+      this._background.setRect(left, top, width, height);
       zIndex += 2;
     }
     if (this._secondaryText) {
@@ -60,10 +51,9 @@ export default class Label extends ControlBase {
 
   _updateSecondaryText() {
     if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = this._createDOMNode(['classes', 'styles', 'attributes']);
+      this._secondaryText = this._createDOMNode(['classes', 'styles', 'attributes', 'content']);
       this._secondaryText.opacity = 0;
-    }
-    else if (!this.animated && !this._autoScale && this._secondaryText) {
+    } else if (!this.animated && !this._autoScale && this._secondaryText) {
       this._removeDOMNode(this._secondaryText);
       this._secondaryText = undefined;
     }
@@ -78,7 +68,6 @@ export default class Label extends ControlBase {
 
   /**
    * @private
-   * Overriden in order to create/destroy secondary-text if needed.
    */
   set animated(value) {
     super.animated = value;
@@ -120,10 +109,40 @@ export default class Label extends ControlBase {
           this._secondaryText.opacity = showSecondary ? 1 : 0;
         });
         this._frontText.el.setContent('<div>' + this._text + '</div>');
-      }
-      else {
+      } else {
         this._setContent('<div>' + this._text + '</div>');
       }
     }
+  }
+
+  get color() {
+    return this._primaryText.color;
+  }
+
+  set color(value) {
+    this._primaryText.color = value;
+    if (this._secondaryText) {
+      this._secondaryText.color = value;
+    }
+  }
+
+  get hasBackground() {
+    return !!this._background;
+  }
+
+  get background() {
+    if (!this._background) {
+      this._background = this._createDOMNode(['classes', 'styles']);
+      this._background.addClass('background');
+    }
+    return this._background;
+  }
+
+  get backgroundColor() {
+    return this._background ? this._background.backgroundColor : undefined;
+  }
+
+  set backgroundColor(value) {
+    this.background.backgroundColor = value;
   }
 }

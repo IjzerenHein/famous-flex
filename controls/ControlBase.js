@@ -9,11 +9,21 @@
  */
 
 import {Node} from 'famous/core';
-import Margins from './Margins';
+import {Margins} from '../utilities';
 import Animation from '../core/Animation';
 import DOMNode from '../core/DOMNode';
 
 export default class ControlBase extends Node {
+
+  /**
+   * @param {Object} options Configuration options.
+   * @param {Array.String} [options.classes] Initial css-classes.
+   * @param {Object} [options.styles] Initial css-styles.
+   * @param {Object} [options.attributes] Initial element attributes.
+   * @param {Bool} [options.animated] Enables or disables animations for the control.
+   * @param {Number|String|Array} [options.padding] Sets the internal padding for the control.
+   * @param {Array} [options.intrinsicsize] Sets the intrinsic-size of the control.
+   */
   constructor(options) {
     super();
     this._classes = ['ff-control'];
@@ -24,18 +34,16 @@ export default class ControlBase extends Node {
     this._sharedClassesNodes = [];
     this._sharedAttrNodes = [];
     this._content = undefined;
+    this._intrinsicSize = [undefined, undefined];
     this._layout = (options && options.layout) ? options.layout : () => {};
     this._comp = this.addComponent({
-      onUpdate: () => this._layout(this.getSize()),
-      onSizeChange: () => this._layout(this.getSize())
+      onUpdate: () => this._relayout(this.getSize()),
+      onSizeChange: () => this._relayout(this.getSize())
     });
     if (options) {
-      if (options.margins) {
-        this._margins = new Margins(options.margins);
-      }
-      if (options.content !== undefined) {
-        this._setContent(options.content);
-      }
+      if (options.padding) this.padding = options.padding;
+      if (options.intrinsicSize) this.intrinsicSize = options.intrinsicSize;
+      if (options.content !== undefined) this._setContent(options.content);
       if (options.classes) {
         for (let i = 0; i < options.classes.length; i++) {
           this.addClass(options.classes[i]);
@@ -53,6 +61,12 @@ export default class ControlBase extends Node {
       }
       this.animated = options.animated || false;
     }
+  }
+
+  _relayout(size) {
+    const width = (this._intrinsicSize[0] !== undefined) ? this._intrinsicSize[0] : size[0];
+    const height = (this._intrinsicSize[1] !== undefined) ? this._intrinsicSize[1] : size[1];
+    this._layout((size[0] - width) / 2, (size[1] - height) / 2, width, height);
   }
 
   _createDOMNode(inherit) {
@@ -84,6 +98,7 @@ export default class ControlBase extends Node {
       }
     }
     this.addChild(domNode);
+    this.reflowLayout();
     return domNode;
   }
 
@@ -113,7 +128,7 @@ export default class ControlBase extends Node {
     }
   }
 
-  _reflowLayout() {
+  reflowLayout() {
     this.requestUpdate(this._comp);
   }
 
@@ -124,9 +139,19 @@ export default class ControlBase extends Node {
     }
   }
 
-  get margins() {
-    this._margins = this._margins || new Margins();
-    return this._margins;
+  get padding() {
+    this._padding = this._padding || Margins.identity;
+    return this._padding;
+  }
+
+  set padding(padding) {
+    this._padding = this._padding || Margins.identity;
+    if (Animation.isCollecting) {
+      Animation.collect(this, 'padding', this._padding, Margins.parse(padding));
+    } else {
+      this._padding = Margins.parse(padding);
+      this.reflowLayout();
+    }
   }
 
   get styles() {
@@ -182,6 +207,18 @@ export default class ControlBase extends Node {
     return this._classes.indexOf(cls) !== -1;
   }
 
+  get intrinsicSize() {
+    return this._intrinsicSize;
+  }
+
+  set intrinsicSize(value) {
+    if ((this._intrinsicSize[0] !== value[0]) || (this._intrinsicSize[1] !== value[1])) {
+      this._intrinsicSize[0] = value[0];
+      this._intrinsicSize[1] = value[1];
+      this.reflowLayout();
+    }
+  }
+
   get animated() {
     return this._animated;
   }
@@ -190,7 +227,24 @@ export default class ControlBase extends Node {
     this._animated = value;
   }
 
+  get animationDuration() {
+    return this._animationDuration;
+  }
+
+  set animationDuration(value) {
+    this._animationDuration = value;
+  }
+
+  get animationCurve() {
+    return this._animationCurve;
+  }
+
+  set animationCurve(value) {
+    this._animationCurve = value;
+  }
+
   _animate(collectFn) {
-    return Animation.start(this.animationDuration, this.animationCurve, collectFn);
+    if (this._lastAnimation) this._lastAnimation.cancel();
+    this._lastAnimation = Animation.start(this.animationCurve, this.animationDuration, collectFn);
   }
 }

@@ -12,6 +12,7 @@ import {Node} from 'famous/core';
 import {DOMElement} from 'famous/dom-renderables';
 import {GestureHandler} from 'famous/components';
 import Animation from './Animation';
+import {Color} from '../utilities';
 
 export default class DOMNode extends Node {
     constructor(options) {
@@ -65,8 +66,7 @@ export default class DOMNode extends Node {
     set opacity(value) {
       if (Animation.isCollecting) {
         Animation.collect(this, 'opacity', this.getOpacity(), value);
-      }
-      else {
+      } else {
         this.setOpacity(value);
       }
     }
@@ -114,5 +114,44 @@ export default class DOMNode extends Node {
     setRect(left, top, width, height) {
       this.setPosition(left, top);
       this.setAbsoluteSize(width, height);
+    }
+
+    get color() {
+      return this._color;
+    }
+
+    set color(color) {
+      if (this._color && Animation.isCollecting) {
+        Animation.collect(this, 'color', this._color, Color.parse(color));
+      } else {
+        this._color = Color.parse(color);
+        this.setStyle('color', Array.isArray(color) ? Color.formatRGBA(color) : color);
+      }
+    }
+
+    get backgroundColor() {
+      return this._color;
+    }
+
+    set backgroundColor(color) {
+      if (this._backgroundColor && Animation.isCollecting) {
+        Animation.collect(this, 'backgroundColor', this._backgroundColor, Color.parse(color));
+      } else {
+        this._backgroundColor = Color.parse(color);
+        this.setStyle('backgroundColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
+      }
+    }
+
+    get borderColor() {
+      return this._borderColor;
+    }
+
+    set borderColor(color) {
+      if (this._borderColor && Animation.isCollecting) {
+        Animation.collect(this, 'borderColor', this._borderColor, Color.parse(color));
+      } else {
+        this._borderColor = Color.parse(color);
+        this.setStyle('borderColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
+      }
     }
 }
