@@ -40,6 +40,10 @@ export default class Label extends ControlBase {
       this._background.setRect(left, top, width, height);
       zIndex += 2;
     }
+    left += Margins.getLeft(this.padding, width);
+    top += Margins.getTop(this.padding, height);
+    width = Margins.getWidth(this.padding, width);
+    height = Margins.getHeight(this.padding, height);
     if (this._secondaryText) {
       this._secondaryText.setRect(left, top, width, height);
       this._secondaryText.zIndex = zIndex;

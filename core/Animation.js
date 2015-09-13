@@ -20,10 +20,10 @@ class AnimationPromise {
     });
   }
   then() {
-    this._promise.then.apply(this._promise, arguments);
+    return this._promise.then.apply(this._promise, arguments);
   }
   catch() {
-    this._promise.catch.apply(this._promise, arguments);
+    return this._promise.catch.apply(this._promise, arguments);
   }
   cancel() {
     if (!this._isDone) {
