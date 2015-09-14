@@ -22,7 +22,9 @@ export default class Margins {
    * @return {Number|Array}
    */
   static parseComponent(value) {
-    if (typeof value === 'number') {
+    if (value === undefined) {
+      return undefined;
+    } else if (typeof value === 'number') {
       return [value, 0];
     } else if (Array.isArray(value)) {
       return value;
