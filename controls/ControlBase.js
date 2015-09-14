@@ -12,14 +12,16 @@ import {Node} from 'famous/core';
 import {Margins, assert} from '../utilities';
 import Animation from '../core/Animation';
 import DOMNode from '../core/DOMNode';
+import Size from '../core/Size';
 
 export default class ControlBase extends Node {
 
   constructor() {
     super();
     this._classes = ['ff-control'];
+    this._intrinsicSize = new Size();
+    this._intrinsicSize.onValueChange = () => this.reflowLayout();
     this._sharedClassesNodes = [];
-    this._intrinsicSize = [undefined, undefined];
     this._spec = {};
     this._comp = this.addComponent({
       onUpdate: () => this._relayout(this.getSize()),
@@ -64,8 +66,7 @@ export default class ControlBase extends Node {
 
   _relayout(size) {
     const spec = this._spec;
-    spec.width = (this._intrinsicSize[0] !== undefined) ? this._intrinsicSize[0] : size[0];
-    spec.height = (this._intrinsicSize[1] !== undefined) ? this._intrinsicSize[1] : size[1];
+    this._intrinsicSize.resolve(size, spec);
     spec.x = (size[0] - spec.width) / 2;
     spec.y = (size[1] - spec.height) / 2;
     spec.z = 0;
@@ -113,6 +114,14 @@ export default class ControlBase extends Node {
     this.requestUpdate(this._comp);
   }
 
+  get intrinsicSize() {
+    return this._intrinsicSize;
+  }
+
+  set intrinsicSize(value) {
+    this._intrinsicSize.set(value);
+  }
+
   get padding() {
     this._padding = this._padding || Margins.identity;
     return this._padding;
@@ -153,18 +162,6 @@ export default class ControlBase extends Node {
 
   hasClass(cls) {
     return this._classes.indexOf(cls) !== -1;
-  }
-
-  get intrinsicSize() {
-    return this._intrinsicSize;
-  }
-
-  set intrinsicSize(value) {
-    if ((this._intrinsicSize[0] !== value[0]) || (this._intrinsicSize[1] !== value[1])) {
-      this._intrinsicSize[0] = value[0];
-      this._intrinsicSize[1] = value[1];
-      this.reflowLayout();
-    }
   }
 
   get animated() {

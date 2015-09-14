@@ -12,10 +12,10 @@ export default class Margins {
    *
    * Examples:
    * ```
-   * Margins.parseComponent(10); // => `10`
-   * Margins.parseComponent('10.5%'); // => `[0.105]`
-   * Margins.parseComponent('20%+10'); // => `[0.2, 10]`
-   * Margins.parseComponent([0.4]); // => `[0.4]`
+   * Margins.parseComponent(10); // => `[10]`
+   * Margins.parseComponent('10.5%'); // => `[0, 0.105]`
+   * Margins.parseComponent('20%+10'); // => `[10, 0.2]`
+   * Margins.parseComponent([20, 0.4]); // => `[20, 0.4]`
    * ```
    *
    * @param {Number|String|Array} value
