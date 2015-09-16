@@ -94,7 +94,7 @@ export default class Switch extends ControlBase {
         Animation.collect(this, 'checkedRatio', this._checkedRatio, perc);
       } else {
         this._checkedRatio = perc;
-        this.reflowLayout();
+        this.requestLayout();
       }
     }
   }

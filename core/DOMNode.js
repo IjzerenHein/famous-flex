@@ -163,4 +163,17 @@ export default class DOMNode extends Node {
         this.setStyle('borderColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
       }
     }
+
+    get borderRadius() {
+      return this._borderRadius;
+    }
+
+    set borderRadius(value) {
+      if (this._borderRadius && Animation.isCollecting) {
+        Animation.collect(this, 'borderRadius', this._borderRadius || 0, value || 0);
+      } else {
+        this._borderColor = value;
+        this.setStyle('borderRadius', (value === undefined) ? 'inherit' : (value + 'px'));
+      }
+    }
 }

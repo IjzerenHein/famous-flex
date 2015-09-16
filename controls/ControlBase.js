@@ -20,12 +20,12 @@ export default class ControlBase extends Node {
     super();
     this._classes = ['ff-control'];
     this._intrinsicSize = new Size();
-    this._intrinsicSize.onValueChange = () => this.reflowLayout();
+    this._intrinsicSize.onValueChange = () => this.requestLayout();
     this._sharedClassesNodes = [];
     this._spec = {};
     this._comp = this.addComponent({
-      onUpdate: () => this._relayout(this.getSize()),
-      onSizeChange: () => this._relayout(this.getSize())
+      onUpdate: (time) => this.processUpdate(time),
+      onSizeChange: () => this.requestLayout(true)
     });
   }
 
@@ -64,15 +64,6 @@ export default class ControlBase extends Node {
     }
   }
 
-  _relayout(size) {
-    const spec = this._spec;
-    this._intrinsicSize.resolve(size, spec);
-    spec.x = (size[0] - spec.width) / 2;
-    spec.y = (size[1] - spec.height) / 2;
-    spec.z = 0;
-    this._layout(this._spec);
-  }
-
   _applyPadding(rect) {
     return this._padding ? Margins.apply(this._padding, rect) : rect;
   }
@@ -87,7 +78,7 @@ export default class ControlBase extends Node {
       domNode.addClass(this._classes[i]);
     }
     this.addChild(domNode);
-    this.reflowLayout();
+    this.requestLayout();
     return domNode;
   }
 
@@ -106,12 +97,52 @@ export default class ControlBase extends Node {
   set layout(layout) {
     if (layout !== this._layout) {
       this._layout = layout;
-      this.reflowLayout();
+      this.requestLayout(Animation.isCollecting);
     }
   }
 
-  reflowLayout() {
-    this.requestUpdate(this._comp);
+  processUpdate(time) {
+    this._updateRequested = false;
+    if (this._requestedUpdates) {
+      const requestedUpdates = this._requestedUpdates;
+      this._requestedUpdates = undefined;
+      let comp = requestedUpdates.shift();
+      while (comp) {
+        comp.onUpdate(time);
+        comp = requestedUpdates.shift();
+      }
+    }
+    if (this._layoutRequested) {
+      this._layoutRequested = false;
+      this.requestLayout(true);
+    }
+  }
+
+  requestUpdate(comp) {
+    if (comp === this._comp) {
+      this._layoutRequested = true;
+    } else {
+      this._requestedUpdates = this._requestedUpdates || [];
+      this._requestedUpdates.push(comp);
+    }
+    if (!this._updateRequested) {
+      this._updateRequested = true;
+      super.requestUpdate(this._comp);
+    }
+  }
+
+  requestLayout(immediate) {
+    if (immediate) {
+      const size = this.getSize();
+      const spec = this._spec;
+      this._intrinsicSize.resolve(size, spec);
+      spec.x = (size[0] - spec.width) / 2;
+      spec.y = (size[1] - spec.height) / 2;
+      spec.z = 0;
+      this._layout(this._spec);
+    } else if (!this._layoutRequested) {
+      this.requestUpdate(this._comp);
+    }
   }
 
   get intrinsicSize() {
@@ -133,7 +164,7 @@ export default class ControlBase extends Node {
       Animation.collect(this, 'padding', this._padding, Margins.parse(padding));
     } else {
       this._padding = Margins.parse(padding);
-      this.reflowLayout();
+      this.requestLayout();
     }
   }
 

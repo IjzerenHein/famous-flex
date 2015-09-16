@@ -46,7 +46,8 @@ export default class Animation {
     famousEngine = engine;
   }
 
-  static requestUpdate() {
+  static requestUpdate(comp) {
+    // TODO HANDLE COMP
     if (!requestingUpdate) {
       famousEngine.requestUpdate(Animation);
       requestingUpdate = true;
