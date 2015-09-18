@@ -1,9 +1,9 @@
 import ControlBase from './ControlBase';
 import DOMNode from '../core/DOMNode';
 import Animation from '../animation/Animation';
-import {Margins} from '../utils';
 
 const defaults = {
+  classes: ['label']
 };
 
 /**
@@ -19,7 +19,7 @@ export default class Label extends ControlBase {
    */
   constructor(options) {
     super();
-    this._primaryText = this.addChild(new DOMNode({classes: ['label', 'text']}));
+    this._primaryText = this.addChild(new DOMNode({classes: ['text']}));
     this._frontText = this._primaryText;
     this.setOptions(options, defaults);
   }
@@ -39,10 +39,10 @@ export default class Label extends ControlBase {
 
   _updateSecondaryText() {
     if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = this.addChild(new DOMNode({classes: ['label', 'text']}));
+      this._secondaryText = this.addChild(new DOMNode({classes: ['text']}));
       this._secondaryText.opacity = 0;
     } else if (!this.animated && !this._autoScale && this._secondaryText) {
-      this._removeDOMNode(this._secondaryText);
+      this.removeChild(this._secondaryText);
       this._secondaryText = undefined;
     }
   }
@@ -127,7 +127,7 @@ export default class Label extends ControlBase {
 
   set hasBackground(value) {
     if (value) {
-      this._background = this._background || this.addChild(new DOMNode({classes: ['label', 'background']}));
+      this._background = this._background || this.addChild(new DOMNode({classes: ['background']}));
     }
   }
 

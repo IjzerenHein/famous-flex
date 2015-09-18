@@ -22,7 +22,7 @@ class UpdateRegistration {
       this.requested = true;
       if (!this.node._registeredUpdatesRequested) {
         this.node._registeredUpdatesRequested = true;
-        this.node.requestUpdate(this.node._registeredUpdatesComp);
+        this.node.requestUpdate(this.node._registeredUpdatesCompId);
       }
     }
   }
@@ -35,13 +35,13 @@ export default class BaseNode extends Node {
     this._gestureHandler.on(event, callback);
   }
 
-  /*getOpacity() {
-    return this.getOpacity();
-  }
-
-  setOpacity(value) {
-    this.setOpacity(value);
-  }*/
+  /*
+  getOpacity()
+  setOpacity()
+  addChild()
+  removeChild()
+  getChildren()
+  */
 
   _processRegisteredUpdates(time) {
     this._registeredUpdates = this._newRegisteredUpdates || this._registeredUpdates;
@@ -56,18 +56,19 @@ export default class BaseNode extends Node {
     }
   }
 
-  registerUpdate(callback, last) {
+  registerUpdate(callback, layout) {
     if (!this._registeredUpdates) {
       this._registeredUpdates = [];
-      this._registeredUpdatesComp = this.addComponent({
+      this._registeredUpdatesComp = {
         onUpdate: (time) => this._processRegisteredUpdates(time)
-        //onSizeChange: () => this.requestLayout(true)
-      });
+      };
+      this._registeredUpdatesCompId = this.addComponent(this._registeredUpdatesComp);
     }
     const update = new UpdateRegistration(this, callback);
     this._newRegisteredUpdates = this._newRegisteredUpdates || this._registeredUpdates.slice(0);
-    if (last) {
-      this._newRegisteredUpdates.push(update);
+    if (layout) { // there should only be 1 layout registration!
+      this._registeredUpdatesComp.onSizeChange = () => update.callback();
+      this._newRegisteredUpdates.push(update); // layout is executed AFTER all other updates
     }
     else {
       this._newRegisteredUpdates.unshift(update);

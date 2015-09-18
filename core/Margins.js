@@ -18,7 +18,7 @@ export default class Margins {
    * Margins.parseComponent([20, 0.4]); // => `[20, 0.4]`
    * ```
    *
-   * @param {Number|String|Array} value
+   * @param {Number|String|Array} value Number, string or array.
    * @return {Number|Array}
    */
   static parseComponent(value) {
@@ -29,6 +29,7 @@ export default class Margins {
     } else if (Array.isArray(value)) {
       return value;
     }
+
     // must be string...
     const vals = value.match(/^(\d+(\.\d+)?)%([\+\-]\d+)?$/);
     if (vals) {
@@ -59,7 +60,7 @@ export default class Margins {
    * ...
    * ```
    *
-   * @param {String|Number|Array} value
+   * @param {String|Number|Array} value Number, string or array.
    * @return {Array}
    */
   static parse(value) {

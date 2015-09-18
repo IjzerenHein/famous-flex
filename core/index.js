@@ -1,9 +1,9 @@
-import LayoutController from './LayoutController';
 import DOMNode from './DOMNode';
 import BaseNode from './BaseNode';
+import LayoutNode from './LayoutNode';
 
 export {
-  LayoutController,
   DOMNode,
-  BaseNode
+  BaseNode,
+  LayoutNode
 };

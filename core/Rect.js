@@ -1,4 +1,4 @@
-import Margins from '../utils/Margins';
+import Margins from './Margins';
 
 export default class Rect {
   constructor() {
@@ -7,6 +7,14 @@ export default class Rect {
     this.z = 0;
     this.width = 0;
     this.height = 0;
+  }
+
+  get bottom() {
+    return this.y + this.height;
+  }
+
+  get right() {
+    return this.x + this.width;
   }
 
   center() {

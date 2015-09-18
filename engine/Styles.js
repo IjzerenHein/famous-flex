@@ -1,4 +1,4 @@
-import Color from '../utils/Color';
+import Color from '../core/Color';
 import Animation from '../animation/Animation';
 
 export default class Styles {

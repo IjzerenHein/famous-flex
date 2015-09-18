@@ -1,5 +1,5 @@
-import HeaderFooterLayout from './HeaderFooterLayout';
+import headerFooterLayout from './headerFooterLayout';
 
 export {
-  HeaderFooterLayout
+  headerFooterLayout
 };

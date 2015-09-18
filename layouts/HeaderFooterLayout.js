@@ -1,28 +1,25 @@
 /**
  * HeaderFooterLayout.
  *
- * @param {Object} nodes Nodes to layout.
- * @param {Array} size Size of the container.
+ * @param {Rect} rect Rect to layout in.
  * @param {Object} options Configuration options.
  * @param {Number} [options.headerSize] Size of the header.
  * @param {Number} [options.footerSize] Size of the footer.
  */
-function headerFooterLayout(nodes, size, options) {
-  if (nodes.header) {
-    nodes.header
-      .setSizeMode('relative', 'absolute')
-      .setAbsoluteSize(0, options.headerSize);
+function headerFooterLayout(rect, options) {
+  if (this.header) {
+    rect.height = options.headerSize;
+    this.header.rect = rect;
   }
-  if (nodes.content) {
-    nodes.content
-      .setDifferentialSize(0, -(options.headerSize + (nodes.footer ? options.footerSize : 0)))
-      .setPosition(0, options.headerSize, 0);
+  if (this.content) {
+    rect.y = rect.bottom;
+    rect.height = rect.parent.height - options.headerSize - options.footerSize;
+    this.content.rect = rect;
   }
-  if (nodes.footer) {
-    nodes.footer
-      .setSizeMode('relative', 'absolute')
-      .setAbsoluteSize(0, options.footerSize)
-      .setPosition(0, size[1] - options.footerSize, 0);
+  if (this.footer) {
+    rect.y = rect.bottom;
+    rect.height = options.footerSize;
+    this.footer.rect = rect;
   }
 }
 

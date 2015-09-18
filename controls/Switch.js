@@ -1,9 +1,10 @@
 import ControlBase from './ControlBase';
-import {DOMNode} from '../core';
-import {Animation} from '../animation';
-import {Color} from '../utils';
+import DOMNode from '../core/DOMNode';
+import Animation from '../animation/Animation';
+import Color from '../core/Color';
 
 const defaults = {
+  classes: ['switch'],
   checked: false,
   intrinsicSize: [60, 35],
   animated: true,
@@ -23,8 +24,8 @@ export default class Switch extends ControlBase {
    */
   constructor(options) {
     super();
-    this._handle = this.addChild(new DOMNode({classes: ['switch', 'handle']}));
-    this._background = this.addChild(new DOMNode({classes: ['switch', 'background']}));
+    this._handle = this.addChild(new DOMNode({classes: ['handle']}));
+    this._background = this.addChild(new DOMNode({classes: ['background']}));
     this._handle.on('tap', () => this.checked = !this.checked);
     this._background.on('tap', () => this.checked = !this.checked);
     this.setOptions(options, defaults);

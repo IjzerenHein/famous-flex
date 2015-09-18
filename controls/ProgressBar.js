@@ -1,8 +1,9 @@
 import ControlBase from './ControlBase';
-import {DOMNode} from '../core';
+import DOMNode from '../core/DOMNode';
 import {Animation, Particle} from '../animation';
 
 const defaults = {
+  classes: ['progressbar'],
   progress: 0.5,
   intrinsicSize: ['90%', 80],
   animated: true,
@@ -21,8 +22,8 @@ export default class ProgressBar extends ControlBase {
     options = options || {};
     this._particle = new Particle(this, options.particle || defaults.particle);
     this._particle.onChange = () => this.requestLayout();
-    this._inside = this.addChild(new DOMNode({classes: ['progressbar', 'inside']}));
-    this._background = this.addChild(new DOMNode({classes: ['progressbar', 'background']}));
+    this._inside = this.addChild(new DOMNode({classes: ['inside']}));
+    this._background = this.addChild(new DOMNode({classes: ['background']}));
     this.setOptions(options, defaults);
   }
 

@@ -12,14 +12,13 @@ export default class Color {
    * ...
    * ```
    *
-   * @param {String|Array} value
+   * @param {String|Array} value String or array.
    * @return {Array}
    */
   static parse(value) {
     if (Array.isArray(value)) {
       return value;
-    }
-    else if (typeof value === 'string') {
+    } else if (typeof value === 'string') {
       if ((value[0] === '#') && (value.length === 7)) {
         return [
           parseInt(value.substring(1, 3), 16),
@@ -27,16 +26,13 @@ export default class Color {
           parseInt(value.substring(5, 7), 16),
           1,
         ];
-      }
-      else if (value === 'transparent') {
+      } else if (value === 'transparent') {
         return [0, 0, 0, 0];
-      }
-      else {
+      } else {
         const rgba = value.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*(\d+(?:\.\d+))\)$/);
         if (rgba) {
           return [parseInt(rgba[0]), parseInt(rgba[1]), parseInt(rgba[2]), parseInt(rgba[3])];
-        }
-        else {
+        } else {
           const rgb = value.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
           if (rgb) {
             return [parseInt(rgb[0]), parseInt(rgb[1]), parseInt(rgb[2]), 1];
@@ -56,7 +52,7 @@ export default class Color {
    * ```
    *
    * @param {Array} color RGBA components
-   * @return {string}
+   * @return {String}
    */
   static formatRGBA(color) {
     return 'rgba(' + Math.round(color[0]) + ',' + Math.round(color[1]) + ',' + Math.round(color[2]) + ',' + color[3] + ')';
