@@ -8,172 +8,59 @@
  * copyright Hein Rutjes, 2015
  */
 
-import {Node} from 'famous/core';
+import NodeBase from '../core/NodeBase';
 import {DOMElement} from 'famous/dom-renderables';
-import {GestureHandler} from 'famous/components';
 import Animation from './Animation';
+import Classes from './Classes';
+import Styles from './Styles';
 import {Color} from '../utilities';
 
-export default class DOMNode extends Node {
-    constructor(options) {
-      super();
-      this.setSizeMode('absolute', 'absolute');
-      this._domElement = new DOMElement(this, options);
-      if (options && options.styles) {
-        for (var key in options.styles) {
-          this._domElement.setProperty(key, options.styles[key]);
-        }
-      }
-    }
+export default class DOMNode extends NodeBase {
+  constructor(options) {
+    super();
+    this._domElement = new DOMElement(this);
+    this.setOptions(options);
+  }
 
-    get el() {
-      return this._domElement;
-    }
+  get el() {
+    return this._domElement;
+  }
 
-    on(event, callback) {
-      this._gestureHandler = this._gestureHandler || new GestureHandler(this);
-      this._gestureHandler.on(event, callback);
-    }
+  get innerHTML() {
+    return this.el.getContent();
+  }
 
-    get innerHTML() {
-      return this.el.getContent();
-    }
+  set innerHTML(value) {
+    this.el.setContent(value);
+  }
 
-    set innerHTML(value) {
-      this.el.setContent(value);
-    }
+  get styles() {
+    this._styles = this._styles || new Styles(this.el);
+    return this._styles;
+  }
 
-    setStyle(style, value) {
-      this.el.setProperty(style, value);
-      return this;
-    }
+  set styles(value) {
+    this.styles.setAll(value);
+  }
 
-    setAttribute(attr, value) {
-      this.el.setAttribute(attr, value);
-      return this;
-    }
+  // TODO ATTRIBUTES ?
 
-    addClass(cls) {
-      this.el.addClass(cls);
-      return this;
+  onClasses(add, remove) {
+    if (add) {
+      this.el.addClass(add);
     }
+    if (remove) {
+      this.el.removeClass(remove);
+    }
+  }
 
-    removeClass(cls) {
-      this.el.addClass(cls);
-      return this;
-    }
+  get classes() {
+    this._classes = this._classes || new Classes(this);
+    return this._classes;
+  }
 
-    hasClass(cls) {
-      return this.el.hasClass();
-    }
-
-    get opacity() {
-      return this.getOpacity();
-    }
-
-    set opacity(value) {
-      if (Animation.isCollecting) {
-        Animation.collect(this, 'opacity', this.getOpacity(), value);
-      } else {
-        this.setOpacity(value);
-      }
-    }
-
-    get width() {
-      return this.getSize()[0];
-    }
-
-    set width(value) {
-      this.setAbsoluteSize(value);
-    }
-
-    get height() {
-      return this.getSize()[1];
-    }
-
-    set height(value) {
-      this.setAbsoluteSize(undefined, value);
-    }
-
-    get left() {
-      this.getPosition()[0];
-    }
-
-    set left(value) {
-      this.setPosition(value, undefined, undefined);
-    }
-
-    get top() {
-      this.getPosition()[1];
-    }
-
-    set top(value) {
-      this.setPosition(undefined, value, undefined);
-    }
-
-    get zIndex() {
-      this.getPosition()[2];
-    }
-
-    set zIndex(value) {
-      this.setPosition(undefined, undefined, value);
-    }
-
-    setSpec(spec, incrementZ) {
-      this.setPosition(spec.x, spec.y, spec.z);
-      this.setAbsoluteSize(spec.width, spec.height);
-      spec.z += incrementZ ? 2 : 0;
-    }
-
-    get color() {
-      return this._color;
-    }
-
-    set color(color) {
-      if (this._color && Animation.isCollecting) {
-        Animation.collect(this, 'color', this._color, Color.parse(color));
-      } else {
-        this._color = Color.parse(color);
-        this.setStyle('color', Array.isArray(color) ? Color.formatRGBA(color) : color);
-      }
-    }
-
-    get backgroundColor() {
-      return this._color;
-    }
-
-    set backgroundColor(color) {
-      if (this._backgroundColor && Animation.isCollecting) {
-        Animation.collect(this, 'backgroundColor', this._backgroundColor, Color.parse(color));
-      } else {
-        this._backgroundColor = Color.parse(color);
-        this.setStyle('backgroundColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
-      }
-    }
-
-    get borderColor() {
-      return this._borderColor;
-    }
-
-    set borderColor(color) {
-      if (this._borderColor && Animation.isCollecting) {
-        Animation.collect(this, 'borderColor', this._borderColor, Color.parse(color));
-      } else {
-        this._borderColor = Color.parse(color);
-        this.setStyle('borderColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
-      }
-    }
-
-    get borderRadius() {
-      return this._borderRadius;
-    }
-
-    set borderRadius(value) {
-      if (this._borderRadius && Animation.isCollecting) {
-        Animation.collect(this, 'borderRadius', this._borderRadius || 0, value || 0);
-      } else {
-        this._borderColor = value;
-        this.setStyle('borderRadius', (value === undefined) ? 'inherit' : (value + 'px'));
-      }
-    }
+  set classes(values) {
+    console.log(JSON.stringify(values));
+    this.classes.add(values);
+  }
 }

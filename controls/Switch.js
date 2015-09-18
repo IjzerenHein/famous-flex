@@ -1,5 +1,5 @@
 import ControlBase from './ControlBase';
-import {Animation} from '../core';
+import {Animation, DOMNode} from '../core';
 import {Color} from '../utilities';
 
 const defaults = {
@@ -22,27 +22,27 @@ export default class Switch extends ControlBase {
    */
   constructor(options) {
     super();
-    this._handle = this._createDOMNode(['switch', 'handle']);
-    this._background = this._createDOMNode(['switch', 'background']);
+    this._handle = this.addChild(new DOMNode({classes: ['switch', 'handle']}));
+    this._background = this.addChild(new DOMNode({classes: ['switch', 'background']}));
     this._handle.on('tap', () => this.checked = !this.checked);
     this._background.on('tap', () => this.checked = !this.checked);
-    this._setProperties(options, defaults);
+    this.setOptions(options, defaults);
     this._updateColor();
   }
 
-  static layout(spec) {
-    this._background.setSpec(spec, true);
-    this._applyPadding(spec);
-    const handleWidth = Math.min(spec.width, spec.height);
-    spec.x += ((spec.width - handleWidth) * this._checkedRatio);
-    spec.width = handleWidth;
-    this._handle.setSpec(spec);
+  static layout(rect, size) {
+    this._background.rect = rect;
+    rect.subtract(this._padding).inFront();
+    const handleWidth = Math.min(rect.width, rect.height);
+    rect.x += ((rect.width - handleWidth) * this._checkedRatio);
+    rect.width = handleWidth;
+    this._handle.rect = rect;
   }
 
   _updateColor() {
     if (this._background) {
-      this._background.backgroundColor = this.checked ? this.color : this.backgroundColor;
-      this._background.borderColor = this.checked ? this.color : this.borderColor;
+      this._background.styles.backgroundColor = this.checked ? this.color : this.backgroundColor;
+      this._background.styles.borderColor = this.checked ? this.color : this.borderColor;
     }
   }
 

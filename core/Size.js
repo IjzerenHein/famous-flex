@@ -9,26 +9,27 @@ export default class Size {
     }
   }
 
-  resolve(size, spec) {
-    spec.width = size[0];
-    spec.height = size[1];
-    if (this._width) spec.width = this._width[0] + (this._width[1] * size[0]);
-    if (this._height) spec.height = this._height[0] + (this._height[1] * size[1]);
-    if (this._maxWidth) spec.width = Math.min(spec.width, this._maxWidth[0] + (this._maxWidth[1] * size[0]));
-    if (this._maxHeight) spec.height = Math.min(spec.height, this._maxHeight[0] + (this._maxHeight[1] * size[1]));
-    if (this._minWidth) spec.width = Math.max(spec.width, this._minWidth[0] + (this._minWidth[1] * size[0]));
-    if (this._minHeight) spec.height = Math.max(spec.height, this._minHeight[0] + (this._minHeight[1] * size[1]));
+  resolve(rect) {
+    const parent = rect.parent;
+    rect.width = parent.width;
+    rect.height = parent.height;
+    if (this._width) rect.width = this._width[0] + (this._width[1] * parent.width);
+    if (this._height) rect.height = this._height[0] + (this._height[1] * parent.height);
+    if (this._maxWidth) rect.width = Math.min(rect.width, this._maxWidth[0] + (this._maxWidth[1] * parent.width));
+    if (this._maxHeight) rect.height = Math.min(rect.height, this._maxHeight[0] + (this._maxHeight[1] * parent.height));
+    if (this._minWidth) rect.width = Math.max(rect.width, this._minWidth[0] + (this._minWidth[1] * parent.width));
+    if (this._minHeight) rect.height = Math.max(rect.height, this._minHeight[0] + (this._minHeight[1] * parent.height));
     if (this._aspectRatio) {
-      if (this._aspectRatio < (spec.width / spec.height)) {
-        spec.width = spec.height * this._aspectRatio;
+      if (this._aspectRatio < (rect.width / rect.height)) {
+        rect.width = rect.height * this._aspectRatio;
       } else {
-        spec.height = spec.width / this._aspectRatio;
+        rect.height = rect.width / this._aspectRatio;
       }
     }
     this._lastWidth = this._lastWidth || [0, 0];
     this._lastHeight = this._lastHeight || [0, 0];
-    this._lastWidth[0] = size[0];
-    this._lastHeight[0] = size[1];
+    this._lastWidth[0] = parent.width;
+    this._lastHeight[0] = parent.height;
   }
 
   set(value) {
@@ -60,7 +61,7 @@ export default class Size {
       Animation.collect(this, 'width', this._width || this._lastWidth, parse(value) || this._lastWidth);
     } else {
       this._width = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -73,7 +74,7 @@ export default class Size {
       Animation.collect(this, 'height', this._height || this._lastHeight, parse(value) || this._lastHeight);
     } else {
       this._height = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -86,7 +87,7 @@ export default class Size {
       Animation.collect(this, 'maxWidth', this._maxWidth || this._lastWidth, parse(value) || this._lastWidth);
     } else {
       this._maxWidth = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -99,7 +100,7 @@ export default class Size {
       Animation.collect(this, 'maxHeight', this._maxHeight || this._lastHeight, parse(value) || this._lastHeight);
     } else {
       this._maxHeight = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -112,7 +113,7 @@ export default class Size {
       Animation.collect(this, 'minWidth', this._minWidth || this._lastWidth, parse(value) || this._lastWidth);
     } else {
       this._minWidth = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -125,7 +126,7 @@ export default class Size {
       Animation.collect(this, 'minHeight', this._minHeight || this._lastHeight, parse(value) || this._lastHeight);
     } else {
       this._minHeight = parse(value);
-      this.onValueChange();
+      this.onChange();
     }
   }
 
@@ -139,11 +140,11 @@ export default class Size {
       Animation.collect(this, 'aspectRatio', this._aspectRatio || (this._lastWidth[0] / this._lastHeight[0]), aspectRatio || (this._lastWidth[0] / this._lastHeight[0]));
     } else {
       this._aspectRatio = aspectRatio;
-      this.onValueChange();
+      this.onChange();
     }
   }
 
-  onValueChange() {
+  onChange() {
     // override to implement
   }
 }

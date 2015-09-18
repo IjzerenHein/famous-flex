@@ -23,11 +23,17 @@ export default class Label extends ControlBase {
     this._setProperties(options, defaults);
   }
 
-  static layout(spec) {
-    if (this._background) this._background.setSpec(spec, true);
-    this._applyPadding(spec);
-    if (this._secondaryText) this._secondaryText.setSpec(spec, true);
-    this._primaryText.setSpec(spec);
+  static layout(rect) {
+    if (this._background) {
+      this._background.rect = rect;
+      rect.inFront();
+    }
+    rect.subtract(this._padding);
+    if (this._secondaryText) {
+      this._secondaryText.rect = rect;
+      rect.inFront();
+    }
+    this._primaryText.rect = rect;
   }
 
   _updateSecondaryText() {

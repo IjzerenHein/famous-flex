@@ -8,78 +8,60 @@
  * copyright Hein Rutjes, 2015
  */
 
-import {Node} from 'famous/core';
+import NodeBase from '../core/NodeBase';
 import {Margins, assert} from '../utilities';
 import Animation from '../core/Animation';
+import Classes from '../core/Classes';
 import DOMNode from '../core/DOMNode';
 import Size from '../core/Size';
+import Rect from '../core/Rect';
 
-export default class ControlBase extends Node {
+const defaults = {
+  classes: ['ff-control']
+};
 
-  constructor() {
+export default class ControlBase extends NodeBase {
+  constructor(options) {
     super();
-    this._classes = ['ff-control'];
-    this._intrinsicSize = new Size();
-    this._intrinsicSize.onValueChange = () => this.requestLayout();
     this._sharedClassesNodes = [];
-    this._spec = {};
     this._comp = this.addComponent({
       onUpdate: (time) => this.processUpdate(time),
       onSizeChange: () => this.requestLayout(true)
     });
+    this.setOptions(options, defaults);
   }
 
-  /**
-   * @param {Object} options Configuration options.
-   * @param {Array.String} [options.classes] Initial css-classes.
-   * @param {Bool} [options.animated] Enables or disables animations for the control.
-   * @param {Number|String|Array} [options.padding] Sets the internal padding for the control.
-   * @param {Array} [options.intrinsicsize] Sets the intrinsic-size of the control.
-   */
-  _setProperties(options, defaults) {
-    if (defaults) {
-      for (var key in defaults) {
-        if (!options || (options[key] === undefined)) {
-          // TODO
-          //if (!Object.getOwnPropertyDescriptor(this, key)) {
-          //console.warn('Property "' + key + '" specified in defaults, but not implemented by class');
-          //}
-          this[key] = defaults[key];
-        }
+  onClasses(add, remove) {
+    if (add) {
+      for (let j = 0; j < this._sharedClassesNodes.length; j++) {
+        this._sharedClassesNodes[j].el.addClass(add);
       }
     }
-    if (options) {
-      for (var key in options) {
-        if (key === 'classes') {
-          for (let i = 0; i < options.classes.length; i++) {
-            this.addClass(options.classes[i]);
-          }
-        } else if (!Object.getOwnPropertyDescriptor(this, key)) {
-          //console.warn('option "' + key + '" specified, but not supported by class: ');
-          this[key] = options[key];
-        } else {
-          this[key] = options[key];
-        }
+    if (remove) {
+      for (let j = 0; j < this._sharedClassesNodes.length; j++) {
+        this._sharedClassesNodes[j].el.removeClass(remove);
       }
     }
   }
 
-  _applyPadding(rect) {
-    return this._padding ? Margins.apply(this._padding, rect) : rect;
+  get classes() {
+    this._classes = this._classes || new Classes(this);
+    return this._classes;
   }
 
-  _createDOMNode(classes) {
-    const domNode = new DOMNode();
-    this._sharedClassesNodes.push(domNode);
-    for (let i = 0; i < classes.length; i++) {
-      domNode.addClass(classes[i]);
+  set classes(values) {
+    this.classes.add(values);
+  }
+
+  addChild(child) {
+    super.addChild(child);
+    if (child.classes) {
+      for (let i = 0; i < this._classes.length; i++) {
+        child.classes.add(this._classes.getAt(i));
+      }
     }
-    for (let i = 0; i < this._classes.length; i++) {
-      domNode.addClass(this._classes[i]);
-    }
-    this.addChild(domNode);
     this.requestLayout();
-    return domNode;
+    return child;
   }
 
   _removeDOMNode(node) {
@@ -133,24 +115,39 @@ export default class ControlBase extends Node {
 
   requestLayout(immediate) {
     if (immediate) {
-      const size = this.getSize();
-      const spec = this._spec;
-      this._intrinsicSize.resolve(size, spec);
-      spec.x = (size[0] - spec.width) / 2;
-      spec.y = (size[1] - spec.height) / 2;
-      spec.z = 0;
-      this._layout(this._spec);
+      if (!this._layoutRect) {
+        this._layoutRect = new Rect();
+        this._layoutRect.parent = new Rect();
+      }
+      const rect = this._layoutRect;
+      rect.parent.width = this.rect.width;
+      rect.parent.height = this.rect.height;
+      rect.x = 0;
+      rect.y = 0;
+      rect.z = 0;
+      if (this._intrinsicSize) {
+        this._intrinsicSize.resolve(rect);
+        rect.center();
+      } else {
+        rect.width = rect.parent.width;
+        rect.height = rect.parent.height;
+      }
+      this._layout(rect);
     } else if (!this._layoutRequested) {
       this.requestUpdate(this._comp);
     }
   }
 
   get intrinsicSize() {
+    if (!this._intrinsicSize) {
+      this._intrinsicSize = new Size();
+      this._intrinsicSize.onChange = () => this.requestLayout();
+    }
     return this._intrinsicSize;
   }
 
   set intrinsicSize(value) {
-    this._intrinsicSize.set(value);
+    this.intrinsicSize.set(value);
   }
 
   get padding() {
@@ -166,33 +163,6 @@ export default class ControlBase extends Node {
       this._padding = Margins.parse(padding);
       this.requestLayout();
     }
-  }
-
-  get classes() {
-    return this._classes;
-  }
-
-  addClass(cls) {
-    if (this._classes.indexOf(cls) < 0) {
-      this._classes.push(cls);
-      for (let i = 0; i < this._sharedClassesNodes.length; i++) {
-        this._sharedClassesNodes[i].el.addClass(cls);
-      }
-    }
-  }
-
-  removeClass(cls) {
-    const index = this._classes.indexOf(cls);
-    if (index >= 0) {
-      this._classes.splice(index, 1);
-      for (let i = 0; i < this._sharedClassesNodes.length; i++) {
-        this._sharedClassesNodes[i].el.removeClass(cls);
-      }
-    }
-  }
-
-  hasClass(cls) {
-    return this._classes.indexOf(cls) !== -1;
   }
 
   get animated() {

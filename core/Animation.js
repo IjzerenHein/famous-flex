@@ -89,7 +89,9 @@ export default class Animation {
   }
 
   static collect(node, property, curValue, newValue) {
-    collected.push({node, property, curValue, newValue});
+    if (curValue !== newValue) {
+      collected.push({node, property, curValue, newValue});
+    }
   }
 
   static start(curve, duration, collectFn) {

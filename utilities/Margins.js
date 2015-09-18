@@ -1,10 +1,10 @@
 export default class Margins {
 
-  static apply(margins, spec) {
-    spec.x += margins[3][0] + (margins[3][1] * spec.width);
-    spec.y += margins[0][0] + (margins[0][1] * spec.height);
-    spec.width -= (margins[3][0] + (margins[3][1] * spec.width)) + (margins[1][0] + (margins[1][1] * spec.width));
-    spec.height -= (margins[0][0] + (margins[0][1] * spec.height)) + (margins[2][0] + (margins[2][1] * spec.height));
+  static apply(margins, rect) {
+    rect.x += margins[3][0] + (margins[3][1] * rect.width);
+    rect.y += margins[0][0] + (margins[0][1] * rect.height);
+    rect.width -= (margins[3][0] + (margins[3][1] * rect.width)) + (margins[1][0] + (margins[1][1] * rect.width));
+    rect.height -= (margins[0][0] + (margins[0][1] * rect.height)) + (margins[2][0] + (margins[2][1] * rect.height));
   }
 
   /**
