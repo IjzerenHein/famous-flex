@@ -1,6 +1,7 @@
 import ControlBase from './ControlBase';
-import {Animation, DOMNode} from '../core';
-import {Color} from '../utilities';
+import {DOMNode} from '../core';
+import {Animation} from '../animation';
+import {Color} from '../utils';
 
 const defaults = {
   checked: false,

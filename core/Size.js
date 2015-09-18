@@ -1,5 +1,5 @@
-import Animation from './Animation';
-import {Margins} from '../utilities';
+import Animation from '../animation/Animation';
+import {Margins} from '../utils';
 const parse = Margins.parseComponent;
 
 export default class Size {

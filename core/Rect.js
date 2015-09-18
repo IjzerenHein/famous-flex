@@ -1,4 +1,4 @@
-import Margins from '../utilities/Margins';
+import Margins from '../utils/Margins';
 
 export default class Rect {
   constructor() {

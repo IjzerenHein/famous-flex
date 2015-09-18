@@ -1,5 +1,6 @@
 import ControlBase from './ControlBase';
-import {Animation, Particle, DOMNode} from '../core';
+import {DOMNode} from '../core';
+import {Animation, Particle} from '../animation';
 
 const defaults = {
   progress: 0.5,
@@ -18,7 +19,7 @@ export default class ProgressBar extends ControlBase {
   constructor(options) {
     super();
     options = options || {};
-    this._particle = new Particle(options.particle || defaults.particle, this);
+    this._particle = new Particle(this, options.particle || defaults.particle);
     this._particle.onChange = () => this.requestLayout();
     this._inside = this.addChild(new DOMNode({classes: ['progressbar', 'inside']}));
     this._background = this.addChild(new DOMNode({classes: ['progressbar', 'background']}));
@@ -28,8 +29,8 @@ export default class ProgressBar extends ControlBase {
   static layout(rect) {
     this._background.rect = rect;
     rect.inFront();
-    if (this._borderRadius === 'auto') this._background.borderRadius = Math.min(rect.width, rect.height) / 2;
-    if (this._borderRadius === 'auto') this._inside.borderRadius = Math.min(rect.width, rect.height) / 2;
+    if (this._borderRadius === 'auto') this._background.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
+    if (this._borderRadius === 'auto') this._inside.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
     rect.subtract(this._padding);
     rect.width = rect.width * Math.min(Math.max(this._particle.value.x, 0), 1);
     this._inside.rect = rect;
@@ -69,8 +70,8 @@ export default class ProgressBar extends ControlBase {
     if (this._borderRadius !== value) {
       this._borderRadius = value;
       if (value !== 'auto') {
-        this._inner.borderRadius = value;
-        this._background.borderRadius = value;
+        this._inner.styles.borderRadius = value;
+        this._background.styles.borderRadius = value;
       }
     }
   }

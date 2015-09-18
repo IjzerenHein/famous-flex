@@ -18,9 +18,9 @@ const defaults = {
 };
 
 export default class Particle {
-  constructor(options, node) {
-    options = options || {};
+  constructor(node, options) {
     this._node = node;
+    options = options || {};
     this._pe = new PhysicsEngine();
     this._particle = new FamousParticle(defaults.particle);
     this._pe.addBody(this._particle);
@@ -41,18 +41,11 @@ export default class Particle {
   }
 
   requestUpdate() {
-    if (!this._requestingUpdate) {
-      if (this._node) {
-        this._node.requestUpdate(this);
-      } else {
-        Animation.requestUpdate(this);
-      }
-      this._requestingUpdate = true;
-    }
+    this._update = this._update || this._node.registerUpdate((time) => this.onUpdate(time));
+    this._update.request();
   }
 
   onUpdate(time) {
-    this._requestingUpdate = false;
     if (!this._isActive) {
       this._pe.time = time;
       this._isActive = this._animated;

@@ -8,9 +8,9 @@
  * copyright Hein Rutjes, 2015
  */
 
-import NodeBase from '../core/NodeBase';
-import {Margins, assert} from '../utilities';
-import Animation from '../core/Animation';
+import BaseNode from '../core/BaseNode';
+import {Margins, assert} from '../utils';
+import Animation from '../animation/Animation';
 import Classes from '../core/Classes';
 import DOMNode from '../core/DOMNode';
 import Size from '../core/Size';
@@ -20,14 +20,10 @@ const defaults = {
   classes: ['ff-control']
 };
 
-export default class ControlBase extends NodeBase {
+export default class ControlBase extends BaseNode {
   constructor(options) {
     super();
     this._sharedClassesNodes = [];
-    this._comp = this.addComponent({
-      onUpdate: (time) => this.processUpdate(time),
-      onSizeChange: () => this.requestLayout(true)
-    });
     this.setOptions(options, defaults);
   }
 
@@ -72,6 +68,36 @@ export default class ControlBase extends NodeBase {
     this.removeChild(node);
   }
 
+  onLayout() {
+    if (!this._layoutRect) {
+      this._layoutRect = new Rect();
+      this._layoutRect.parent = new Rect();
+    }
+    const rect = this._layoutRect;
+    rect.parent.width = this.rect.width;
+    rect.parent.height = this.rect.height;
+    rect.x = 0;
+    rect.y = 0;
+    rect.z = 0;
+    if (this._intrinsicSize) {
+      this._intrinsicSize.resolve(rect);
+      rect.center();
+    } else {
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
+    }
+    this._layout(rect);
+  }
+
+  requestLayout(immediate) {
+    if (immediate) {
+      this.onLayout();
+    } else {
+      this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
+      this._updateLayout.request();
+    }
+  }
+
   get layout() {
     return this._layout;
   }
@@ -80,61 +106,6 @@ export default class ControlBase extends NodeBase {
     if (layout !== this._layout) {
       this._layout = layout;
       this.requestLayout(Animation.isCollecting);
-    }
-  }
-
-  processUpdate(time) {
-    this._updateRequested = false;
-    if (this._requestedUpdates) {
-      const requestedUpdates = this._requestedUpdates;
-      this._requestedUpdates = undefined;
-      let comp = requestedUpdates.shift();
-      while (comp) {
-        comp.onUpdate(time);
-        comp = requestedUpdates.shift();
-      }
-    }
-    if (this._layoutRequested) {
-      this._layoutRequested = false;
-      this.requestLayout(true);
-    }
-  }
-
-  requestUpdate(comp) {
-    if (comp === this._comp) {
-      this._layoutRequested = true;
-    } else {
-      this._requestedUpdates = this._requestedUpdates || [];
-      this._requestedUpdates.push(comp);
-    }
-    if (!this._updateRequested) {
-      this._updateRequested = true;
-      super.requestUpdate(this._comp);
-    }
-  }
-
-  requestLayout(immediate) {
-    if (immediate) {
-      if (!this._layoutRect) {
-        this._layoutRect = new Rect();
-        this._layoutRect.parent = new Rect();
-      }
-      const rect = this._layoutRect;
-      rect.parent.width = this.rect.width;
-      rect.parent.height = this.rect.height;
-      rect.x = 0;
-      rect.y = 0;
-      rect.z = 0;
-      if (this._intrinsicSize) {
-        this._intrinsicSize.resolve(rect);
-        rect.center();
-      } else {
-        rect.width = rect.parent.width;
-        rect.height = rect.parent.height;
-      }
-      this._layout(rect);
-    } else if (!this._layoutRequested) {
-      this.requestUpdate(this._comp);
     }
   }
 
@@ -191,6 +162,6 @@ export default class ControlBase extends NodeBase {
 
   _animate(collectFn) {
     if (this._lastAnimation) this._lastAnimation.cancel();
-    this._lastAnimation = Animation.start(this.animationCurve, this.animationDuration, collectFn);
+    this._lastAnimation = this.animate(this.animationCurve, this.animationDuration, collectFn);
   }
 }

@@ -1,6 +1,7 @@
 import ControlBase from './ControlBase';
-import {Animation} from '../core';
-import {Margins} from '../utilities';
+import DOMNode from '../core/DOMNode';
+import Animation from '../animation/Animation';
+import {Margins} from '../utils';
 
 const defaults = {
 };
@@ -18,9 +19,9 @@ export default class Label extends ControlBase {
    */
   constructor(options) {
     super();
-    this._primaryText = this._createDOMNode(['label', 'text']);
+    this._primaryText = this.addChild(new DOMNode({classes: ['label', 'text']}));
     this._frontText = this._primaryText;
-    this._setProperties(options, defaults);
+    this.setOptions(options, defaults);
   }
 
   static layout(rect) {
@@ -38,7 +39,7 @@ export default class Label extends ControlBase {
 
   _updateSecondaryText() {
     if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = this._createDOMNode(['label', 'text']);
+      this._secondaryText = this.addChild(new DOMNode({classes: ['label', 'text']}));
       this._secondaryText.opacity = 0;
     } else if (!this.animated && !this._autoScale && this._secondaryText) {
       this._removeDOMNode(this._secondaryText);
@@ -101,21 +102,22 @@ export default class Label extends ControlBase {
     return this._primaryText.styles;
   }
 
-  setStyle(style, value) {
-    this._primaryText.setStyle(style, value);
+  set styles(value) {
+    console.log('heuj');
+    this._primaryText.styles.setAll(value);
     if (this._secondaryText) {
-      this._secondaryText.setStyle(style, value);
+      this._secondaryText.styles.setAll(value);
     }
   }
 
   get color() {
-    return this._primaryText.color;
+    return this._primaryText.styles.color;
   }
 
   set color(value) {
-    this._primaryText.color = value;
+    this._primaryText.styles.color = value;
     if (this._secondaryText) {
-      this._secondaryText.color = value;
+      this._secondaryText.styles.color = value;
     }
   }
 
@@ -125,7 +127,7 @@ export default class Label extends ControlBase {
 
   set hasBackground(value) {
     if (value) {
-      this._background = this._background || this._createDOMNode(['label', 'background']);
+      this._background = this._background || this.addChild(new DOMNode({classes: ['label', 'background']}));
     }
   }
 
@@ -135,11 +137,11 @@ export default class Label extends ControlBase {
   }
 
   get backgroundColor() {
-    return this._background ? this._background.backgroundColor : undefined;
+    return this._background ? this._background.styles.backgroundColor : undefined;
   }
 
   set backgroundColor(value) {
-    this.background.backgroundColor = value;
+    this.background.styles.backgroundColor = value;
   }
 }
 Label.defaults = defaults;

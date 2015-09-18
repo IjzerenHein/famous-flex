@@ -1,5 +1,5 @@
-import Color from '../utilities/Color';
-import Animation from './Animation';
+import Color from '../utils/Color';
+import Animation from '../animation/Animation';
 
 export default class Styles {
   constructor(el) {
