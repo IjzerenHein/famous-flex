@@ -31,6 +31,7 @@ define(function(require, exports, module) {
     var Utility = require('famous/utilities/Utility');
     var Entity = require('famous/core/Entity');
     var ViewSequence = require('famous/core/ViewSequence');
+    var LinkedListViewSequence = require('./LinkedListViewSequence');
     var OptionsManager = require('famous/core/OptionsManager');
     var EventHandler = require('famous/core/EventHandler');
     var LayoutUtility = require('./LayoutUtility');
@@ -45,7 +46,7 @@ define(function(require, exports, module) {
      * @param {Object} options Options.
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+     * @param {Array|LinkedListViewSequence|Object} [options.dataSource] Array, LinkedListViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used)
      * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
      * @param {Object} [options.flowOptions] Options used by nodes when reflowing.
@@ -181,7 +182,7 @@ define(function(require, exports, module) {
      * @param {Options} options An object of configurable options for the LayoutController instance.
      * @param {Function|Object} [options.layout] Layout function or layout-literal.
      * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+     * @param {Array|LinkedListViewSequence|Object} [options.dataSource] Array, LinkedListViewSequence or Object with key/value pairs.
      * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used)
      * @param {Object} [options.flowOptions] Options used by nodes when reflowing.
      * @param {Bool} [options.flowOptions.reflowOnResize] Smoothly reflows renderables on resize (only used when flow = true) (default: `true`).
@@ -258,26 +259,19 @@ define(function(require, exports, module) {
      * Helper function to enumerate all the renderables in the datasource
      */
     function _forEachRenderable(callback) {
-        var dataSource = this._dataSource;
-        if (dataSource instanceof Array) {
-            for (var i = 0, j = dataSource.length; i < j; i++) {
-                callback(dataSource[i]);
-            }
-        }
-        else if (dataSource instanceof ViewSequence) {
-            var renderable;
-            while (dataSource) {
-                renderable = dataSource.get();
-                if (!renderable) {
-                    break;
-                }
-                callback(renderable);
-                dataSource = dataSource.getNext();
+        if (this._nodesById) {
+            for (var key in this._nodesById) {
+                callback(this._nodesById[key]);
             }
         }
         else {
-            for (var key in dataSource) {
-                callback(dataSource[key]);
+            var sequence = this._viewSequence.getHead();
+            while (sequence) {
+                var renderable = sequence.get();
+                if (renderable) {
+                    callback(renderable);
+                }
+                sequence = sequence.getNext();
             }
         }
     }
@@ -286,23 +280,30 @@ define(function(require, exports, module) {
      * Sets the collection of renderables which are layed out according to
      * the layout-function.
      *
-     * The data-source can be either an Array, ViewSequence or Object
+     * The data-source can be either an Array, LinkedListViewSequence or Object
      * with key/value pairs.
      *
-     * @param {Array|Object|ViewSequence} dataSource Array, ViewSequence or Object.
+     * @param {Array|Object|LinkedListViewSequence} dataSource Array, LinkedListViewSequence or Object.
      * @return {LayoutController} this
      */
     LayoutController.prototype.setDataSource = function(dataSource) {
         this._dataSource = dataSource;
-        this._initialViewSequence = undefined;
         this._nodesById = undefined;
-        if (dataSource instanceof Array) {
-            this._viewSequence = new ViewSequence(dataSource);
-            this._initialViewSequence = this._viewSequence;
+        if (dataSource instanceof ViewSequence) {
+            console.warn('The stock famo.us ViewSequence is no longer supported as it is too buggy');
+            console.warn('It has been automatically converted to the safe LinkedListViewSequence.');
+            console.warn('Please refactor your code by using LinkedListViewSequence.');
+            this._dataSource = new LinkedListViewSequence(dataSource._.array);
+            this._viewSequence = this._dataSource;
         }
-        else if ((dataSource instanceof ViewSequence) || dataSource.getNext) {
+        else if (dataSource instanceof Array) {
+            this._viewSequence = new LinkedListViewSequence(dataSource);
+        }
+        else if (dataSource instanceof LinkedListViewSequence) {
             this._viewSequence = dataSource;
-            this._initialViewSequence = dataSource;
+        }
+        else if (dataSource.getNext) {
+            this._viewSequence = dataSource;
         }
         else if (dataSource instanceof Object){
             this._nodesById = dataSource;
@@ -328,7 +329,7 @@ define(function(require, exports, module) {
     /**
      * Get the data-source.
      *
-     * @return {Array|ViewSequence|Object} data-source
+     * @return {Array|LinkedListViewSequence|Object} data-source
      */
     LayoutController.prototype.getDataSource = function() {
         return this._dataSource;
@@ -582,39 +583,14 @@ define(function(require, exports, module) {
         // Add the renderable using an index
         else {
 
-            // Create data-source if neccesary
+            // Create own data-source if neccesary
             if (this._dataSource === undefined) {
-                this._dataSource = [];
-                this._viewSequence = new ViewSequence(this._dataSource);
-                this._initialViewSequence = this._viewSequence;
+                this._dataSource = new LinkedListViewSequence();
+                this._viewSequence = this._dataSource;
             }
 
-            // Insert into array
-            var dataSource = this._viewSequence || this._dataSource;
-            var array = _getDataSourceArray.call(this);
-            if (array && (indexOrId === array.length)) {
-                indexOrId = -1;
-            }
-            if (indexOrId === -1) {
-                dataSource.push(renderable);
-            }
-            else if (indexOrId === 0) {
-                if (dataSource === this._viewSequence) {
-                    dataSource.splice(0, 0, renderable);
-                    if (this._viewSequence.getIndex() === 0) {
-                        var nextViewSequence = this._viewSequence.getNext();
-                        if (nextViewSequence && nextViewSequence.get()) {
-                            this._viewSequence = nextViewSequence;
-                        }
-                    }
-                }
-                else {
-                    dataSource.splice(0, 0, renderable);
-                }
-            }
-            else {
-                dataSource.splice(indexOrId, 0, renderable);
-            }
+            // Insert data
+            this._viewSequence.insert(indexOrId, renderable);
         }
 
         // When a custom insert-spec was specified, store that in the layout-node
@@ -653,6 +629,9 @@ define(function(require, exports, module) {
      * Helper function for finding the view-sequence node at the given position.
      */
     function _getViewSequenceAtIndex(index, startViewSequence) {
+        if (this._viewSequence.getAtIndex) {
+            return this._viewSequence.getAtIndex(index, startViewSequence);
+        }
         var viewSequence = startViewSequence || this._viewSequence;
         var i = viewSequence ? viewSequence.getIndex() : index;
         if (index > i) {
@@ -689,19 +668,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Helper that return the underlying array datasource if available.
-     */
-    function _getDataSourceArray() {
-      if (Array.isArray(this._dataSource)) {
-        return this._dataSource;
-      }
-      else if (this._viewSequence || this._viewSequence._) {
-        return this._viewSequence._.array;
-      }
-      return undefined;
-    }
-
-    /**
      * Get the renderable at the given index or Id.
      *
      * @param {Number|String} indexOrId Index within dataSource array or id (String)
@@ -718,29 +684,14 @@ define(function(require, exports, module) {
     /**
      * Swaps two renderables at the given positions.
      *
-     * This method is only supported for dataSources of type Array or ViewSequence.
+     * This method is only supported for dataSources of type Array or LinkedListViewSequence.
      *
      * @param {Number} index Index of the renderable to swap
      * @param {Number} index2 Index of the renderable to swap with
      * @return {LayoutController} this
      */
     LayoutController.prototype.swap = function(index, index2) {
-        var array = _getDataSourceArray.call(this);
-        if (!array) {
-            throw '.swap is only supported for dataSources of type Array or ViewSequence';
-        }
-        if (index === index2) {
-          return this;
-        }
-        if ((index < 0) || (index >= array.length)) {
-          throw 'Invalid index (' + index + ') specified to .swap';
-        }
-        if ((index2 < 0) || (index2 >= array.length)) {
-          throw 'Invalid second index (' + index2 + ') specified to .swap';
-        }
-        var renderNode = array[index];
-        array[index] = array[index2];
-        array[index2] = renderNode;
+        this._viewSequence.swap(index, index2);
         this._isDirty = true;
         return this;
     };
@@ -769,16 +720,13 @@ define(function(require, exports, module) {
             }
             return oldRenderable;
         }
-        var array = _getDataSourceArray.call(this);
-        if (!array) {
-          return undefined;
+        var sequence = this._viewSequence.findByIndex(indexOrId);
+        if (!sequence) {
+            throw 'Invalid index (' + indexOrId + ') specified to .replace';
         }
-        if ((indexOrId < 0) || (indexOrId >= array.length)) {
-          throw 'Invalid index (' + indexOrId + ') specified to .replace';
-        }
-        oldRenderable = array[indexOrId];
+        oldRenderable = sequence.get();
+        sequence.set(renderable);
         if (oldRenderable !== renderable) {
-          array[indexOrId] = renderable;
           this._isDirty = true;
         }
         return oldRenderable;
@@ -787,25 +735,19 @@ define(function(require, exports, module) {
     /**
      * Moves a renderable to a new index.
      *
-     * This method is only supported for dataSources of type Array or ViewSequence.
+     * This method is only supported for dataSources of type Array or LinkedListViewSequence.
      *
      * @param {Number} index Index of the renderable to move.
      * @param {Number} newIndex New index of the renderable.
      * @return {LayoutController} this
      */
     LayoutController.prototype.move = function(index, newIndex) {
-        var array = _getDataSourceArray.call(this);
-        if (!array) {
-            throw '.move is only supported for dataSources of type Array or ViewSequence';
-        }
-        if ((index < 0) || (index >= array.length)) {
+        var sequence = this._viewSequence.findByIndex(index);
+        if (!sequence) {
           throw 'Invalid index (' + index + ') specified to .move';
         }
-        if ((newIndex < 0) || (newIndex >= array.length)) {
-          throw 'Invalid newIndex (' + newIndex + ') specified to .move';
-        }
-        var item = array.splice(index, 1)[0];
-        array.splice(newIndex, 0, item);
+        this._viewSequence = this._viewSequence.remove(sequence);
+        this._viewSequence.insert(newIndex, sequence.get());
         this._isDirty = true;
         return this;
     };
@@ -844,35 +786,20 @@ define(function(require, exports, module) {
                 }
             }
         }
-
-        // Remove the renderable using an index
-        else if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
-            var array = _getDataSourceArray.call(this);
-            if (!array || (indexOrId < 0) || (indexOrId >= array.length)) {
-                throw 'Invalid index (' + indexOrId + ') specified to .remove (or dataSource doesn\'t support remove)';
-            }
-            renderNode = array[indexOrId];
-            this._dataSource.splice(indexOrId, 1);
-        }
-
-        // Remove by renderable
         else {
-            indexOrId = this._dataSource.indexOf(indexOrId);
-            if (indexOrId >= 0) {
-                this._dataSource.splice(indexOrId, 1);
-                renderNode = indexOrId;
-            }
-        }
 
-        // When a node is removed from the view-sequence, the current this._viewSequence
-        // node may not be part of the valid view-sequence anymore. This seems to be a bug
-        // in the famo.us ViewSequence implementation/concept. The following check was added
-        // to ensure that always a valid viewSequence node is selected into the ScrollView.
-        if (this._viewSequence && renderNode) {
-            var viewSequence = _getViewSequenceAtIndex.call(this, this._viewSequence.getIndex(), this._initialViewSequence);
-            viewSequence = viewSequence || _getViewSequenceAtIndex.call(this, this._viewSequence.getIndex() - 1, this._initialViewSequence);
-            viewSequence = viewSequence || this._dataSource;
-            this._viewSequence = viewSequence;
+            // Remove the renderable
+            var sequence;
+            if ((indexOrId instanceof Number) || (typeof indexOrId === 'number')) {
+                sequence = this._viewSequence.findByIndex(indexOrId);
+            }
+            else {
+                sequence = this._viewSequence.findByValue(indexOrId);
+            }
+            if (sequence) {
+                renderNode = sequence.get();
+                this._viewSequence = this._viewSequence.remove(sequence);
+            }
         }
 
         // When a custom remove-spec was specified, store that in the layout-node
@@ -912,8 +839,8 @@ define(function(require, exports, module) {
                 this._isDirty = true;
             }
         }
-        else if (this._dataSource){
-            this.setDataSource([]);
+        else if (this._viewSequence){
+            this._viewSequence = this._viewSequence.clear();
         }
         if (removeSpec) {
             var node = this._nodes.getStartEnumNode();

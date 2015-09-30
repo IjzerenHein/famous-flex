@@ -258,5 +258,25 @@ define(function(require, exports, module) {
         }
     };
 
+    /**
+     * Not supported
+     * @private
+     */
+    VirtualViewSequence.prototype.insert = function() {
+        if (console.error) {
+            console.error('VirtualViewSequence.insert is not supported and should not be called');
+        }
+    };
+
+    /**
+     * Not supported
+     * @private
+     */
+    VirtualViewSequence.prototype.remove = function() {
+        if (console.error) {
+            console.error('VirtualViewSequence.remove is not supported and should not be called');
+        }
+    };
+
     module.exports = VirtualViewSequence;
 });

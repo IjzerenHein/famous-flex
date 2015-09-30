@@ -136,7 +136,7 @@ define(function(require, exports, module) {
      *
      * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
-     * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
+     * @param {Array|LinkedListViewSequence} node Either an array of renderables or a viewSequence.
      * @return {FlexScrollView} this
      */
     FlexScrollView.prototype.sequenceFrom = function(node) {
@@ -148,7 +148,7 @@ define(function(require, exports, module) {
      *
      * This function is a shim provided for compatibility with the stock famo.us Scrollview.
      *
-     * @return {Number} The current index of the ViewSequence
+     * @return {Number} Index of the first visible renderable.
      */
     FlexScrollView.prototype.getCurrentIndex = function() {
         var item = this.getFirstVisibleItem();

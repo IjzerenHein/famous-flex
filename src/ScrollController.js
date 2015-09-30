@@ -53,7 +53,7 @@ define(function(require, exports, module) {
     var Drag = require('famous/physics/forces/Drag');
     var Spring = require('famous/physics/forces/Spring');
     var ScrollSync = require('famous/inputs/ScrollSync');
-    var ViewSequence = require('famous/core/ViewSequence');
+    var LinkedListViewSequence = require('./LinkedListViewSequence');
 
     /**
      * Boudary reached detection
@@ -1083,7 +1083,7 @@ define(function(require, exports, module) {
      * following properties. Example:
      * ```javascript
      * {
-     *   viewSequence: {ViewSequence},
+     *   viewSequence: {LinkedListViewSequence},
      *   index: {Number},
      *   renderNode: {renderable},
      *   visiblePerc: {Number} 0..1
@@ -1419,13 +1419,13 @@ define(function(require, exports, module) {
      * When the node is already visible, nothing happens. If the node is not entirely visible
      * the view is scrolled as much as needed to make it entirely visibl.
      *
-     * @param {Number|ViewSequence|Renderable} node index, renderNode or ViewSequence
+     * @param {Number|LinkedListViewSequence|Renderable} node index, renderNode or LinkedListViewSequence
      * @return {ScrollController} this
      */
     ScrollController.prototype.ensureVisible = function(node) {
 
         // Convert argument into renderNode
-        if (node instanceof ViewSequence) {
+        if (node instanceof LinkedListViewSequence) {
             node = node.get();
         }
         else if ((node instanceof Number) || (typeof node === 'number')) {
