@@ -986,8 +986,10 @@ define(function(require, exports, module) {
                     normalizeNextPrev = (scrollOffset >= 0);
                 }
                 else {
-                    this._viewSequence = node._viewSequence;
-                    normalizedScrollOffset = scrollOffset;
+                    if (Math.round(scrollOffset) >= 0) {
+                        this._viewSequence = node._viewSequence;
+                        normalizedScrollOffset = scrollOffset;
+                    }
                 }
             }
             node = node._prev;
@@ -1000,7 +1002,7 @@ define(function(require, exports, module) {
         var node = this._nodes.getStartEnumNode(true);
         while (node) {
             if (!node._invalidated || (node.scrollLength === undefined) || node.trueSizeRequested || !node._viewSequence ||
-                ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0)))) {
+                ((Math.round(scrollOffset) > 0) && (!this.options.alignment || (node.scrollLength !== 0)))) {
                 break;
             }
             if (this.options.alignment) {
@@ -1061,7 +1063,7 @@ define(function(require, exports, module) {
             var particleValue = this._scroll.particle.getPosition1D();
             //var particleValue = this._scroll.particleValue;
             _setParticle.call(this, particleValue + delta, undefined, 'normalize');
-            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
+            //console.log('normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
             // Adjust scroll spring
             if (this._scroll.springPosition !== undefined) {
@@ -1734,6 +1736,10 @@ define(function(require, exports, module) {
         // Determine start & end
         var scrollStart = 0 - Math.max(this.options.extraBoundsSpace[0], 1);
         var scrollEnd = size[this._direction] + Math.max(this.options.extraBoundsSpace[1], 1);
+        if (this.options.paginationMode === PaginationMode.PAGE) {
+            scrollStart = scrollOffset - this.options.extraBoundsSpace[0];
+            scrollEnd = scrollOffset + size[this._direction] + this.options.extraBoundsSpace[1];
+        }
         if (this.options.layoutAll) {
             scrollStart = -1000000;
             scrollEnd = 1000000;
@@ -1764,6 +1770,19 @@ define(function(require, exports, module) {
         // Call post-layout function
         if (this._postLayout) {
             this._postLayout(size, scrollOffset);
+        }
+
+        if (this.options.paginationMode === PaginationMode.PAGE) {
+            var node = this._nodes._first;
+            while (node) {
+                if (!node._invalidated && !node._removing) {
+                    console.log('removing node');
+                }
+                node = node._next;
+            }
+            if (this._nodes._contextState.addCount) {
+                console.log('adding nodes: ' + this._nodes._contextState.addCount);
+            }
         }
 
         // Mark non-invalidated nodes for removal
