@@ -42,11 +42,29 @@ define(function(require, exports, module) {
         }
     }
 
-     LinkedListViewSequence.Backing = function Backing() {
+    LinkedListViewSequence.Backing = function Backing() {
         this.length = 0;
         //this.head = undefined;
         //this.tail = undefined;
     };
+
+    /*LinkedListViewSequence.prototype.verifyIntegrity = function() {
+        var item = this._.head;
+        var count = 0;
+        while (item) {
+          assert(item._value, 'no rendernode at index: ' + count);
+          count++;
+          item = item._next;
+        }
+        assert(count === this._.length, 'head -> tail, different count: ' + count + ' != ' + this._.length);
+        item = this._.tail;
+        count = 0;
+        while (item) {
+          count++;
+          item = item._prev;
+        }
+        assert(count === this._.length, 'tail -> head, different count: ' + count + ' != ' + this._.length);
+    };*/
 
     /**
      * Get head node.
@@ -202,6 +220,7 @@ define(function(require, exports, module) {
             this._.head = this;
             this._.tail = this;
             this._.length = 1;
+            //this.verifyIntegrity();
             return this;
         }
         var sequence;
@@ -246,12 +265,14 @@ define(function(require, exports, module) {
             }
             // insert after searchSequence
             sequence = new LinkedListViewSequence(this._);
+            sequence._value = renderNode;
             sequence._prev = searchSequence;
             sequence._next = searchSequence._next;
             searchSequence._next._prev = sequence;
             searchSequence._next = sequence;
         }
         this._.length++;
+        //this.verifyIntegrity();
         return sequence;
     };
 
@@ -270,6 +291,7 @@ define(function(require, exports, module) {
             sequence._next._prev = sequence._prev;
             this._value = undefined;
             this._.length--;
+            //this.verifyIntegrity();
             return (sequence === this) ? sequence._prev : this;
         }
         else if (!sequence._prev && !sequence._next) {
@@ -280,8 +302,9 @@ define(function(require, exports, module) {
             assert(this._.length === 1, 'length should be 1');
             this._value = undefined;
             this._.head = undefined;
-            this._.prev = undefined;
+            this._.tail = undefined;
             this._.length--;
+            //this.verifyIntegrity();
             return this;
         }
         else if (!sequence._prev) {
@@ -289,6 +312,7 @@ define(function(require, exports, module) {
             sequence._next._prev = undefined;
             this._.head = sequence._next;
             this._.length--;
+            //this.verifyIntegrity();
             return (sequence === this) ? this._.head : this;
         }
         else {
@@ -297,6 +321,7 @@ define(function(require, exports, module) {
             sequence._prev._next = undefined;
             this._.tail = sequence._prev;
             this._.length--;
+            //this.verifyIntegrity();
             return (sequence === this) ? this._.tail : this;
         }
     };
@@ -310,6 +335,7 @@ define(function(require, exports, module) {
         while (this._.length) {
           sequence = sequence.remove(this._.tail);
         }
+        //sequence.verifyIntegrity();
         return sequence;
     };
 
@@ -339,6 +365,7 @@ define(function(require, exports, module) {
         var swap = sequence1._value;
         sequence1._value = sequence2._value;
         sequence2._value = swap;
+        //this.verifyIntegrity();
         return this;
     };
 
