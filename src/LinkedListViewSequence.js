@@ -54,6 +54,7 @@ define(function(require, exports, module) {
         while (item) {
           assert(item._value, 'no rendernode at index: ' + count);
           count++;
+          assert(count <= this._.length, 'head -> tail, node-count exceeds length: ' + count + ' > ' + this._.length);
           item = item._next;
         }
         assert(count === this._.length, 'head -> tail, different count: ' + count + ' != ' + this._.length);
@@ -61,6 +62,7 @@ define(function(require, exports, module) {
         count = 0;
         while (item) {
           count++;
+          assert(count <= this._.length, 'tail -> head, node-count exceeds length: ' + count + ' > ' + this._.length);
           item = item._prev;
         }
         assert(count === this._.length, 'tail -> head, different count: ' + count + ' != ' + this._.length);
@@ -289,7 +291,6 @@ define(function(require, exports, module) {
         if (sequence._prev && sequence._next) {
             sequence._prev._next = sequence._next;
             sequence._next._prev = sequence._prev;
-            this._value = undefined;
             this._.length--;
             //this.verifyIntegrity();
             return (sequence === this) ? sequence._prev : this;
