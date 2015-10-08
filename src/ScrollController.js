@@ -634,6 +634,9 @@ define(function(require, exports, module) {
             this._scroll.particleValue = position;
             this._scroll.particle.setPosition1D(position);
             //_log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
+            if (this._scroll.springValue !== undefined) {
+                this._scroll.pe.wake();
+            }
         }
         if (velocity !== undefined) {
             var oldVelocity = this._scroll.particle.getVelocity1D();
@@ -907,7 +910,6 @@ define(function(require, exports, module) {
         if (this._scroll.scrollToDirection) {
             this._scroll.springPosition = scrollOffset - size[this._direction];
             this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
-
         }
         else {
             this._scroll.springPosition = scrollOffset + size[this._direction];
@@ -1772,7 +1774,7 @@ define(function(require, exports, module) {
             this._postLayout(size, scrollOffset);
         }
 
-        if (this.options.paginationMode === PaginationMode.PAGE) {
+        /*if (this.options.paginationMode === PaginationMode.PAGE) {
             var node = this._nodes._first;
             while (node) {
                 if (!node._invalidated && !node._removing) {
@@ -1783,7 +1785,7 @@ define(function(require, exports, module) {
             if (this._nodes._contextState.addCount) {
                 console.log('adding nodes: ' + this._nodes._contextState.addCount);
             }
-        }
+        }*/
 
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
