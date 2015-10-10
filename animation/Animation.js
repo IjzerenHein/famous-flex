@@ -1,5 +1,5 @@
 import EngineAnimation from '../engine/Animation';
-import {assert} from '../utils';
+import {assert, cloneArray} from '../utils';
 import AnimationPromise from './AnimationPromise';
 
 let collected;
@@ -10,32 +10,43 @@ export default class Animation extends EngineAnimation {
   onUpdate(value) {
     for (var j = 0; j < this.items.length; j++) {
       const item = this.items[j];
-      if (Array.isArray(item.newValue)) {
-        const propValue = [];
-        for (var k = 0; k < item.newValue.length; k++) {
-          const newValue = item.newValue[k];
-          const curValue = item.curValue[k];
-          if (Array.isArray(newValue)) {
-            const subPropValue = [];
-            for (var n = 0; n < newValue.length; n++) {
-              subPropValue.push(((newValue[n] - curValue[n]) * value) + curValue[n]);
+      if (Array.isArray(item.startValue)) {
+        for (var k = 0; k < item.endValue.length; k++) {
+          const endValue = item.endValue[k];
+          const startValue = item.startValue[k];
+          if (Array.isArray(endValue)) {
+            for (var n = 0; n < endValue.length; n++) {
+              item.curValue[k][n] = ((endValue[n] - startValue[n]) * value) + startValue[n];
             }
-            propValue.push(subPropValue);
           } else {
-            propValue.push(((newValue - curValue) * value) + curValue);
+            item.curValue[k] = ((endValue - startValue) * value) + startValue;
           }
         }
-        item.node[item.property] = propValue;
+        item.node[item.property] = item.curValue;
       } else {
-        item.node[item.property] = ((item.newValue - item.curValue) * value) + item.curValue;
+        //console.log('animating ' + item.property + ' = ' + ((item.newValue - item.curValue) * value) + item.curValue);
+        item.node[item.property] = ((item.endValue - item.startValue) * value) + item.startValue;
       }
     }
   }
 
   static collect(node, property, curValue, newValue) {
     assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
-    if (curValue !== newValue) {
-      collected.push({node, property, curValue, newValue});
+    if (Array.isArray(curValue)) {
+      collected.push({
+        node: node,
+        property: property,
+        curValue: cloneArray(curValue), // allocate array for re-use
+        startValue: cloneArray(curValue),
+        endValue: cloneArray(newValue)
+      });
+    } else if (curValue !== newValue) {
+      collected.push({
+        node: node,
+        property: property,
+        startValue: curValue,
+        endValue: newValue
+      });
     }
   }
 
@@ -57,7 +68,7 @@ export default class Animation extends EngineAnimation {
         animation.stop();
         for (var j = 0; j < animation.items.length; j++) {
           const item = animation.items[j];
-          item.node[item.property] = item.newValue;
+          item.node[item.property] = item.endValue;
         }
         animation.items = undefined;
         animationsPool.push(animation);

@@ -1,14 +1,12 @@
 import ControlBase from './ControlBase';
 import DOMNode from '../core/DOMNode';
 import {Animation, Particle} from '../animation';
+import Theme from '../theme';
+import Color from '../core/Color';
 
 const defaults = {
   classes: ['progressbar'],
-  progress: 0.5,
-  intrinsicSize: ['90%', 80],
-  animated: true,
-  padding: 1,
-  borderRadius: 'auto'
+  progress: 0.5
 };
 
 export default class ProgressBar extends ControlBase {
@@ -20,21 +18,15 @@ export default class ProgressBar extends ControlBase {
   constructor(options) {
     super();
     options = options || {};
-    this._particle = new Particle(this, options.particle || defaults.particle);
+    this._particle = new Particle(this, options.particle || Theme.defaults.progressBar.particle || defaults.particle);
     this._particle.onChange = () => this.requestLayout();
     this._inside = this.addChild(new DOMNode({classes: ['inside']}));
     this._background = this.addChild(new DOMNode({classes: ['background']}));
-    this.setOptions(options, defaults);
-  }
-
-  static layout(rect) {
-    this._background.rect = rect;
-    rect.inFront();
-    if (this._borderRadius === 'auto') this._background.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
-    if (this._borderRadius === 'auto') this._inside.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
-    rect.subtract(this._padding);
-    rect.width = rect.width * Math.min(Math.max(this._particle.value.x, 0), 1);
-    this._inside.rect = rect;
+    this._color = new Color(this);
+    this._color.on('changed', () => this.requestLayout());
+    this._backgroundColor = new Color(this);
+    this._backgroundColor.on('changed', () => this.requestLayout());
+    this.setOptions(defaults, Theme.defaults.progressBar, options);
   }
 
   get animated() {
@@ -63,6 +55,22 @@ export default class ProgressBar extends ControlBase {
     }
   }
 
+  get color() {
+    return this._color;
+  }
+
+  set color(color) {
+    this._color.set(color);
+  }
+
+  get backgroundColor() {
+    return this._backgroundColor;
+  }
+
+  set backgroundColor(color) {
+    this._backgroundColor.set(color);
+  }
+
   get borderRadius() {
     return this._borderRadius;
   }
@@ -77,5 +85,3 @@ export default class ProgressBar extends ControlBase {
     }
   }
 }
-ProgressBar.defaults = defaults;
-ProgressBar.defaults.layout = ProgressBar.layout;

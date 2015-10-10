@@ -101,4 +101,18 @@ export default class NodeRect {
       }
     }
   }
+
+  toString() {
+    return JSON.stringify(this.toJSON());
+  }
+
+  toJSON() {
+    return {
+      x: this.x,
+      y: this.y,
+      z: this.z,
+      width: this.width,
+      height: this.height
+    };
+  }
 }

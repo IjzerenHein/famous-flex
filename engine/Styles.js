@@ -10,6 +10,7 @@ export default class Styles {
   setAll(styles) {
     if (styles) {
       for (var key in styles) {
+        // TODO, CHECK IF KEY IS A PROPERTY
         this._el.setProperty(key, styles[key]);
       }
     }
@@ -28,12 +29,13 @@ export default class Styles {
   }
 
   set color(color) {
-    if (this._items.color && Animation.isCollecting) {
-      Animation.collect(this, 'color', this._items.color, Color.parse(color));
-    } else {
-      this._items.color = Color.parse(color);
-      this._el.setProperty('color', Array.isArray(color) ? Color.formatRGBA(color) : color);
+    if (!this._items.color) {
+      this._items.color = new Color();
+      this._items.color.on('changed', () => {
+        this._el.setProperty('color', this._items.color.formatRGBA());
+      });
     }
+    this._items.color.set(color);
   }
 
   get backgroundColor() {
@@ -41,12 +43,13 @@ export default class Styles {
   }
 
   set backgroundColor(color) {
-    if (this._items.backgroundColor && Animation.isCollecting) {
-      Animation.collect(this, 'backgroundColor', this._items.backgroundColor, Color.parse(color));
-    } else {
-      this._items.backgroundColor = Color.parse(color);
-      this._el.setProperty('backgroundColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
+    if (!this._items.backgroundColor) {
+      this._items.backgroundColor = new Color();
+      this._items.backgroundColor.on('changed', () => {
+        this._el.setProperty('backgroundColor', this._items.backgroundColor.formatRGBA());
+      });
     }
+    this._items.backgroundColor.set(color);
   }
 
   get borderColor() {
@@ -54,12 +57,13 @@ export default class Styles {
   }
 
   set borderColor(color) {
-    if (this._items.borderColor && Animation.isCollecting) {
-      Animation.collect(this, 'borderColor', this._items.borderColor, Color.parse(color));
-    } else {
-      this._items.borderColor = Color.parse(color);
-      this._el.setProperty('borderColor', Array.isArray(color) ? Color.formatRGBA(color) : color);
+    if (!this._items.borderColor) {
+      this._items.borderColor = new Color();
+      this._items.borderColor.on('changed', () => {
+        this._el.setProperty('borderColor', this._items.borderColor.formatRGBA());
+      });
     }
+    this._items.borderColor.set(color);
   }
 
   get borderRadius() {

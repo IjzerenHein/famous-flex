@@ -21,7 +21,7 @@ export default class Label extends ControlBase {
     super();
     this._primaryText = this.addChild(new DOMNode({classes: ['text']}));
     this._frontText = this._primaryText;
-    this.setOptions(options, defaults);
+    this.setOptions(defaults, options);
   }
 
   static layout(rect) {
@@ -103,7 +103,6 @@ export default class Label extends ControlBase {
   }
 
   set styles(value) {
-    console.log('heuj');
     this._primaryText.styles.setAll(value);
     if (this._secondaryText) {
       this._secondaryText.styles.setAll(value);

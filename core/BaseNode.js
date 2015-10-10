@@ -29,23 +29,32 @@ export default class BaseNode extends EngineBaseNode {
     }
   }
 
-  setOptions(options, defaults) {
-    if (defaults) {
-      for (var key in defaults) {
-        this[key] = defaults[key];
-      }
-    }
-    if (options) {
-      for (var key in options) {
+  setOptions(options) {
+    for (var i = 0; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
         //if (!Object.getOwnPropertyDescriptor(this, key)) {
         //console.warn('option "' + key + '" specified, but not supported by class: ');
         //}
-        this[key] = options[key];
+        this[key] = arguments[i][key];
       }
     }
   }
 
   animate(curve, duration, collectFn) {
     return Animation.start(this, curve, duration, collectFn);
+  }
+
+  debounce(callback, frameCount) {
+    frameCount = frameCount || 1;
+    const update = this.registerUpdate(() => {
+      frameCount--;
+      if (!frameCount) {
+        callback();
+        this.unregisterUpdate(update);
+      } else {
+        update.request();
+      }
+    });
+    update.request();
   }
 }
