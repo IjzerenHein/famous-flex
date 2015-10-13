@@ -145,7 +145,7 @@ scrollView.setDataSource([surface1, surface2, ...]);
 scrollView.sequenceFrom([surface1, surface2, ...]);
 
 // Using a ViewSequence
-var viewSequence = new ViewSequence();
+var viewSequence = new LinkedListViewSequence();
 viewSequence.push(surface1);
 viewSequence.push(surface2);
 viewSequence.push(...);
