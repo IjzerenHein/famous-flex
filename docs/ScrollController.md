@@ -105,7 +105,7 @@ The returned result is an array of objects containing the
 following properties. Example:
 ```javascript
 {
-  viewSequence: {ViewSequence},
+  viewSequence: {LinkedListViewSequence},
   index: {Number},
   renderNode: {renderable},
   visiblePerc: {Number} 0..1
@@ -198,7 +198,7 @@ the view is scrolled as much as needed to make it entirely visibl.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| node | <code>Number</code> &#124; <code>ViewSequence</code> &#124; <code>Renderable</code> | index, renderNode or ViewSequence |
+| node | <code>Number</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Renderable</code> | index, renderNode or LinkedListViewSequence |
 
 <a name="module_ScrollController--ScrollController+scroll"></a>
 #### scrollController.scroll(delta) ⇒ <code>ScrollController</code>

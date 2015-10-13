@@ -17,7 +17,7 @@ Events:
     * [new LayoutController(options)](#new_module_LayoutController--LayoutController_new)
     * [.setOptions(options)](#module_LayoutController--LayoutController+setOptions) ⇒ <code>LayoutController</code>
     * [.setDataSource(dataSource)](#module_LayoutController--LayoutController+setDataSource) ⇒ <code>LayoutController</code>
-    * [.getDataSource()](#module_LayoutController--LayoutController+getDataSource) ⇒ <code>Array</code> &#124; <code>ViewSequence</code> &#124; <code>Object</code>
+    * [.getDataSource()](#module_LayoutController--LayoutController+getDataSource) ⇒ <code>Array</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Object</code>
     * [.setLayout(layout, [options])](#module_LayoutController--LayoutController+setLayout) ⇒ <code>LayoutController</code>
     * [.getLayout()](#module_LayoutController--LayoutController+getLayout) ⇒ <code>function</code> &#124; <code>Object</code>
     * [.setLayoutOptions([options])](#module_LayoutController--LayoutController+setLayoutOptions) ⇒ <code>LayoutController</code>
@@ -48,7 +48,7 @@ Events:
 | options | <code>Object</code> | Options. |
 | [options.layout] | <code>function</code> &#124; <code>Object</code> | Layout function or layout-literal. |
 | [options.layoutOptions] | <code>Object</code> | Options to pass in to the layout-function. |
-| [options.dataSource] | <code>Array</code> &#124; <code>ViewSequence</code> &#124; <code>Object</code> | Array, ViewSequence or Object with key/value pairs. |
+| [options.dataSource] | <code>Array</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Object</code> | Array, LinkedListViewSequence or Object with key/value pairs. |
 | [options.direction] | <code>Utility.Direction</code> | Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used) |
 | [options.flow] | <code>Bool</code> | Enables flow animations when the layout changes (default: `false`). |
 | [options.flowOptions] | <code>Object</code> | Options used by nodes when reflowing. |
@@ -73,7 +73,7 @@ Patches the LayoutController instance's options with the passed-in ones.
 | options | <code>Options</code> | An object of configurable options for the LayoutController instance. |
 | [options.layout] | <code>function</code> &#124; <code>Object</code> | Layout function or layout-literal. |
 | [options.layoutOptions] | <code>Object</code> | Options to pass in to the layout-function. |
-| [options.dataSource] | <code>Array</code> &#124; <code>ViewSequence</code> &#124; <code>Object</code> | Array, ViewSequence or Object with key/value pairs. |
+| [options.dataSource] | <code>Array</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Object</code> | Array, LinkedListViewSequence or Object with key/value pairs. |
 | [options.direction] | <code>Utility.Direction</code> | Direction to layout into (e.g. Utility.Direction.Y) (when omitted the default direction of the layout is used) |
 | [options.flowOptions] | <code>Object</code> | Options used by nodes when reflowing. |
 | [options.flowOptions.reflowOnResize] | <code>Bool</code> | Smoothly reflows renderables on resize (only used when flow = true) (default: `true`). |
@@ -88,7 +88,7 @@ Patches the LayoutController instance's options with the passed-in ones.
 Sets the collection of renderables which are layed out according to
 the layout-function.
 
-The data-source can be either an Array, ViewSequence or Object
+The data-source can be either an Array, LinkedListViewSequence or Object
 with key/value pairs.
 
 **Kind**: instance method of <code>[LayoutController](#exp_module_LayoutController--LayoutController)</code>  
@@ -96,14 +96,14 @@ with key/value pairs.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dataSource | <code>Array</code> &#124; <code>Object</code> &#124; <code>ViewSequence</code> | Array, ViewSequence or Object. |
+| dataSource | <code>Array</code> &#124; <code>Object</code> &#124; <code>LinkedListViewSequence</code> | Array, LinkedListViewSequence or Object. |
 
 <a name="module_LayoutController--LayoutController+getDataSource"></a>
-#### layoutController.getDataSource() ⇒ <code>Array</code> &#124; <code>ViewSequence</code> &#124; <code>Object</code>
+#### layoutController.getDataSource() ⇒ <code>Array</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Object</code>
 Get the data-source.
 
 **Kind**: instance method of <code>[LayoutController](#exp_module_LayoutController--LayoutController)</code>  
-**Returns**: <code>Array</code> &#124; <code>ViewSequence</code> &#124; <code>Object</code> - data-source  
+**Returns**: <code>Array</code> &#124; <code>LinkedListViewSequence</code> &#124; <code>Object</code> - data-source  
 <a name="module_LayoutController--LayoutController+setLayout"></a>
 #### layoutController.setLayout(layout, [options]) ⇒ <code>LayoutController</code>
 Set the new layout.
@@ -245,7 +245,7 @@ Get the renderable at the given index or Id.
 #### layoutController.swap(index, index2) ⇒ <code>LayoutController</code>
 Swaps two renderables at the given positions.
 
-This method is only supported for dataSources of type Array or ViewSequence.
+This method is only supported for dataSources of type Array or LinkedListViewSequence.
 
 **Kind**: instance method of <code>[LayoutController](#exp_module_LayoutController--LayoutController)</code>  
 **Returns**: <code>LayoutController</code> - this  
@@ -272,7 +272,7 @@ Replaces a renderable at the given index or id.
 #### layoutController.move(index, newIndex) ⇒ <code>LayoutController</code>
 Moves a renderable to a new index.
 
-This method is only supported for dataSources of type Array or ViewSequence.
+This method is only supported for dataSources of type Array or LinkedListViewSequence.
 
 **Kind**: instance method of <code>[LayoutController](#exp_module_LayoutController--LayoutController)</code>  
 **Returns**: <code>LayoutController</code> - this  

@@ -88,7 +88,7 @@ This function is a shim provided for compatibility with the stock famo.us Scroll
 
 | Param | Type | Description |
 | --- | --- | --- |
-| node | <code>Array</code> &#124; <code>ViewSequence</code> | Either an array of renderables or a Famous viewSequence. |
+| node | <code>Array</code> &#124; <code>LinkedListViewSequence</code> | Either an array of renderables or a viewSequence. |
 
 <a name="module_FlexScrollView--FlexScrollView+getCurrentIndex"></a>
 #### flexScrollView.getCurrentIndex() ⇒ <code>Number</code>
@@ -97,7 +97,7 @@ Returns the index of the first visible renderable.
 This function is a shim provided for compatibility with the stock famo.us Scrollview.
 
 **Kind**: instance method of <code>[FlexScrollView](#exp_module_FlexScrollView--FlexScrollView)</code>  
-**Returns**: <code>Number</code> - The current index of the ViewSequence  
+**Returns**: <code>Number</code> - Index of the first visible renderable.  
 <a name="module_FlexScrollView--FlexScrollView+goToPage"></a>
 #### flexScrollView.goToPage(index, [noAnimation]) ⇒ <code>FlexScrollView</code>
 Paginates the Scrollview to an absolute page index. This function is a shim provided
