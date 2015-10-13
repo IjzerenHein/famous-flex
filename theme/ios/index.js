@@ -1,5 +1,6 @@
 import Switch from './switch';
-import ProgressBar from './ProgressBar';
+import ProgressBar from './progressBar';
+import Slider from './slider';
 
 export default class IOSTheme {
 }
@@ -9,5 +10,6 @@ IOSTheme.outlineColor = '#E8E8E8';
 IOSTheme.neutralColor = '#E8E8E8';
 IOSTheme.defaults = {
   switch: Switch,
-  progressBar: ProgressBar
+  progressBar: ProgressBar,
+  slider: Slider
 };

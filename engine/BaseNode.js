@@ -30,11 +30,6 @@ class UpdateRegistration {
 
 export default class BaseNode extends Node {
 
-  on(event, callback) {
-    this._gestureHandler = this._gestureHandler || new GestureHandler(this);
-    this._gestureHandler.on(event, callback);
-  }
-
   /*
   getOpacity()
   setOpacity()
@@ -69,8 +64,7 @@ export default class BaseNode extends Node {
     if (layout) { // there should only be 1 layout registration!
       this._registeredUpdatesComp.onSizeChange = () => update.callback();
       this._newRegisteredUpdates.push(update); // layout is executed AFTER all other updates
-    }
-    else {
+    } else {
       this._newRegisteredUpdates.unshift(update);
     }
     return update;

@@ -21,7 +21,10 @@ export default class LayoutNode extends BaseNode {
     rect.x = 0;
     rect.y = 0;
     rect.z = 0;
-    if (this._intrinsicSize) {
+    if (this._measure) {
+      this._measure(rect);
+      rect.center();
+    } else if (this._intrinsicSize) {
       this._intrinsicSize.resolve(rect);
       rect.center();
     } else {
@@ -59,6 +62,17 @@ export default class LayoutNode extends BaseNode {
     if (this._layoutOptions !== options) {
       this._layoutOptions = options;
       this.requestLayout();
+    }
+  }
+
+  get measure() {
+    return this._measure;
+  }
+
+  set measure(measure) {
+    if (measure !== this._measure) {
+      this._measure = measure;
+      this.requestLayout(Animation.isCollecting);
     }
   }
 

@@ -29,16 +29,21 @@ function interpolate(startValue, endValue, progress) {
 }
 
 function cloneArray(ar) {
-    var res = [];
-    for (var i = 0; i < ar.length; i++) {
-      const elm = ar[i];
-      res.push(Array.isArray(elm) ? cloneArray(elm) : elm);
-    }
-    return res;
+  var res = [];
+  for (var i = 0; i < ar.length; i++) {
+    const elm = ar[i];
+    res.push(Array.isArray(elm) ? cloneArray(elm) : elm);
+  }
+  return res;
+}
+
+function distance(deltaX, deltaY) {
+  return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
 }
 
 export {
   assert,
   interpolate,
+  distance,
   cloneArray
 };

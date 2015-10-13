@@ -1,5 +1,6 @@
 import EngineBaseNode from '../engine/BaseNode';
 import EngineNodeRect from '../engine/NodeRect';
+import GestureRecognizer from '../gestures/GestureRecognizer';
 import Animation from '../animation/Animation';
 
 export default class BaseNode extends EngineBaseNode {
@@ -7,6 +8,11 @@ export default class BaseNode extends EngineBaseNode {
     super();
     this._rect = new EngineNodeRect(this);
     this.setOptions(options);
+  }
+
+  on(event, callback) {
+    this._gestureRecognizer = this._gestureRecognizer || new GestureRecognizer(this);
+    return this._gestureRecognizer.on(event, callback);
   }
 
   get rect() {
