@@ -1,5 +1,11 @@
 # Contributing to famous-flex
 
+## Develop-branch
+
+All Pull-requests should be made on the 'develop'-branch.
+Pull-requests on the 'master' -branch will not be accepted.
+
+
 ## Documentation
 
 Please note that documentation (i.e. everything in the `docs` directory) is
