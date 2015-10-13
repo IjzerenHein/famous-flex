@@ -10,3 +10,6 @@
 - Gadi Cohen (gadicc)
 - Mark Wheeler (mhwheeler)
 - Nicholas Reed (nicholasareed)
+- Andrew Reedy (andrewreedy)
+- Tom Clement (tjclement)
+- Manual Overdijk (ManuelOverdijk)
