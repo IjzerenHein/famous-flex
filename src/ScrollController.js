@@ -1782,19 +1782,6 @@ define(function(require, exports, module) {
             this._postLayout(size, scrollOffset);
         }
 
-        if (this.options.paginationMode === PaginationMode.PAGE) {
-            var node = this._nodes._first;
-            while (node) {
-                if (!node._invalidated && !node._removing) {
-                    console.log('removing node');
-                }
-                node = node._next;
-            }
-            if (this._nodes._contextState.addCount) {
-                console.log('adding nodes: ' + this._nodes._contextState.addCount);
-            }
-        }
-
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
 
