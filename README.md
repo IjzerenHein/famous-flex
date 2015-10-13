@@ -55,6 +55,7 @@ In order to make this happen, community contributions would be very welcome to s
 - [ListLayout](docs/layouts/ListLayout.md) *(scrollable)*	
 - [CollectionLayout](docs/layouts/CollectionLayout.md) *(scrollable)*
 - [WheelLayout](docs/layouts/WheelLayout.md) *(scrollable)*
+- [CoverLayout](docs/layouts/CoverLayout.md) *(scrollable)*
 
 ### Resources
 - [Documentation](#documentation)
@@ -151,10 +152,11 @@ The data-source contains the renderables that are to be layed-out.
 It can be one of three things:
 
 - An `Array`
-- A `ViewSequence`
+- A `LinkedListViewSequence`
+- A `VirtualViewSequence`
 - An `Object` with key/value pairs
 
-In case of an `Array` or `ViewSequence`, use `context.next()` in your
+In case of an `Array` or a `ViewSequence`, use `context.next()` in your
 layout-function to enumerate all the renderables in the data-source:
 
 ```javascript
@@ -249,14 +251,15 @@ Layout helpers are special classes that simplify writing layout functions.
 
 |Layout|DataSource|Scrollable|Description|
 |---|---|---|---|
-|[ProportionalLayout](docs/layouts/ProportionalLayout.md)|ViewSequence / Array|No|Lays out renderables sequentially and sizes them proportionally.|
+|[ProportionalLayout](docs/layouts/ProportionalLayout.md)|LinkedListViewSequence / Array|No|Lays out renderables sequentially and sizes them proportionally.|
 |[HeaderFooterLayout](docs/layouts/HeaderFooterLayout.md)|Id-based|No|Layout containing a top-header, bottom- footer and content.|
 |[NavBarLayout](docs/layouts/NavBarLayout.md)|Id-based|No|Layout containing one or more left and right items and a title.|
 |[TabBarLayout](docs/layouts/TabBarLayout.md)|Id-based|No|Tab-bar layout.|
 |*Scrollable layouts:*|
-|[ListLayout](docs/layouts/ListLayout.md)|ViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
-|[CollectionLayout](docs/layouts/CollectionLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a grid with a specific width & height.|
-|[WheelLayout](docs/layouts/WheelLayout.md)|ViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
+|[ListLayout](docs/layouts/ListLayout.md)|LinkedListViewSequence / Array|Yes|List layout with margins, spacing and optionally sticky headers.|
+|[CollectionLayout](docs/layouts/CollectionLayout.md)|LinkedListViewSequence / Array|Yes|Lays out renderables in a grid with a specific width & height.|
+|[WheelLayout](docs/layouts/WheelLayout.md)|LinkedListViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
+|[CoverLayout](docs/layouts/CoverLayout.md)|LinkedListViewSequence / Array|Yes|Lays out renderables in a wheel (slot-machine) formation.|
 
 
 ## Documentation
@@ -273,6 +276,7 @@ Layout helpers are special classes that simplify writing layout functions.
 |[LayoutContext](docs/LayoutContext.md)|Context used for writing layout-functions.|
 |[LayoutUtility](docs/LayoutUtility.md)|Utility class containing helper functions.|
 |[VirtualViewSequence](docs/VirtualViewSequence.md)|Infinite view-sequence which uses a factory delegate to create renderables.|
+|[LinkedListViewSequence](docs/LinkedListViewSequence.md)|Linked-list based View-sequence which resolves various issues with the stock famo.us ViewSequence.|
 
 
 ## Roadmap
