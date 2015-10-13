@@ -11,6 +11,9 @@
 /*global console*/
 /*eslint no-console:0 */
 
+/**
+ * @private
+ */
 function assert(value, message) {
     if (!value) {
         //debugger;
@@ -19,7 +22,8 @@ function assert(value, message) {
 }
 
 /**
- * Own implementation of ViewSequence which doesn't suck
+ * Linked-list based implementation of a view-sequence which fixes
+ * several issues in the stock famo.us ViewSequence.
  *
  * @module
  */
@@ -117,6 +121,7 @@ define(function(require, exports, module) {
      * Sets the value of this node.
      *
      * @param {Renderable} value surface/view
+     * @return {LinkedListViewSequence} this
      */
     LinkedListViewSequence.prototype.set = function(value) {
         this._value = value;
@@ -142,8 +147,9 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Gets the index of a given render-node.
+     * Finds the index of a given render-node.
      *
+     * @param {Renderable} item Render-node to find.
      * @return {Number} Index or -1 when not found.
      */
     LinkedListViewSequence.prototype.indexOf = function(item) {
@@ -160,7 +166,10 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Gets the view-sequence item at the given index.
+     * Finds the view-sequence item at the given index.
+     *
+     * @param {Number} index 0-based index.
+     * @return {LinkedListViewSequence} View-sequence node or undefined.
      */
     LinkedListViewSequence.prototype.findByIndex = function(index) {
         index = (index === -1) ? (this._.length - 1) : index;
@@ -193,7 +202,10 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Gets the view-sequence item at the given index.
+     * Finds the view-sequence node by the given renderable.
+     *
+     * @param {Renderable} value Render-node to search for.
+     * @return {LinkedListViewSequence} View-sequence node or undefined.
      */
     LinkedListViewSequence.prototype.findByValue = function(value) {
         var sequence = this._.head;
@@ -207,9 +219,11 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Pushes an item to the end of the view-sequence.
+     * Inserts an item into the view-sequence.
      *
-     * @return {LinkedListViewSequence} view-sequence node
+     * @param {Number} index 0-based index (-1 inserts at the tail).
+     * @param {Renderable} renderNode Renderable to insert.
+     * @return {LinkedListViewSequence} newly inserted view-sequence node.
      */
     LinkedListViewSequence.prototype.insert = function(index, renderNode) {
         index = (index === -1) ? this._.length : index;
@@ -327,10 +341,20 @@ define(function(require, exports, module) {
         }
     };
 
+    /**
+     * Gets the number of items in the view-sequence.
+     *
+     * @return {Number} length.
+     */
     LinkedListViewSequence.prototype.getLength = function() {
         return this._.length;
     };
 
+    /**
+     * Removes all items.
+     *
+     * @return {LinkedListViewSequence} Last remaining view-sequence node.
+     */
     LinkedListViewSequence.prototype.clear = function() {
         var sequence = this; //eslint-disable-line consistent-this
         while (this._.length) {
@@ -340,10 +364,22 @@ define(function(require, exports, module) {
         return sequence;
     };
 
+    /**
+     * Inserts an item at the beginning of the view-sequence.
+     *
+     * @param {Renderable} renderNode Renderable to insert.
+     * @return {LinkedListViewSequence} newly inserted view-sequence node.
+     */
     LinkedListViewSequence.prototype.unshift = function(renderNode) {
         return this.insert(0, renderNode);
     };
 
+    /**
+     * Inserts an item at the end of the view-sequence.
+     *
+     * @param {Renderable} renderNode Renderable to insert.
+     * @return {LinkedListViewSequence} newly inserted view-sequence node.
+     */
     LinkedListViewSequence.prototype.push = function(renderNode) {
         return this.insert(-1, renderNode);
     };
@@ -354,6 +390,13 @@ define(function(require, exports, module) {
         }
     };
 
+    /**
+     * Swaps the values of two view-sequence nodes.
+     *
+     * @param {Number} index Index of the first item to swap.
+     * @param {Number} index2 Index of item to swap with.
+     * @return {LinkedListViewSequence} this
+     */
     LinkedListViewSequence.prototype.swap = function(index, index2) {
         var sequence1 = this.findByIndex(index);
         if (!sequence1) {
