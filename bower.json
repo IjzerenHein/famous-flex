@@ -1,7 +1,7 @@
 {
   "main": "src",
   "name": "famous-flex",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "homepage": "https://github.com/IjzerenHein/famous-flex",
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "datetimepicker",
     "tabbar",
     "tabbarcontroller",
+    "coverlayout",
     "widgets",
     "autolayout",
     "cassowary",
