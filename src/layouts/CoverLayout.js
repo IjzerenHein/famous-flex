@@ -5,19 +5,18 @@
  *
  * @author: Hein Rutjes (IjzerenHein)
  * @license MIT
- * @copyright Gloey Apps, 2014
+ * @copyright Gloey Apps, 2015
  */
 
 /**
- * Lays a collection of renderables from left to right, and when the right edge is reached,
- * continues at the left of the next line.
+ * Lays out renderables in scrollable coverflow.
  *
  * |options|type|description|
  * |---|---|---|
  * |`itemSize`|Size|Size of an item to layout|
- * |`[gutter]`|Size|Gutter-space between renderables|
  * |`zOffset`|Size|Z-space offset for all the renderables except the current 'selected' renderable|
  * |`itemAngle`|Angle|Angle of the renderables, in radians|
+ * |`[radialOpacity]`|Number|Opacity (0..1) at the edges of the layout (default: 1).|
  * Example:
  *
  * ```javascript
@@ -28,9 +27,8 @@
  *   layoutOptions: {
  *        itemSize: 400,
  *        zOffset: 400,      // z-space offset for all the renderables except the current 'selected' renderable
- *        diameter: 2500,
- *        radialOpacity: 1,  // make items at the edges more transparent
- *        itemAngle: 0.78    // Angle of the renderables, in radians
+ *        itemAngle: 0.78,   // Angle of the renderables, in radians
+ *        radialOpacity: 1   // make items at the edges more transparent
  *   },
  *   dataSource: [
  *     new Surface({content: 'item 1'}),
@@ -61,11 +59,9 @@ define(function(require, exports, module) {
     var revDirection;
     var node;
     var itemSize;
-    var diameter;
     var offset;
     var bound;
     var angle;
-    var radius;
     var itemAngle;
     var radialOpacity;
     var zOffset;
@@ -93,8 +89,6 @@ define(function(require, exports, module) {
         direction = context.direction;
         revDirection = direction ? 0 : 1;
         itemSize = options.itemSize || (size[direction] / 2);
-        diameter = options.diameter || (itemSize * 3);
-        radius = diameter / 2;
         radialOpacity = (options.radialOpacity === undefined) ? 1 : options.radialOpacity;
 
         //
@@ -103,7 +97,7 @@ define(function(require, exports, module) {
         set.opacity = 1;
         set.size[0] = size[0];
         set.size[1] = size[1];
-        set.size[revDirection] = itemSize
+        set.size[revDirection] = itemSize;
         set.size[direction] = itemSize;
         set.translate[0] = 0;
         set.translate[1] = 0;
@@ -125,11 +119,10 @@ define(function(require, exports, module) {
             }
             if (offset >= -bound) {
                 set.translate[direction] = offset;
-                set.translate[2] = Math.abs(offset) > itemSize ? - zOffset : -(Math.abs(offset) * (zOffset/itemSize));
-                if(offset < 0){
-                    set.rotate[1] = Math.abs(offset) > itemSize ?  itemAngle : (Math.abs(offset) * (itemAngle / itemSize));
-                } else {
-                    set.rotate[1] = Math.abs(offset) > itemSize ?  -itemAngle : -(Math.abs(offset) * (itemAngle / itemSize));
+                set.translate[2] = Math.abs(offset) > itemSize ? -zOffset : -(Math.abs(offset) * (zOffset / itemSize));
+                set.rotate[revDirection] = Math.abs(offset) > itemSize ? itemAngle : (Math.abs(offset) * (itemAngle / itemSize));
+                if (((offset > 0) && !direction) || ((offset < 0) && direction)) {
+                    set.rotate[revDirection] = 0 - set.rotate[revDirection];
                 }
                 set.opacity = 1 - ((Math.abs(angle) / (Math.PI / 2)) * (1 - radialOpacity));
                 context.set(node, set);
@@ -148,11 +141,10 @@ define(function(require, exports, module) {
             }
             if (offset <= bound) {
                 set.translate[direction] = offset;
-                set.translate[2] = Math.abs(offset) > itemSize ? - zOffset : -(Math.abs(offset) * (zOffset/itemSize));
-                if(offset < 0){
-                    set.rotate[1] = Math.abs(offset) > itemSize ?  itemAngle : (Math.abs(offset) * (itemAngle / itemSize));
-                } else {
-                    set.rotate[1] = Math.abs(offset) > itemSize ?  -itemAngle : -(Math.abs(offset) * (itemAngle / itemSize));
+                set.translate[2] = Math.abs(offset) > itemSize ? -zOffset : -(Math.abs(offset) * (zOffset / itemSize));
+                set.rotate[revDirection] = Math.abs(offset) > itemSize ? itemAngle : (Math.abs(offset) * (itemAngle / itemSize));
+                if (((offset > 0) && !direction) || ((offset < 0) && direction)) {
+                    set.rotate[revDirection] = 0 - set.rotate[revDirection];
                 }
                 set.opacity = 1 - ((Math.abs(angle) / (Math.PI / 2)) * (1 - radialOpacity));
                 context.set(node, set);
