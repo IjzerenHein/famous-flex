@@ -1741,6 +1741,14 @@ define(function(require, exports, module) {
         if (this.options.paginationMode === PaginationMode.PAGE) {
             scrollStart = scrollOffset - this.options.extraBoundsSpace[0];
             scrollEnd = scrollOffset + size[this._direction] + this.options.extraBoundsSpace[1];
+            if ((scrollOffset + size[this._direction]) < 0) {
+                scrollStart += size[this._direction];
+                scrollEnd += size[this._direction];
+            }
+            else if ((scrollOffset - size[this._direction]) > 0) {
+                scrollStart -= size[this._direction];
+                scrollEnd -= size[this._direction];
+            }
         }
         if (this.options.layoutAll) {
             scrollStart = -1000000;
@@ -1774,7 +1782,7 @@ define(function(require, exports, module) {
             this._postLayout(size, scrollOffset);
         }
 
-        /*if (this.options.paginationMode === PaginationMode.PAGE) {
+        if (this.options.paginationMode === PaginationMode.PAGE) {
             var node = this._nodes._first;
             while (node) {
                 if (!node._invalidated && !node._removing) {
@@ -1785,7 +1793,7 @@ define(function(require, exports, module) {
             if (this._nodes._contextState.addCount) {
                 console.log('adding nodes: ' + this._nodes._contextState.addCount);
             }
-        }*/
+        }
 
         // Mark non-invalidated nodes for removal
         this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
