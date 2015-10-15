@@ -1,11 +1,14 @@
 import EngineGestureRecognizer from '../engine/GestureRecognizer';
 import TapGesture from './TapGesture';
 import DoubleTapGesture from './DoubleTapGesture';
+import PanGesture from './PanGesture';
 
 const gestures = {
   tap: TapGesture,
   doubletap: DoubleTapGesture,
-  click: TapGesture
+  click: TapGesture,
+  pan: PanGesture,
+  drag: PanGesture
 };
 
 export default class GestureRecognizer extends EngineGestureRecognizer{
@@ -18,7 +21,7 @@ export default class GestureRecognizer extends EngineGestureRecognizer{
     let gesture = this._gestures[type];
     if (!gesture) {
       if (!gestures[type]) return;
-      gesture = new gestures[type]();
+      gesture = new gestures[type](type);
       this._gestures[type] = gesture;
     }
     return gesture.addCallback(callback);

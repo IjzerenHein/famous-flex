@@ -1,35 +1,58 @@
 export default class BaseGesture {
   constructor() {
-    this._callbacks = [];
-    this._pointers = {};
+    this.callbacks = [];
+    this.pointers = {};
+    this.event = {};
+    this.pointerCount = 0;
+    this.captureCount = 0;
   }
 
   addCallback(callback) {
-    this._callbacks.push(callback);
+    this.callbacks.push(callback);
     return () => {
-      this._callbacks.splice(this._callbacks.indexOf(callback), 1);
+      this.callbacks.splice(this.callbacks.indexOf(callback), 1);
     };
   }
 
-  emit(type, event) {
-    for (var i = 0; i < this._callbacks.length; i++) {
-      this._callbacks[i](type, event);
+  emit(event) {
+    for (var i = 0; i < this.callbacks.length; i++) {
+      this.callbacks[i](event);
     }
   }
 
   onReceive(type, event) {
-    switch (type) {
-      case 'mousedown': return this._mouseDown(event);
-      case 'mousemove': return this._mouseMove(event);
-      case 'mouseup': return this._mouseUp(event);
+    if (!this.captureCount) {
+      switch (type) {
+        case 'mousedown': return this.mouseDown(event);
+        case 'mousemove': return this.mouseMove(event);
+        case 'mouseup': return this.mouseUp(event);
+      }
     }
   }
 
-  _mouseDown(event) {
-    let pointer = this._pointers.mouse;
+  startCapture() {
+    this.captureCount++;
+    if (this.captureCount === 1) {
+      this.mouseMoveListener = this.mouseMoveListener || ((event) => this.mouseMove(event));
+      this.mouseUpListener = this.mouseUpListener || ((event) => this.mouseUp(event));
+      document.addEventListener('mousemove', this.mouseMoveListener);
+      document.addEventListener('mouseup', this.mouseUpListener);
+    }
+  }
+
+  endCapture() {
+    this.captureCount = Math.max(this.captureCount - 1, 0);
+    if (!this.captureCount) {
+      document.removeEventListener('mousemove', this.mouseMoveListener);
+      document.removeEventListener('mouseup', this.mouseUpListener);
+    }
+  }
+
+  mouseDown(event) {
+    let pointer = this.pointers.mouse;
     if (!pointer) {
       pointer = {};
-      this._pointers.mouse = pointer;
+      this.pointers.mouse = pointer;
     }
     pointer.startTime = event.time || Date.now(),
     pointer.startX = event.clientX;
@@ -37,42 +60,54 @@ export default class BaseGesture {
     pointer.time = pointer.startTime;
     pointer.x = pointer.startX;
     pointer.y = pointer.startY;
-    pointer.active = true;
-    this._pointerStart(pointer);
+    pointer.deltaX = 0;
+    pointer.deltaY = 0;
+    if (!pointer.active) {
+      pointer.active = true;
+      this.pointerCount++;
+    }
+    this.pointerStart(pointer);
   }
 
-  _mouseMove(event) {
-    let pointer = this._pointers.mouse;
+  mouseMove(event) {
+    let pointer = this.pointers.mouse;
     if (!pointer) {
       return;
     }
     pointer.time = event.time || Date.now(),
+    pointer.deltaX += event.clientX - pointer.x;
+    pointer.deltaY += event.clientY - pointer.y;
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    this._pointerMove(pointer);
+    this.pointerMove(pointer);
   }
 
-  _mouseUp(event) {
-    let pointer = this._pointers.mouse;
+  mouseUp(event) {
+    let pointer = this.pointers.mouse;
     if (!pointer) {
       return;
     }
     pointer.time = event.time || Date.now(),
+    pointer.deltaX += event.clientX - pointer.x;
+    pointer.deltaY += event.clientY - pointer.y;
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    pointer.active = false;
-    this._pointerEnd(pointer);
+    if (pointer.active) {
+      pointer.active = false;
+      this.pointerCount--;
+    }
+    this.pointerEnd(pointer);
   }
 
-  _pointerStart() {
+  pointerStart() {
     // override to implement
   }
 
-  _pointerMove() {
+  pointerMove() {
     // override to implement
   }
 
-  _pointerEnd() {
+  pointerEnd() {
     // override to implement
   }
 }

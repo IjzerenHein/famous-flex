@@ -105,10 +105,18 @@ export default class LayoutNode extends BaseNode {
 
   onClasses(add, remove) {
     const children = this.getChildren();
+    const sharedClassesChildren = this._sharedClassesChildren;
     if (add) {
       for (let i = 0; i < children.length; i++) {
         if (children[i].classes) {
           children[i].classes.add(add);
+        }
+      }
+      if (sharedClassesChildren) {
+        for (let i = 0; i < sharedClassesChildren.length; i++) {
+          if (sharedClassesChildren[i].classes) {
+            sharedClassesChildren[i].classes.add(add);
+          }
         }
       }
     }
@@ -116,6 +124,13 @@ export default class LayoutNode extends BaseNode {
       for (let i = 0; i < children.length; i++) {
         if (children[i].classes) {
           children[i].classes.remove(remove);
+        }
+      }
+      if (sharedClassesChildren) {
+        for (let i = 0; i < sharedClassesChildren.length; i++) {
+          if (sharedClassesChildren[i].classes) {
+            sharedClassesChildren[i].classes.remove(remove);
+          }
         }
       }
     }
@@ -148,5 +163,29 @@ export default class LayoutNode extends BaseNode {
       }
     }
     return super.removeChild(child);
+  }
+
+  addSharedClassesChild(child) {
+    this._sharedClassesChildren = this._sharedClassesChildren || [];
+    this._sharedClassesChildren.push(child);
+    if (this._classes && child.classes) {
+      for (let i = 0; i < this._classes.length; i++) {
+        child.classes.add(this._classes.getAt(i));
+      }
+    }
+    return child;
+  }
+
+  removeSharedClassesChild(child) {
+    if (this._classes && child.classes) {
+      for (let i = 0; i < this._classes.length; i++) {
+        child.classes.remove(this._classes.getAt(i));
+      }
+    }
+    let i = this._sharedClassesChildren.indexOf(child);
+    if (i >= 0) {
+      this._sharedClassesChildren.splice(i, 1);
+    }
+    return child;
   }
 }

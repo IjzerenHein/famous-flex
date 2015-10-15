@@ -12,6 +12,21 @@
     }
   }
 
+  &.button {
+    &.text {
+      .famous-dom-element-content > div {
+        position: relative;
+        top: 50%;
+        -webkit-transform: translateY(-50%);
+        -moz-transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+        -o-transform: translateY(-50%);
+        transform: translateY(-50%);
+        display: block;
+      }
+    }
+  }
+
   &.switch {
     &.handle {
       box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.15);

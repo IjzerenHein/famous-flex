@@ -36,18 +36,10 @@ export default class Slider extends ControlBase {
   _setupDragListeners() {
     let startValue;
     this._handle.on('drag', (event) => {
-      /*if (this._enabled && (event.status === 'start')) {
-        startValue = this.value;
-      } else if (event.status === 'end') {
-        startValue =
-      }
-      if (startValue !== undefined) {
-
-      }*/
-      /*if (this._enabled) {
+      if (this._enabled) {
         if (event.status === 'start') startValue = this.value;
-        this.value = Math.min(Math.max(0, startValue + (this._direction ? (event.deltaX / this.rect.width) : (event.deltaY / this.rect.height))), 1);
-      }*/
+        this.value = Math.min(Math.max(0, startValue + (this._direction ? (event.delta.y / this.rect.height) : (event.delta.x / this.rect.width))), 1);
+      }
     });
   }
 
