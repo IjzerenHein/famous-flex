@@ -1738,7 +1738,7 @@ define(function(require, exports, module) {
         // Determine start & end
         var scrollStart = 0 - Math.max(this.options.extraBoundsSpace[0], 1);
         var scrollEnd = size[this._direction] + Math.max(this.options.extraBoundsSpace[1], 1);
-        if (this.options.paginationMode === PaginationMode.PAGE) {
+        if (this.options.paginated && (this.options.paginationMode === PaginationMode.PAGE)) {
             scrollStart = scrollOffset - this.options.extraBoundsSpace[0];
             scrollEnd = scrollOffset + size[this._direction] + this.options.extraBoundsSpace[1];
             if ((scrollOffset + size[this._direction]) < 0) {
