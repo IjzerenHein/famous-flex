@@ -41,9 +41,17 @@ function distance(deltaX, deltaY) {
   return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
 }
 
+function nonNull(arg1, arg2, arg3, arg4) {
+  if (arg1 !== undefined) return arg1;
+  if (arg2 !== undefined) return arg2;
+  if (arg3 !== undefined) return arg3;
+  return arg4;
+}
+
 export {
   assert,
   interpolate,
   distance,
-  cloneArray
+  cloneArray,
+  nonNull
 };

@@ -2,8 +2,10 @@ import EngineGestureRecognizer from '../engine/GestureRecognizer';
 import TapGesture from './TapGesture';
 import DoubleTapGesture from './DoubleTapGesture';
 import PanGesture from './PanGesture';
+import PointerGesture from './PointerGesture';
 
 const gestures = {
+  pointer: PointerGesture,
   tap: TapGesture,
   doubletap: DoubleTapGesture,
   click: TapGesture,

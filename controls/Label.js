@@ -1,9 +1,23 @@
 import ControlBase from './ControlBase';
 import DOMNode from '../core/DOMNode';
+import ShowAnimation from '../core/ShowAnimation';
 import Animation from '../animation/Animation';
 
+/**
+ * @private
+ */
+function layout(rect) {
+  if (this._background) {
+    this._background.rect = rect;
+    rect.inFront();
+  }
+  rect.subtract(this._padding);
+  this._text.rect = rect;
+}
+
 const defaults = {
-  classes: ['label']
+  classes: ['label'],
+  layout: layout
 };
 
 /**
@@ -19,41 +33,43 @@ export default class Label extends ControlBase {
    */
   constructor(options) {
     super();
-    this._primaryText = this.addChild(new DOMNode({classes: ['text']}));
-    this._frontText = this._primaryText;
+    this._text = this.addChild(new ShowAnimation());
+    this._text1 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
     this.setOptions(defaults, options);
   }
 
-  static layout(rect) {
-    if (this._background) {
-      this._background.rect = rect;
-      rect.inFront();
+  /*_updateAnimation() {
+    const enabled = !!this._showAnimation.showEffect || !!this._showAnimation.hideEffect;
+    if (enabled && (this._text !== this._showAnimation)) {
+      this.removeChild(this._text1, true);
+      this.addChild(this._showAnimation);
+      this._showAnimation._showNode(this._visibleText, null);
+      if (!this._text2) {
+        this._text2 = new DOMNode({classes: ['text']});
+        this.addSharedClassesChild(this._text2);
+      }
+      this._text = this._showAnimation;
+      this.requestLayout();
+
+    } else if (!enabled && (this._text === this._showAnimation)) {
+      // disabling of animation not yet supported
     }
-    rect.subtract(this._padding);
-    if (this._secondaryText) {
-      this._secondaryText.rect = rect;
-      rect.inFront();
-    }
-    this._primaryText.rect = rect;
+  }*/
+
+  get animation() {
+    /*if (!this._showAnimation) {
+      this._showAnimation = new ShowAnimation();
+      this._showAnimation.onChanged = () => this._updateAnimation();
+    }*/
+    return this._text;
   }
 
-  _updateSecondaryText() {
-    if ((this.animated || this._autoScale) && !this._secondaryText) {
-      this._secondaryText = this.addChild(new DOMNode({classes: ['text']}));
-      this._secondaryText.opacity = 0;
-    } else if (!this.animated && !this._autoScale && this._secondaryText) {
-      this.removeChild(this._secondaryText);
-      this._secondaryText = undefined;
-    }
-  }
-
-  get animated() {
-    return super.animated;
-  }
-
-  set animated(value) {
-    super.animated = value;
-    this._updateSecondaryText();
+  set animation(value) {
+    /*if (!this._showAnimation) {
+      this._showAnimation = new ShowAnimation();
+      this._showAnimation.onChanged = () => this._updateAnimation();
+    }*/
+    this._text.setOptions(value);
   }
 
   /*get autoScale() {
@@ -71,7 +87,7 @@ export default class Label extends ControlBase {
    * @type {String}
    */
   get text() {
-    return this._text;
+    return this._textValue;
   }
 
   /**
@@ -81,42 +97,61 @@ export default class Label extends ControlBase {
    */
   set text(text) {
     text = text || '';
-    if (this._text !== text) {
-      this._text = text;
-      if (this.animated) {
-        const showSecondary = (this._frontText === this._primaryText);
-        this._frontText = showSecondary ? this._secondaryText : this._primaryText;
-        this._animate(() => {
-          this._primaryText.opacity = showSecondary ? 0 : 1;
-          this._secondaryText.opacity = showSecondary ? 1 : 0;
-        });
-      }
-      this._primaryText.innerHTML = '<div>' + this._text + '</div>';
-      if (this._secondaryText) {
-        this._secondaryText.innerHTML = '<div>' + this._text + '</div>';
-      }
+    if (this._textValue !== text) {
+      console.log('whoop');
+      this._textValue = text;
+      if (this._visibleText && !this._text2) this._text2 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
+      this._visibleText = (this._visibleText === this._text2) ? this._text1 : this._text2;
+      this._visibleText.innerHTML = '<div>' + this._textValue + '</div>';
+      this._text._showNode(this._visibleText);
+    }
+  }
+
+  get textAlign() {
+    return this._textAlign;
+  }
+
+  set textAlign(value) {
+    if (this._textAlign !== value) {
+      this._textAlign = value;
+      this._text1.styles.set('textAlign', value);
+      if (this._text2) this._text2.styles.set('textAlign', value);
+    }
+  }
+
+  get fontSize() {
+    return this._fontSize;
+  }
+
+  set fontSize(value) {
+    if (this._fontSize !== value) {
+      this._fontSize = value;
+      this._text1.styles.fontSize = value;
+      if (this._text2) this._text2.styles.fontSize = value;
     }
   }
 
   get styles() {
-    return this._primaryText.styles;
+    // TODO, the returned styles should modify both text1 & text2
+    return this._text1.styles;
   }
 
   set styles(value) {
-    this._primaryText.styles.setAll(value);
-    if (this._secondaryText) {
-      this._secondaryText.styles.setAll(value);
+    this._text1.styles.setAll(value);
+    if (this._text2) {
+      this._text2.styles.setAll(value);
     }
   }
 
   get color() {
-    return this._primaryText.styles.color;
+    // TODO, the returned color should modify both text1 & text2
+    return this._text1.styles.color;
   }
 
   set color(value) {
-    this._primaryText.styles.color = value;
-    if (this._secondaryText) {
-      this._secondaryText.styles.color = value;
+    this._text1.styles.color = value;
+    if (this._text2) {
+      this._text2.styles.color = value;
     }
   }
 
@@ -143,5 +178,3 @@ export default class Label extends ControlBase {
     this.background.styles.backgroundColor = value;
   }
 }
-Label.defaults = defaults;
-Label.defaults.layout = Label.layout;

@@ -5,8 +5,10 @@ function layout(rect) {
   this._background.styles.backgroundColor = this._backgroundColor;
   if (this._borderRadius === 'auto') this._background.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
 
-  rect.subtract(this._padding).inFront();
-  this._text.rect = rect;
+  if (this._label) {
+    rect.subtract(this._padding).inFront();
+    this._label.rect = rect;
+  }
 }
 
 function measure(rect) {
@@ -17,7 +19,8 @@ function measure(rect) {
 export default {
   layout: layout,
   measure: measure,
-  color: Theme.color,
-  backgroundColor: Theme.neutralColor,
-  borderRadius: 4
+  color: '#FFFFFF',
+  fontSize: 20,
+  backgroundColor: Theme.color,
+  borderRadius: 5
 };

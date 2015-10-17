@@ -24,6 +24,15 @@ export default class Styles {
     return this._items[style];
   }
 
+  get fontSize() {
+    return this._items.fontSize;
+  }
+
+  set fontSize(value) {
+    this._fontSize = value;
+    this._el.setProperty('fontSize', value + 'px');
+  }
+
   get color() {
     return this._items.color;
   }

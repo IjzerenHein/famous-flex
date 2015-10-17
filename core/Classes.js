@@ -47,6 +47,10 @@ export default class Classes {
     return this;
   }
 
+  enable(value, enable) {
+    return enable ? this.add(value) : this.remove(value);
+  }
+
   get length() {
     return this._items.length;
   }

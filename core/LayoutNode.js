@@ -156,8 +156,11 @@ export default class LayoutNode extends BaseNode {
     return child;
   }
 
-  removeChild(child) {
-    if (this._classes && child.classes) {
+  removeChild(child, migrateToSharedClasses) {
+    if (migrateToSharedClasses) {
+      this._sharedClassesChildren = this._sharedClassesChildren || [];
+      this._sharedClassesChildren.push(child);
+    } else if (this._classes && child.classes) {
       for (let i = 0; i < this._classes.length; i++) {
         child.classes.remove(this._classes.getAt(i));
       }

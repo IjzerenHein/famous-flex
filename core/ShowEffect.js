@@ -1,6 +1,11 @@
 const Effects = {
 
   /**
+   * No effect
+   */
+  none: null,
+
+  /**
    * Fade's in or out by setting the opacity to 0.
    */
   fade: function(node) {

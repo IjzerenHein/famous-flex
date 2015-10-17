@@ -51,7 +51,9 @@ export default class BaseGesture {
   mouseDown(event) {
     let pointer = this.pointers.mouse;
     if (!pointer) {
-      pointer = {};
+      pointer = {
+        id: 'mouse'
+      };
       this.pointers.mouse = pointer;
     }
     pointer.startTime = event.time || Date.now(),
