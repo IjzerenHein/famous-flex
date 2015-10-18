@@ -95,12 +95,23 @@ export default class ShowNode extends BaseNode {
     clientRect.height = this.rect.height;
 
     let promise;
+    let effect;
     if (this._visibleNode) {
       if (hideEffect) {
-        hideEffect = (typeof hideEffect === 'string') ? ShowEffect[hideEffect] : hideEffect;
+        effect = (typeof hideEffect === 'string') ? ShowEffect[hideEffect] : hideEffect;
         const hideNode = this._visibleNode;
+        hideNode.rect = clientRect;
+        hideNode.rotation = undefined;
+        hideNode.scale = undefined;
+        hideNode.opacity = 1;
+        if (effect.preHide) effect.preHide(hideNode, clientRect);
         promise = this.animate(curve, duration, () => {
-          hideEffect(hideNode, clientRect, true);
+          if (effect.hide) {
+            effect.hide(hideNode, clientRect);
+          } else {
+            effect(hideNode, clientRect);
+          }
+          console.log(hideNode.rect.toString());
         });
         promise.then(() => this.debounce(() => this.removeChild(hideNode)));
       } else {
@@ -110,17 +121,21 @@ export default class ShowNode extends BaseNode {
     this._visibleNode = node;
     if (node) {
       this.addChild(node);
-      console.log(clientRect);
       node.rect = clientRect;
-      console.log(node.rect.toString());
       if (showEffect) {
-        showEffect = (typeof showEffect === 'string') ? ShowEffect[showEffect] : showEffect;
-        showEffect(node, clientRect);
+        effect = (typeof showEffect === 'string') ? ShowEffect[showEffect] : showEffect;
+        if (effect.show) {
+          effect.show(node, clientRect);
+        } else {
+          effect(node, clientRect);
+        }
         promise = this.animate(curve, duration, () => {
           node.rect = clientRect;
           node.rotation = undefined;
           node.scale = undefined;
           node.opacity = 1;
+          console.log('heuj');
+          if (effect.postShow) effect.postShow(node, clientRect);
         });
       }
     }

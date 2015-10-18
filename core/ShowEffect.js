@@ -8,65 +8,98 @@ const Effects = {
   /**
    * Fade's in or out by setting the opacity to 0.
    */
-  fade: function(node) {
-    node.opacity = 0;
-  },
+  fade: (node) => node.opacity = 0,
 
   /**
    * Slides to the left.
    */
-  slideLeft: function(node, size, hide) {
-    console.log('huh');
-    node.rect.x = hide ? -size.width : size.width;
+  slideLeft: {
+    show: (node, rect) => node.rect.x = rect.width,
+    hide: (node, rect) => node.rect.x = -rect.width
   },
 
   /**
    * Slides to the right.
    */
-  slideRight: function(node, size, hide) {
-    node.rect.x = hide ? size.width : -size.width;
+  slideRight: {
+    show: (node, rect) => node.rect.x = -rect.width,
+    hide: (node, rect) => node.rect.x = rect.width
   },
 
   /**
    * Slides upwards.
    */
-  slideUp: function(node, size, hide) {
-    node.rect.y = hide ? size.height : -size.height;
+  slideUp: {
+    show: (node, rect) => node.rect.y = -rect.height,
+    hide: (node, rect) => node.rect.y = rect.height
   },
 
   /**
    * Slides downwards.
    */
-  slideDown: function(node, size, hide) {
-    node.rect.y = hide ? -size.height : size.height;
+  slideDown: {
+    show: (node, rect) => node.rect.y = rect.height,
+    hide: (node, rect) => node.rect.y = -rect.height
+  },
+
+  /**
+   * Cover slide left.
+   */
+  coverSlideLeft: {
+    show: (node, rect) => {
+      node.rect.x = rect.width;
+      node.rect.z = rect.z + 5;
+    },
+    postShow: (node, rect) => node.rect.z = rect.z + 5,
+    hide: (node, rect) => node.rect.x = -(rect.width / 2)
+  },
+
+  /**
+   * Cover slide right.
+   */
+  coverSlideRight: {
+    show: (node, rect) => {
+      node.rect.x = -rect.width;
+      node.rect.z = rect.z + 5;
+    },
+    postShow: (node, rect) => node.rect.z = rect.z + 5,
+    hide: (node, rect) => node.rect.x = (rect.width / 2)
   },
 
   /**
    * Flips left.
    */
-  flipLeft: function(node, size, hide) {
-    node.rotation.y = hide ? Math.PI : Math.PI;
+  flipLeft: {
+    show: (node) => node.rotation.y = -Math.PI,
+    hide: (node) => node.rotation.y = Math.PI
   },
 
   /**
    * Flips right.
    */
-  flipRight: function(node, size, hide) {
-    node.rotation.y = hide ? -Math.PI : Math.PI;
+  flipRight: {
+    show: (node) => node.rotation.y = -Math.PI,
+    hide: (node) => node.rotation.y = Math.PI
   },
 
   /**
    * Flips up.
    */
-  flipUp: function(node, size, hide) {
-    node.origin.y = 0.5;
-    node.rotation.x = hide ? -Math.PI : Math.PI;
+  flipUp: {
+    show: (node, size) => {
+      node.origin.y = 0.5;
+      node.rotation.x = Math.PI;
+    },
+    hide: (node, size) => {
+      node.origin.y = 0.5;
+      node.rotation.x = -Math.PI;
+    }
   },
 
   /**
    * Zooms.
    */
-  zoom: function(node, size, hide) {
+  zoom: (node, size) => {
     node.scale.x = 0.5;
     node.scale.y = 0.5;
   },
@@ -74,7 +107,7 @@ const Effects = {
   /**
    * Fades and zooms.
    */
-  fadedZoom: function(node, size, hide) {
+  fadedZoom: (node, size) => {
     node.origin.x = 0.5;
     node.origin.y = 0.5;
     node.opacity = 0;

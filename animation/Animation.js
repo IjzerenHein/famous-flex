@@ -24,7 +24,7 @@ export default class Animation extends EngineAnimation {
         }
         item.node[item.property] = item.curValue;
       } else {
-        //console.log('animating ' + item.property + ' = ' + ((item.newValue - item.curValue) * value) + item.curValue);
+        console.log('animating ' + item.property + ' = ' + ((item.endValue - item.startValue) * value) + item.startValue);
         item.node[item.property] = ((item.endValue - item.startValue) * value) + item.startValue;
       }
     }
@@ -32,6 +32,15 @@ export default class Animation extends EngineAnimation {
 
   static collect(node, property, curValue, newValue) {
     assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
+    for (let i = 0; i < collected.length; i++) {
+      const item = collected[i];
+      if ((item.node === node) && (item.property === property)) {
+        item.curValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue; // allocate array for re-use
+        item.startValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue;
+        item.endValue = Array.isArray(curValue) ? cloneArray(newValue) : newValue;
+        break;
+      }
+    }
     if (Array.isArray(curValue)) {
       collected.push({
         node: node,
@@ -41,6 +50,7 @@ export default class Animation extends EngineAnimation {
         endValue: cloneArray(newValue)
       });
     } else if (curValue !== newValue) {
+      //console.log('collect: ' + property + ' = ' + curValue + ' -> ' + newValue);
       collected.push({
         node: node,
         property: property,

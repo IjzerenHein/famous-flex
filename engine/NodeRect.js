@@ -17,7 +17,7 @@ export default class NodeRect {
       this.width = rect.width;
       this.height = rect.height;
     }
-    rect.z += incrementZ ? 2 : 0;
+    if (incrementZ) rect.z += 2;
   }
 
   get x() {

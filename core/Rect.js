@@ -56,7 +56,7 @@ export default class Rect {
     this.z -= 5;
   }
 
-  log() {
-    console.log(JSON.stringify(this));
+  toString() {
+    return JSON.stringify(this);
   }
 }
