@@ -57,7 +57,7 @@ export default class NodeRect {
   }
 
   get width() {
-    return this._node.getSize()[0];
+    return this._widthValue || this._node.getSize()[0];
   }
 
   set width(value) {
@@ -65,6 +65,7 @@ export default class NodeRect {
       if (this._widthAbsolute) {
         this._node.setSizeMode('render');
         this._widthAbsolute = false;
+        this._widthValue = undefined;
       }
     } else if (value !== this._node.getSize()[0]) {
       if (!this._widthAbsolute) {
@@ -75,12 +76,13 @@ export default class NodeRect {
         Animation.collect(this, 'width', this.width, value);
       } else {
         this._node.setAbsoluteSize(value);
+        this._widthValue = value;
       }
     }
   }
 
   get height() {
-    return this._node.getSize()[1];
+    return this._heightValue || this._node.getSize()[1];
   }
 
   set height(value) {
@@ -88,6 +90,7 @@ export default class NodeRect {
       if (this._heightAbsolute) {
         this._node.setSizeMode(undefined, 'render');
         this._heightAbsolute = false;
+        this._heightValue = undefined;
       }
     } else if (value !== this._node.getSize()[1]) {
       if (!this._heightAbsolute) {
@@ -98,6 +101,7 @@ export default class NodeRect {
         Animation.collect(this, 'height', this.height, value);
       } else {
         this._node.setAbsoluteSize(undefined, value);
+        this._heightValue = value;
       }
     }
   }
