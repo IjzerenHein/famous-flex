@@ -1,7 +1,7 @@
 import ControlBase from './ControlBase';
 import DOMNode from '../core/DOMNode';
-import ShowAnimation from '../core/ShowAnimation';
-import Animation from '../animation/Animation';
+import ShowNode from '../core/ShowNode';
+import Styles from '../core/Styles';
 
 /**
  * @private
@@ -33,43 +33,17 @@ export default class Label extends ControlBase {
    */
   constructor(options) {
     super();
-    this._text = this.addChild(new ShowAnimation());
+    this._text = this.addChild(new ShowNode());
     this._text1 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
     this.setOptions(defaults, options);
   }
 
-  /*_updateAnimation() {
-    const enabled = !!this._showAnimation.showEffect || !!this._showAnimation.hideEffect;
-    if (enabled && (this._text !== this._showAnimation)) {
-      this.removeChild(this._text1, true);
-      this.addChild(this._showAnimation);
-      this._showAnimation._showNode(this._visibleText, null);
-      if (!this._text2) {
-        this._text2 = new DOMNode({classes: ['text']});
-        this.addSharedClassesChild(this._text2);
-      }
-      this._text = this._showAnimation;
-      this.requestLayout();
-
-    } else if (!enabled && (this._text === this._showAnimation)) {
-      // disabling of animation not yet supported
-    }
-  }*/
-
   get animation() {
-    /*if (!this._showAnimation) {
-      this._showAnimation = new ShowAnimation();
-      this._showAnimation.onChanged = () => this._updateAnimation();
-    }*/
-    return this._text;
+    return this._text.animation;
   }
 
-  set animation(value) {
-    /*if (!this._showAnimation) {
-      this._showAnimation = new ShowAnimation();
-      this._showAnimation.onChanged = () => this._updateAnimation();
-    }*/
-    this._text.setOptions(value);
+  set animation(options) {
+    this._text.animation = options;
   }
 
   /*get autoScale() {
@@ -98,61 +72,61 @@ export default class Label extends ControlBase {
   set text(text) {
     text = text || '';
     if (this._textValue !== text) {
-      console.log('whoop');
       this._textValue = text;
-      if (this._visibleText && !this._text2) this._text2 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
+      if (this._visibleText && !this._text2) {
+        this._text2 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
+        console.log('yep');
+        const styles = this._styles ? this._styles.get() : undefined;
+        if (styles) {
+          this._text2.styles.setOptions(styles);
+        }
+      }
       this._visibleText = (this._visibleText === this._text2) ? this._text1 : this._text2;
       this._visibleText.innerHTML = '<div>' + this._textValue + '</div>';
-      this._text._showNode(this._visibleText);
+      this._text.show(this._visibleText);
     }
   }
 
-  get textAlign() {
-    return this._textAlign;
-  }
-
-  set textAlign(value) {
-    if (this._textAlign !== value) {
-      this._textAlign = value;
-      this._text1.styles.set('textAlign', value);
-      if (this._text2) this._text2.styles.set('textAlign', value);
-    }
-  }
-
-  get fontSize() {
-    return this._fontSize;
-  }
-
-  set fontSize(value) {
-    if (this._fontSize !== value) {
-      this._fontSize = value;
-      this._text1.styles.fontSize = value;
-      if (this._text2) this._text2.styles.fontSize = value;
-    }
+  /**
+   * @private
+   */
+  onSetStyle(style, value) {
+    this._text1.onSetStyle(style, value);
+    if (this._text2) this._text2.onSetStyle(style, value);
   }
 
   get styles() {
-    // TODO, the returned styles should modify both text1 & text2
-    return this._text1.styles;
+    this._styles = this._styles || new Styles(this);
+    return this._styles;
   }
 
-  set styles(value) {
-    this._text1.styles.setAll(value);
-    if (this._text2) {
-      this._text2.styles.setAll(value);
-    }
+  set styles(options) {
+    this.styles.setOptions(options);
+  }
+
+  get textAlign() {
+    return this._styles ? this._styles.textAlign : undefined;
+  }
+
+  set textAlign(value) {
+    console.log('heuj');
+    this.styles.textAlign = value;
+  }
+
+  get fontSize() {
+    return this._styles ? this._styles.fontSize : undefined;
+  }
+
+  set fontSize(value) {
+    this.styles.fontSize = value;
   }
 
   get color() {
-    // TODO, the returned color should modify both text1 & text2
-    return this._text1.styles.color;
+    return this._styles ? this._styles.color : undefined;
   }
 
   set color(value) {
-    this._text1.styles.color = value;
-    if (this._text2) {
-      this._text2.styles.color = value;
-    }
+    this.styles.color = value;
   }
 
   get hasBackground() {

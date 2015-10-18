@@ -12,7 +12,7 @@ import {DOMElement} from 'famous/dom-renderables';
 import BaseNode from '../core/BaseNode';
 import Animation from '../animation/Animation';
 import Classes from '../core/Classes';
-import Styles from './Styles';
+import Styles from '../core/Styles';
 import {Color} from '../utils';
 
 export default class DOMNode extends BaseNode {
@@ -35,12 +35,17 @@ export default class DOMNode extends BaseNode {
   }
 
   get styles() {
-    this._styles = this._styles || new Styles(this.el);
+    this._styles = this._styles || new Styles(this);
     return this._styles;
   }
 
-  set styles(value) {
-    this.styles.setAll(value);
+  set styles(options) {
+    this._styles = this._styles || new Styles(this);
+    this.styles.setOptions(options);
+  }
+
+  onSetStyle(style, value) {
+    this.el.setProperty(style, value);
   }
 
   // TODO ATTRIBUTES ?
@@ -60,6 +65,7 @@ export default class DOMNode extends BaseNode {
   }
 
   set classes(values) {
+    this._classes = this._classes || new Classes(this);
     this.classes.add(values);
   }
 }
