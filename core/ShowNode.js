@@ -111,7 +111,6 @@ export default class ShowNode extends BaseNode {
           } else {
             effect(hideNode, clientRect);
           }
-          console.log(hideNode.rect.toString());
         });
         promise.then(() => this.debounce(() => this.removeChild(hideNode)));
       } else {
@@ -134,7 +133,6 @@ export default class ShowNode extends BaseNode {
           node.rotation = undefined;
           node.scale = undefined;
           node.opacity = 1;
-          console.log('heuj');
           if (effect.postShow) effect.postShow(node, clientRect);
         });
       }

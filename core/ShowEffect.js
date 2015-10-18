@@ -86,20 +86,22 @@ const Effects = {
    * Flips up.
    */
   flipUp: {
-    show: (node, size) => {
-      node.origin.y = 0.5;
-      node.rotation.x = Math.PI;
-    },
-    hide: (node, size) => {
+    show: (node, rect) => {
       node.origin.y = 0.5;
       node.rotation.x = -Math.PI;
+    },
+    preHide: (node, rect) => node.rect.z = rect.z + 1,
+    hide: (node, rect) => {
+      node.origin.y = 0.5;
+      node.rotation.x = -Math.PI;
+      node.rect.z = rect.z + 1;
     }
   },
 
   /**
    * Zooms.
    */
-  zoom: (node, size) => {
+  zoom: (node) => {
     node.scale.x = 0.5;
     node.scale.y = 0.5;
   },
@@ -107,7 +109,7 @@ const Effects = {
   /**
    * Fades and zooms.
    */
-  fadedZoom: (node, size) => {
+  fadedZoom: (node) => {
     node.origin.x = 0.5;
     node.origin.y = 0.5;
     node.opacity = 0;

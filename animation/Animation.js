@@ -24,14 +24,14 @@ export default class Animation extends EngineAnimation {
         }
         item.node[item.property] = item.curValue;
       } else {
-        console.log('animating ' + item.property + ' = ' + ((item.endValue - item.startValue) * value) + item.startValue);
+        //console.log('animating ' + item.property + ' = ' + ((item.endValue - item.startValue) * value) + item.startValue);
         item.node[item.property] = ((item.endValue - item.startValue) * value) + item.startValue;
       }
     }
   }
 
   static collect(node, property, curValue, newValue) {
-    assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
+    //assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
     for (let i = 0; i < collected.length; i++) {
       const item = collected[i];
       if ((item.node === node) && (item.property === property)) {
@@ -50,7 +50,6 @@ export default class Animation extends EngineAnimation {
         endValue: cloneArray(newValue)
       });
     } else if (curValue !== newValue) {
-      //console.log('collect: ' + property + ' = ' + curValue + ' -> ' + newValue);
       collected.push({
         node: node,
         property: property,
