@@ -118,6 +118,8 @@ export default class ShowNode extends BaseNode {
         showEffect(node, clientRect);
         promise = this.animate(curve, duration, () => {
           node.rect = clientRect;
+          node.rotation = undefined;
+          node.scale = undefined;
           node.opacity = 1;
         });
       }

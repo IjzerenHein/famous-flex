@@ -1,5 +1,8 @@
 import EngineBaseNode from '../engine/BaseNode';
 import EngineNodeRect from '../engine/NodeRect';
+import EngineNodeRotation from '../engine/NodeRotation';
+import EngineNodeScale from '../engine/NodeScale';
+import EngineNodeOrigin from '../engine/NodeOrigin';
 import GestureRecognizer from '../gestures/GestureRecognizer';
 import Animation from '../animation/Animation';
 
@@ -32,6 +35,42 @@ export default class BaseNode extends EngineBaseNode {
       Animation.collect(this, 'opacity', this.getOpacity(), value);
     } else {
       this.setOpacity(value);
+    }
+  }
+
+  get rotation() {
+    this._rotation = this._rotation || new EngineNodeRotation(this);
+    return this._rotation;
+  }
+
+  set rotation(values) {
+    if (this._rotation || values) {
+      this._rotation = this._rotation || new EngineNodeRotation(this);
+      this._rotation.set(values || EngineNodeRotation.identity);
+    }
+  }
+
+  get scale() {
+    this._scale = this._scale || new EngineNodeScale(this);
+    return this._scale;
+  }
+
+  set scale(values) {
+    if (this._scale || values) {
+      this._scale = this._scale || new EngineNodeScale(this);
+      this._scale.set(values || EngineNodeScale.identity);
+    }
+  }
+
+  get origin() {
+    this._origin = this._origin || new EngineNodeOrigin(this);
+    return this._origin;
+  }
+
+  set origin(values) {
+    if (this._origin || values) {
+      this._origin = this._origin || new EngineNodeOrigin(this);
+      this._origin.set(values || EngineNodeOrigin.identity);
     }
   }
 

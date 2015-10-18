@@ -45,14 +45,22 @@ const Effects = {
    * Flips left.
    */
   flipLeft: function(node, size, hide) {
-    node.rotate.y = hide ? Math.PI : -Math.PI;
+    node.rotation.y = hide ? Math.PI : Math.PI;
   },
 
   /**
    * Flips right.
    */
   flipRight: function(node, size, hide) {
-    node.rotate.y = hide ? -Math.PI : Math.PI;
+    node.rotation.y = hide ? -Math.PI : Math.PI;
+  },
+
+  /**
+   * Flips up.
+   */
+  flipUp: function(node, size, hide) {
+    node.origin.y = 0.5;
+    node.rotation.x = hide ? -Math.PI : Math.PI;
   },
 
   /**
@@ -67,6 +75,8 @@ const Effects = {
    * Fades and zooms.
    */
   fadedZoom: function(node, size, hide) {
+    node.origin.x = 0.5;
+    node.origin.y = 0.5;
     node.opacity = 0;
     node.scale.x = 0.5;
     node.scale.y = 0.5;
