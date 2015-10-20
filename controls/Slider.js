@@ -48,11 +48,11 @@ export default class Slider extends ControlBase {
   }
 
   set value(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'value', this._value, value);
-    } else if (this._value !== value) {
-      this._value = value;
-      this.requestLayout();
+    if (!Animation.collect(this, 'value', value)) {
+      if (this._value !== value) {
+        this._value = value;
+        this.requestLayout();
+      }
     }
   }
 

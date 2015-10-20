@@ -1,6 +1,7 @@
 import BaseNode from './BaseNode';
 import Margins from './Margins';
 import Animation from '../animation/Animation';
+import LayoutAnimation from '../animation/LayoutAnimation';
 import Classes from './Classes';
 import Size from './Size';
 import Rect from './Rect';
@@ -31,7 +32,18 @@ export default class LayoutNode extends BaseNode {
       rect.width = rect.parent.width;
       rect.height = rect.parent.height;
     }
+
+    if (this._animations) {
+      for (var i = 0; i < this._animations.length; i++) {
+        this._animations[i].state = LayoutAnimation.State.PRELAYOUT;
+      }
+    }
     this._layout(rect, this._layoutOptions);
+    if (this._animations) {
+      for (var i = 0; i < this._animations.length; i++) {
+        this._animations[i].state = LayoutAnimation.State.POSTLAYOUT;
+      }
+    }
   }
 
   requestLayout(immediate) {
@@ -50,7 +62,7 @@ export default class LayoutNode extends BaseNode {
   set layout(layout) {
     if (layout !== this._layout) {
       this._layout = layout;
-      this.requestLayout(Animation.isCollecting);
+      this.requestLayout();
     }
   }
 
@@ -72,7 +84,7 @@ export default class LayoutNode extends BaseNode {
   set measure(measure) {
     if (measure !== this._measure) {
       this._measure = measure;
-      this.requestLayout(Animation.isCollecting);
+      this.requestLayout();
     }
   }
 
@@ -95,9 +107,7 @@ export default class LayoutNode extends BaseNode {
 
   set padding(padding) {
     this._padding = this._padding || Margins.identity;
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'padding', this._padding, Margins.parse(padding));
-    } else {
+    if (!Animation.collect(this, 'padding', Margins.parse(padding))) {
       this._padding = Margins.parse(padding);
       this.requestLayout();
     }
@@ -190,5 +200,13 @@ export default class LayoutNode extends BaseNode {
       this._sharedClassesChildren.splice(i, 1);
     }
     return child;
+  }
+
+  animate(curve, duration, collectFn) {
+    const animation = LayoutAnimation.start(this, curve, duration, collectFn);
+    this._animations = this._animations || [];
+    this._animations.push(animation);
+    animation.promise.then(() => this._animations.splice(this._animations.indexOf(animation), 1));
+    return animation.promise;
   }
 }

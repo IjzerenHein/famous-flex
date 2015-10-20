@@ -2,7 +2,6 @@ import EngineAnimation from '../engine/Animation';
 import {assert, cloneArray} from '../utils';
 import AnimationPromise from './AnimationPromise';
 
-let collected;
 let animationsPool = [];
 
 export default class Animation extends EngineAnimation {
@@ -30,15 +29,15 @@ export default class Animation extends EngineAnimation {
     }
   }
 
-  static collect(node, property, curValue, newValue) {
-    //assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
+  collect(node, property, curValue, newValue) {
+    const collected = this.items;
     for (let i = 0; i < collected.length; i++) {
       const item = collected[i];
       if ((item.node === node) && (item.property === property)) {
         item.curValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue; // allocate array for re-use
         item.startValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue;
         item.endValue = Array.isArray(curValue) ? cloneArray(newValue) : newValue;
-        break;
+        return;
       }
     }
     if (Array.isArray(curValue)) {
@@ -59,39 +58,50 @@ export default class Animation extends EngineAnimation {
     }
   }
 
+  stop(cancelled) {
+    super.stop();
+    if (!cancelled) {
+      for (var j = 0; j < this.items.length; j++) {
+        const item = this.items[j];
+        item.node[item.property] = item.endValue;
+      }
+    }
+    this.items = undefined;
+    animationsPool.push(this);
+  }
+
+  static collect(node, property, newValue, curValue) {
+    //assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
+    node.__animCollectors = node.__animCollectors || {};
+    const collector = node.__animCollectors[property];
+    if (collector && collector.active) {
+      return collector.collect(node, property, newValue, curValue || node[property]);
+    } else if (Animation.animation) {
+      return Animation.animation.collect(node, property, newValue, curValue || node[property]);
+    }
+    return false;
+  }
+
   static start(node, curve, duration, collectFn) {
 
     // collect changed properties, layout changes, etc..
     assert(!Animation.isCollecting, 'Cannot start an animation while an other is still collecting');
-    Animation.isCollecting = true;
-    collected = [];
-    collectFn();
-    Animation.isCollecting = false;
-
-    // Re-use/create animation
     const animation = animationsPool.pop() || new Animation();
-    animation.items = collected;
+    animation.items = [];
+    Animation.animation = animation;
+    collectFn();
+    Animation.animation = undefined;
 
-    const promise = new AnimationPromise((resolve) => {
+    animation.promise = new AnimationPromise((resolve) => {
       animation.start(node, curve, duration, () => {
         animation.stop();
-        for (var j = 0; j < animation.items.length; j++) {
-          const item = animation.items[j];
-          item.node[item.property] = item.endValue;
-        }
-        animation.items = undefined;
-        animationsPool.push(animation);
         resolve(true);
       });
     });
-    promise.then((done) => {
-      if (!done) {
-        animation.stop();
-        animation.items = undefined;
-        animationsPool.push(animation);
-      }
+    animation.promise.then((done) => {
+      if (!done) animation.stop(true);
     });
-    return promise;
+    return animation;
   }
 }
 

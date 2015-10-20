@@ -57,9 +57,7 @@ export default class Size {
   }
 
   set width(value) {
-    if (Animation.isCollecting && this._lastWidth) {
-      Animation.collect(this, 'width', this._width || this._lastWidth, parse(value) || this._lastWidth);
-    } else {
+    if (!this._lastWidth || !Animation.collect(this, 'width', parse(value) || this._lastWidth, this._width || this._lastWidth)) {
       this._width = parse(value);
       this.onChange();
     }
@@ -70,9 +68,7 @@ export default class Size {
   }
 
   set height(value) {
-    if (Animation.isCollecting && this._lastHeight) {
-      Animation.collect(this, 'height', this._height || this._lastHeight, parse(value) || this._lastHeight);
-    } else {
+    if (!this._lastHeight || !Animation.collect(this, 'height', parse(value) || this._lastHeight, this._height || this._lastHeight)) {
       this._height = parse(value);
       this.onChange();
     }
@@ -83,9 +79,7 @@ export default class Size {
   }
 
   set maxWidth(value) {
-    if (Animation.isCollecting && this._lastWidth) {
-      Animation.collect(this, 'maxWidth', this._maxWidth || this._lastWidth, parse(value) || this._lastWidth);
-    } else {
+    if (!this._lastWidth || !Animation.collect(this, 'maxWidth', parse(value) || this._lastWidth, this._maxWidth || this._lastWidth)) {
       this._maxWidth = parse(value);
       this.onChange();
     }
@@ -96,9 +90,7 @@ export default class Size {
   }
 
   set maxHeight(value) {
-    if (Animation.isCollecting && this._lastHeight) {
-      Animation.collect(this, 'maxHeight', this._maxHeight || this._lastHeight, parse(value) || this._lastHeight);
-    } else {
+    if (!this._lastHeight || !Animation.collect(this, 'maxHeight', parse(value) || this._lastHeight, this._maxHeight || this._lastHeight)) {
       this._maxHeight = parse(value);
       this.onChange();
     }
@@ -109,9 +101,7 @@ export default class Size {
   }
 
   set minWidth(value) {
-    if (Animation.isCollecting && this._lastWidth) {
-      Animation.collect(this, 'minWidth', this._minWidth || this._lastWidth, parse(value) || this._lastWidth);
-    } else {
+    if (!this._lastWidth || !Animation.collect(this, 'minWidth', parse(value) || this._lastWidth, this._minWidth || this._lastWidth)) {
       this._minWidth = parse(value);
       this.onChange();
     }
@@ -122,9 +112,7 @@ export default class Size {
   }
 
   set minHeight(value) {
-    if (Animation.isCollecting && this._lastHeight) {
-      Animation.collect(this, 'minHeight', this._minHeight || this._lastHeight, parse(value) || this._lastHeight);
-    } else {
+    if (!this._lastHeight || !Animation.collect(this, 'minHeight', parse(value) || this._lastHeight, this._minHeight || this._lastHeight)) {
       this._minHeight = parse(value);
       this.onChange();
     }
@@ -136,9 +124,7 @@ export default class Size {
 
   set aspectRatio(value) {
     const aspectRatio = Array.isArray(value) ? (value[0] / value[1]) : value;
-    if (Animation.isCollecting && this._lastHeight) {
-      Animation.collect(this, 'aspectRatio', this._aspectRatio || (this._lastWidth[0] / this._lastHeight[0]), aspectRatio || (this._lastWidth[0] / this._lastHeight[0]));
-    } else {
+    if (!this._lastHeight || !Animation.collect(this, 'aspectRatio', aspectRatio || (this._lastWidth[0] / this._lastHeight[0]), this._aspectRatio || (this._lastWidth[0] / this._lastHeight[0]))) {
       this._aspectRatio = aspectRatio;
       this.onChange();
     }

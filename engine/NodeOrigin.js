@@ -3,10 +3,16 @@ export default class NodeOrigin {
     this._node = node;
   }
 
+  getParent() {
+    return this._node.getParent();
+  }
+
+  get identity() {
+    return NodeOrigin.identity;
+  }
+
   set(values) {
-    this._node.setAlign(values.x, values.y, values.z);
     this._node.setOrigin(values.x, values.y, values.z);
-    this._node.setMountPoint(values.x, values.y, values.z);
   }
 
   get x() {
@@ -14,9 +20,7 @@ export default class NodeOrigin {
   }
 
   set x(value) {
-    this._node.setAlign(value);
     this._node.setOrigin(value);
-    this._node.setMountPoint(value);
   }
 
   get y() {
@@ -24,9 +28,7 @@ export default class NodeOrigin {
   }
 
   set y(value) {
-    this._node.setAlign(undefined, value);
     this._node.setOrigin(undefined, value);
-    this._node.setMountPoint(undefined, value);
   }
 
   get z() {
@@ -34,9 +36,7 @@ export default class NodeOrigin {
   }
 
   set z(value) {
-    this._node.setAlign(undefined, undefined, value);
     this._node.setOrigin(undefined, undefined, value);
-    this._node.setMountPoint(undefined, undefined, value);
   }
 
   toString() {

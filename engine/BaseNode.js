@@ -36,6 +36,7 @@ export default class BaseNode extends Node {
   addChild()
   removeChild()
   getChildren()
+  getParent()
   */
 
   _processRegisteredUpdates(time) {

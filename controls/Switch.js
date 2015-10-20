@@ -56,9 +56,7 @@ export default class Switch extends ControlBase {
 
   set checkedRatio(perc) {
     if (this._checkedRatio !== perc) {
-      if (Animation.isCollecting) {
-        Animation.collect(this, 'checkedRatio', this._checkedRatio, perc);
-      } else {
+      if (!Animation.collect(this, 'checkedRatio', perc)) {
         this._checkedRatio = perc;
         this.requestLayout();
       }

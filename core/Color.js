@@ -36,8 +36,7 @@ export default class Color extends CallbackStore {
    * @return {Boolean} Returns true when color has changed
    */
   setValues(r, g, b, a) {
-    if (this._init && Animation.isCollecting) {
-      Animation.collect(this, 'values', this.values, [r, g, b, a]);
+    if (this._init && Animation.collect(this, 'values', [r, g, b, a], this.values)) {
       return false;
     }
     let changed;

@@ -8,17 +8,18 @@ export default class NodeRotation {
     this._z = 0;
   }
 
+  getParent() {
+    return this._node.getParent();
+  }
+
+  get identity() {
+    return NodeRotation.identity;
+  }
+
   set(values) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, values.x);
-      Animation.collect(this, 'y', this.y, values.y);
-      Animation.collect(this, 'z', this.z, values.z);
-    } else {
-      this._node.setRotation(values.x, values.y, values.z);
-      if (values.x !== undefined) this._x = values.x;
-      if (values.y !== undefined) this._y = values.y;
-      if (values.z !== undefined) this._z = values.z;
-    }
+    this.x = values.x;
+    this.y = values.y;
+    this.z = values.z;
   }
 
   get x() {
@@ -26,9 +27,7 @@ export default class NodeRotation {
   }
 
   set x(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, value);
-    } else {
+    if (!Animation.collect(this, 'x', value)) {
       this._x = value;
       this._node.setRotation(value, undefined, undefined);
     }
@@ -39,9 +38,7 @@ export default class NodeRotation {
   }
 
   set y(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'y', this.y, value);
-    } else {
+    if (!Animation.collect(this, 'y', value)) {
       this._y = value;
       this._node.setRotation(undefined, value, undefined);
     }
@@ -52,9 +49,7 @@ export default class NodeRotation {
   }
 
   set z(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'z', this.z, value);
-    } else {
+    if (!Animation.collect(this, 'z', value)) {
       this._z = value;
       this._node.setRotation(undefined, undefined, value);
     }

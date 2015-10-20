@@ -17,7 +17,7 @@ function headerFooterLayout(rect, options) {
     this.content.rect = rect;
   }
   if (this.footer) {
-    rect.y = rect.bottom;
+    rect.y = rect.parent.height - options.footerSize;
     rect.height = options.footerSize;
     this.footer.rect = rect;
   }

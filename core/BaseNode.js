@@ -13,6 +13,10 @@ export default class BaseNode extends EngineBaseNode {
     this.setOptions(options);
   }
 
+  identity() {
+    return BaseNode.identity;
+  }
+
   on(event, callback) {
     this._gestureRecognizer = this._gestureRecognizer || new GestureRecognizer(this);
     return this._gestureRecognizer.on(event, callback);
@@ -31,9 +35,7 @@ export default class BaseNode extends EngineBaseNode {
   }
 
   set opacity(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'opacity', this.getOpacity(), value);
-    } else {
+    if (!Animation.collect(this, 'opacity', value)) {
       this.setOpacity(value);
     }
   }
@@ -86,7 +88,7 @@ export default class BaseNode extends EngineBaseNode {
   }
 
   animate(curve, duration, collectFn) {
-    return Animation.start(this, curve, duration, collectFn);
+    return Animation.start(this, curve, duration, collectFn).promise;
   }
 
   debounce(callback, frameCount) {
@@ -103,3 +105,5 @@ export default class BaseNode extends EngineBaseNode {
     update.request();
   }
 }
+BaseNode.identity = {opacity: 1};
+

@@ -5,18 +5,20 @@ export default class NodeRect {
     this._node = node;
   }
 
+  getParent() {
+    return this._node.getParent();
+  }
+
+  get identity() {
+    return NodeRect.identity;
+  }
+
   set(rect, incrementZ) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, rect.x);
-      Animation.collect(this, 'y', this.y, rect.y);
-      Animation.collect(this, 'z', this.z, rect.z);
-      Animation.collect(this, 'width', this.width, rect.width);
-      Animation.collect(this, 'height', this.height, rect.height);
-    } else {
-      this._node.setPosition(rect.x, rect.y, rect.z);
-      this.width = rect.width;
-      this.height = rect.height;
-    }
+    this.x = rect.x;
+    this.y = rect.y;
+    this.z = rect.z;
+    this.width = rect.width;
+    this.height = rect.height;
     if (incrementZ) rect.z += 2;
   }
 
@@ -25,9 +27,7 @@ export default class NodeRect {
   }
 
   set x(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, value);
-    } else {
+    if (!Animation.collect(this, 'x', value)) {
       this._node.setPosition(value, undefined, undefined);
     }
   }
@@ -37,9 +37,7 @@ export default class NodeRect {
   }
 
   set y(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'y', this.y, value);
-    } else {
+    if (!Animation.collect(this, 'y', value)) {
       this._node.setPosition(undefined, value, undefined);
     }
   }
@@ -49,9 +47,7 @@ export default class NodeRect {
   }
 
   set z(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'z', this.z, value);
-    } else {
+    if (!Animation.collect(this, 'z', value)) {
       this._node.setPosition(undefined, undefined, value);
     }
   }
@@ -72,9 +68,7 @@ export default class NodeRect {
         this._node.setSizeMode('absolute');
         this._widthAbsolute = true;
       }
-      if (Animation.isCollecting) {
-        Animation.collect(this, 'width', this.width, value);
-      } else {
+      if (!Animation.collect(this, 'width', value)) {
         this._node.setAbsoluteSize(value);
         this._widthValue = value;
       }
@@ -97,9 +91,7 @@ export default class NodeRect {
         this._node.setSizeMode(undefined, 'absolute');
         this._heightAbsolute = true;
       }
-      if (Animation.isCollecting) {
-        Animation.collect(this, 'height', this.height, value);
-      } else {
+      if (!Animation.collect(this, 'height', value)) {
         this._node.setAbsoluteSize(undefined, value);
         this._heightValue = value;
       }
@@ -120,3 +112,4 @@ export default class NodeRect {
     };
   }
 }
+NodeRect.identity = {x: 0, y: 0, z: 0, width: 0, height: 0};

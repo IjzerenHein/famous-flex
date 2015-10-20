@@ -5,14 +5,18 @@ export default class NodeScale {
     this._node = node;
   }
 
+  getParent() {
+    return this._node.getParent();
+  }
+
+  get identity() {
+    return NodeScale.identity;
+  }
+
   set(values) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, values.x);
-      Animation.collect(this, 'y', this.y, values.y);
-      Animation.collect(this, 'z', this.z, values.z);
-    } else {
-      this._node.setScale(values.x, values.y, values.z);
-    }
+    this.x = values.x;
+    this.y = values.y;
+    this.z = values.z;
   }
 
   get x() {
@@ -20,9 +24,7 @@ export default class NodeScale {
   }
 
   set x(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'x', this.x, value);
-    } else {
+    if (!Animation.collect(this, 'x', value)) {
       this._node.setScale(value, undefined, undefined);
     }
   }
@@ -32,9 +34,7 @@ export default class NodeScale {
   }
 
   set y(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'y', this.y, value);
-    } else {
+    if (!Animation.collect(this, 'y', value)) {
       this._node.setScale(undefined, value, undefined);
     }
   }
@@ -44,9 +44,7 @@ export default class NodeScale {
   }
 
   set z(value) {
-    if (Animation.isCollecting) {
-      Animation.collect(this, 'z', this.z, value);
-    } else {
+    if (!Animation.collect(this, 'z', value)) {
       this._node.setScale(undefined, undefined, value);
     }
   }

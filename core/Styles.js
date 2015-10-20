@@ -97,9 +97,7 @@ export default class Styles {
   }
 
   set borderRadius(value) {
-    if (this._items.borderRadius && Animation.isCollecting) {
-      Animation.collect(this, 'borderRadius', this._items.borderRadius || 0, value || 0);
-    } else {
+    if (!this._items.borderRadius || !Animation.collect(this, 'borderRadius', value || 0, this._items.borderRadius || 0)) {
       this._items.borderRadius = value;
       this._node.onSetStyle('borderRadius', (value === undefined) ? 'inherit' : (value + 'px'));
     }

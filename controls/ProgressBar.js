@@ -46,9 +46,7 @@ export default class ProgressBar extends ControlBase {
       if (this.animated) {
         this._particle.endValue.x = value;
       } else {
-        if (Animation.isCollecting) {
-          Animation.collect(this, 'progress', this._particle.endValue.x, value);
-        } else {
+        if (!Animation.collect(this, 'progress', value)) {
           this._particle.endValue.x = value;
         }
       }
