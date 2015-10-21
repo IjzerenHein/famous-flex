@@ -1,4 +1,4 @@
-import ControlBase from './ControlBase';
+import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import {Animation, Particle} from '../animation';
 import Theme from '../theme';
@@ -9,7 +9,7 @@ const defaults = {
   progress: 0.5
 };
 
-export default class ProgressBar extends ControlBase {
+export default class ProgressBar extends Control {
 
   /**
    * @param {Object} options Configuration options.

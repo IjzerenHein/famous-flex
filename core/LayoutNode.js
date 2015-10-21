@@ -1,9 +1,5 @@
 import BaseNode from './BaseNode';
-import Margins from './Margins';
-import Animation from '../animation/Animation';
 import LayoutAnimation from '../animation/LayoutAnimation';
-import Classes from './Classes';
-import Size from './Size';
 import Rect from './Rect';
 
 export default class LayoutNode extends BaseNode {
@@ -24,9 +20,6 @@ export default class LayoutNode extends BaseNode {
     rect.z = 0;
     if (this._measure) {
       this._measure(rect);
-      rect.center();
-    } else if (this._intrinsicSize) {
-      this._intrinsicSize.resolve(rect);
       rect.center();
     } else {
       rect.width = rect.parent.width;
@@ -86,120 +79,6 @@ export default class LayoutNode extends BaseNode {
       this._measure = measure;
       this.requestLayout();
     }
-  }
-
-  get intrinsicSize() {
-    if (!this._intrinsicSize) {
-      this._intrinsicSize = new Size();
-      this._intrinsicSize.onChange = () => this.requestLayout();
-    }
-    return this._intrinsicSize;
-  }
-
-  set intrinsicSize(value) {
-    this.intrinsicSize.set(value);
-  }
-
-  get padding() {
-    this._padding = this._padding || Margins.identity;
-    return this._padding;
-  }
-
-  set padding(padding) {
-    this._padding = this._padding || Margins.identity;
-    if (!Animation.collect(this, 'padding', Margins.parse(padding))) {
-      this._padding = Margins.parse(padding);
-      this.requestLayout();
-    }
-  }
-
-  onClasses(add, remove) {
-    const children = this.getChildren();
-    const sharedClassesChildren = this._sharedClassesChildren;
-    if (add) {
-      for (let i = 0; i < children.length; i++) {
-        if (children[i].classes) {
-          children[i].classes.add(add);
-        }
-      }
-      if (sharedClassesChildren) {
-        for (let i = 0; i < sharedClassesChildren.length; i++) {
-          if (sharedClassesChildren[i].classes) {
-            sharedClassesChildren[i].classes.add(add);
-          }
-        }
-      }
-    }
-    if (remove) {
-      for (let i = 0; i < children.length; i++) {
-        if (children[i].classes) {
-          children[i].classes.remove(remove);
-        }
-      }
-      if (sharedClassesChildren) {
-        for (let i = 0; i < sharedClassesChildren.length; i++) {
-          if (sharedClassesChildren[i].classes) {
-            sharedClassesChildren[i].classes.remove(remove);
-          }
-        }
-      }
-    }
-  }
-
-  get classes() {
-    this._classes = this._classes || new Classes(this);
-    return this._classes;
-  }
-
-  set classes(values) {
-    this.classes.add(values);
-  }
-
-  addChild(child) {
-    super.addChild(child);
-    if (this._classes && child.classes) {
-      for (let i = 0; i < this._classes.length; i++) {
-        child.classes.add(this._classes.getAt(i));
-      }
-    }
-    this.requestLayout();
-    return child;
-  }
-
-  removeChild(child, migrateToSharedClasses) {
-    if (migrateToSharedClasses) {
-      this._sharedClassesChildren = this._sharedClassesChildren || [];
-      this._sharedClassesChildren.push(child);
-    } else if (this._classes && child.classes) {
-      for (let i = 0; i < this._classes.length; i++) {
-        child.classes.remove(this._classes.getAt(i));
-      }
-    }
-    return super.removeChild(child);
-  }
-
-  addSharedClassesChild(child) {
-    this._sharedClassesChildren = this._sharedClassesChildren || [];
-    this._sharedClassesChildren.push(child);
-    if (this._classes && child.classes) {
-      for (let i = 0; i < this._classes.length; i++) {
-        child.classes.add(this._classes.getAt(i));
-      }
-    }
-    return child;
-  }
-
-  removeSharedClassesChild(child) {
-    if (this._classes && child.classes) {
-      for (let i = 0; i < this._classes.length; i++) {
-        child.classes.remove(this._classes.getAt(i));
-      }
-    }
-    let i = this._sharedClassesChildren.indexOf(child);
-    if (i >= 0) {
-      this._sharedClassesChildren.splice(i, 1);
-    }
-    return child;
   }
 
   animate(curve, duration, collectFn) {

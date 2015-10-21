@@ -1,4 +1,4 @@
-import ControlBase from './ControlBase';
+import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import Label from './Label';
 import Animation from '../animation/Animation';
@@ -11,7 +11,7 @@ const defaults = {
   textAlign: 'center'
 };
 
-export default class Button extends ControlBase {
+export default class Button extends Control {
 
   /**
    * @param {Object} options Configuration options.

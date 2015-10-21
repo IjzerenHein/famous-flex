@@ -1,4 +1,4 @@
-import ControlBase from './ControlBase';
+import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import Animation from '../animation/Animation';
 import AnimationOptions from '../animation/AnimationOptions';
@@ -10,7 +10,7 @@ const defaults = {
   checked: false
 };
 
-export default class Switch extends ControlBase {
+export default class Switch extends Control {
 
   /**
    * @param {Object} options Configuration options.

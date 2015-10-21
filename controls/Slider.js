@@ -1,4 +1,4 @@
-import ControlBase from './ControlBase';
+import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import Animation from '../animation/Animation';
 import Color from '../core/Color';
@@ -11,7 +11,7 @@ const defaults = {
   value: 0
 };
 
-export default class Slider extends ControlBase {
+export default class Slider extends Control {
 
   /**
    * @param {Object} options Configuration options.

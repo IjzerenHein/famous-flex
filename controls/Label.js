@@ -1,4 +1,4 @@
-import ControlBase from './ControlBase';
+import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import ShowNode from '../core/ShowNode';
 import Styles from '../core/Styles';
@@ -23,7 +23,7 @@ const defaults = {
 /**
  * Static text label.
  */
-export default class Label extends ControlBase {
+export default class Label extends Control {
 
   /**
    * @param {Object} options Configuration options.
