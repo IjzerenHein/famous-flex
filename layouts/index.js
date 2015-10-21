@@ -1,5 +1,7 @@
 import headerFooterLayout from './headerFooterLayout';
+import listLayout from './listLayout';
 
 export {
-  headerFooterLayout
+  headerFooterLayout,
+  listLayout
 };

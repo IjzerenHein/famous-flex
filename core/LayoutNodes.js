@@ -9,8 +9,24 @@ export default class LayoutNodes {
     this._removedNodes = [];
   }
 
-  get(id) {
+  get index() {
+    return this._index;
+  }
+
+  get(value) {
+    if ((indexOrId instanceof String) || (typeof value === 'string')) {
+      return this._nodesById[id];
+    } else {
+      return this._array[value];
+    }
+  }
+
+  getById(id) {
     return this._nodesById[id];
+  }
+
+  getAt(index) {
+    return this._array[index];
   }
 
   set(id, node) {
@@ -22,14 +38,14 @@ export default class LayoutNodes {
       if (typeof this[id] !== 'function') {
         this[id] = node;
       }
-
-      // TODO, requestLayout?
+      this._node.requestLayout();
     }
   }
 
   insert(index, node) {
     this._array.splice(index, 0, node);
-    this._index += (index <= this._index) ? 1 : 0;
+    this._index = (index <= this._index) ? Math.min(index + 1, this._array.length - 1) : 0;
+    this._node.requestLayout();
   }
 
   remove(value) {
@@ -45,6 +61,8 @@ export default class LayoutNodes {
       assert((value >= 0) && (value < this._array.length), 'invalid index');
       this._removedNodes.push(this._array[value]);
       this._array.splice(index, 1);
+
+      // TODO - UPDATE INDEX
     } else {
       for (let key in this._nodesById) {
         if (this._nodesById[key] === value) {
@@ -53,6 +71,7 @@ export default class LayoutNodes {
           if (typeof this[key] !== 'function') {
             delete this[key];
           }
+          this._node.requestLayout();
           return this._removedNodes[this._removedNodes.length - 1];
         }
       }
@@ -60,7 +79,10 @@ export default class LayoutNodes {
       assert((value >= 0) && (value < this._array.length), 'invalid node');
       this._removedNodes.push(this._array[value]);
       this._array.splice(index, 1);
+
+      // TODO - UPDATE INDEX
     }
+    this._node.requestLayout();
     return this._removedNodes[this._removedNodes.length - 1];
   }
 
@@ -80,40 +102,7 @@ export default class LayoutNodes {
     return this.remove(0);
   }
 
-  next() {
-
-  }
-
-  prev() {
-
-  }
-
-  _beginLayout() {
-    for (let key in this._nodesById) {
-      this._nodesById[key]._layoutInvalidated = false;
-    }
-    for (let i = 0; i < this._array.length; i++) {
-      this._array[i]._layoutInvalidated = false;
-    }
-  }
-
-  _endLayout() {
-    let node;
-    for (let key in this._nodesById) {
-      node = this._nodesById[key];
-      if (node._layoutInvalidated && !node.getParent()) {
-        this._node.addChild(node);
-      } else if (!node._layoutInvalidated && node.getParent()) {
-        this._node.removeChild(node);
-      }
-    }
-    for (let i = 0; i < this._array.length; i++) {
-      node = this._array[i];
-      if (node._layoutInvalidated && !node.getParent()) {
-        this._node.addChild(node);
-      } else if (!node._layoutInvalidated && node.getParent()) {
-        this._node.removeChild(node);
-      }
-    }
+  get length() {
+    return this._array.length;
   }
 }

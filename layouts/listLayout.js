@@ -52,7 +52,7 @@
  * }
  * ```
  */
-function ListLayout(context, options) {
+function listLayout(context, options) {
 
   // Local data
   var size = context.size;
@@ -80,6 +80,12 @@ function ListLayout(context, options) {
   //
   // Reset size & translation
   //
+  const set = {
+    size: [0, 0],
+    translate: [0, 0, 0],
+    scrollLength: undefined
+  };
+  const margin = [0, 0];
   set.size[0] = size[0];
   set.size[1] = size[1];
   set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
