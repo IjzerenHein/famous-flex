@@ -17,8 +17,7 @@ export default class ProgressBar extends ControlBase {
    */
   constructor(options) {
     super();
-    options = options || {};
-    this._particle = new Particle(this, options.particle || Theme.defaults.progressBar.particle || defaults.particle);
+    this._particle = new Particle(this);
     this._particle.onChange = () => this.requestLayout();
     this._inside = this.addChild(new DOMNode({classes: ['inside']}));
     this._background = this.addChild(new DOMNode({classes: ['background']}));
@@ -29,21 +28,17 @@ export default class ProgressBar extends ControlBase {
     this.setOptions(defaults, Theme.defaults.progressBar, options);
   }
 
-  get animated() {
-    return this._particle.animated;
+  get animation() {
+    return this._particle.options;
   }
 
-  set animated(value) {
-    this._particle.animated = value;
-  }
-
-  get progress() {
-    return this._particle.endValue.x;
+  set animation(options) {
+    this._particle.options = options;
   }
 
   set progress(value) {
     if (this._particle.endValue.x !== value) {
-      if (this.animated) {
+      if (this._particle.options.enabled) {
         this._particle.endValue.x = value;
       } else {
         if (!Animation.collect(this, 'progress', value)) {

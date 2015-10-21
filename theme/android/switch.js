@@ -15,9 +15,11 @@ function layout(rect, size) {
 
 export default {
   intrinsicSize: [60, 35],
-  animated: true,
-  animationDuration: 300,
-  animationCurve: 'inOutQuad',
+  animation: {
+    enabled: true,
+    duration: 300,
+    curve: 'inOutQuad'
+  },
   padding: 1,
   color: '#3d59fd',
   backgroundColor: '#FFFFFF',

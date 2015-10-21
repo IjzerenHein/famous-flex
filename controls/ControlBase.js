@@ -19,33 +19,4 @@ export default class ControlBase extends LayoutNode {
     super();
     this.setOptions(options, defaults);
   }
-
-  get animated() {
-    return this._animated;
-  }
-
-  set animated(value) {
-    this._animated = value;
-  }
-
-  get animationDuration() {
-    return this._animationDuration;
-  }
-
-  set animationDuration(value) {
-    this._animationDuration = value;
-  }
-
-  get animationCurve() {
-    return this._animationCurve;
-  }
-
-  set animationCurve(value) {
-    this._animationCurve = value;
-  }
-
-  _animate(collectFn) {
-    if (this._lastAnimation) this._lastAnimation.cancel();
-    this._lastAnimation = this.animate(this.animationCurve, this.animationDuration, collectFn);
-  }
 }

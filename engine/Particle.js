@@ -2,11 +2,9 @@ import {PhysicsEngine, Spring} from 'famous/physics';
 import FamousParticle from 'famous/physics/bodies/Particle';
 import Vec from './Vec';
 import Animation from './Animation';
+import ParticleOptions from '../animation/ParticleOptions';
 
 const defaults = {
-  animated: true,
-  settleValue: 1e-3,
-  settleVelocity: 1e-5,
   particle: {
     mass: 1
   },
@@ -20,6 +18,7 @@ const defaults = {
 export default class Particle {
   constructor(node, options) {
     this._node = node;
+    this._options = new ParticleOptions(this);
     options = options || {};
     this._pe = new PhysicsEngine();
     this._particle = new FamousParticle(defaults.particle);
@@ -33,9 +32,6 @@ export default class Particle {
     this._endVec = new Vec();
     this._endVec.onSet = () => this._onSet(true);
     this._spring.anchor = this._endVec._vec3;
-    this.animated = (options.animated !== undefined) ? options.animated : defaults.animated;
-    this.settleValue = (options.settleValue !== undefined) ? options.settleValue : defaults.settleValue;
-    this.settleVelocity = (options.settleVelocity !== undefined) ? options.settleVelocity : defaults.settleVelocity;
     if (options.value !== undefined) this.value = options.value;
     if (options.endValue !== undefined) this.endValue = options.endValue;
   }
@@ -48,12 +44,12 @@ export default class Particle {
   onUpdate(time) {
     if (!this._isActive) {
       this._pe.time = time;
-      this._isActive = this._animated;
+      this._isActive = this._options.enabled;
     }
     if (this._isActive) {
       this._pe.update(time);
-      if ((Math.abs(this._curVec.x - this._endVec.x) < this._settleValue) &&
-          (Math.abs(this._velVec.x) < this._settleVelocity)) {
+      if ((Math.abs(this._curVec.x - this._endVec.x) < this._options.settleValue) &&
+          (Math.abs(this._velVec.x) < this._options.settleVelocity)) {
         this._isActive = false;
       }
       if (this._isActive) this.requestUpdate();
@@ -66,35 +62,19 @@ export default class Particle {
   }
 
   _onSet(endState) {
-    if (this._animated) {
+    if (this._options.enabled) {
       this.requestUpdate();
     } else if (endState) {
       this._curVec.set(this._endVec);
     }
   }
 
-  get settleValue() {
-    return this._settleValue;
+  get options() {
+    return this._options;
   }
 
-  set settleValue(value) {
-    this._settleValue = value;
-  }
-
-  get settleVelocity() {
-    return this._settleVelocity;
-  }
-
-  set settleVelocity(value) {
-    this._settleVelocity = value;
-  }
-
-  get animated() {
-    return this._animated;
-  }
-
-  set animated(value) {
-    this._animated = value;
+  set options(options) {
+    this._options.setOptions(options);
   }
 
   get endValue() {

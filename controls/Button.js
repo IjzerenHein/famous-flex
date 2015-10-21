@@ -8,7 +8,6 @@ import Theme from '../theme';
 const defaults = {
   classes: ['button'],
   enabled: true,
-  animated: false,
   textAlign: 'center'
 };
 

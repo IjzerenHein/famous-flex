@@ -18,7 +18,9 @@ export default {
   color: Theme.color,
   backgroundColor: Theme.neutralColor,
   intrinsicSize: ['90%', 80],
-  animated: true,
+  animation: {
+    enabled: true
+  },
   padding: 1,
   borderRadius: 'auto'
 };

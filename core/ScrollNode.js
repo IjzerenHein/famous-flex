@@ -133,6 +133,7 @@ export default class ScrollNode extends BaseNode {
 // 3) Collect all renderables that have been set (context.set) (later using reflection)
 // 4) Add unparented and set renderables to the scene (addChild)
 // 5) Remove unset and parented renderables from the scene (removeChild) (only when not in an animation)
+// 6) Collect through reflection
 
 //SCROLLING
 // 1) Particle (scroll-particle) (two-dimensional?)
@@ -146,3 +147,5 @@ export default class ScrollNode extends BaseNode {
 // 9) Pagination
 // 10) Overscoll on/off
 // 11) Emit events (scrollstart, scrollend, pagechange)
+// 12) Native scrolling
+

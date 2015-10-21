@@ -1,6 +1,7 @@
 import ControlBase from './ControlBase';
 import DOMNode from '../core/DOMNode';
 import Animation from '../animation/Animation';
+import AnimationOptions from '../animation/AnimationOptions';
 import Color from '../core/Color';
 import Theme from '../theme';
 
@@ -30,6 +31,21 @@ export default class Switch extends ControlBase {
     this.setOptions(defaults, Theme.defaults.switch, options);
   }
 
+  get animation() {
+    this._animation = this._animation || new AnimationOptions();
+    return this._animation;
+  }
+
+  set animation(options) {
+    this._animation = this._animation || new AnimationOptions();
+    this._animation.setOptions(options);
+  }
+
+  _animate(collectFn) {
+    if (this._lastAnimation) this._lastAnimation.cancel();
+    this._lastAnimation = this.animate(this.animation.curve, this.animation.duration, collectFn);
+  }
+
   toggle() {
     this.checked = !this.checked;
   }
@@ -40,7 +56,7 @@ export default class Switch extends ControlBase {
 
   set checked(checked) {
     if (this._checked !== checked) {
-      if (this.animated && (this._checked !== undefined)) {
+      if (this._animation && this._animation.enabled && (this._checked !== undefined)) {
         this._checked = checked;
         this._animate(() => this.checkedRatio = checked ? 1 : 0);
       } else {
