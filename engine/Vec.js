@@ -38,7 +38,7 @@ export default class Vec {
   }
 
   get y() {
-    return this._vec3.x;
+    return this._vec3.y;
   }
 
   set y(value) {
@@ -49,7 +49,7 @@ export default class Vec {
   }
 
   get z() {
-    return this._vec3.x;
+    return this._vec3.z;
   }
 
   set z(value) {

@@ -49,7 +49,9 @@ export default class Particle {
     if (this._isActive) {
       this._pe.update(time);
       if ((Math.abs(this._curVec.x - this._endVec.x) < this._options.settleValue) &&
-          (Math.abs(this._velVec.x) < this._options.settleVelocity)) {
+          (Math.abs(this._velVec.x) < this._options.settleVelocity) &&
+          (Math.abs(this._curVec.y - this._endVec.y) < this._options.settleValue) &&
+          (Math.abs(this._velVec.y) < this._options.settleVelocity)) {
         this._isActive = false;
       }
       if (this._isActive) this.requestUpdate();
