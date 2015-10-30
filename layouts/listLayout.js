@@ -55,27 +55,28 @@
 function listLayout(context, options) {
 
   // Local data
-  var size = context.size;
-  var direction = context.direction;
-  var alignment = context.alignment;
-  var revDirection = direction ? 0 : 1;
-  var offset;
-  var margins = [0, 0, 0, 0]; // TODO LayoutUtility.normalizeMargins(options.margins);
-  var spacing = options.spacing || 0;
-  var node;
-  var nodeSize;
-  var itemSize;
-  var getItemSize;
-  var lastSectionBeforeVisibleCell;
-  var lastSectionBeforeVisibleCellOffset;
-  var lastSectionBeforeVisibleCellLength;
-  var lastSectionBeforeVisibleCellScrollLength;
-  var lastSectionBeforeVisibleCellTopReached;
-  var firstVisibleCell;
-  var lastNode;
-  var lastCellOffsetInFirstVisibleSection;
-  var isSectionCallback = options.isSectionCallback;
-  var bound;
+  const size = context.size;
+  const direction = context.direction;
+  const alignment = context.alignment;
+  const revDirection = direction ? 0 : 1;
+  const margins = [0, 0, 0, 0]; // TODO LayoutUtility.normalizeMargins(options.margins);
+  const spacing = options.spacing || 0;
+  let offset;
+  let node;
+  let nodeSize;
+  let itemSize;
+  let getItemSize;
+  let lastSectionBeforeVisibleCell;
+  let lastSectionBeforeVisibleCellOffset;
+  let lastSectionBeforeVisibleCellLength;
+  let lastSectionBeforeVisibleCellScrollLength;
+  let lastSectionBeforeVisibleCellTopReached;
+  let firstVisibleCell;
+  let lastNode;
+  let lastCellOffsetInFirstVisibleSection;
+  let isSectionCallback = options.isSectionCallback;
+  let sectionZIndex = options.sectionZIndex || 5;
+  let bound;
 
   //
   // Reset size & translation
@@ -126,7 +127,7 @@ function listLayout(context, options) {
     //
     // Get node size
     //
-    nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+    nodeSize = getItemSize ? getItemSize(node) : itemSize;
     nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
 
     //
@@ -141,11 +142,13 @@ function listLayout(context, options) {
     //
     // Keep track of the last section before the first visible cell
     //
-    if (isSectionCallback && isSectionCallback(node.renderNode)) {
+    if (isSectionCallback && isSectionCallback(node)) {
       if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
         lastSectionBeforeVisibleCellTopReached = true;
         set.translate[direction] = margin[0];
+        set.translate[2] = sectionZIndex;
         context.set(node, set);
+        set.translate[2] = 0;
       }
       if (!firstVisibleCell) {
         lastSectionBeforeVisibleCell = node;
@@ -181,7 +184,7 @@ function listLayout(context, options) {
     //
     // Get node size
     //
-    nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+    nodeSize = getItemSize ? getItemSize(node) : itemSize;
     nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
 
     //
@@ -196,7 +199,7 @@ function listLayout(context, options) {
     //
     // Keep track of the last section before the first visible cell
     //
-    if (isSectionCallback && isSectionCallback(node.renderNode)) {
+    if (isSectionCallback && isSectionCallback(node)) {
       if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
         lastSectionBeforeVisibleCellTopReached = true;
         set.translate[direction] = margin[0];
@@ -231,7 +234,7 @@ function listLayout(context, options) {
   if (isSectionCallback && !lastSectionBeforeVisibleCell) {
     node = context.prev();
     while (node) {
-      if (isSectionCallback(node.renderNode)) {
+      if (isSectionCallback(node)) {
         lastSectionBeforeVisibleCell = node;
         nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
         lastSectionBeforeVisibleCellOffset = offset - nodeSize;
@@ -255,6 +258,7 @@ function listLayout(context, options) {
     }
     set.size[direction] = lastSectionBeforeVisibleCellLength;
     set.translate[direction] = correctedOffset;
+    set.translate[2] = sectionZIndex;
     set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
     context.set(lastSectionBeforeVisibleCell, set);
   }
