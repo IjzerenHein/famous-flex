@@ -7,20 +7,19 @@ export default class LayoutContext {
     this.size = [0, 0];
   }
 
-  _prepareForLayout(rect, offset) {
-    this.size[0] = rect.width;
-    this.size[1] = rect.height;
+  _prepareForLayout(rect, options, offset) {
+    this.length = this._nodes.length;
+    this.size[0] = rect.width; // oldskool
+    this.size[1] = rect.height; // oldskool
     this.rect = rect;
-
-    // TODO ALIGN
+    this.direction = options.direction;
+    this.alignment = options.alignment;
+    this.offset = offset;
+    this.scrollOffset = options.direction ? offset.y : offset.x; // oldskool
+    this.scrollStart = options.direction ? rect.y : rect.x; // oldskool
+    this.scrollEnd = options.direction ? (rect.y + rect.height) : (rect.x + rect.width); // oldskool
     this._prevIndex = this._nodes.index;
     this._nextIndex = this._prevIndex;
-    this.length = this._nodes.length;
-    this.direction = 1;
-    this.alignment = 0;
-    this.scrollOffset = offset || 0;
-    this.scrollStart = 0;
-    this.scrollEnd = 10000;
   }
 
   set(node, spec) {

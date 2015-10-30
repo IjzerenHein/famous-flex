@@ -8,12 +8,19 @@ import {assert} from '../utils';
 
 const defaults = {
   layout: listLayout,
-  enabled: true
+  enabled: true,
+  paginated: false,
+  overscroll: true,
+  direction: 0,
+  alignment: 0
 };
 
 export default class ScrollNode extends EngineScrollNode {
   constructor(options) {
     super();
+    this._options = {};
+    this._layoutRect = new Rect();
+    this._layoutRect.parent = new Rect();
     this._nodes = new LayoutNodes(this);
     this._context = new LayoutContext(this._group, this._nodes);
     this._particle = new Particle(this);
@@ -26,18 +33,22 @@ export default class ScrollNode extends EngineScrollNode {
     let startX;
     let startY;
     this.on('drag', (event) => {
-      if (this._enabled) {
+      if (this._options.enabled) {
+        const dir = this._options.direction;
         if (event.status === 'start') {
           startX = this._particle.value.x;
           startY = this._particle.value.y;
         }
-        this._particle.value.y = startY + event.delta.y;
-        console.log('velocity: ' + event.velocity.y);
+        this._particle.value.x = (dir !== 1) ? (startX + event.delta.x) : 0;
+        this._particle.value.y = (dir !== 0) ? (startY + event.delta.y) : 0;
         if (event.status === 'end') {
-          this._particle.endValue.y = undefined;
-          this._particle.velocity.y = event.velocity.y * 100;
+          this._particle.endValue.x = (dir !== 1) ? undefined : 0;
+          this._particle.endValue.y = (dir !== 0) ? undefined : 0;
+          this._particle.velocity.x = (dir !== 1) ? (event.velocity.x * 100) : 0;
+          this._particle.velocity.y = (dir !== 0) ? (event.velocity.y * 100) : 0;
         } else {
-          this._particle.endValue.y = startY + event.delta.y;
+          this._particle.endValue.x = (dir !== 1) ? (startX + event.delta.x) : 0;
+          this._particle.endValue.y = (dir !== 0) ? (startY + event.delta.y) : 0;
         }
         this.requestLayout();
       }
@@ -58,10 +69,6 @@ export default class ScrollNode extends EngineScrollNode {
 
     //this.group.rect.y = this._particle.value.y;
 
-    if (!this._layoutRect) {
-      this._layoutRect = new Rect();
-      this._layoutRect.parent = new Rect();
-    }
     const rect = this._layoutRect;
     rect.parent.width = this.rect.width;
     rect.parent.height = this.rect.height;
@@ -78,7 +85,7 @@ export default class ScrollNode extends EngineScrollNode {
     }
 
     //console.log('layout!');
-    this._context._prepareForLayout(rect, this._particle.value.y);
+    this._context._prepareForLayout(rect, this._options, this._particle.value);
     this._layout(this._context, this._layoutOptions);
     if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
@@ -118,24 +125,62 @@ export default class ScrollNode extends EngineScrollNode {
     }
   }
 
-  get measure() {
-    return this._measure;
+  measure(size) {
+    // TODO
+    return size;
   }
 
-  set measure(measure) {
-    if (measure !== this._measure) {
-      this._measure = measure;
+  get enabled() {
+    return this._options.enabled;
+  }
+
+  set enabled(value) {
+    if (this._options.enabled !== value) {
+      this._options.enabled = value;
       this.requestLayout();
     }
   }
 
-  get enabled() {
-    return this._enabled;
+  get direction() {
+    return this._options.direction;
   }
 
-  set enabled(value) {
-    if (this._enabled !== value) {
-      this._enabled = value;
+  set direction(value) {
+    if (this._options.direction !== value) {
+      this._options.direction = value;
+      this.requestLayout();
+    }
+  }
+
+  get alignment() {
+    return this._options.alignment;
+  }
+
+  set alignment(value) {
+    if (this._options.alignment !== value) {
+      this._options.alignment = value;
+      this.requestLayout();
+    }
+  }
+
+  get paginated() {
+    return this._options.paginated;
+  }
+
+  set paginated(value) {
+    if (this._options.paginated !== value) {
+      this._options.paginated = value;
+      this.requestLayout();
+    }
+  }
+
+  get overscroll() {
+    return this._options.overscroll;
+  }
+
+  set overscroll(value) {
+    if (this._options.overscroll !== value) {
+      this._options.overscroll = value;
       this.requestLayout();
     }
   }
