@@ -145,10 +145,10 @@ function listLayout(context, options) {
     if (isSectionCallback && isSectionCallback(node)) {
       if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
         lastSectionBeforeVisibleCellTopReached = true;
-        set.translate[direction] = margin[0];
+        /*set.translate[direction] = margin[0];
         set.translate[2] = sectionZIndex;
         context.set(node, set);
-        set.translate[2] = 0;
+        set.translate[2] = 0;*/
       }
       if (!firstVisibleCell) {
         lastSectionBeforeVisibleCell = node;
@@ -257,6 +257,7 @@ function listLayout(context, options) {
       correctedOffset = ((lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength));
     }
     set.size[direction] = lastSectionBeforeVisibleCellLength;
+    console.log('correctedOffset: ' + correctedOffset);
     set.translate[direction] = correctedOffset;
     set.translate[2] = sectionZIndex;
     set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
