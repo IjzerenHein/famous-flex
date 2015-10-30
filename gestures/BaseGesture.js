@@ -4,6 +4,7 @@ export default class BaseGesture {
     this.pointers = {};
     this.event = {};
     this.pointerCount = 0;
+    this.prevPointerCount = 0;
     this.captureCount = 0;
   }
 
@@ -68,7 +69,8 @@ export default class BaseGesture {
       pointer.active = true;
       this.pointerCount++;
     }
-    this.pointerStart(pointer);
+    this.pointerStart(pointer, 1);
+    this.prevPointerCount = this.pointerCount;
   }
 
   mouseMove(event) {
@@ -81,7 +83,7 @@ export default class BaseGesture {
     pointer.deltaY += event.clientY - pointer.y;
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    this.pointerMove(pointer);
+    this.pointerMove(pointer, 1);
   }
 
   mouseUp(event) {
@@ -98,7 +100,8 @@ export default class BaseGesture {
       pointer.active = false;
       this.pointerCount--;
     }
-    this.pointerEnd(pointer);
+    this.pointerEnd(pointer, 1);
+    this.prevPointerCount = this.pointerCount;
   }
 
   pointerStart() {

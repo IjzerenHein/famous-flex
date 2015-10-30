@@ -6,26 +6,46 @@ export default class PanGesture extends BaseGesture {
     super();
     this.event.delta = {};
     this.event.start = {};
+    this.event.velocity = {};
   }
 
-  update(event) {
+  update(pointer, count) {
+    const event = this.event;
+    const time = pointer.time - event.prevTime;
+    event.prevTime = event.time;
+    event.time = pointer.time;
     event.delta.x = 0;
     event.delta.y = 0;
-    for (var key in this.pointers) {
-      const pointer = this.pointers[key];
+    while (pointer) {
       event.delta.x += pointer.deltaX;
       event.delta.y += pointer.deltaY;
+      pointer = pointer.next;
     }
+    event.delta.x /= count;
+    event.delta.y /= count;
+    event.velocity.x = event.delta.x / time;
+    event.velocity.y = event.delta.y / time;
   }
 
-  pointerStart(pointer) {
+  pointerStart(pointer, count) {
     const event = this.event;
-    if (this.pointerCount === 1) {
+    if (!this.prevPointerCount) {
+      event.time = pointer.time;
+      event.prevTime = pointer.time;
       event.start.time = pointer.time;
-      event.start.x = pointer.x;
-      event.start.y = pointer.y;
+      event.start.x = 0;
+      event.start.y = 0;
+      while (pointer) {
+        event.start.x += pointer.x;
+        event.start.y += pointer.y;
+        pointer = pointer.next;
+      }
+      event.start.x /= count;
+      event.start.y /= count;
       event.delta.x = 0;
       event.delta.y = 0;
+      event.velocity.x = 0;
+      event.velocity.y = 0;
       event.status = 'start';
       this.emit(event);
       event.status = 'update';
@@ -33,16 +53,16 @@ export default class PanGesture extends BaseGesture {
     }
   }
 
-  pointerMove(pointer) {
+  pointerMove(pointer, count) {
     if (this.event.status === 'update') {
-      this.update(this.event);
+      this.update(pointer, count);
       this.emit(this.event);
     }
   }
 
-  pointerEnd(pointer) {
-    if (!this.pointerCount ) {
-      this.update(this.event);
+  pointerEnd(pointer, count) {
+    if (!this.pointerCount) {
+      this.update(pointer, count);
       this.event.status = 'end';
       this.emit(this.event);
       this.endCapture();
