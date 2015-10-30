@@ -7,7 +7,7 @@ export default class LayoutContext {
     this.size = [0, 0];
   }
 
-  _prepareForLayout(rect) {
+  _prepareForLayout(rect, offset) {
     this.size[0] = rect.width;
     this.size[1] = rect.height;
     this.rect = rect;
@@ -18,7 +18,7 @@ export default class LayoutContext {
     this.length = this._nodes.length;
     this.direction = 1;
     this.alignment = 0;
-    this.scrollOffset = 0;
+    this.scrollOffset = offset || 0;
     this.scrollStart = 0;
     this.scrollEnd = 10000;
   }

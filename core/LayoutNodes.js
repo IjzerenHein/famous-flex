@@ -43,6 +43,7 @@ export default class LayoutNodes {
   }
 
   insert(index, node) {
+    index = (index === -1) ? this._array.length : index;
     this._array.splice(index, 0, node);
     this._index = (index <= this._index) ? Math.min(index + 1, this._array.length - 1) : 0;
     this._node.requestLayout();

@@ -1,20 +1,47 @@
-import BaseNode from './BaseNode';
+import EngineScrollNode from '../engine/ScrollNode';
 import Rect from './Rect';
 import LayoutNodes from './LayoutNodes';
 import LayoutContext from './LayoutContext';
 import listLayout from '../layouts/listLayout';
+import Particle from '../animation/Particle';
 import {assert} from '../utils';
 
 const defaults = {
-  layout: listLayout
+  layout: listLayout,
+  enabled: true
 };
 
-export default class ScrollNode extends BaseNode {
+export default class ScrollNode extends EngineScrollNode {
   constructor(options) {
     super();
     this._nodes = new LayoutNodes(this);
-    this._context = new LayoutContext(this, this._nodes);
+    this._context = new LayoutContext(this._group, this._nodes);
+    this._particle = new Particle(this);
+    this._particle.onChange = () => this.requestLayout();
+    this._setupDragListeners();
     this.setOptions(defaults, options);
+  }
+
+  _setupDragListeners() {
+    let startX;
+    let startY;
+    this.on('drag', (event) => {
+      if (this._enabled) {
+        if (event.status === 'start') {
+          startX = this._particle.value.x;
+          startY = this._particle.value.y;
+        }
+        this._particle.value.y = startY + event.delta.y;
+        console.log('velocity: ' + event.velocity.y);
+        if (event.status === 'end') {
+          this._particle.endValue.y = undefined;
+          this._particle.velocity.y = event.velocity.y * 100;
+        } else {
+          this._particle.endValue.y = startY + event.delta.y;
+        }
+        this.requestLayout();
+      }
+    });
   }
 
   get nodes() {
@@ -26,6 +53,11 @@ export default class ScrollNode extends BaseNode {
   }
 
   onLayout() {
+    this.group.rect.width = this.rect.width;
+    this.group.rect.height = this.rect.height;
+
+    //this.group.rect.y = this._particle.value.y;
+
     if (!this._layoutRect) {
       this._layoutRect = new Rect();
       this._layoutRect.parent = new Rect();
@@ -36,24 +68,17 @@ export default class ScrollNode extends BaseNode {
     rect.x = 0;
     rect.y = 0;
     rect.z = 0;
-    if (this._measure) {
-      this._measure(rect);
-      rect.center();
-    } else if (this._intrinsicSize) {
-      this._intrinsicSize.resolve(rect);
-      rect.center();
-    } else {
-      rect.width = rect.parent.width;
-      rect.height = rect.parent.height;
-    }
+    rect.width = rect.parent.width;
+    rect.height = rect.parent.height;
 
     if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
         this._animations[i].state = LayoutAnimation.State.PRELAYOUT;
       }
     }
-    console.log('layout!');
-    this._context._prepareForLayout(rect);
+
+    //console.log('layout!');
+    this._context._prepareForLayout(rect, this._particle.value.y);
     this._layout(this._context, this._layoutOptions);
     if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
@@ -104,16 +129,15 @@ export default class ScrollNode extends BaseNode {
     }
   }
 
-  get intrinsicSize() {
-    if (!this._intrinsicSize) {
-      this._intrinsicSize = new Size();
-      this._intrinsicSize.onChange = () => this.requestLayout();
-    }
-    return this._intrinsicSize;
+  get enabled() {
+    return this._enabled;
   }
 
-  set intrinsicSize(value) {
-    this.intrinsicSize.set(value);
+  set enabled(value) {
+    if (this._enabled !== value) {
+      this._enabled = value;
+      this.requestLayout();
+    }
   }
 
   // TODO - SHARED CLASSES
