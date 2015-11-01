@@ -8,7 +8,7 @@ function layout(rect) {
   rect.inFront();
   if (this._borderRadius === 'auto') this._inside.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
   rect.subtract(this._padding);
-  rect.width = rect.width * Math.min(Math.max(this._particle.value.x, 0), 1);
+  rect.width = rect.width * Math.min(Math.max(this._particle.value, 0), 1);
   this._inside.rect = rect;
   this._inside.styles.backgroundColor = this._color;
 }

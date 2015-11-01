@@ -10,7 +10,7 @@ export default class PointerGesture extends BaseGesture {
       pointer._event = {
         start: {},
         delta: {}
-      }
+      };
     };
     const event = pointer._event;
     event.id = pointer.id;

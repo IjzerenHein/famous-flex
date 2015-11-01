@@ -37,12 +37,12 @@ export default class ProgressBar extends Control {
   }
 
   set progress(value) {
-    if (this._particle.endValue.x !== value) {
+    if (this._particle.endValue !== value) {
       if (this._particle.options.enabled) {
-        this._particle.endValue.x = value;
+        this._particle.endValue = value;
       } else {
         if (!Animation.collect(this, 'progress', value)) {
-          this._particle.endValue.x = value;
+          this._particle.endValue = value;
         }
       }
     }

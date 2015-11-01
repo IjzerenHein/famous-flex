@@ -1,28 +1,33 @@
 import EngineScrollNode from '../engine/ScrollNode';
 import Rect from './Rect';
-import LayoutNodes from './LayoutNodes';
-import LayoutContext from './LayoutContext';
-import listLayout from '../layouts/listLayout';
+import Size from './Size';
+import Point from './Point';
 import Particle from '../animation/Particle';
 import {assert} from '../utils';
 
 const defaults = {
-  layout: listLayout,
   enabled: true,
   paginated: false,
-  overscroll: true,
-  direction: 0,
-  alignment: 0
+  overscroll: [0.5, 0.5],
+  direction: undefined,
+  contentAlignment: [0.5, 0.5]
 };
 
 export default class ScrollNode extends EngineScrollNode {
   constructor(options) {
     super();
-    this._options = {};
-    this._layoutRect = new Rect();
-    this._layoutRect.parent = new Rect();
-    this._nodes = new LayoutNodes(this);
-    this._context = new LayoutContext(this._group, this._nodes);
+    this._direction = 1;
+    this._contentRect = new Rect();
+    this._contentRect.parent = new Rect();
+    this._contentSize = new Size();
+    this._contentSize.onChange = () => this.requestLayout();
+    this._contentOffset = new Point();
+    this._contentOffset.onChange = () => this._onSetContentOffset();
+    this._contentAlignment = new Point();
+    this._contentAlignment.onChange = () => this.requestLayout();
+    this._overscroll = new Point();
+    this._overscroll.onChange = () => this.requestLayout();
+    this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
     this._particle = new Particle(this);
     this._particle.onChange = () => this.requestLayout();
     this._setupDragListeners();
@@ -30,99 +35,173 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   _setupDragListeners() {
-    let startX;
+    let start;
     let startY;
+    let bound;
+    let boundY;
+    let offset;
+    let offsetY;
     this.on('drag', (event) => {
-      if (this._options.enabled) {
-        const dir = this._options.direction;
+      if (this._enabled) {
         if (event.status === 'start') {
-          startX = this._particle.value.x;
-          startY = this._particle.value.y;
+          this._dragging = true;
+          start = this._particle.value;
+          this._particle.endValue = undefined;
+          if (this._direction === undefined) {
+            startY = this._particleY.value;
+            this._particleY.endValue = undefined;
+          }
+        } else if (event.status === 'end') {
+          this._dragging = false;
         }
-        this._particle.value.x = (dir !== 1) ? (startX + event.delta.x) : 0;
-        this._particle.value.y = (dir !== 0) ? (startY + event.delta.y) : 0;
-        if (event.status === 'end') {
-          this._particle.endValue.x = (dir !== 1) ? undefined : 0;
-          this._particle.endValue.y = (dir !== 0) ? undefined : 0;
-          this._particle.velocity.x = (dir !== 1) ? (event.velocity.x * 100) : 0;
-          this._particle.velocity.y = (dir !== 0) ? (event.velocity.y * 100) : 0;
-        } else {
-          this._particle.endValue.x = (dir !== 1) ? (startX + event.delta.x) : 0;
-          this._particle.endValue.y = (dir !== 0) ? (startY + event.delta.y) : 0;
+        switch (this._direction) {
+          case 0: // horizontal
+            bound = this.getBound(0);
+            offset = start + event.delta.x;
+            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.x);
+            this._particle.value = offset;
+            if (!this._dragging) this._particle.velocity = event.velocity.x * 1000;
+            break;
+          case 1: // vertical
+            bound = this.getBound(1);
+            offset = start + event.delta.y;
+            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.y);
+            this._particle.value = bound;
+            if (!this._dragging) this._particle.velocity = event.velocity.y * 1000;
+            break;
+          default: // both
+            const rect = this.contentRect;
+            bound = this.getBound(0);
+            boundY = this.getBound(1);
+            offset = start + event.delta.x;
+            offsetY = startY + event.delta.y;
+            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.x);
+            if (boundY !== undefined) offsetY = boundY + ((offsetY - boundY) * this._overscroll.y);
+            this._particle.value = offset;
+            this._particleY.value = offsetY;
+            if (!this._dragging) {
+              this._particle.velocity = event.velocity.x * 1000;
+              this._particleY.velocity = event.velocity.y * 1000;
+            }
         }
         this.requestLayout();
       }
     });
   }
 
-  get nodes() {
-    return this._nodes;
-  }
-
-  set nodes(value) {
-    this._nodes.set(value);
-  }
-
-  onLayout() {
-    this.group.rect.width = this.rect.width;
-    this.group.rect.height = this.rect.height;
-
-    //this.group.rect.y = this._particle.value.y;
-
-    const rect = this._layoutRect;
-    rect.parent.width = this.rect.width;
-    rect.parent.height = this.rect.height;
-    rect.x = 0;
-    rect.y = 0;
-    rect.z = 0;
-    rect.width = rect.parent.width;
-    rect.height = rect.parent.height;
-
-    if (this._animations) {
-      for (var i = 0; i < this._animations.length; i++) {
-        this._animations[i].state = LayoutAnimation.State.PRELAYOUT;
-      }
-    }
-
-    //console.log('layout!');
-    this._context._prepareForLayout(rect, this._options, this._particle.value);
-    this._layout(this._context, this._layoutOptions);
-    if (this._animations) {
-      for (var i = 0; i < this._animations.length; i++) {
-        this._animations[i].state = LayoutAnimation.State.POSTLAYOUT;
-      }
-    }
+  _onSetContentOffset() {
+    // TODO
   }
 
   requestLayout(immediate) {
     if (immediate) {
       this.onLayout();
     } else {
-      this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
       this._updateLayout.request();
     }
   }
 
-  get layout() {
-    return this._layout;
+  getBound(direction, contentRect) {
+    const rect = contentRect || this.contentRect;
+    const align = this._contentAlignment;
+    if (!direction) {
+      if (rect.width < this.rect.width) {
+        return (this.rect.width * align.x) - (align.x * rect.width);
+      } else if (rect.x > 0) {
+        return 0;
+      } else if ((rect.x + rect.width) < this.rect.width) {
+        return this.rect.width - rect.width;
+      }
+    } else {
+      if (rect.height < this.rect.height) {
+        return (this.rect.height * align.y) - (align.y * rect.height);
+      } else if (rect.y > 0) {
+        return 0;
+      } else if ((rect.y + rect.height) < this.rect.height) {
+        return this.rect.height - rect.height;
+      }
+    }
+    return undefined;
   }
 
-  set layout(layout) {
-    if (layout !== this._layout) {
-      this._layout = layout;
+  onLayout() {
+    const contentRect = this.contentRect;
+
+    if (!this._dragging) {
+      if (this._direction !== undefined) {
+        const bound = this.getBound(this._direction, contentRect);
+        if (bound !== undefined) this._particle.endValue = bound;
+      } else {
+        const bound = this.getBound(0, contentRect);
+        const boundY = this.getBound(1, contentRect);
+        if (bound !== undefined) this._particle.endValue = bound;
+        if (boundY !== undefined) this._particleY.endValue = boundY;
+      }
+    }
+
+    // Layout content
+    if (this._content) {
+      this._content.rect = contentRect;
+    }
+  }
+
+  get content() {
+    return this._content;
+  }
+
+  set content(value) {
+    if (this._content !== value) {
+      if (this._content) {
+        this.removeChild(this._content);
+      }
+      this._content = value;
+      if (this._content) {
+        this.addChild(this._content);
+      }
       this.requestLayout();
     }
   }
 
-  get layoutOptions() {
-    return this._layoutOptions;
+  get contentSize() {
+    return this._contentSize;
   }
 
-  set layoutOptions(options) {
-    if (this._layoutOptions !== options) {
-      this._layoutOptions = options;
-      this.requestLayout();
+  set contentSize(value) {
+    this._contentSize.set(value);
+  }
+
+  get contentRect() {
+    // Prepare content-rect
+    const rect = this._contentRect;
+    rect.parent.width = this.rect.width;
+    rect.parent.height = this.rect.height;
+    switch (this._direction) {
+      case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
+      case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
+      default: rect.x = this._particle.value; rect.y = this._particleY.value; rect.z = 0; break;
+
     }
+
+    // Calculate content-size and apply to rect
+    this._contentSize.resolve(rect);
+
+    return rect;
+  }
+
+  get contentOffset() {
+    return this._contentOffset;
+  }
+
+  set contentOffset(value) {
+    this._contentOffset.set(value);
+  }
+
+  get contentAlignment() {
+    return this._contentAlignment;
+  }
+
+  set contentAlignment(value) {
+    this._contentAlignment.set(value);
   }
 
   measure(size) {
@@ -131,39 +210,32 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   get enabled() {
-    return this._options.enabled;
+    return this._enabled;
   }
 
   set enabled(value) {
-    if (this._options.enabled !== value) {
-      this._options.enabled = value;
+    if (this._enabled !== value) {
+      this._enabled = value;
       this.requestLayout();
     }
   }
 
   get direction() {
-    return this._options.direction;
+    return this._direction;
   }
 
   set direction(value) {
-    if (this._options.direction !== value) {
-      this._options.direction = value;
+    if (this._direction !== value) {
+      this._direction = value;
+      if ((this._direction === undefined) && !this._particleY) {
+        this._particleY = new Particle(this);
+        this._particleY.onChange = () => this.requestLayout();
+      }
       this.requestLayout();
     }
   }
 
-  get alignment() {
-    return this._options.alignment;
-  }
-
-  set alignment(value) {
-    if (this._options.alignment !== value) {
-      this._options.alignment = value;
-      this.requestLayout();
-    }
-  }
-
-  get paginated() {
+  /*get paginated() {
     return this._options.paginated;
   }
 
@@ -172,49 +244,44 @@ export default class ScrollNode extends EngineScrollNode {
       this._options.paginated = value;
       this.requestLayout();
     }
-  }
+  }*/
 
   get overscroll() {
-    return this._options.overscroll;
+    return this._overscroll;
   }
 
   set overscroll(value) {
-    if (this._options.overscroll !== value) {
-      this._options.overscroll = value;
-      this.requestLayout();
-    }
+    this._overscroll.set(value);
   }
 
-  // TODO - SHARED CLASSES
-
-  animate(curve, duration, collectFn) {
+  /*animate(curve, duration, collectFn) {
     const animation = LayoutAnimation.start(this, curve, duration, collectFn);
     this._animations = this._animations || [];
     this._animations.push(animation);
     animation.promise.then(() => this._animations.splice(this._animations.indexOf(animation), 1));
     return animation.promise;
-  }
+  }*/
 }
 
 //LAYOUT
-// 1) Mark all renderables as untouched
-// 2) Layout renderables
-// 3) Collect all renderables that have been set (context.set) (later using reflection)
-// 4) Add unparented and set renderables to the scene (addChild)
-// 5) Remove unset and parented renderables from the scene (removeChild) (only when not in an animation)
-// 6) Collect through reflection
+// 1) [ ] Mark all renderables as untouched
+// 2) [ ] Layout renderables
+// 3) [ ] Collect all renderables that have been set (context.set) (later using reflection)
+// 4) [ ] Add unparented and set renderables to the scene (addChild)
+// 5) [ ] Remove unset and parented renderables from the scene (removeChild) (only when not in an animation)
+// 6) [ ] Collect through reflection
 
 //SCROLLING
-// 1) Particle (scroll-particle) (two-dimensional?)
-// 2) Boundary detection
-// 3) Gesture handling
-// 4) getVisibleItem
-// 5) ensureVisible
-// 6) navigateTo
-// 7) Alignment
-// 8) Direction
-// 9) Pagination
-// 10) Overscoll on/off
-// 11) Emit events (scrollstart, scrollend, pagechange)
-// 12) Native scrolling
+// 1) [X] Particle (scroll-particle) (two-dimensional?)
+// 2) [ ] Boundary detection
+// 3) [X] Gesture handling
+// 4) [ ] getVisibleItem
+// 5) [ ] ensureVisible
+// 6) [ ] navigateTo
+// 7) [ ] Alignment
+// 8) [ ] Direction
+// 9) [ ] Pagination
+// 10) [ ] Overscoll on/off
+// 11) [ ] Emit events (scrollstart, scrollend, pagechange)
+// 12) [ ] Native scrolling
 

@@ -11,9 +11,10 @@ export default class PanGesture extends BaseGesture {
 
   update(pointer, count) {
     const event = this.event;
-    const time = pointer.time - event.prevTime;
     event.prevTime = event.time;
     event.time = pointer.time;
+    const prevDeltaX = event.delta.x;
+    const prevDeltaY = event.delta.y;
     event.delta.x = 0;
     event.delta.y = 0;
     while (pointer) {
@@ -23,8 +24,9 @@ export default class PanGesture extends BaseGesture {
     }
     event.delta.x /= count;
     event.delta.y /= count;
-    event.velocity.x = event.delta.x / time;
-    event.velocity.y = event.delta.y / time;
+    const time = event.time - event.prevTime;
+    event.velocity.x = time ? ((event.delta.x - prevDeltaX) / time) : 0;
+    event.velocity.y = time ? ((event.delta.y - prevDeltaY) / time) : 0;
   }
 
   pointerStart(pointer, count) {
@@ -62,7 +64,10 @@ export default class PanGesture extends BaseGesture {
 
   pointerEnd(pointer, count) {
     if (!this.pointerCount) {
-      this.update(pointer, count);
+      if ((pointer.time - this.event.time) >= 100) {
+        this.event.velocity.x = 0;
+        this.event.velocity.y = 0;
+      }
       this.event.status = 'end';
       this.emit(this.event);
       this.endCapture();

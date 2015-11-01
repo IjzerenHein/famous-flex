@@ -16,9 +16,9 @@ import Styles from '../core/Styles';
 import {Color} from '../utils';
 
 export default class DOMNode extends BaseNode {
-  constructor(options) {
+  constructor(options, tagName) {
     super();
-    this._domElement = new DOMElement(this);
+    this._domElement = new DOMElement(this, tagName ? {tagName: tagName} : undefined);
     this.setOptions(options);
   }
 
@@ -48,7 +48,17 @@ export default class DOMNode extends BaseNode {
     this.el.setProperty(style, value);
   }
 
-  // TODO ATTRIBUTES ?
+  get attributes() {
+    // TODO PROPERLY
+    return {};
+  }
+
+  set attributes(options) {
+    // TODO PROPERLY
+    for (var key in options) {
+      this.el.setAttribute(key, options[key]);
+    }
+  }
 
   onClasses(add, remove) {
     if (add) {
