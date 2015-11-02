@@ -26,16 +26,10 @@ export default class Control extends BaseNode {
     rect.x = 0;
     rect.y = 0;
     rect.z = 0;
-    if (this._measure) {
-      this._measure(rect);
-      rect.center();
-    } else if (this._intrinsicSize) {
-      this._intrinsicSize.resolve(rect);
-      rect.center();
-    } else {
-      rect.width = rect.parent.width;
-      rect.height = rect.parent.height;
-    }
+    rect.width = rect.parent.width;
+    rect.height = rect.parent.height;
+    this.measure(rect);
+    rect.center();
     this._layout(rect, this._layoutOptions);
   }
 
@@ -70,27 +64,25 @@ export default class Control extends BaseNode {
     }
   }
 
-  get measure() {
-    return this._measure;
-  }
-
-  set measure(measure) {
-    if (measure !== this._measure) {
-      this._measure = measure;
-      this.requestLayout();
+  measure(rect) {
+    if (this._configuredSize) {
+      this._configuredSize.measure(rect);
+    } else {
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
     }
   }
 
-  get intrinsicSize() {
-    if (!this._intrinsicSize) {
-      this._intrinsicSize = new Size();
-      this._intrinsicSize.onChange = () => this.requestLayout();
+  get size() {
+    if (!this._configuredSize) {
+      this._configuredSize = new Size(this);
+      this._configuredSize.onChange = () => this.requestLayout();
     }
-    return this._intrinsicSize;
+    return this._configuredSize;
   }
 
-  set intrinsicSize(value) {
-    this.intrinsicSize.set(value);
+  set size(value) {
+    this.size.set(value);
   }
 
   get padding() {

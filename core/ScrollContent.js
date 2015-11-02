@@ -1,3 +1,41 @@
+import GroupNode from '../engine/GroupNode';
+import Point from './Point';
+
+const defaults = {
+  // TODO
+};
+
+export default class ScrollContent extends GroupNode {
+  constructor() {
+    super();
+    this._direction = 1;
+    this._alignment = new Point();
+    this._alignment.onChange = () => this.requestLayout();
+  }
+
+  measure(rect) {
+
+  }
+
+  get direction() {
+    this._direction;
+  }
+
+  set direction(value) {
+    if (this._direction !== value) {
+      this._direction = value;
+      this.requestLayout();
+    }
+  }
+
+  get alignment() {
+    this._alignment;
+  }
+
+  set alignment(value) {
+    this._alignment.set(value);
+  }
+}
 
 /*
 const defaults = {

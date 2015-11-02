@@ -2,29 +2,73 @@ import Animation from '../animation/Animation';
 import Margins from './Margins';
 const parse = Margins.parseComponent;
 
+const Mode = {
+  NONE: 0,
+  COVER: 1,
+  CONTAIN: 2
+};
+
 export default class Size {
-  constructor(options) {
-    if (options) {
-      this.set(options);
-    }
+  constructor(node) {
+    this._node = node;
+    this._mode = Mode.NONE;
   }
 
-  resolve(rect) {
+  measure(rect) {
     const parent = rect.parent;
-    rect.width = parent.width;
-    rect.height = parent.height;
-    if (this._width) rect.width = this._width[0] + (this._width[1] * parent.width);
-    if (this._height) rect.height = this._height[0] + (this._height[1] * parent.height);
+    if (this._width) {
+      if (this._width[0] === true) {
+        rect.width = this._width[1] * rect.width;
+      } else {
+        rect.width = this._width[0] + (this._width[1] * parent.width);
+      }
+    } else {
+      rect.width = parent.width;
+    }
+    if (this._height) {
+      if (this._height[0] === true) {
+        rect.height = this._height[1] * rect.height;
+      } else {
+        rect.height = this._height[0] + (this._height[1] * parent.height);
+      }
+    } else {
+      rect.height = parent.height;
+    }
     if (this._maxWidth) rect.width = Math.min(rect.width, this._maxWidth[0] + (this._maxWidth[1] * parent.width));
     if (this._maxHeight) rect.height = Math.min(rect.height, this._maxHeight[0] + (this._maxHeight[1] * parent.height));
     if (this._minWidth) rect.width = Math.max(rect.width, this._minWidth[0] + (this._minWidth[1] * parent.width));
     if (this._minHeight) rect.height = Math.max(rect.height, this._minHeight[0] + (this._minHeight[1] * parent.height));
-    if (this._aspectRatio) {
-      if (this._aspectRatio < (rect.width / rect.height)) {
-        rect.width = rect.height * this._aspectRatio;
-      } else {
-        rect.height = rect.width / this._aspectRatio;
-      }
+    let aspectRatio = this._aspectRatio;
+    switch (this._mode) {
+      case Mode.NONE:
+        if (aspectRatio) {
+          if (aspectRatio < (rect.width / rect.height)) {
+            rect.width = rect.height * aspectRatio;
+          } else {
+            rect.height = rect.width / aspectRatio;
+          }
+        }
+        break;
+      case Mode.COVER:
+        aspectRatio = aspectRatio || (rect.width / rect.height);
+        if (aspectRatio > (parent.width / parent.height)) {
+          rect.width = parent.height * aspectRatio;
+          rect.height = parent.height;
+        } else {
+          rect.width = parent.width;
+          rect.height = parent.width / aspectRatio;
+        }
+        break;
+      case Mode.CONTAIN:
+        aspectRatio = aspectRatio || (rect.width / rect.height);
+        if (aspectRatio < (parent.width / parent.height)) {
+          rect.width = parent.height * aspectRatio;
+          rect.height = parent.height;
+        } else {
+          rect.width = parent.width;
+          rect.height = parent.width / aspectRatio;
+        }
+        break;
     }
     this._lastWidth = this._lastWidth || [0, 0];
     this._lastHeight = this._lastHeight || [0, 0];
@@ -36,6 +80,25 @@ export default class Size {
     if (Array.isArray(value)) {
       this.width = value[0];
       this.height = value[1];
+      this.mode = (value.length >= 3) ? value[2] : Mode.NONE;
+      if (this._maxWidth) this.maxWidth = undefined;
+      if (this._maxHeight) this.maxHeight = undefined;
+      if (this._minWidth) this.minWidth = undefined;
+      if (this._minHeight) this.minHeight = undefined;
+      if (this._aspectRatio) this.aspectRatio = undefined;
+    } else if ((value instanceof String) || (typeof value === 'string')) {
+      if (value === 'cover') {
+        this.width = true;
+        this.height = true;
+        this.mode = Mode.COVER;
+      } else if (value === 'contain') {
+        this.width = true;
+        this.height = true;
+        this.mode = Mode.CONTAIN;
+      } else {
+        // TODO, "100% 50%", "500px 100px", "100px", "50%"
+        this.mode = Mode.NONE;
+      }
       if (this._maxWidth) this.maxWidth = undefined;
       if (this._maxHeight) this.maxHeight = undefined;
       if (this._minWidth) this.minWidth = undefined;
@@ -49,6 +112,22 @@ export default class Size {
       if (value.minWidth || this._minWidth) this.minWidth = value.minWidth;
       if (value.minHeight || this._minHeight) this.minHeight = value.minHeight;
       if (value.aspectRatio || this._aspectRatio) this.aspectRatio = value.aspectRatio;
+      this.mode = Mode.NONE;
+    }
+  }
+
+  get requiresNaturalSize() {
+    return (this._width && (this._width[0] === true)) || (this._height && (this._height[0] === true));
+  }
+
+  get mode() {
+    return this._mode;
+  }
+
+  set mode(value) {
+    if (this._mode !== value) {
+      this._mode = value;
+      this.onChange();
     }
   }
 
@@ -56,8 +135,22 @@ export default class Size {
     return this._width;
   }
 
+  /**
+   * Sets the configured width.
+   *
+   */
   set width(value) {
-    if (!this._lastWidth || !Animation.collect(this, 'width', parse(value) || this._lastWidth, this._width || this._lastWidth)) {
+    if (value === true) {
+      this._width = this._width || [0, 0];
+      this._width[0] = true;
+      this._width[1] = 1;
+      this.onChange();
+    } else if (Array.isArray(value) && (value[0] === true)) {
+      this._width = this._width || [0, 0];
+      this._width[0] = value[0];
+      this._width[1] = value[1];
+      this.onChange();
+    } else if (!this._lastWidth || !Animation.collect(this, 'width', parse(value) || this._lastWidth, this._width || this._lastWidth)) {
       this._width = parse(value);
       this.onChange();
     }
@@ -68,7 +161,17 @@ export default class Size {
   }
 
   set height(value) {
-    if (!this._lastHeight || !Animation.collect(this, 'height', parse(value) || this._lastHeight, this._height || this._lastHeight)) {
+    if (value === true) {
+      this._height = this._height || [0, 0];
+      this._height[0] = true;
+      this._height[1] = 1;
+      this.onChange();
+    } else if (Array.isArray(value) && (value[0] === true)) {
+      this._height = this._height || [0, 0];
+      this._height[0] = value[0];
+      this._height[1] = value[1];
+      this.onChange();
+    } else if (!this._lastHeight || !Animation.collect(this, 'height', parse(value) || this._lastHeight, this._height || this._lastHeight)) {
       this._height = parse(value);
       this.onChange();
     }

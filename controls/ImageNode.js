@@ -36,6 +36,26 @@ export default class ImageNode extends Control {
     if (this._src !== value) {
       this._src = value;
       this._image.el.setAttribute('src', value);
+
+    }
+  }
+
+  measure(rect) {
+    if (this._configuredSize) {
+      if (this._configuredSize.requiresNaturalSize) {
+        if (!this._imageObj) {
+          this._imageObj = new Image();
+          this._imageObj.onload = () => {
+            // do something
+          };
+        }
+        if (this._imageObj.src !== this._src) {
+          this._imageObj.src = this._src;
+        }
+        rect.width = this._imageObj.width;
+        rect.height = this._imageObj.width;
+      }
+      this._configuredSize.measure(rect);
     }
   }
 }

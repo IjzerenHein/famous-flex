@@ -14,7 +14,7 @@ function layout(rect, size) {
 
 export default {
   layout: layout,
-  intrinsicSize: [60, 35],
+  size: [60, 35],
   animation: {
     enabled: true,
     duration: 300,

@@ -7,10 +7,9 @@ import {assert} from '../utils';
 
 const defaults = {
   enabled: true,
-  paginated: false,
   overscroll: [0.5, 0.5],
   direction: undefined,
-  contentAlignment: [0.5, 0.5]
+  alignment: [0.5, 0.5]
 };
 
 export default class ScrollNode extends EngineScrollNode {
@@ -19,12 +18,13 @@ export default class ScrollNode extends EngineScrollNode {
     this._direction = 1;
     this._contentRect = new Rect();
     this._contentRect.parent = new Rect();
-    this._contentSize = new Size();
-    this._contentSize.onChange = () => this.requestLayout();
     this._contentOffset = new Point();
     this._contentOffset.onChange = () => this._onSetContentOffset();
-    this._contentAlignment = new Point();
-    this._contentAlignment.onChange = () => this.requestLayout();
+    this._alignment = new Point();
+    this._alignment.onChange = () => {
+      if (this._content && this._content.alignment) this._content.alignment = this._alignment;
+      this.requestLayout();
+    };
     this._overscroll = new Point();
     this._overscroll.onChange = () => this.requestLayout();
     this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
@@ -91,7 +91,7 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   getBound(direction, rect) {
-    const align = this._contentAlignment;
+    const align = this._alignment;
     if (!direction) {
       if (rect.width < this.rect.width) {
         return (this.rect.width * align.x) - (align.x * rect.width);
@@ -113,16 +113,22 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   onLayout() {
+    if (!this._content) return;
 
     // Prepare content-rect
     const rect = this._contentRect;
     rect.parent.width = this.rect.width;
     rect.parent.height = this.rect.height;
 
-    // Calculate content-size and apply to rect
-    this._contentSize.resolve(rect);
+    // Measure size of content
+    rect.x = 0;
+    rect.y = 0;
+    rect.z = 0;
+    rect.width = rect.parent.width;
+    rect.height = rect.parent.height;
+    if (this._content.measure) this._content.measure(rect);
 
-    // Calculate base x & y, based on particle value
+    // Calculate (unbounded) x & y, based on particle value
     switch (this._direction) {
       case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
       case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
@@ -158,9 +164,7 @@ export default class ScrollNode extends EngineScrollNode {
     }
 
     // Layout content
-    if (this._content) {
-      this._content.rect = rect;
-    }
+    this._content.rect = rect;
   }
 
   get content() {
@@ -175,17 +179,10 @@ export default class ScrollNode extends EngineScrollNode {
       this._content = value;
       if (this._content) {
         this.addChild(this._content);
+        if (this._content.alignment) this._content.alignment = this._alignment;
       }
       this.requestLayout();
     }
-  }
-
-  get contentSize() {
-    return this._contentSize;
-  }
-
-  set contentSize(value) {
-    this._contentSize.set(value);
   }
 
   get contentOffset() {
@@ -196,17 +193,10 @@ export default class ScrollNode extends EngineScrollNode {
     this._contentOffset.set(value);
   }
 
-  get contentAlignment() {
-    return this._contentAlignment;
-  }
-
-  set contentAlignment(value) {
-    this._contentAlignment.set(value);
-  }
-
-  measure(size) {
-    // TODO
-    return size;
+  measure(rect) {
+    if (this._content && this._content.measure) {
+      this._content.measure(rect);
+    }
   }
 
   get enabled() {
@@ -235,16 +225,13 @@ export default class ScrollNode extends EngineScrollNode {
     }
   }
 
-  /*get paginated() {
-    return this._options.paginated;
+  get alignment() {
+    return this._alignment;
   }
 
-  set paginated(value) {
-    if (this._options.paginated !== value) {
-      this._options.paginated = value;
-      this.requestLayout();
-    }
-  }*/
+  set alignment(value) {
+    this._alignment.set(value);
+  }
 
   get overscroll() {
     return this._overscroll;
@@ -273,7 +260,7 @@ export default class ScrollNode extends EngineScrollNode {
 
 //SCROLLING
 // 1) [X] Particle (scroll-particle) (two-dimensional?)
-// 2) [ ] Boundary detection
+// 2) [X] Boundary detection
 // 3) [X] Gesture handling
 // 4) [ ] getVisibleItem
 // 5) [ ] ensureVisible

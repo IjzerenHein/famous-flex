@@ -39,7 +39,7 @@ function measure(rect) {
 
 export default {
   layout: layout,
-  measure: measure,
+  size: measure,
   color: Theme.color,
   backgroundColor: Theme.neutralColor,
   padding: [15, 15],

@@ -11,14 +11,9 @@ function layout(rect) {
   }
 }
 
-function measure(rect) {
-  rect.width = 200;
-  rect.height = 44;
-}
-
 export default {
   layout: layout,
-  measure: measure,
+  size: [200, 44],
   color: '#FFFFFF',
   fontSize: 20,
   backgroundColor: Theme.color,

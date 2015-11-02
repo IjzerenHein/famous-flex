@@ -17,7 +17,7 @@ export default {
   layout: layout,
   color: Theme.color,
   backgroundColor: Theme.neutralColor,
-  intrinsicSize: ['90%', 80],
+  size: ['90%', 80],
   animation: {
     enabled: true
   },

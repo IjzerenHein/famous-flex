@@ -1,6 +1,7 @@
 import BaseNode from './BaseNode';
 import LayoutAnimation from '../animation/LayoutAnimation';
 import Rect from './Rect';
+import Size from './Size';
 
 export default class LayoutNode extends BaseNode {
   constructor(options) {
@@ -18,13 +19,8 @@ export default class LayoutNode extends BaseNode {
     rect.x = 0;
     rect.y = 0;
     rect.z = 0;
-    if (this._measure) {
-      this._measure(rect);
-      rect.center();
-    } else {
-      rect.width = rect.parent.width;
-      rect.height = rect.parent.height;
-    }
+    rect.width = rect.parent.width;
+    rect.height = rect.parent.height;
 
     if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
@@ -70,15 +66,26 @@ export default class LayoutNode extends BaseNode {
     }
   }
 
-  get measure() {
-    return this._measure;
+  measure(rect) {
+    if (this._configuredSize) {
+      this._configuredSize.measure(rect);
+    } else {
+      // TODO - MEASURE BASED ON CONTENT
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
+    }
   }
 
-  set measure(measure) {
-    if (measure !== this._measure) {
-      this._measure = measure;
-      this.requestLayout();
+  get size() {
+    if (!this._configuredSize) {
+      this._configuredSize = new Size(this);
+      this._configuredSize.onChange = () => this.requestLayout();
     }
+    return this._configuredSize;
+  }
+
+  set size(value) {
+    this.size.set(value);
   }
 
   animate(curve, duration, collectFn) {
