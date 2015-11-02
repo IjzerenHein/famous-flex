@@ -37,8 +37,6 @@ export default class ScrollNode extends EngineScrollNode {
   _setupDragListeners() {
     let start;
     let startY;
-    let bound;
-    let boundY;
     let offset;
     let offsetY;
     this.on('drag', (event) => {
@@ -56,27 +54,18 @@ export default class ScrollNode extends EngineScrollNode {
         }
         switch (this._direction) {
           case 0: // horizontal
-            bound = this.getBound(0);
             offset = start + event.delta.x;
-            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.x);
             this._particle.value = offset;
             if (!this._dragging) this._particle.velocity = event.velocity.x * 1000;
             break;
           case 1: // vertical
-            bound = this.getBound(1);
             offset = start + event.delta.y;
-            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.y);
             this._particle.value = bound;
             if (!this._dragging) this._particle.velocity = event.velocity.y * 1000;
             break;
           default: // both
-            const rect = this.contentRect;
-            bound = this.getBound(0);
-            boundY = this.getBound(1);
             offset = start + event.delta.x;
             offsetY = startY + event.delta.y;
-            if (bound !== undefined) offset = bound + ((offset - bound) * this._overscroll.x);
-            if (boundY !== undefined) offsetY = boundY + ((offsetY - boundY) * this._overscroll.y);
             this._particle.value = offset;
             this._particleY.value = offsetY;
             if (!this._dragging) {
@@ -101,8 +90,7 @@ export default class ScrollNode extends EngineScrollNode {
     }
   }
 
-  getBound(direction, contentRect) {
-    const rect = contentRect || this.contentRect;
+  getBound(direction, rect) {
     const align = this._contentAlignment;
     if (!direction) {
       if (rect.width < this.rect.width) {
@@ -125,23 +113,53 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   onLayout() {
-    const contentRect = this.contentRect;
 
-    if (!this._dragging) {
-      if (this._direction !== undefined) {
-        const bound = this.getBound(this._direction, contentRect);
-        if (bound !== undefined) this._particle.endValue = bound;
-      } else {
-        const bound = this.getBound(0, contentRect);
-        const boundY = this.getBound(1, contentRect);
-        if (bound !== undefined) this._particle.endValue = bound;
-        if (boundY !== undefined) this._particleY.endValue = boundY;
-      }
+    // Prepare content-rect
+    const rect = this._contentRect;
+    rect.parent.width = this.rect.width;
+    rect.parent.height = this.rect.height;
+
+    // Calculate content-size and apply to rect
+    this._contentSize.resolve(rect);
+
+    // Calculate base x & y, based on particle value
+    switch (this._direction) {
+      case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
+      case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
+      default: rect.x = this._particle.value; rect.y = this._particleY.value; rect.z = 0; break;
+    }
+
+    // Calculate bounded x & y; and set spring
+    const bound = this.getBound(this._direction || 0, rect);
+    switch (this._direction) {
+      case 0:
+        if (bound !== undefined) {
+          rect.x = bound + ((this._particle.value - bound) * this._overscroll.x);
+          if (!this._dragging) this._particle.endValue = bound;
+        }
+        break;
+      case 1:
+        if (bound !== undefined) {
+          rect.y = bound + ((this._particle.value - bound) * this._overscroll.y);
+          if (!this._dragging) this._particle.endValue = bound;
+        }
+        break;
+      default:
+        const boundY = this.getBound(1, rect);
+        if (bound !== undefined) {
+          rect.x = bound + ((this._particle.value - bound) * this._overscroll.x);
+          if (!this._dragging) this._particle.endValue = bound;
+        }
+        if (boundY !== undefined) {
+          rect.y = boundY + ((this._particleY.value - boundY) * this._overscroll.y);
+          if (!this._dragging) this._particleY.endValue = boundY;
+        }
+        break;
     }
 
     // Layout content
     if (this._content) {
-      this._content.rect = contentRect;
+      this._content.rect = rect;
     }
   }
 
@@ -168,24 +186,6 @@ export default class ScrollNode extends EngineScrollNode {
 
   set contentSize(value) {
     this._contentSize.set(value);
-  }
-
-  get contentRect() {
-    // Prepare content-rect
-    const rect = this._contentRect;
-    rect.parent.width = this.rect.width;
-    rect.parent.height = this.rect.height;
-    switch (this._direction) {
-      case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
-      case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
-      default: rect.x = this._particle.value; rect.y = this._particleY.value; rect.z = 0; break;
-
-    }
-
-    // Calculate content-size and apply to rect
-    this._contentSize.resolve(rect);
-
-    return rect;
   }
 
   get contentOffset() {
