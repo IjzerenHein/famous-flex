@@ -165,7 +165,7 @@ define(function(require, exports, module) {
             //
             // Get node size
             //
-            nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+            nodeSize = getItemSize ? getItemSize(node.renderNode, context.size) : itemSize;
             nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
 
             //
@@ -222,7 +222,7 @@ define(function(require, exports, module) {
             //
             // Get node size
             //
-            nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+            nodeSize = getItemSize ? getItemSize(node.renderNode, context.size) : itemSize;
             nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
 
             //
