@@ -1,12 +1,11 @@
 import {assert} from '../utils';
 
-export default class LayoutNodes {
+export default class NodeCollection {
   constructor(node) {
     this._node = node;
     this._nodesById = {};
     this._index = 0;
     this._array = [];
-    this._removedNodes = [];
   }
 
   get index() {
@@ -32,8 +31,9 @@ export default class LayoutNodes {
   set(id, node) {
     if (this._nodesById[id] !== node) {
       if (this._nodesById[id]) {
-        this._removedNodes.push(this._nodesById[id]);
+        this._nodesById[id]._nodeCollection = undefined;
       }
+      node._nodeCollection = this;
       this._nodesById[id] = node;
       if (typeof this[id] !== 'function') {
         this[id] = node;
@@ -45,46 +45,49 @@ export default class LayoutNodes {
   insert(index, node) {
     index = (index === -1) ? this._array.length : index;
     this._array.splice(index, 0, node);
+    node._nodeCollection = this;
     this._index = (index <= this._index) ? Math.min(index + 1, this._array.length - 1) : 0;
     this._node.requestLayout();
   }
 
   remove(value) {
+    let node;
     if ((value instanceof String) || (typeof value === 'string')) {
-      if (!this._nodesById[id]) return undefined;
-      this._removedNodes.push(this._nodesById[id]);
-      delete this._nodesById[id];
+      node = this._nodesById[value];
+      if (!node) return undefined;
+      delete this._nodesById[value];
       if (typeof this[id] !== 'function') {
         delete this[id];
       }
     } else if ((value instanceof Number) || (typeof value === 'number')) {
       value = (value === -1) ? (this._array.length - 1) : value;
       assert((value >= 0) && (value < this._array.length), 'invalid index');
-      this._removedNodes.push(this._array[value]);
+      node = this._array[value];
       this._array.splice(index, 1);
 
       // TODO - UPDATE INDEX
     } else {
       for (let key in this._nodesById) {
         if (this._nodesById[key] === value) {
-          this._removedNodes.push(value);
+          value._nodeCollection = undefined;
           delete this._nodesById[key];
           if (typeof this[key] !== 'function') {
             delete this[key];
           }
           this._node.requestLayout();
-          return this._removedNodes[this._removedNodes.length - 1];
+          return value;
         }
       }
       value = this._array.indexOf(value);
       assert((value >= 0) && (value < this._array.length), 'invalid node');
-      this._removedNodes.push(this._array[value]);
+      node = this._array[value];
       this._array.splice(index, 1);
 
       // TODO - UPDATE INDEX
     }
     this._node.requestLayout();
-    return this._removedNodes[this._removedNodes.length - 1];
+    node._nodeCollection = undefined;
+    return node;
   }
 
   push(node) {

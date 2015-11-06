@@ -4,13 +4,13 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     eslint: {
-      target: ['core/**/*.js', 'controls/**/*.js', 'animation/**/*.js', 'layouts/**/*.js', 'widgets/**/*.js', 'gestures/**/*.js', 'engine/**/*.js'],
+      target: ['core/**/*.js', 'controls/**/*.js', 'animation/**/*.js', 'layouts/**/*.js', 'views/**/*.js', 'gestures/**/*.js', 'engine/**/*.js'],
       options: {
         config: '.eslintrc',
       }
     },
     jscs: {
-      target: ['core/**/*.js', 'controls/**/*.js', 'animation/**/*.js', 'layouts/**/*.js', 'widgets/**/*.js', 'gestures/**/*.js', 'engine/**/*.js'],
+      target: ['core/**/*.js', 'controls/**/*.js', 'animation/**/*.js', 'layouts/**/*.js', 'views/**/*.js', 'gestures/**/*.js', 'engine/**/*.js'],
       options: {
         config: '.jscsrc',
       }

@@ -5,7 +5,11 @@ export default class NodeRect {
     this._node = node;
   }
 
-  getParent() {
+  get node() {
+    return this._node;
+  }
+
+  getParent() { // obsolete, should be removed
     return this._node.getParent();
   }
 

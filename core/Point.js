@@ -14,6 +14,10 @@ export default class Point {
       if (value.length >= 2) {
         this.z = value[2];
       }
+    } else if ((value instanceof Number) || (typeof value === 'number')) {
+      this.x = value;
+      this.y = value;
+      this.z = value;
     } else {
       if (value.x !== undefined) this.x = value.x;
       if (value.y !== undefined) this.y = value.y;

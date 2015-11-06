@@ -21,19 +21,19 @@ export default class Animation extends EngineAnimation {
             item.curValue[k] = ((endValue - startValue) * value) + startValue;
           }
         }
-        item.node[item.property] = item.curValue;
+        item.object[item.property] = item.curValue;
       } else {
         //console.log('animating ' + item.property + ' = ' + ((item.endValue - item.startValue) * value) + item.startValue);
-        item.node[item.property] = ((item.endValue - item.startValue) * value) + item.startValue;
+        item.object[item.property] = ((item.endValue - item.startValue) * value) + item.startValue;
       }
     }
   }
 
-  collect(node, property, curValue, newValue) {
+  collect(object, property, curValue, newValue) {
     const collected = this.items;
     for (let i = 0; i < collected.length; i++) {
       const item = collected[i];
-      if ((item.node === node) && (item.property === property)) {
+      if ((item.object === object) && (item.property === property)) {
         item.curValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue; // allocate array for re-use
         item.startValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue;
         item.endValue = Array.isArray(curValue) ? cloneArray(newValue) : newValue;
@@ -42,7 +42,7 @@ export default class Animation extends EngineAnimation {
     }
     if (Array.isArray(curValue)) {
       collected.push({
-        node: node,
+        object: object,
         property: property,
         curValue: cloneArray(curValue), // allocate array for re-use
         startValue: cloneArray(curValue),
@@ -50,7 +50,7 @@ export default class Animation extends EngineAnimation {
       });
     } else if (curValue !== newValue) {
       collected.push({
-        node: node,
+        object: object,
         property: property,
         startValue: curValue,
         endValue: newValue
@@ -63,29 +63,45 @@ export default class Animation extends EngineAnimation {
     if (!cancelled) {
       for (var j = 0; j < this.items.length; j++) {
         const item = this.items[j];
-        item.node[item.property] = item.endValue;
+        item.object[item.property] = item.endValue;
       }
     }
     this.items = undefined;
     animationsPool.push(this);
   }
 
-  static collect(node, property, newValue, curValue) {
-    //assert(Animation.isCollecting, 'collect is only allowed during an animation-collection cycle');
-    node.__animCollectors = node.__animCollectors || {};
-    const collector = node.__animCollectors[property];
-    if (collector && collector.active) {
-      return collector.collect(node, property, newValue, curValue || node[property]);
-    } else if (Animation.animation) {
-      return Animation.animation.collect(node, property, newValue, curValue || node[property]);
+  static collect(object, property, newValue, curValue) {
+    if (!Animation.intercepting && Animation.interceptFn) {
+      Animation.intercepting = true;
+      if (Animation.interceptFn(object, property, newValue, curValue)) {
+        Animation.intercepting = false;
+        return true;
+      }
+      Animation.intercepting = false;
+    }
+    if (object.__animCollectors) {
+      const collector = object.__animCollectors[property];
+      if (collector && collector.active) {
+        return collector.collect(object, property, newValue, curValue || object[property]);
+      }
+    }
+    if (Animation.animation) {
+      return Animation.animation.collect(object, property, newValue, curValue || object[property]);
     }
     return false;
+  }
+
+  static intercept(collectFn, callback) {
+    assert(!Animation.interceptFn, 'Cannot intercept while another intercept is still active');
+    Animation.interceptFn = callback;
+    collectFn();
+    Animation.interceptFn = undefined;
   }
 
   static start(node, curve, duration, collectFn) {
 
     // collect changed properties, layout changes, etc..
-    assert(!Animation.isCollecting, 'Cannot start an animation while an other is still collecting');
+    assert(!Animation.animation, 'Cannot start an animation while an other is still collecting');
     const animation = animationsPool.pop() || new Animation();
     animation.items = [];
     Animation.animation = animation;

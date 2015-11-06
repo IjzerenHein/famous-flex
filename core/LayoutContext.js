@@ -7,19 +7,23 @@ export default class LayoutContext {
     this.size = [0, 0];
   }
 
-  _prepareForLayout(rect, options, offset) {
+  _prepareForLayout(rect, offset, options) {
     this.length = this._nodes.length;
-    this.size[0] = rect.width; // oldskool
-    this.size[1] = rect.height; // oldskool
     this.rect = rect;
+    this.offset = offset;
     this.direction = options.direction;
     this.alignment = options.alignment;
-    this.offset = offset;
-    this.scrollOffset = options.direction ? offset.y : offset.x; // oldskool
-    this.scrollStart = options.direction ? rect.y : rect.x; // oldskool
-    this.scrollEnd = options.direction ? (rect.y + rect.height) : (rect.x + rect.width); // oldskool
     this._prevIndex = this._nodes.index;
     this._nextIndex = this._prevIndex;
+
+    // oldskool
+    this.size[0] = rect.parent.width;
+    this.size[1] = rect.parent.height;
+    if (options.direction !== undefined) {
+      this.scrollOffset = options.direction ? offset.y : offset.x;
+      this.scrollStart = options.direction ? rect.y : rect.x;
+      this.scrollEnd = options.direction ? (rect.y + rect.height) : (rect.x + rect.width);
+    }
   }
 
   set(node, spec) {
@@ -27,7 +31,6 @@ export default class LayoutContext {
       node = nodes.getById(node);
     }
     if (node) {
-      if (!node.getParent()) this._node.addChild(node);
       if (spec.opacity !== undefined) node.opacity = node.opacity;
       if (spec.translate) {
         node.rect.x = spec.translate[0];
@@ -53,6 +56,7 @@ export default class LayoutContext {
         node.origin.y = spec.origin[1];
       }
     }
+    return spec;
   }
 
   next() {

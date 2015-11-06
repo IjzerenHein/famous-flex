@@ -1,4 +1,4 @@
-import EngineScrollNode from '../engine/ScrollNode';
+ import EngineScrollNode from '../engine/ScrollNode';
 import Rect from './Rect';
 import Size from './Size';
 import Point from './Point';
@@ -15,16 +15,15 @@ const defaults = {
 export default class ScrollNode extends EngineScrollNode {
   constructor(options) {
     super();
-    this._direction = 1;
+    this._contentOptions = {};
+    this._contentOptions.direction = 1;
+    this._contentOptions.alignment = new Point();
+    this._contentOptions.alignment.onChange = () => this.requestLayout();
     this._contentRect = new Rect();
     this._contentRect.parent = new Rect();
     this._contentOffset = new Point();
-    this._contentOffset.onChange = () => this._onSetContentOffset();
-    this._alignment = new Point();
-    this._alignment.onChange = () => {
-      if (this._content && this._content.alignment) this._content.alignment = this._alignment;
-      this.requestLayout();
-    };
+
+    //this._contentOffset.onChange = () => this._onSetContentOffset();
     this._overscroll = new Point();
     this._overscroll.onChange = () => this.requestLayout();
     this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
@@ -37,37 +36,32 @@ export default class ScrollNode extends EngineScrollNode {
   _setupDragListeners() {
     let start;
     let startY;
-    let offset;
-    let offsetY;
     this.on('drag', (event) => {
       if (this._enabled) {
+        const dir = this._contentOptions.direction;
         if (event.status === 'start') {
           this._dragging = true;
           start = this._particle.value;
           this._particle.endValue = undefined;
-          if (this._direction === undefined) {
+          if (dir === undefined) {
             startY = this._particleY.value;
             this._particleY.endValue = undefined;
           }
         } else if (event.status === 'end') {
           this._dragging = false;
         }
-        switch (this._direction) {
+        switch (dir) {
           case 0: // horizontal
-            offset = start + event.delta.x;
-            this._particle.value = offset;
+            this._particle.value = start + event.delta.x;
             if (!this._dragging) this._particle.velocity = event.velocity.x * 1000;
             break;
           case 1: // vertical
-            offset = start + event.delta.y;
-            this._particle.value = bound;
+            this._particle.value = start + event.delta.y;
             if (!this._dragging) this._particle.velocity = event.velocity.y * 1000;
             break;
           default: // both
-            offset = start + event.delta.x;
-            offsetY = startY + event.delta.y;
-            this._particle.value = offset;
-            this._particleY.value = offsetY;
+            this._particle.value = start + event.delta.x;
+            this._particleY.value = startY + event.delta.y;
             if (!this._dragging) {
               this._particle.velocity = event.velocity.x * 1000;
               this._particleY.velocity = event.velocity.y * 1000;
@@ -76,10 +70,6 @@ export default class ScrollNode extends EngineScrollNode {
         this.requestLayout();
       }
     });
-  }
-
-  _onSetContentOffset() {
-    // TODO
   }
 
   requestLayout(immediate) {
@@ -91,7 +81,7 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   getBound(direction, rect) {
-    const align = this._alignment;
+    const align = this._contentOptions.alignment;
     if (!direction) {
       if (rect.width < this.rect.width) {
         return (this.rect.width * align.x) - (align.x * rect.width);
@@ -116,28 +106,33 @@ export default class ScrollNode extends EngineScrollNode {
     if (!this._content) return;
 
     // Prepare content-rect
+    const dir = this._contentOptions.direction;
     const rect = this._contentRect;
     rect.parent.width = this.rect.width;
     rect.parent.height = this.rect.height;
 
+    // Calculate (unbounded) x & y, based on particle value
+    switch (dir) {
+      case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
+      case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
+      default: rect.x = this._particle.value; rect.y = this._particleY.value; rect.z = 0; break;
+    }
+
     // Measure size of content
-    rect.x = 0;
-    rect.y = 0;
-    rect.z = 0;
     rect.width = rect.parent.width;
     rect.height = rect.parent.height;
     if (this._content.measure) this._content.measure(rect);
 
     // Calculate (unbounded) x & y, based on particle value
-    switch (this._direction) {
+    switch (dir) {
       case 0: rect.x = this._particle.value; rect.y = 0; rect.z = 0; break;
       case 1: rect.y = this._particle.value; rect.x = 0; rect.z = 0; break;
       default: rect.x = this._particle.value; rect.y = this._particleY.value; rect.z = 0; break;
     }
 
     // Calculate bounded x & y; and set spring
-    const bound = this.getBound(this._direction || 0, rect);
-    switch (this._direction) {
+    const bound = this.getBound(dir || 0, rect);
+    switch (dir) {
       case 0:
         if (bound !== undefined) {
           rect.x = bound + ((this._particle.value - bound) * this._overscroll.x);
@@ -173,14 +168,9 @@ export default class ScrollNode extends EngineScrollNode {
 
   set content(value) {
     if (this._content !== value) {
-      if (this._content) {
-        this.removeChild(this._content);
-      }
+      if (this._content) this.removeChild(this._content);
       this._content = value;
-      if (this._content) {
-        this.addChild(this._content);
-        if (this._content.alignment) this._content.alignment = this._alignment;
-      }
+      if (this._content) this.addChild(this._content);
       this.requestLayout();
     }
   }
@@ -211,13 +201,13 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   get direction() {
-    return this._direction;
+    return this._contentOptions.direction;
   }
 
   set direction(value) {
-    if (this._direction !== value) {
-      this._direction = value;
-      if ((this._direction === undefined) && !this._particleY) {
+    if (this._contentOptions.direction !== value) {
+      this._contentOptions.direction = value;
+      if ((this._contentOptions.direction === undefined) && !this._particleY) {
         this._particleY = new Particle(this);
         this._particleY.onChange = () => this.requestLayout();
       }
@@ -226,11 +216,11 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   get alignment() {
-    return this._alignment;
+    return this._contentOptions.alignment;
   }
 
   set alignment(value) {
-    this._alignment.set(value);
+    this._contentOptions.alignment.set(value);
   }
 
   get overscroll() {

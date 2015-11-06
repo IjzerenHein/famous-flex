@@ -6,10 +6,10 @@ import AnimationPromise from './AnimationPromise';
 let animationsPool = [];
 
 class Item {
-  constructor(node) {
-    this.node = node;
+  constructor(object) {
+    this.object = object;
     this.properties = {};
-    this.initiallyVisible = !!node.getParent();
+    this.initiallyVisible = !!object.getParent();
   }
   preLayout() {
     for (let key in this.properties) {
@@ -21,11 +21,11 @@ class Item {
     for (let key in this.properties) {
       const prop = this.properties[key];
       prop.active = false;
-      if ((prop.layoutValue === undefined) && this.node.identity) {
-        prop.layoutValue = this.node.identity[key];
+      if ((prop.layoutValue === undefined) && this.object.identity) {
+        prop.layoutValue = this.object.identity[key];
       }
       if (prop.layoutValue !== undefined) {
-        if (this._initiallyVisible && !this.node.getParent()) {
+        if (this._initiallyVisible && !this.object.getParent()) {
           prop.startValue = prop.layoutValue;
           prop.endValue = prop.value;
         } else {
@@ -53,9 +53,9 @@ class Item {
               prop.curValue[k] = ((endValue - startValue) * progress) + startValue;
             }
           }
-          this.node[key] = prop.curValue;
+          this.object[key] = prop.curValue;
         } else {
-          this.node[key] = ((prop.endValue - prop.startValue) * progress) + prop.startValue;
+          this.object[key] = ((prop.endValue - prop.startValue) * progress) + prop.startValue;
         }
       }
     }
@@ -66,7 +66,7 @@ class ItemProperty {
   constructor(property) {
     this.property = property;
   }
-  collect(node, property, newValue, curValue) {
+  collect(object, property, newValue, curValue) {
     this.layoutValue = Array.isArray(newValue) ? cloneArray(newValue) : newValue;
   }
 }
@@ -86,11 +86,11 @@ export default class LayoutAnimation extends EngineAnimation {
     }
   }
 
-  collect(node, property, newValue, curValue) {
+  collect(object, property, newValue, curValue) {
     const items = this.items;
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (item.node === node) {
+      if (item.object === object) {
         if (!item.properties[property]) {
           item.properties[property] = new ItemProperty(property);
         }
@@ -98,16 +98,17 @@ export default class LayoutAnimation extends EngineAnimation {
         return item.properties[property];
       }
     }
-    const item = new Item(node);
+    const item = new Item(object);
     items.push(item);
     item.properties[property] = new ItemProperty(property);
     item.properties[property].value = Array.isArray(newValue) ? cloneArray(newValue) : newValue; // allocate array for re-use
-    if (!node.getParent()) {
+    if (!object.getParent()) {
       Animation.animation = undefined;
-      node[property] = newValue;
+      object[property] = newValue;
       Animation.animation = this;
     }
-    node.__animCollectors[property] = item.properties[property];
+    object.__animCollectors = object.__animCollectors || {};
+    object.__animCollectors[property] = item.properties[property];
     return true;
   }
 
@@ -118,7 +119,7 @@ export default class LayoutAnimation extends EngineAnimation {
         this.items[j].update(1);
       }
     }
-    this.nodes = undefined;
+    this.items = undefined;
     animationsPool.push(this);
   }
 
@@ -143,7 +144,7 @@ export default class LayoutAnimation extends EngineAnimation {
   static start(node, curve, duration, collectFn) {
 
     // collect changed properties, layout changes, etc..
-    assert(!Animation.isCollecting, 'Cannot start an animation while an other is still collecting');
+    assert(!Animation.animation, 'Cannot start an animation while an other is still collecting');
     const animation = animationsPool.pop() || new LayoutAnimation();
     animation.items = [];
     animation.state = State.INIT;

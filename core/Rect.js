@@ -9,6 +9,14 @@ export default class Rect {
     this.height = 0;
   }
 
+  set(rect) {
+    this.x = rect.x;
+    this.y = rect.y;
+    this.z = rect.z;
+    this.width = rect.width;
+    this.height = rect.height;
+  }
+
   get bottom() {
     return this.y + this.height;
   }
@@ -46,6 +54,14 @@ export default class Rect {
       Margins.apply(value, this);
     }
     return this;
+  }
+
+  intersectsWith(rect) {
+    return (
+      (((rect.x >= this.x) && (rect.x <= (this.x + this.width))) ||
+      (((rect.x + rect.width) >= this.x) && ((rect.x + rect.width) <= (this.x + this.width)))) &&
+      (((rect.y >= this.y) && (rect.y <= (this.y + this.height))) ||
+      (((rect.y + rect.height) >= this.y) && ((rect.y + rect.height) <= (this.y + this.height)))));
   }
 
   inFront() {

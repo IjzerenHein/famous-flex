@@ -4,7 +4,6 @@
  * |options|type|description|
  * |---|---|---|
  * |`[itemSize]`|Number/Function|Height or width in pixels of an item (used when renderNode has no size)|
- * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
  * |`[spacing]`|Number|Spacing between items|
  * |`[isSectionCallback]`|Function|Callback that is called in order to check if a render-node is a section rather than a cell.|
  *
@@ -17,7 +16,6 @@
  * var scrollView = new FlexScrollView({
  *   layout: ListLayout,
  *   layoutOptions: {
- *     margins: [20, 10, 20, 10],
  *     spacing: 1,
  *     isSectionCallback: function(renderNode) {
  *       return renderNode.isSection;
@@ -57,9 +55,8 @@ function listLayout(context, options) {
   // Local data
   const size = context.size;
   const direction = context.direction;
-  const alignment = context.alignment;
+  const alignment = direction ? context.alignment.y : context.alignment.x;
   const revDirection = direction ? 0 : 1;
-  const margins = [0, 0, 0, 0]; // TODO LayoutUtility.normalizeMargins(options.margins);
   const spacing = options.spacing || 0;
   let offset;
   let node;
@@ -69,7 +66,6 @@ function listLayout(context, options) {
   let lastSectionBeforeVisibleCell;
   let lastSectionBeforeVisibleCellOffset;
   let lastSectionBeforeVisibleCellLength;
-  let lastSectionBeforeVisibleCellScrollLength;
   let lastSectionBeforeVisibleCellTopReached;
   let firstVisibleCell;
   let lastNode;
@@ -78,22 +74,20 @@ function listLayout(context, options) {
   let sectionZIndex = options.sectionZIndex || 5;
   let bound;
 
+  //console.log('listlayout, offset: ' + context.scrollOffset + ', start: ' + context.scrollStart + ', end: ' + context.scrollEnd);
+
   //
   // Reset size & translation
   //
   const set = {
     size: [0, 0],
-    translate: [0, 0, 0],
-    scrollLength: undefined
+    translate: [0, 0, 0]
   };
-  const margin = [0, 0];
   set.size[0] = size[0];
   set.size[1] = size[1];
-  set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
   set.translate[0] = 0;
   set.translate[1] = 0;
   set.translate[2] = 0;
-  set.translate[revDirection] = margins[direction ? 3 : 0];
 
   //
   // Determine item-size or use true=size
@@ -107,16 +101,10 @@ function listLayout(context, options) {
   }
 
   //
-  // Determine leading/trailing margins
-  //
-  margin[0] = margins[direction ? 0 : 3];
-  margin[1] = -margins[direction ? 2 : 1];
-
-  //
   // Process all next nodes
   //
-  offset = context.scrollOffset + margin[alignment];
-  bound = context.scrollEnd + margin[alignment];
+  offset = context.scrollOffset;
+  bound = context.scrollEnd;
   while (offset < (bound + spacing)) {
     lastNode = node;
     node = context.next();
@@ -135,18 +123,16 @@ function listLayout(context, options) {
     //
     set.size[direction] = nodeSize;
     set.translate[direction] = offset + (alignment ? spacing : 0);
-    set.scrollLength = nodeSize + spacing;
     context.set(node, set);
-    offset += set.scrollLength;
+    offset += nodeSize + spacing;
 
     //
     // Keep track of the last section before the first visible cell
     //
     if (isSectionCallback && isSectionCallback(node)) {
-      if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+      if ((set.translate[direction] <= 0) && !lastSectionBeforeVisibleCellTopReached) {
         lastSectionBeforeVisibleCellTopReached = true;
-        /*set.translate[direction] = margin[0];
-        set.translate[2] = sectionZIndex;
+        /*set.translate[2] = sectionZIndex;
         context.set(node, set);
         set.translate[2] = 0;*/
       }
@@ -154,7 +140,6 @@ function listLayout(context, options) {
         lastSectionBeforeVisibleCell = node;
         lastSectionBeforeVisibleCellOffset = offset - nodeSize;
         lastSectionBeforeVisibleCellLength = nodeSize;
-        lastSectionBeforeVisibleCellScrollLength = nodeSize;
       } else if (lastCellOffsetInFirstVisibleSection === undefined) {
         lastCellOffsetInFirstVisibleSection = offset - nodeSize;
       }
@@ -162,18 +147,14 @@ function listLayout(context, options) {
       firstVisibleCell = node;
     }
   }
-  if (lastNode && !node && !alignment) {
-    set.scrollLength = nodeSize + margin[0] + -margin[1];
-    context.set(lastNode, set);
-  }
 
   //
   // Process previous nodes
   //
   lastNode = undefined;
   node = undefined;
-  offset = context.scrollOffset + margin[alignment];
-  bound = context.scrollStart + margin[alignment];
+  offset = context.scrollOffset;
+  bound = context.scrollStart;
   while (offset > (bound - spacing)) {
     lastNode = node;
     node = context.prev();
@@ -190,8 +171,7 @@ function listLayout(context, options) {
     //
     // Position node
     //
-    set.scrollLength = nodeSize + spacing;
-    offset -= set.scrollLength;
+    offset -= nodeSize + spacing;
     set.size[direction] = nodeSize;
     set.translate[direction] = offset + (alignment ? spacing : 0);
     context.set(node, set);
@@ -200,16 +180,15 @@ function listLayout(context, options) {
     // Keep track of the last section before the first visible cell
     //
     if (isSectionCallback && isSectionCallback(node)) {
-      if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+      if ((set.translate[direction] <= 0) && !lastSectionBeforeVisibleCellTopReached) {
         lastSectionBeforeVisibleCellTopReached = true;
-        set.translate[direction] = margin[0];
+        set.translate[direction] = 0;
         context.set(node, set);
       }
       if (!lastSectionBeforeVisibleCell) {
         lastSectionBeforeVisibleCell = node;
         lastSectionBeforeVisibleCellOffset = offset;
         lastSectionBeforeVisibleCellLength = nodeSize;
-        lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
       }
     } else if ((offset + nodeSize) >= 0) {
       firstVisibleCell = node;
@@ -217,13 +196,6 @@ function listLayout(context, options) {
         lastCellOffsetInFirstVisibleSection = offset + nodeSize;
       }
       lastSectionBeforeVisibleCell = undefined;
-    }
-  }
-  if (lastNode && !node && alignment) {
-    set.scrollLength = nodeSize + margin[0] + -margin[1];
-    context.set(lastNode, set);
-    if (lastSectionBeforeVisibleCell === lastNode) {
-      lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
     }
   }
 
@@ -239,7 +211,6 @@ function listLayout(context, options) {
         nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
         lastSectionBeforeVisibleCellOffset = offset - nodeSize;
         lastSectionBeforeVisibleCellLength = nodeSize;
-        lastSectionBeforeVisibleCellScrollLength = undefined;
         break;
       } else {
         node = context.prev();
@@ -251,16 +222,16 @@ function listLayout(context, options) {
   // Reposition "last section before first visible cell" to the top of the layout
   //
   if (lastSectionBeforeVisibleCell) {
-    var correctedOffset = Math.max(margin[0], lastSectionBeforeVisibleCellOffset);
+    var correctedOffset = Math.max(0, lastSectionBeforeVisibleCellOffset);
     if ((lastCellOffsetInFirstVisibleSection !== undefined) &&
-      (lastSectionBeforeVisibleCellLength > (lastCellOffsetInFirstVisibleSection - margin[0]))) {
+      (lastSectionBeforeVisibleCellLength > (lastCellOffsetInFirstVisibleSection))) {
       correctedOffset = ((lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength));
     }
     set.size[direction] = lastSectionBeforeVisibleCellLength;
-    console.log('correctedOffset: ' + correctedOffset);
+
+    //console.log('correctedOffset: ' + correctedOffset);
     set.translate[direction] = correctedOffset;
     set.translate[2] = sectionZIndex;
-    set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
     context.set(lastSectionBeforeVisibleCell, set);
   }
 }
