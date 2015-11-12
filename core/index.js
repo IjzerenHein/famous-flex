@@ -3,6 +3,7 @@ import BaseNode from './BaseNode';
 import LayoutNode from './LayoutNode';
 import ScrollNode from './ScrollNode';
 import ShowNode from './ShowNode';
+import ContainerNode from './ContainerNode';
 import Color from './Color';
 
 export {
@@ -11,5 +12,6 @@ export {
   LayoutNode,
   ScrollNode,
   ShowNode,
+  ContainerNode,
   Color
 };

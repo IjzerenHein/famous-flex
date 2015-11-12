@@ -29,7 +29,7 @@ export default class Animation extends EngineAnimation {
     }
   }
 
-  collect(object, property, curValue, newValue) {
+  collect(object, property, newValue, curValue) {
     const collected = this.items;
     for (let i = 0; i < collected.length; i++) {
       const item = collected[i];
@@ -56,6 +56,7 @@ export default class Animation extends EngineAnimation {
         endValue: newValue
       });
     }
+    console.log('animating: ', property, curValue, ' -> ', newValue);
   }
 
   stop(cancelled) {

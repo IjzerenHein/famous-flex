@@ -1,5 +1,5 @@
 import BaseNode from '../core/BaseNode';
-import Margins from '../core/Margins';
+import Padding from '../core/Padding';
 import Animation from '../animation/Animation';
 import Classes from '../core/Classes';
 import Size from '../core/Size';
@@ -28,7 +28,9 @@ export default class Control extends BaseNode {
     rect.z = 0;
     rect.width = rect.parent.width;
     rect.height = rect.parent.height;
-    this.measure(rect);
+    const size = this.measure(rect);
+    rect.width = size.width;
+    rect.height = size.height;
     rect.center();
     this._layout(rect, this._layoutOptions);
   }
@@ -66,11 +68,9 @@ export default class Control extends BaseNode {
 
   measure(rect) {
     if (this._configuredSize) {
-      this._configuredSize.measure(rect);
-    } else {
-      rect.width = rect.parent.width;
-      rect.height = rect.parent.height;
+      return this._configuredSize.measure(rect);
     }
+    return rect;
   }
 
   get size() {
@@ -86,14 +86,14 @@ export default class Control extends BaseNode {
   }
 
   get padding() {
-    this._padding = this._padding || Margins.identity;
+    this._padding = this._padding || Padding.identity;
     return this._padding;
   }
 
   set padding(padding) {
-    this._padding = this._padding || Margins.identity;
-    if (!Animation.collect(this, 'padding', Margins.parse(padding))) {
-      this._padding = Margins.parse(padding);
+    this._padding = this._padding || Padding.identity;
+    if (!Animation.collect(this, 'padding', Padding.parse(padding))) {
+      this._padding = Padding.parse(padding);
       this.requestLayout();
     }
   }

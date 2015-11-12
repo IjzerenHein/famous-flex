@@ -17,6 +17,14 @@ export default class NodeRect {
     return NodeRect.identity;
   }
 
+  get debug() {
+    return this._debug;
+  }
+
+  set debug(value) {
+    this._debug = value;
+  }
+
   set(rect, incrementZ) {
     this.x = rect.x;
     this.y = rect.y;
@@ -61,6 +69,9 @@ export default class NodeRect {
   }
 
   set width(value) {
+    if (this._debug) {
+      console.log('setting width: ', value);
+    }
     if (value === true) {
       if (this._widthAbsolute) {
         this._node.setSizeMode('render');

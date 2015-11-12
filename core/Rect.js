@@ -1,4 +1,4 @@
-import Margins from './Margins';
+import Padding from './Padding';
 
 export default class Rect {
   constructor() {
@@ -9,12 +9,13 @@ export default class Rect {
     this.height = 0;
   }
 
-  set(rect) {
+  set(rect, parent) {
     this.x = rect.x;
     this.y = rect.y;
     this.z = rect.z;
     this.width = rect.width;
     this.height = rect.height;
+    this.parent = parent || this.parent;
   }
 
   get bottom() {
@@ -51,7 +52,7 @@ export default class Rect {
       this.y -= value;
       return this;
     } else {
-      Margins.apply(value, this);
+      Padding.apply(value, this);
     }
     return this;
   }

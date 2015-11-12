@@ -6,9 +6,11 @@ import {nonNull} from '../utils';
 const resolved = Promise.resolve(true);
 
 const defaults = {
-  effect: null, // none
-  curve: 'easeIn',
-  duration: 400
+  animation: {
+    effect: null, // none
+    curve: 'easeIn',
+    duration: 400
+  }
 };
 
 class ShowAnimation {
@@ -128,6 +130,7 @@ export default class ShowNode extends BaseNode {
         } else {
           effect(node, clientRect);
         }
+        console.log('clientRect: ', clientRect, ', rect: ' + node.rect.toString());
         promise = this.animate(curve, duration, () => {
           node.rect = clientRect;
           node.rotation = undefined;

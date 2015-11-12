@@ -1,7 +1,7 @@
 import ScrollNode from '../core/ScrollNode';
-import ScrollContent from '../core/ScrollContent';
-import NodeCollection from '../core/NodeCollection';
+import ListViewContent from './ListViewContent';
 import listLayout from '../layouts/listLayout';
+import NodeCollection from '../core/NodeCollection';
 
 const defaults = {
   layout: listLayout,
@@ -13,48 +13,48 @@ const defaults = {
 export default class ListView extends ScrollNode {
   constructor(options) {
     super();
-    this._contentOptions.nodes = new NodeCollection(this);
-    this.content = new ScrollContent(this._contentOptions);
+    this._nodes = new NodeCollection(this);
+    this.content = new ListViewContent(this);
     this.setOptions(defaults, options);
   }
 
   get nodes() {
-    return this._contentOptions.nodes;
+    return this._nodes;
   }
 
   set nodes(value) {
-    this._contentOptions.nodes = value;
+    this._nodes.set(value);
   }
 
   get layout() {
-    return this._contentOptions.layout;
+    return this._layout;
   }
 
-  set layout(layout) {
-    if (this._contentOptions.layout !== layout) {
-      this._contentOptions.layout = layout;
+  set layout(value) {
+    if (this._layout !== value) {
+      this._layout = value;
       this.requestLayout();
     }
   }
 
   get layoutOptions() {
-    return this._content.layoutOptions;
+    return this._layoutOptions;
   }
 
-  set layoutOptions(options) {
-    if (this._contentOptions.layoutOptions !== options) {
-      this._contentOptions.layoutOptions = options;
+  set layoutOptions(value) {
+    if (this._layoutOptions !== value) {
+      this._layoutOptions = value;
       this.requestLayout();
     }
   }
 
   get paginated() {
-    return this._contentOptions.paginated;
+    return this._paginated;
   }
 
   set paginated(value) {
-    if (this._contentOptions.paginated !== value) {
-      this._contentOptions.paginated = value;
+    if (this._paginated !== value) {
+      this._paginated = value;
       this.requestLayout();
     }
   }

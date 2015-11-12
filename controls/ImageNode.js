@@ -28,6 +28,14 @@ export default class ImageNode extends Control {
     this.setOptions(defaults, options);
   }
 
+  on(event, callback) {
+    return this._image.on(event, callback);
+  }
+
+  onLoad() {
+    // override to implement
+  }
+
   get src() {
     return this._src;
   }
@@ -36,7 +44,7 @@ export default class ImageNode extends Control {
     if (this._src !== value) {
       this._src = value;
       this._image.el.setAttribute('src', value);
-
+      this.requestLayout();
     }
   }
 
@@ -45,17 +53,14 @@ export default class ImageNode extends Control {
       if (this._configuredSize.requiresNaturalSize) {
         if (!this._imageObj) {
           this._imageObj = new Image();
-          this._imageObj.onload = () => {
-            // do something
-          };
+          this._imageObj.onload = () => this.onLoad();
         }
         if (this._imageObj.src !== this._src) {
           this._imageObj.src = this._src;
         }
-        rect.width = this._imageObj.width;
-        rect.height = this._imageObj.width;
       }
-      this._configuredSize.measure(rect);
+      return this._configuredSize.measure(rect, this._imageObj);
     }
+    return rect;
   }
 }

@@ -30,16 +30,30 @@ const Effects = {
    * Slides upwards.
    */
   slideUp: {
-    show: (node, rect) => node.rect.y = -rect.height,
-    hide: (node, rect) => node.rect.y = rect.height
+    show: (node, rect) => node.rect.y = rect.height,
+    hide: (node, rect) => node.rect.y = -rect.height
   },
 
   /**
    * Slides downwards.
    */
   slideDown: {
-    show: (node, rect) => node.rect.y = rect.height,
-    hide: (node, rect) => node.rect.y = -rect.height
+    show: (node, rect) => node.rect.y = -rect.height,
+    hide: (node, rect) => node.rect.y = rect.height
+  },
+
+  /**
+   * Slides left and up.
+   */
+  slideLeftUp: {
+    show: (node, rect) => {
+      node.rect.x = rect.width;
+      node.rect.y = rect.height;
+    },
+    hide: (node, rect) => {
+      node.rect.x = -rect.width;
+      node.rect.y = -rect.height;
+    }
   },
 
   /**

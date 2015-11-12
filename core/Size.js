@@ -1,6 +1,6 @@
 import Animation from '../animation/Animation';
-import Margins from './Margins';
-const parse = Margins.parseComponent;
+import Padding from './Padding';
+const parse = Padding.parseComponent;
 
 const Mode = {
   NONE: 0,
@@ -9,71 +9,74 @@ const Mode = {
 };
 
 export default class Size {
-  constructor(node) {
-    this._node = node;
+  constructor() {
     this._mode = Mode.NONE;
   }
 
-  measure(rect) {
-    const parent = rect.parent;
+  measure(rect, naturalSize) {
+    if (this._callback) {
+      return this._callback(rect, naturalSize);
+    }
+    let width = rect.width;
+    let height = rect.height;
     if (this._width) {
       if (this._width[0] === true) {
-        rect.width = this._width[1] * rect.width;
+        width = this._width[1] * naturalSize.width;
       } else {
-        rect.width = this._width[0] + (this._width[1] * parent.width);
+        width = this._width[0] + (this._width[1] * rect.width);
       }
-    } else {
-      rect.width = parent.width;
     }
     if (this._height) {
       if (this._height[0] === true) {
-        rect.height = this._height[1] * rect.height;
+        height = this._height[1] * naturalSize.height;
       } else {
-        rect.height = this._height[0] + (this._height[1] * parent.height);
+        height = this._height[0] + (this._height[1] * rect.height);
       }
-    } else {
-      rect.height = parent.height;
     }
-    if (this._maxWidth) rect.width = Math.min(rect.width, this._maxWidth[0] + (this._maxWidth[1] * parent.width));
-    if (this._maxHeight) rect.height = Math.min(rect.height, this._maxHeight[0] + (this._maxHeight[1] * parent.height));
-    if (this._minWidth) rect.width = Math.max(rect.width, this._minWidth[0] + (this._minWidth[1] * parent.width));
-    if (this._minHeight) rect.height = Math.max(rect.height, this._minHeight[0] + (this._minHeight[1] * parent.height));
+    if (this._maxWidth) width = Math.min(width, this._maxWidth[0] + (this._maxWidth[1] * rect.width));
+    if (this._maxHeight) height = Math.min(height, this._maxHeight[0] + (this._maxHeight[1] * rect.height));
+    if (this._minWidth) width = Math.max(width, this._minWidth[0] + (this._minWidth[1] * rect.width));
+    if (this._minHeight) height = Math.max(height, this._minHeight[0] + (this._minHeight[1] * prect.height));
     let aspectRatio = this._aspectRatio;
     switch (this._mode) {
       case Mode.NONE:
         if (aspectRatio) {
-          if (aspectRatio < (rect.width / rect.height)) {
-            rect.width = rect.height * aspectRatio;
+          if (aspectRatio < (width / height)) {
+            width = height * aspectRatio;
           } else {
-            rect.height = rect.width / aspectRatio;
+            height = width / aspectRatio;
           }
         }
         break;
       case Mode.COVER:
-        aspectRatio = aspectRatio || (rect.width / rect.height);
-        if (aspectRatio > (parent.width / parent.height)) {
-          rect.width = parent.height * aspectRatio;
-          rect.height = parent.height;
+        aspectRatio = aspectRatio || (width / height);
+        if (aspectRatio > (rect.width / rect.height)) {
+          width = rect.height * aspectRatio;
+          height = rect.height;
         } else {
-          rect.width = parent.width;
-          rect.height = parent.width / aspectRatio;
+          width = rect.width;
+          height = rect.width / aspectRatio;
         }
         break;
       case Mode.CONTAIN:
-        aspectRatio = aspectRatio || (rect.width / rect.height);
-        if (aspectRatio < (parent.width / parent.height)) {
-          rect.width = parent.height * aspectRatio;
-          rect.height = parent.height;
+        aspectRatio = aspectRatio || (width / height);
+        if (aspectRatio < (rect.width / rect.height)) {
+          width = rect.height * aspectRatio;
+          height = rect.height;
         } else {
-          rect.width = parent.width;
-          rect.height = parent.width / aspectRatio;
+          width = rect.width;
+          height = rect.width / aspectRatio;
         }
         break;
     }
     this._lastWidth = this._lastWidth || [0, 0];
     this._lastHeight = this._lastHeight || [0, 0];
-    this._lastWidth[0] = parent.width;
-    this._lastHeight[0] = parent.height;
+    this._lastWidth[0] = rect.width;
+    this._lastHeight[0] = rect.height;
+    this._result = this._result || {};
+    this._result.width = width;
+    this._result.height = height;
+    return this._result;
   }
 
   set(value) {
@@ -86,6 +89,7 @@ export default class Size {
       if (this._minWidth) this.minWidth = undefined;
       if (this._minHeight) this.minHeight = undefined;
       if (this._aspectRatio) this.aspectRatio = undefined;
+      if (this._callback) this.callback = undefined;
     } else if ((value instanceof String) || (typeof value === 'string')) {
       if (value === 'cover') {
         this.width = true;
@@ -104,6 +108,17 @@ export default class Size {
       if (this._minWidth) this.minWidth = undefined;
       if (this._minHeight) this.minHeight = undefined;
       if (this._aspectRatio) this.aspectRatio = undefined;
+      if (this._callback) this.callback = undefined;
+    } else if (value instanceof Function) {
+      this.callback = value;
+      if (this._width) this.width = undefined;
+      if (this._heigth) this.height = undefined;
+      if (this._maxWidth) this.maxWidth = undefined;
+      if (this._maxHeight) this.maxHeight = undefined;
+      if (this._minWidth) this.minWidth = undefined;
+      if (this._minHeight) this.minHeight = undefined;
+      if (this._aspectRatio) this.aspectRatio = undefined;
+      this.mode = Mode.NONE;
     } else {
       if (value.width || this._width) this.width = value.width;
       if (value.height || this._height) this.height = value.height;
@@ -112,6 +127,7 @@ export default class Size {
       if (value.minWidth || this._minWidth) this.minWidth = value.minWidth;
       if (value.minHeight || this._minHeight) this.minHeight = value.minHeight;
       if (value.aspectRatio || this._aspectRatio) this.aspectRatio = value.aspectRatio;
+      if (this._callback) this.callback = undefined;
       this.mode = Mode.NONE;
     }
   }
@@ -127,6 +143,17 @@ export default class Size {
   set mode(value) {
     if (this._mode !== value) {
       this._mode = value;
+      this.onChange();
+    }
+  }
+
+  get callback() {
+    return this._callback;
+  }
+
+  set callback(value) {
+    if (this._callback !== value) {
+      this._callback = value;
       this.onChange();
     }
   }
@@ -150,9 +177,12 @@ export default class Size {
       this._width[0] = value[0];
       this._width[1] = value[1];
       this.onChange();
-    } else if (!this._lastWidth || !Animation.collect(this, 'width', parse(value) || this._lastWidth, this._width || this._lastWidth)) {
-      this._width = parse(value);
-      this.onChange();
+    } else {
+      value = parse(value);
+      if (!this._lastWidth || !Animation.collect(this, 'width', value || this._lastWidth, this._width || this._lastWidth)) {
+        this._width = value;
+        this.onChange();
+      }
     }
   }
 
@@ -171,9 +201,12 @@ export default class Size {
       this._height[0] = value[0];
       this._height[1] = value[1];
       this.onChange();
-    } else if (!this._lastHeight || !Animation.collect(this, 'height', parse(value) || this._lastHeight, this._height || this._lastHeight)) {
-      this._height = parse(value);
-      this.onChange();
+    } else {
+      value = parse(value);
+      if (!this._lastHeight || !Animation.collect(this, 'height', value || this._lastHeight, this._height || this._lastHeight)) {
+        this._height = value;
+        this.onChange();
+      }
     }
   }
 
@@ -182,8 +215,9 @@ export default class Size {
   }
 
   set maxWidth(value) {
-    if (!this._lastWidth || !Animation.collect(this, 'maxWidth', parse(value) || this._lastWidth, this._maxWidth || this._lastWidth)) {
-      this._maxWidth = parse(value);
+    value = parse(value);
+    if (!this._lastWidth || !Animation.collect(this, 'maxWidth', value || this._lastWidth, this._maxWidth || this._lastWidth)) {
+      this._maxWidth = value;
       this.onChange();
     }
   }
@@ -193,8 +227,9 @@ export default class Size {
   }
 
   set maxHeight(value) {
-    if (!this._lastHeight || !Animation.collect(this, 'maxHeight', parse(value) || this._lastHeight, this._maxHeight || this._lastHeight)) {
-      this._maxHeight = parse(value);
+    value = parse(value);
+    if (!this._lastHeight || !Animation.collect(this, 'maxHeight', value || this._lastHeight, this._maxHeight || this._lastHeight)) {
+      this._maxHeight = value;
       this.onChange();
     }
   }
@@ -204,8 +239,9 @@ export default class Size {
   }
 
   set minWidth(value) {
-    if (!this._lastWidth || !Animation.collect(this, 'minWidth', parse(value) || this._lastWidth, this._minWidth || this._lastWidth)) {
-      this._minWidth = parse(value);
+    value = parse(value);
+    if (!this._lastWidth || !Animation.collect(this, 'minWidth', value || this._lastWidth, this._minWidth || this._lastWidth)) {
+      this._minWidth = value;
       this.onChange();
     }
   }
@@ -215,8 +251,9 @@ export default class Size {
   }
 
   set minHeight(value) {
-    if (!this._lastHeight || !Animation.collect(this, 'minHeight', parse(value) || this._lastHeight, this._minHeight || this._lastHeight)) {
-      this._minHeight = parse(value);
+    value = parse(value);
+    if (!this._lastHeight || !Animation.collect(this, 'minHeight', value || this._lastHeight, this._minHeight || this._lastHeight)) {
+      this._minHeight = value;
       this.onChange();
     }
   }

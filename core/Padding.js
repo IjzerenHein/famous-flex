@@ -1,4 +1,4 @@
-export default class Margins {
+export default class Padding {
 
   static apply(margins, rect) {
     rect.x += margins[3][0] + (margins[3][1] * rect.width);
@@ -7,15 +7,19 @@ export default class Margins {
     rect.height -= (margins[0][0] + (margins[0][1] * rect.height)) + (margins[2][0] + (margins[2][1] * rect.height));
   }
 
+  static applyComponent(comp, value) {
+    return comp ? (comp[0] + (comp[1] * value)) : 0;
+  }
+
   /**
    * Parses a single margin/padding value into a computational representation.
    *
    * Examples:
    * ```
-   * Margins.parseComponent(10); // => `[10]`
-   * Margins.parseComponent('10.5%'); // => `[0, 0.105]`
-   * Margins.parseComponent('20%+10'); // => `[10, 0.2]`
-   * Margins.parseComponent([20, 0.4]); // => `[20, 0.4]`
+   * Padding.parseComponent(10); // => `[10]`
+   * Padding.parseComponent('10.5%'); // => `[0, 0.105]`
+   * Padding.parseComponent('20%+10'); // => `[10, 0.2]`
+   * Padding.parseComponent([20, 0.4]); // => `[20, 0.4]`
    * ```
    *
    * @param {Number|String|Array} value Number, string or array.
@@ -49,14 +53,14 @@ export default class Margins {
    *
    * Padding can be specified in both short-hand and full form:
    * ```
-   * Margins.parse(10); // 10px padding for all sides
-   * Margins.parse([20, 30]); // 20px padding for top/bottom, 30px for left/right
-   * Margins.parse([1,2,3,4]); // 1px top, 2px right, 3px bottom, 4px left (clock-wise)
-   * Margins.parse('10%'); // 10% padding for all sides
-   * Margins.parse(['10%', '50%']); // 10% padding for top/bottom, 50% for left/right
-   * Margins.parse(['10%+5', '50%-10']); // 10% + 5px padding for top/bottom, 50% - 10px for left/right
-   * Margins.parse([[0.1]]); // 10% padding for all sides
-   * Margins.parse([[0.05,10]]); // 5% + 10px padding for all sides
+   * Padding.parse(10); // 10px padding for all sides
+   * Padding.parse([20, 30]); // 20px padding for top/bottom, 30px for left/right
+   * Padding.parse([1,2,3,4]); // 1px top, 2px right, 3px bottom, 4px left (clock-wise)
+   * Padding.parse('10%'); // 10% padding for all sides
+   * Padding.parse(['10%', '50%']); // 10% padding for top/bottom, 50% for left/right
+   * Padding.parse(['10%+5', '50%-10']); // 10% + 5px padding for top/bottom, 50% - 10px for left/right
+   * Padding.parse([[0.1]]); // 10% padding for all sides
+   * Padding.parse([[0.05,10]]); // 5% + 10px padding for all sides
    * ...
    * ```
    *
@@ -65,28 +69,30 @@ export default class Margins {
    */
   static parse(value) {
     if (!value) {
-      return Margins.identity;
+      return Padding.identity;
     } else if (!Array.isArray(value)) {
-      const component = Margins.parseComponent(value);
+      const component = Padding.parseComponent(value);
       return [component, component, component, component];
     } else if (value.length === 0) {
-      return Margins.identity;
+      return Padding.identity;
     } else if (value.length === 1) {
-      const component = Margins.parseComponent(value[0]);
+      const component = Padding.parseComponent(value[0]);
       return [component, component, component, component];
     } else if (value.length === 2) {
-      const component1 = Margins.parseComponent(value[0]);
-      const component2 = Margins.parseComponent(value[1]);
+      const component1 = Padding.parseComponent(value[0]);
+      const component2 = Padding.parseComponent(value[1]);
       return [component1, component2, component1, component2];
     } else {
       return [
-        Margins.parseComponent(value[0]),
-        Margins.parseComponent(value[1]),
-        Margins.parseComponent(value[2]),
-        Margins.parseComponent(value[3])
+        Padding.parseComponent(value[0]),
+        Padding.parseComponent(value[1]),
+        Padding.parseComponent(value[2]),
+        Padding.parseComponent(value[3])
       ];
     }
   }
 }
 
-Margins.identity = [[0, 0], [0, 0], [0, 0], [0, 0]];
+Padding.identity = [[0, 0], [0, 0], [0, 0], [0, 0]];
+Padding.compIdentity = [0, 0];
+
