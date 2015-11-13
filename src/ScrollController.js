@@ -442,7 +442,9 @@ define(function(require, exports, module) {
         }
 
         // Release scroll force
-        this.releaseScrollForce(this._scroll.mouseMove.delta, velocity);
+        var swipeDirection = (Math.abs(this._scroll.mouseMove.current[0] - this._scroll.mouseMove.prev[0]) > Math.abs(this._scroll.mouseMove.current[1] - this._scroll.mouseMove.prev[1])) ? 0 : 1;
+        var allowSwipes = (swipeDirection === this._direction);
+        this.releaseScrollForce(this._scroll.mouseMove.delta, velocity, allowSwipes);
         this._scroll.mouseMove = undefined;
     }
 
@@ -609,7 +611,9 @@ define(function(require, exports, module) {
 
         // Release scroll force
         var delta = this._scroll.touchDelta;
-        this.releaseScrollForce(delta, velocity);
+        var swipeDirection = (Math.abs(primaryTouch.current[0] - primaryTouch.prev[0]) > Math.abs(primaryTouch.current[1] - primaryTouch.prev[1])) ? 0 : 1;
+        var allowSwipes = (swipeDirection === this._direction);
+        this.releaseScrollForce(delta, velocity, allowSwipes);
         this._scroll.touchDelta = 0;
     }
 
@@ -1651,7 +1655,7 @@ define(function(require, exports, module) {
      * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
      * @return {ScrollController} this
      */
-    ScrollController.prototype.releaseScrollForce = function(delta, velocity) {
+    ScrollController.prototype.releaseScrollForce = function(delta, velocity, detectSwipes) {
         this.halt();
         if (this._scroll.scrollForceCount === 1) {
             var scrollOffset = _calcScrollOffset.call(this);
@@ -1665,7 +1669,7 @@ define(function(require, exports, module) {
                     if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                         this.goToRenderNode(item.renderNode);
                     }
-                    else if (this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
+                    else if (detectSwipes && this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
                         velocity = velocity || 0;
                         if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
                             this.goToRenderNode(item._node._next.renderNode);
