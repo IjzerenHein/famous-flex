@@ -7,6 +7,7 @@ export default class IOSTheme {
 }
 
 IOSTheme.color = '#4dd164';
+IOSTheme.secondaryColor = '#d14d64';
 IOSTheme.outlineColor = '#E8E8E8';
 IOSTheme.neutralColor = '#E8E8E8';
 IOSTheme.defaults = {

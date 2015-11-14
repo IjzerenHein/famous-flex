@@ -19,7 +19,7 @@ export default class LayoutContext {
     // oldskool
     this.size[0] = rect.parent.width;
     this.size[1] = rect.parent.height;
-    if (options.direction !== undefined) {
+    if (offset && (options.direction !== undefined)) {
       this.scrollOffset = options.direction ? offset.y : offset.x;
       this.scrollStart = options.direction ? rect.y : rect.x;
       this.scrollEnd = options.direction ? (rect.y + rect.height) : (rect.x + rect.width);

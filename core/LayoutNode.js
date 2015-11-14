@@ -1,5 +1,5 @@
 import BaseNode from './BaseNode';
-import LayoutAnimation from '../animation/LayoutAnimation';
+import Animation from '../animation/Animation';
 import Rect from './Rect';
 import Size from './Size';
 import NodeCollection from './NodeCollection';
@@ -44,21 +44,50 @@ export default class LayoutNode extends BaseNode {
       }
     }*/
 
-    this._context.prepareForLayout(this._layoutRect, undefined, this);
+    this._context._prepareForLayout(rect, undefined, this);
 
     for (let i = 0; i < this._layoutNodes.length; i++) {
       this._layoutNodes[i]._layoutState = LayoutState.MARKED_FOR_REMOVAL;
     }
 
-    Animation.intercept(() => this._scrollNode._layout(this._context, this._scrollNode._layoutOptions), (object, property, newValue) => {
+    Animation.intercept(() => this._layout(this._context, this._layoutOptions), (object, property, newValue) => {
       const node = object.node;
-      if ((property === dirProp) && node && (node._nodeCollection === this._scrollNode._nodes) && (node.rect === object)) {
-        object[property] = newValue - this._scrollOffset[dirProp];
+      if ((property === 'x') && node && (node._nodeCollection === this._nodes) && (node.rect === object)) {
         if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
         node._layoutState = LayoutState.INLAYOUT;
         return true;
       }
     });
+
+    this._updateScene();
+  }
+
+  _updateScene() {
+    let i = 0;
+    let n = this._layoutNodes.length;
+    while (i < n) {
+      const node = this._layoutNodes[i];
+      switch (node._layoutState) {
+        case LayoutState.INLAYOUT:
+          if (!node.getParent()) {
+            //console.log('adding to scene');
+            this.addChild(node);
+          }
+          i++;
+          break;
+        case LayoutState.MARKED_FOR_REMOVAL:
+          if (node.getParent()) {
+            //console.log('removing from scene #2');
+            node._layoutState = undefined;
+            this.removeChild(node);
+          }
+          this._layoutNodes.splice(i, 1);
+          n = this._layoutNodes.length;
+          break;
+        default:
+          i++;
+      }
+    }
   }
 
   requestLayout(immediate) {
@@ -118,11 +147,11 @@ export default class LayoutNode extends BaseNode {
     this.size.set(value);
   }
 
-  animate(curve, duration, collectFn) {
-    const animation = LayoutAnimation.start(this, curve, duration, collectFn);
+  /*animate(curve, duration, collectFn) {
+    const animation = Animation.start(this, curve, duration, collectFn);
     this._animations = this._animations || [];
     this._animations.push(animation);
     animation.promise.then(() => this._animations.splice(this._animations.indexOf(animation), 1));
     return animation.promise;
-  }
+  }*/
 }

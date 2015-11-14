@@ -13,8 +13,8 @@ export default class NodeCollection {
   }
 
   get(value) {
-    if ((indexOrId instanceof String) || (typeof value === 'string')) {
-      return this._nodesById[id];
+    if ((value instanceof String) || (typeof value === 'string')) {
+      return this._nodesById[value];
     } else {
       return this._array[value];
     }

@@ -1,35 +1,36 @@
-import Size from '../core/Size';
+import SizeProperty from '../core/SizeProperty';
 import LayoutNode from '../core/LayoutNode';
 
 function headerFooterLayout(context) {
+  console.log('here we go');
   const rect = context.rect;
-  const headerSize = this.headerSize.measure(context.rect);
-  const footerSize = this.footerSize.measure(context.rect);
+  const headerSize = this.headerSize.resolve(this._direction ? context.rect.height : context.rect.width);
+  const footerSize = this.footerSize.resolve(this._direction ? context.rect.height : context.rect.width);
   if (this.header) {
     if (this._direction) {
-      rect.height = headerSize.height;
+      rect.height = headerSize;
     } else {
-      rect.width = headerSize.width;
+      rect.width = headerSize;
     }
     this.header.rect = rect;
   }
   if (this.content) {
     if (this._direction) {
       rect.y = rect.bottom;
-      rect.height = rect.parent.height - headerSize.height - footerSize.height;
+      rect.height = rect.parent.height - headerSize - footerSize;
     } else {
       rect.x = rect.right;
-      rect.width = rect.parent.width - headerSize.width - footerSize.width;
+      rect.width = rect.parent.width - headerSize - footerSize;
     }
     this.content.rect = rect;
   }
   if (this.footer) {
     if (this._direction) {
-      rect.y = rect.parent.height - footerSize.height;
-      rect.height = footerSize.height;
+      rect.y = rect.parent.height - footerSize;
+      rect.height = footerSize;
     } else {
-      rect.x = rect.parent.width - footerSize.width;
-      rect.width = footerSize.width;
+      rect.x = rect.parent.width - footerSize;
+      rect.width = footerSize;
     }
     this.footer.rect = rect;
   }
@@ -43,10 +44,10 @@ const defaults = {
 export default class HeaderFooterView extends LayoutNode {
   constructor(options) {
     super();
-    this._headerSize = new Size();
-    this._headerSize.onChange(() => this.requestLayout());
-    this._footerSize = new Size();
-    this._footerSize.onChange(() => this.requestLayout());
+    this._headerSize = new SizeProperty();
+    this._headerSize.onChange = () => this.requestLayout();
+    this._footerSize = new SizeProperty();
+    this._footerSize.onChange = () => this.requestLayout();
     this.setOptions(defaults, options);
   }
 
@@ -70,7 +71,7 @@ export default class HeaderFooterView extends LayoutNode {
   }
 
   get header() {
-    this._nodes.get('header');
+    return this._nodes.get('header');
   }
 
   set header(value) {
@@ -78,7 +79,7 @@ export default class HeaderFooterView extends LayoutNode {
   }
 
   get content() {
-    this._nodes.get('content');
+    return this._nodes.get('content');
   }
 
   set content(value) {
@@ -86,7 +87,7 @@ export default class HeaderFooterView extends LayoutNode {
   }
 
   get footer() {
-    this._nodes.get('footer');
+    return this._nodes.get('footer');
   }
 
   set footer(value) {

@@ -31,6 +31,8 @@ export default class Animation extends EngineAnimation {
 
   collect(object, property, newValue, curValue) {
     const collected = this.items;
+
+    // When the same property is collected twice, overwrite it
     for (let i = 0; i < collected.length; i++) {
       const item = collected[i];
       if ((item.object === object) && (item.property === property)) {
@@ -40,6 +42,7 @@ export default class Animation extends EngineAnimation {
         return;
       }
     }
+
     if (Array.isArray(curValue)) {
       collected.push({
         object: object,
