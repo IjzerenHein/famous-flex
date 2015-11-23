@@ -1,13 +1,16 @@
+import SizeProperty from './SizeProperty';
+
 export default class Margins {
   constructor() {
+    const onChange = () => this.onChange();
     this._top = new SizeProperty();
-    this._top.onChange = () => this.onChange();
+    this._top.onChange = onChange;
     this._bottom = new SizeProperty();
-    this._bottom.onChange = () => this.onChange();
+    this._bottom.onChange = onChange;
     this._left = new SizeProperty();
-    this._left.onChange = () => this.onChange();
+    this._left.onChange = onChange;
     this._right = new SizeProperty();
-    this._right.onChange = () => this.onChange();
+    this._right.onChange = onChange;
   }
 
   get left() {
@@ -22,7 +25,7 @@ export default class Margins {
     return this._right;
   }
 
-  set left(value) {
+  set right(value) {
     this._right.set(value);
   }
 
@@ -71,6 +74,15 @@ export default class Margins {
       this.right = value.right || 0;
       this.bottom = value.bottom || 0;
     }
+  }
+
+  subtract(rect) {
+    const left = this._left.resolve(rect.parent.width);
+    const top = this._top.resolve(rect.parent.height);
+    rect.x += left;
+    rect.y += top;
+    rect.width -= (left + this._right.resolve(rect.parent.width));
+    rect.height -= (top + this._top.resolve(rect.parent.height));
   }
 
   onChange() {

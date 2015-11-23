@@ -48,19 +48,16 @@ export default class ImageNode extends Control {
     }
   }
 
-  measure(rect) {
-    if (this._configuredSize) {
-      if (this._configuredSize.requiresNaturalSize) {
-        if (!this._imageObj) {
-          this._imageObj = new Image();
-          this._imageObj.onload = () => this.onLoad();
-        }
-        if (this._imageObj.src !== this._src) {
-          this._imageObj.src = this._src;
-        }
+  onMeasure(rect) {
+    if (this.size.requiresNaturalSize) {
+      if (!this._imageObj) {
+        this._imageObj = new Image();
+        this._imageObj.onload = () => this.onLoad();
       }
-      return this._configuredSize.measure(rect, this._imageObj);
+      if (this._imageObj.src !== this._src) {
+        this._imageObj.src = this._src;
+      }
     }
-    return rect;
+    return this.size.measure(rect, this._imageObj);
   }
 }

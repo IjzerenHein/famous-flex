@@ -1,6 +1,41 @@
 import Animation from '../animation/Animation';
-import Padding from './Padding';
-const parse = Padding.parseComponent;
+
+/**
+ * Parses a single size value into a computational representation.
+ *
+ * Examples:
+ * ```
+ * parse(10); // => `[10]`
+ * parse('10.5%'); // => `[0, 0.105]`
+ * parse('20%+10'); // => `[10, 0.2]`
+ * parse([20, 0.4]); // => `[20, 0.4]`
+ * ```
+ *
+ * @param {Number|String|Array} value Number, string or array.
+ * @return {Number|Array}
+ */
+function parse(value) {
+  if (value === undefined) {
+    return undefined;
+  } else if (typeof value === 'number') {
+    return [value, 0];
+  } else if (Array.isArray(value)) {
+    return value;
+  }
+
+  // must be string...
+  const vals = value.match(/^(\d+(\.\d+)?)%([\+\-]\d+)?$/);
+  if (vals) {
+    const mul = parseFloat(vals[1]) / 100;
+    if (vals[3]) {
+      const px = parseInt(vals[vals.length - 1].substring(1));
+      return [(vals[3] === '-') ? -px : px, mul];
+    } else {
+      return [0, mul];
+    }
+  }
+  return 0;
+}
 
 const Mode = {
   NONE: 0,
@@ -9,65 +44,70 @@ const Mode = {
 };
 
 export default class Size {
-  constructor() {
+  constructor(node) {
+    this._node = node;
     this._mode = Mode.NONE;
   }
 
   measure(rect, naturalSize) {
-    if (this._callback) {
-      return this._callback(rect, naturalSize);
-    }
     let width = rect.width;
     let height = rect.height;
-    if (this._width) {
-      if (this._width[0] === true) {
-        width = this._width[1] * naturalSize.width;
-      } else {
-        width = this._width[0] + (this._width[1] * rect.width);
+    if (this._callback) {
+      const size = this._callback.call(this._node, rect, naturalSize);
+      this._result = this._result || {};
+      width = size.width;
+      height = size.height;
+    } else {
+      if (this._width) {
+        if (this._width[0] === true) {
+          width = this._width[1] * naturalSize.width;
+        } else {
+          width = this._width[0] + (this._width[1] * rect.width);
+        }
       }
-    }
-    if (this._height) {
-      if (this._height[0] === true) {
-        height = this._height[1] * naturalSize.height;
-      } else {
-        height = this._height[0] + (this._height[1] * rect.height);
+      if (this._height) {
+        if (this._height[0] === true) {
+          height = this._height[1] * naturalSize.height;
+        } else {
+          height = this._height[0] + (this._height[1] * rect.height);
+        }
       }
-    }
-    if (this._maxWidth) width = Math.min(width, this._maxWidth[0] + (this._maxWidth[1] * rect.width));
-    if (this._maxHeight) height = Math.min(height, this._maxHeight[0] + (this._maxHeight[1] * rect.height));
-    if (this._minWidth) width = Math.max(width, this._minWidth[0] + (this._minWidth[1] * rect.width));
-    if (this._minHeight) height = Math.max(height, this._minHeight[0] + (this._minHeight[1] * prect.height));
-    let aspectRatio = this._aspectRatio;
-    switch (this._mode) {
-      case Mode.NONE:
-        if (aspectRatio) {
-          if (aspectRatio < (width / height)) {
-            width = height * aspectRatio;
-          } else {
-            height = width / aspectRatio;
+      if (this._maxWidth) width = Math.min(width, this._maxWidth[0] + (this._maxWidth[1] * rect.width));
+      if (this._maxHeight) height = Math.min(height, this._maxHeight[0] + (this._maxHeight[1] * rect.height));
+      if (this._minWidth) width = Math.max(width, this._minWidth[0] + (this._minWidth[1] * rect.width));
+      if (this._minHeight) height = Math.max(height, this._minHeight[0] + (this._minHeight[1] * prect.height));
+      let aspectRatio = this._aspectRatio;
+      switch (this._mode) {
+        case Mode.NONE:
+          if (aspectRatio) {
+            if (aspectRatio < (width / height)) {
+              width = height * aspectRatio;
+            } else {
+              height = width / aspectRatio;
+            }
           }
-        }
-        break;
-      case Mode.COVER:
-        aspectRatio = aspectRatio || (width / height);
-        if (aspectRatio > (rect.width / rect.height)) {
-          width = rect.height * aspectRatio;
-          height = rect.height;
-        } else {
-          width = rect.width;
-          height = rect.width / aspectRatio;
-        }
-        break;
-      case Mode.CONTAIN:
-        aspectRatio = aspectRatio || (width / height);
-        if (aspectRatio < (rect.width / rect.height)) {
-          width = rect.height * aspectRatio;
-          height = rect.height;
-        } else {
-          width = rect.width;
-          height = rect.width / aspectRatio;
-        }
-        break;
+          break;
+        case Mode.COVER:
+          aspectRatio = aspectRatio || (width / height);
+          if (aspectRatio > (rect.width / rect.height)) {
+            width = rect.height * aspectRatio;
+            height = rect.height;
+          } else {
+            width = rect.width;
+            height = rect.width / aspectRatio;
+          }
+          break;
+        case Mode.CONTAIN:
+          aspectRatio = aspectRatio || (width / height);
+          if (aspectRatio < (rect.width / rect.height)) {
+            width = rect.height * aspectRatio;
+            height = rect.height;
+          } else {
+            width = rect.width;
+            height = rect.width / aspectRatio;
+          }
+          break;
+      }
     }
     this._lastWidth = this._lastWidth || [0, 0];
     this._lastHeight = this._lastHeight || [0, 0];

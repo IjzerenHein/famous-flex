@@ -4,6 +4,7 @@ import Label from './Label';
 import Animation from '../animation/Animation';
 import Color from '../core/Color';
 import Theme from '../theme';
+import Margins from '../core/Margins';
 
 const defaults = {
   classes: ['button'],
@@ -18,12 +19,15 @@ export default class Button extends Control {
    */
   constructor(options) {
     super();
+    const onChange = () => this.requestLayout();
     this._background = this.addChild(new DOMNode({classes: ['background']}));
     this._backgroundColor = new Color(this);
-    this._backgroundColor.on('changed', () => this.requestLayout());
+    this._backgroundColor.on('changed', onChange);
     this._borderColor = new Color(this);
-    this._borderColor.on('changed', () => this.requestLayout());
+    this._borderColor.on('changed', onChange);
     this._label = this.addChild(new Label());
+    this._padding = new Margins();
+    this._padding.onChange = onChange;
     /*this._image1 = this.addChild(new DOMNode({classes: ['image']}));
     this._image2 = this.addChild(new DOMNode({classes: ['image']}));*/
     this._setupClickListeners();
@@ -68,6 +72,14 @@ export default class Button extends Control {
       this._enabled = value;
       this.requestLayout();
     }
+  }
+
+  get padding() {
+    return this._padding;
+  }
+
+  set padding(value) {
+    this._padding.set(value);
   }
 
   get label() {

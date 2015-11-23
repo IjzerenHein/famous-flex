@@ -2,6 +2,7 @@ import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import ShowNode from '../core/ShowNode';
 import Styles from '../core/Styles';
+import Margins from '../core/Margins';
 
 /**
  * @private
@@ -35,6 +36,8 @@ export default class Label extends Control {
     super();
     this._text = this.addChild(new ShowNode());
     this._text1 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
+    this._padding = new Margins();
+    this._padding.onChange = () => this.requestLayout();
     this.setOptions(defaults, options);
   }
 

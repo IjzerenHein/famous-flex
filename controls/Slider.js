@@ -3,6 +3,7 @@ import DOMNode from '../core/DOMNode';
 import Animation from '../animation/Animation';
 import Color from '../core/Color';
 import Theme from '../theme';
+import Margins from '../core/Margins';
 
 const defaults = {
   classes: ['slider'],
@@ -24,12 +25,15 @@ export default class Slider extends Control {
     this._setupDragListeners();
     this._inside = this.addChild(new DOMNode({classes: ['inside']}));
     this._background = this.addChild(new DOMNode({classes: ['background']}));
+    const onChange = () => this.requestLayout();
     this._color = new Color(this);
-    this._color.on('changed', () => this.requestLayout());
+    this._color.on('changed', onChange);
     this._backgroundColor = new Color(this);
-    this._backgroundColor.on('changed', () => this.requestLayout());
+    this._backgroundColor.on('changed', onChange);
     this._borderColor = new Color(this);
-    this._borderColor.on('changed', () => this.requestLayout());
+    this._borderColor.on('changed', onChange);
+    this._padding = new Margins();
+    this._padding.onChange = onChange;
     this.setOptions(defaults, Theme.defaults.slider, options);
   }
 
@@ -65,6 +69,14 @@ export default class Slider extends Control {
       this._direction = value;
       this.requestLayout();
     }
+  }
+
+  get padding() {
+    return this._padding;
+  }
+
+  set padding(value) {
+    this._padding.set(value);
   }
 
   get enabled() {

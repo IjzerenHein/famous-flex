@@ -2,6 +2,7 @@ import Theme from '..';
 
 function layout(rect) {
   const handleSize = Math.min(rect.width, rect.height);
+  console.log('whoop');
   rect.subtract(this._padding);
   const sliderSize = this._direction ? rect.height : rect.width;
 
@@ -32,9 +33,11 @@ function layout(rect) {
   this._handle.rect = rect;
 }
 
+const measureResult = {};
 function measure(rect) {
-  rect.width = this._direction ? 34 : rect.parent.width;
-  rect.height = this._direction ? rect.parent.height : 34;
+  measureResult.width = this._direction ? 34 : rect.parent.width;
+  measureResult.height = this._direction ? rect.parent.height : 34;
+  return measureResult;
 }
 
 export default {

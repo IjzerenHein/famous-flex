@@ -1,4 +1,4 @@
-
+/*
 <resources>
   <!-- inherit from the material theme -->
   <style name="AppTheme" parent="android:Theme.Material">
@@ -11,3 +11,4 @@
     <item name="android:colorAccent">@color/accent</item>
   </style>
 </resources>
+*/

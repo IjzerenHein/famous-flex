@@ -1,6 +1,6 @@
 import Animation from '../animation/Animation';
 
-export default class Point {
+export default class Alignment {
   constructor() {
     this._x = 0;
     this._y = 0;

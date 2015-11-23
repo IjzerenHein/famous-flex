@@ -1,5 +1,3 @@
-import Padding from './Padding';
-
 export default class Rect {
   constructor() {
     this.x = 0;
@@ -42,6 +40,22 @@ export default class Rect {
     return this;
   }
 
+  align(align) {
+    this.x = (this.parent.width * align.x) - (align.x * this.width);
+    this.y = (this.parent.height * align.y) - (align.y * this.height);
+    return this;
+  }
+
+  alignX(value) {
+    this.x = (this.parent.width * value) - (value * this.width);
+    return this;
+  }
+
+  alignY(value) {
+    this.y = (this.parent.height * value) - (value * this.height);
+    return this;
+  }
+
   subtract(value) {
     if (value === undefined) {
       return this;
@@ -49,12 +63,12 @@ export default class Rect {
       this.width -= (value * 2);
       this.height -= (value * 2);
       this.x += value;
-      this.y -= value;
+      this.y += value;
       return this;
     } else {
-      Padding.apply(value, this);
+      value.subtract(this);
+      return this;
     }
-    return this;
   }
 
   intersectsWith(rect) {
