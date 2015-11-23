@@ -68,4 +68,8 @@ export default class LayoutContext {
     // TODO ALIGN
     return (this._prevIndex > 0) ? this._nodes.getAt(--this._prevIndex) : undefined;
   }
+
+  get nodes() {
+    return this._nodes;
+  }
 }

@@ -1,7 +1,5 @@
+import {LayoutNode, BaseNode, NodeCollection, Margins} from '../core';
 import Control from '../controls/Control';
-import NodeCollection from '../core/NodeCollection';
-import Margins from '../core/Margins';
-import Spacing from '../core/Spacing';
 
 function toolBarLayout(context) {
   const rect = this._itemRect;

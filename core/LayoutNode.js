@@ -13,24 +13,31 @@ const LayoutState = {
 
 export default class LayoutNode extends BaseNode {
   constructor(options) {
-    super(options);
-    this._updateLayout = this.registerUpdate(() => this.onLayout(), true);
+    super();
+    this._layoutRect = new Rect();
+    this._layoutRect.parent = this.rect;
+    this._updateLayout = this.registerUpdate(() => this.requestLayout(true), true);
     this._nodes = new NodeCollection(this);
     this._context = new LayoutContext(this, this._nodes);
-    this._layoutRect = new Rect();
-    this._layoutRect.parent = new Rect();
     this._layoutNodes = [];
+    this.setOptions(options);
   }
 
-  onLayout() {
-    const rect = this._layoutRect;
-    rect.parent.width = this.rect.width;
-    rect.parent.height = this.rect.height;
-    rect.x = 0;
-    rect.y = 0;
-    rect.z = 0;
-    rect.width = rect.parent.width;
-    rect.height = rect.parent.height;
+  requestLayout(immediate) {
+    if (immediate) {
+      const rect = this._layoutRect;
+      rect.x = 0;
+      rect.y = 0;
+      rect.z = 0;
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
+      this.onLayout(rect);
+    } else {
+      this._updateLayout.request();
+    }
+  }
+
+  onLayout(rect) {
 
     /*if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
@@ -55,7 +62,6 @@ export default class LayoutNode extends BaseNode {
       if ((property === 'x') && node && (node._nodeCollection === this._nodes) && (node.rect === object)) {
         if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
         node._layoutState = LayoutState.INLAYOUT;
-        return true;
       }
     });
 
@@ -87,14 +93,6 @@ export default class LayoutNode extends BaseNode {
         default:
           i++;
       }
-    }
-  }
-
-  requestLayout(immediate) {
-    if (immediate) {
-      this.onLayout();
-    } else {
-      this._updateLayout.request();
     }
   }
 

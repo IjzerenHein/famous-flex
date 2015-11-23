@@ -14,16 +14,9 @@ const defaults = {
 export default class Control extends BaseNode {
   constructor(options) {
     super();
-    const rect = new Rect();
-    rect.parent = this.rect;
-    this._updateLayout = this.registerUpdate(() => {
-      rect.x = 0;
-      rect.y = 0;
-      rect.z = 0;
-      rect.width = rect.parent.width;
-      rect.height = rect.parent.height;
-      this.onLayout(rect);
-    }, true);
+    this._layoutRect = new Rect();
+    this._layoutRect.parent = this.rect;
+    this._updateLayout = this.registerUpdate(() => this.requestLayout(true), true);
     const onChange = () => this.requestLayout();
     this._configuredSize = new Size(this);
     this._configuredSize.onChange = onChange;
@@ -45,7 +38,17 @@ export default class Control extends BaseNode {
   }
 
   requestLayout(immediate) {
-    return immediate ? this.onLayout() : this._updateLayout.request();
+    if (immediate) {
+      const rect = this._layoutRect;
+      rect.x = 0;
+      rect.y = 0;
+      rect.z = 0;
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
+      this.onLayout(rect);
+    } else {
+      this._updateLayout.request();
+    }
   }
 
   get layout() {

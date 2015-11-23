@@ -16,16 +16,16 @@ export default class ScrollNode extends EngineScrollNode {
   constructor(options) {
     super();
     this._direction = 1;
+    this._layoutRect = new Rect();
+    this._layoutRect.parent = this.rect;
+    this._updateLayout = this.registerUpdate(() => this.requestLayout(true), true);
     this._alignment = new Point();
     this._alignment.onChange = () => this.requestLayout();
-    this._contentRect = new Rect();
-    this._contentRect.parent = new Rect();
     this._contentOffset = new Point();
 
     //this._contentOffset.onChange = () => this._onSetContentOffset();
     this._overscroll = new Point();
     this._overscroll.onChange = () => this.requestLayout();
-    this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
     this._particle = new Particle(this);
     this._particle.onChange = () => this.requestLayout();
     this._setupDragListeners();
@@ -73,7 +73,13 @@ export default class ScrollNode extends EngineScrollNode {
 
   requestLayout(immediate) {
     if (immediate) {
-      this.onLayout();
+      const rect = this._layoutRect;
+      rect.x = 0;
+      rect.y = 0;
+      rect.z = 0;
+      rect.width = rect.parent.width;
+      rect.height = rect.parent.height;
+      this.onLayout(rect);
     } else {
       this._updateLayout.request();
     }
@@ -101,14 +107,11 @@ export default class ScrollNode extends EngineScrollNode {
     return undefined;
   }
 
-  onLayout() {
+  onLayout(rect) {
     if (!this._content) return;
 
     // Prepare content-rect
     const dir = this._direction;
-    const rect = this._contentRect;
-    rect.parent.width = this.rect.width;
-    rect.parent.height = this.rect.height;
 
     // Calculate (unbounded) x & y, based on particle value
     switch (dir) {
@@ -118,8 +121,6 @@ export default class ScrollNode extends EngineScrollNode {
     }
 
     // Measure size of content
-    rect.width = rect.parent.width;
-    rect.height = rect.parent.height;
     if (this._content.measure) {
       const size = this._content.measure(rect);
       rect.width = size.width;
@@ -187,10 +188,11 @@ export default class ScrollNode extends EngineScrollNode {
   }
 
   measure(rect) {
-    if (this._content && this._content.measure) {
-      return this._content.measure(rect);
-    }
-    return rect;
+    return this.onMeasure(rect);
+  }
+
+  onMeasure(rect) {
+    return (this._content && this._content.measure) ? this._content.measure(rect) : rect;
   }
 
   get enabled() {

@@ -8,7 +8,7 @@ function drawerLayout(context) {
   const size = direction ? rect.height : rect.width;
   const fullDrawerSize = this.drawerSize.resolve(size);
   const drawerSize = fullDrawerSize * ((this._drawerMode === 'resize') ? this._openRatio : 1);
-  const drawerStart = (this._drawerMode === 'move') ? -(drawerSize * this._openRatio) : 0;
+  const drawerStart = (this._drawerMode === 'move') ? -(drawerSize * (1 - this._openRatio)) : 0;
   const contentSize = (this._contentMode === 'resize') ? (size - (fullDrawerSize * this._openRatio)) : size;
   const contentStart = (this._contentMode === 'stay') ? 0 : (fullDrawerSize * this._openRatio);
 

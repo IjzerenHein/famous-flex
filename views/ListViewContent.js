@@ -92,23 +92,23 @@ class ContentRect {
 export default class ListViewContent extends GroupNode {
   constructor(node) {
     super();
+    const onChange = () => this.requestLayout(true);
     this._contentRect = new ContentRect(this._rect);
-    this._contentRect.onChange = () => this.requestLayout(true);
+    this._contentRect.onChange = onChange;
     this._scrollNode = node;
-    this._layoutOptions = {};
     this._parentRect = new Rect();
     this._sceneRect = new Rect();
     this._scrollOffset = new Point();
     this._scrollRect = new Rect();
     this._scrollRect.parent = this._parentRect;
     this._context = new LayoutContext(this, this._scrollNode._nodes);
-    this._updateLayout = this._updateLayout || this.registerUpdate(() => this.onLayout(), true);
+    this._updateLayout = this.registerUpdate(onChange, true);
     this._layoutNodes = [];
   }
 
   requestLayout(immediate) {
     if (immediate) {
-      this.onLayout();
+      this.onLayout(this._contentRect);
     } else {
       this._updateLayout.request();
     }
@@ -122,10 +122,33 @@ export default class ListViewContent extends GroupNode {
     this._contentRect.set(value);
   }
 
-  onLayout() {
+  onLayout(rect) {
+    console.log('woop');
+    this._scrollRect.parent.width = this._parentRect.width;
+    this._scrollRect.parent.height = this._parentRect.height;
+    this._scrollRect.x = -this._parentRect.width;
+    this._scrollRect.y = -this._parentRect.height;
+    this._scrollRect.width = this._parentRect.width * 3;
+    this._scrollRect.height = this._parentRect.height * 3;
+    this._scrollOffset.x = rect.x;
+    this._scrollOffset.y = rect.y;
+    const dirProp = this._scrollNode._direction ? 'y' : 'x';
+    this._context._prepareForLayout(this._scrollRect, this._scrollOffset, this._scrollNode);
 
-    //console.log('layout: ', this.rect.toString());
-    this._layout(this._contentRect);
+    for (let i = 0; i < this._layoutNodes.length; i++) {
+      this._layoutNodes[i]._layoutState = LayoutState.MARKED_FOR_REMOVAL;
+    }
+
+    Animation.intercept(() => this._scrollNode._layout(this._context, this._scrollNode._layoutOptions), (object, property, newValue) => {
+      const node = object.node;
+      if ((property === dirProp) && node && (node._nodeCollection === this._scrollNode._nodes) && (node.rect === object)) {
+        object[property] = newValue - this._scrollOffset[dirProp];
+        if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
+        node._layoutState = LayoutState.INLAYOUT;
+        return true;
+      }
+    });
+
     this._updateScene();
 
     /*if (this._animations) {
@@ -158,39 +181,12 @@ export default class ListViewContent extends GroupNode {
     //console.log('measure: ' + rect.y);
     this._parentRect.width = rect.parent.width;
     this._parentRect.height = rect.parent.height;
-    this._measure(rect);
+    return this.onMeasure(rect);
 
     //console.log('measure result: ', rect);
   }
 
-  _layout(rect) {
-    this._scrollRect.parent.width = this._parentRect.width;
-    this._scrollRect.parent.height = this._parentRect.height;
-    this._scrollRect.x = -this._parentRect.width;
-    this._scrollRect.y = -this._parentRect.height;
-    this._scrollRect.width = this._parentRect.width * 3;
-    this._scrollRect.height = this._parentRect.height * 3;
-    this._scrollOffset.x = rect.x;
-    this._scrollOffset.y = rect.y;
-    const dirProp = this._scrollNode._direction ? 'y' : 'x';
-    this._context._prepareForLayout(this._scrollRect, this._scrollOffset, this._scrollNode);
-
-    for (let i = 0; i < this._layoutNodes.length; i++) {
-      this._layoutNodes[i]._layoutState = LayoutState.MARKED_FOR_REMOVAL;
-    }
-
-    Animation.intercept(() => this._scrollNode._layout(this._context, this._scrollNode._layoutOptions), (object, property, newValue) => {
-      const node = object.node;
-      if ((property === dirProp) && node && (node._nodeCollection === this._scrollNode._nodes) && (node.rect === object)) {
-        object[property] = newValue - this._scrollOffset[dirProp];
-        if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
-        node._layoutState = LayoutState.INLAYOUT;
-        return true;
-      }
-    });
-  }
-
-  _measure(rect) {
+  onMeasure(rect) {
     const dir = this._scrollNode._direction;
     const start = dir ? rect.y : rect.x;
     if (dir) {
@@ -220,6 +216,7 @@ export default class ListViewContent extends GroupNode {
     } else {
       rect.x += start;
     }
+    return rect;
   }
 
   _normalize() {

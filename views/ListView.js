@@ -13,6 +13,7 @@ const defaults = {
 export default class ListView extends ScrollNode {
   constructor(options) {
     super();
+    this._layoutOptions = {};
     this._nodes = new NodeCollection(this);
     this.content = new ListViewContent(this);
     this.setOptions(defaults, options);
