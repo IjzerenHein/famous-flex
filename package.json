@@ -53,6 +53,7 @@
     "grunt-eslint": "^17.3.1",
     "grunt-jscs": "^2.3.0",
     "grunt-jsdoc-to-markdown": "^1.1.1",
+    "ismobilejs": "^0.3.9",
     "jscs-jsdoc": "^1.1.0"
   },
   "files": [
