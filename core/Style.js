@@ -11,7 +11,7 @@ const hasStyles = {
   borderRadius: true
 };
 
-export default class Styles {
+export default class Style {
   constructor(node) {
     this._node = node;
     this._items = {};

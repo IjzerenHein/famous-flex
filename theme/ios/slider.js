@@ -7,8 +7,8 @@ function layout(rect) {
   const sliderSize = this._direction ? rect.height : rect.width;
 
   this._background.rect = rect;
-  this._background.styles.backgroundColor = this._backgroundColor;
-  if (this._borderRadius === 'auto') this._background.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
+  this._background.style.backgroundColor = this._backgroundColor;
+  if (this._borderRadius === 'auto') this._background.style.borderRadius = Math.min(rect.width, rect.height) / 2;
 
   rect.inFront();
   if (!this._direction) {
@@ -17,8 +17,8 @@ function layout(rect) {
     rect.height = (sliderSize * this._value);
   }
   this._inside.rect = rect;
-  this._inside.styles.backgroundColor = this._color;
-  if (this._borderRadius === 'auto') this._inside.styles.borderRadius = Math.min(rect.width, rect.height) / 2;
+  this._inside.style.backgroundColor = this._color;
+  if (this._borderRadius === 'auto') this._inside.style.borderRadius = Math.min(rect.width, rect.height) / 2;
 
   rect.inFront();
   rect.width = handleSize;

@@ -1,6 +1,6 @@
 import {DOMElement} from 'famous/dom-renderables';
 import BaseNode from '../core/BaseNode';
-import Styles from '../core/Styles';
+import Style from '../core/Style';
 
 export default class ContainerNode extends BaseNode {
   constructor(options) {
@@ -13,14 +13,14 @@ export default class ContainerNode extends BaseNode {
     return this._domElement;
   }
 
-  get styles() {
-    this._styles = this._styles || new Styles(this);
-    return this._styles;
+  get style() {
+    this._style = this._style || new Style(this);
+    return this._style;
   }
 
-  set styles(options) {
-    this._styles = this._styles || new Styles(this);
-    this.styles.setOptions(options);
+  set style(options) {
+    this._style = this._style || new Style(this);
+    this.style.setOptions(options);
   }
 
   onSetStyle(style, value) {

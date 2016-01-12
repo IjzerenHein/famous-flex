@@ -138,7 +138,7 @@ export default class Button extends Control {
     if (this._borderRadius !== value) {
       this._borderRadius = value;
       if (value !== 'auto') {
-        this._background.styles.borderRadius = value;
+        this._background.style.borderRadius = value;
       }
     }
   }

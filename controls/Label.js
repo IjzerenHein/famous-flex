@@ -1,7 +1,7 @@
 import Control from './Control';
 import DOMNode from '../core/DOMNode';
 import ShowNode from '../core/ShowNode';
-import Styles from '../core/Styles';
+import Style from '../core/Style';
 import Margins from '../core/Margins';
 
 /**
@@ -58,6 +58,15 @@ export default class Label extends Control {
     this._updateSecondaryText();
   }*/
 
+  /*get textWrap() {
+    return this._textWrap;
+  }
+
+  set textWrap(value) {
+    this._textWrap = value;
+    this._updateSecondaryText();
+  }*/
+
   /**
    * Text that is displayed in the label.
    *
@@ -79,9 +88,9 @@ export default class Label extends Control {
       if (this._visibleText && !this._text2) {
         this._text2 = this.addSharedClassesChild(new DOMNode({classes: ['text']}));
         console.log('yep');
-        const styles = this._styles ? this._styles.get() : undefined;
-        if (styles) {
-          this._text2.styles.setOptions(styles);
+        const style = this._style ? this._style.get() : undefined;
+        if (style) {
+          this._text2.style.setOptions(style);
         }
       }
       this._visibleText = (this._visibleText === this._text2) ? this._text1 : this._text2;
@@ -98,38 +107,38 @@ export default class Label extends Control {
     if (this._text2) this._text2.onSetStyle(style, value);
   }
 
-  get styles() {
-    this._styles = this._styles || new Styles(this);
-    return this._styles;
+  get style() {
+    this._style = this._style || new Style(this);
+    return this._style;
   }
 
-  set styles(options) {
-    this.styles.setOptions(options);
+  set style(options) {
+    this.style.setOptions(options);
   }
 
   get textAlign() {
-    return this._styles ? this._styles.textAlign : undefined;
+    return this._style ? this._style.textAlign : undefined;
   }
 
   set textAlign(value) {
     console.log('heuj');
-    this.styles.textAlign = value;
+    this.style.textAlign = value;
   }
 
   get fontSize() {
-    return this._styles ? this._styles.fontSize : undefined;
+    return this._style ? this._style.fontSize : undefined;
   }
 
   set fontSize(value) {
-    this.styles.fontSize = value;
+    this.style.fontSize = value;
   }
 
   get color() {
-    return this._styles ? this._styles.color : undefined;
+    return this._style ? this._style.color : undefined;
   }
 
   set color(value) {
-    this.styles.color = value;
+    this.style.color = value;
   }
 
   get hasBackground() {
@@ -148,10 +157,10 @@ export default class Label extends Control {
   }
 
   get backgroundColor() {
-    return this._background ? this._background.styles.backgroundColor : undefined;
+    return this._background ? this._background.style.backgroundColor : undefined;
   }
 
   set backgroundColor(value) {
-    this.background.styles.backgroundColor = value;
+    this.background.style.backgroundColor = value;
   }
 }

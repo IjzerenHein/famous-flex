@@ -114,8 +114,8 @@ export default class Slider extends Control {
     if (this._borderRadius !== value) {
       this._borderRadius = value;
       if (value !== 'auto') {
-        this._inner.styles.borderRadius = value;
-        this._background.styles.borderRadius = value;
+        this._inner.style.borderRadius = value;
+        this._background.style.borderRadius = value;
       }
     }
   }

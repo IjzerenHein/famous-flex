@@ -12,7 +12,7 @@ import {DOMElement} from 'famous/dom-renderables';
 import BaseNode from '../core/BaseNode';
 import Animation from '../animation/Animation';
 import Classes from '../core/Classes';
-import Styles from '../core/Styles';
+import Style from '../core/Style';
 import {Color} from '../utils';
 
 export default class DOMNode extends BaseNode {
@@ -34,14 +34,14 @@ export default class DOMNode extends BaseNode {
     this.el.setContent(value);
   }
 
-  get styles() {
-    this._styles = this._styles || new Styles(this);
-    return this._styles;
+  get style() {
+    this._style = this._style || new Style(this);
+    return this._style;
   }
 
-  set styles(options) {
-    this._styles = this._styles || new Styles(this);
-    this.styles.setOptions(options);
+  set style(options) {
+    this._style = this._style || new Style(this);
+    this.style.setOptions(options);
   }
 
   onSetStyle(style, value) {
