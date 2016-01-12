@@ -103,7 +103,9 @@ export default class Color extends CallbackStore {
    */
   set(color) {
     if (color instanceof Color) {
-      this._onRefChanged = this._onRefChanged || () => this.onChanged();
+      if (!this._onRefChanged) {
+        this._onRefChanged = () => this.onChanged();
+      }
       if (this._refColor !== color) {
         if (this._refColor) this._refColor.off('changed', this._onRefChanged);
         this._refColor = color;
