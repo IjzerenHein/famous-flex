@@ -56,6 +56,15 @@ export default class Rect {
     return this;
   }
 
+  aspectRatio(value) {
+    if ((this.width * value) > this.height) {
+      this.width = this.height / value;
+    } else if ((this.height / value) > this.width) {
+      this.height = this.width * value;
+    }
+    return this;
+  }
+
   subtract(value) {
     if (value === undefined) {
       return this;
