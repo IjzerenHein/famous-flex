@@ -1,3 +1,5 @@
+import CallbackStore from './CallbackStore';
+
 function assert(value, message) {
   if (!value) {
     throw new Error(message);
@@ -53,5 +55,6 @@ export {
   interpolate,
   distance,
   cloneArray,
-  nonNull
+  nonNull,
+  CallbackStore
 };

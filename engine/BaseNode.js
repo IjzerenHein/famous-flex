@@ -8,7 +8,8 @@
  * copyright Hein Rutjes, 2015
  */
 
-import {Node} from 'famous/core';
+import {Node, FamousEngine} from 'famous/core';
+import {assert} from '../utils';
 
 class UpdateRegistration {
   constructor(node, callback) {
@@ -36,6 +37,19 @@ export default class BaseNode extends Node {
   getChildren()
   getParent()
   */
+
+  mountToDOMElement(domElement) {
+    FamousEngine.init(); // do this once?!
+    assert(!this._parent, 'Cannot mount node that is already mounted or a child of another node.');
+    const scene = FamousEngine.createScene(domElement);
+    this._parent = scene;
+    scene.addChild(this);
+    return this;
+  }
+
+  unmountFromDOMElement() {
+    // TODO
+  }
 
   _processRegisteredUpdates(time) {
     this._registeredUpdates = this._newRegisteredUpdates || this._registeredUpdates;

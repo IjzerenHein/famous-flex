@@ -56,13 +56,15 @@ export default class LayoutNode extends BaseNode {
       this._layoutNodes[i]._layoutState = LayoutState.MARKED_FOR_REMOVAL;
     }
 
-    Animation.intercept(() => this._layout(this._context, this._layoutOptions), (object, property, newValue) => {
-      const node = object.node;
-      if ((property === 'x') && node && (node._nodeCollection === this._nodes) && (node.rect === object)) {
-        if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
-        node._layoutState = LayoutState.INLAYOUT;
-      }
-    });
+    if (this._layout) {
+      Animation.intercept(() => this._layout(this._context, this._layoutOptions), (object, property, newValue) => {
+        const node = object.node;
+        if ((property === 'x') && node && (node._nodeCollection === this._nodes) && (node.rect === object)) {
+          if (node._layoutState === LayoutState.NONE) this._layoutNodes.push(node);
+          node._layoutState = LayoutState.INLAYOUT;
+        }
+      });
+    }
 
     this._updateScene();
   }

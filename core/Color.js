@@ -1,6 +1,5 @@
 import Animation from '../animation/Animation';
-import CallbackStore from 'famous/utilities/CallbackStore';
-import {interpolate} from '../utils';
+import {interpolate, CallbackStore} from '../utils';
 
 export default class Color extends CallbackStore {
   constructor(node, color) {

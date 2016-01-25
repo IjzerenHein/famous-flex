@@ -12,6 +12,7 @@ import Surface from 'famous/core/Surface';
 import BaseNode from '../core/BaseNode';
 import Classes from '../core/Classes';
 import Style from '../core/Style';
+import {assert} from '../utils';
 
 export default class DOMNode extends BaseNode {
 
@@ -21,11 +22,26 @@ export default class DOMNode extends BaseNode {
   getParent()
   */
 
-  constructor() {
+  constructor(options) {
     super();
     this._domSurface = new Surface();
-    this.add(this._domSurface);
+    this.addChild(this._domSurface);
+    this.setOptions(options);
   }
+
+  addChild(child) {
+    assert(!this._children, 'addChild is not supported on DOMNode\'s');
+    this._children = [child];
+    this._resultSpec.target.push({});
+  }
+
+  removeChild() {
+    assert(false, 'removeChild is not supported on DOMNode\'s');
+  }
+
+  /*get surface() {
+    return this._domSurface;
+  }*/
 
   get innerHTML() {
     return this._domSurface.getContent();
