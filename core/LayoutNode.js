@@ -24,7 +24,7 @@ export default class LayoutNode extends BaseNode {
   }
 
   requestLayout(immediate) {
-    if (immediate) {
+    if (immediate || Animation.animation) {
       const rect = this._layoutRect;
       rect.x = 0;
       rect.y = 0;
@@ -38,7 +38,6 @@ export default class LayoutNode extends BaseNode {
   }
 
   onLayout(rect) {
-
     /*if (this._animations) {
       for (var i = 0; i < this._animations.length; i++) {
         this._animations[i].state = LayoutAnimation.State.PRELAYOUT;

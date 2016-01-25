@@ -39,7 +39,7 @@ export default class Animation extends EngineAnimation {
         item.curValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue; // allocate array for re-use
         item.startValue = Array.isArray(curValue) ? cloneArray(curValue) : curValue;
         item.endValue = Array.isArray(curValue) ? cloneArray(newValue) : newValue;
-        return;
+        return true;
       }
     }
 
@@ -60,6 +60,7 @@ export default class Animation extends EngineAnimation {
       });
     }
     console.log('animating: ', property, curValue, ' -> ', newValue);
+    return true;
   }
 
   stop(cancelled) {

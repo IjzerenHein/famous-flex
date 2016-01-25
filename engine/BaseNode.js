@@ -9,8 +9,6 @@
  */
 
 import {Node} from 'famous/core';
-import Animation from '../animation/Animation';
-import {GestureHandler} from 'famous/components';
 
 class UpdateRegistration {
   constructor(node, callback) {

@@ -30,3 +30,15 @@ export default class ScrollNode extends BaseNode {
     return this._group;
   }*/
 }
+
+class GroupNode extends BaseNode {
+  constructor(options) {
+    super(options);
+    this._domElement = new DOMElement(this);
+  }
+
+  get el() {
+    return this._domElement;
+  }
+}
+ScrollNode.GroupNode = GroupNode;

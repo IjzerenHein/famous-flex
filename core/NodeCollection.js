@@ -109,4 +109,8 @@ export default class NodeCollection {
   get length() {
     return this._array.length;
   }
+
+  forEach(callback) {
+    return this._array.forEach(callback);
+  }
 }

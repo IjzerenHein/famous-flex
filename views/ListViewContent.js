@@ -1,5 +1,5 @@
 import Animation from '../animation/Animation';
-import GroupNode from '../engine/GroupNode';
+import ScrollNode from '../core/ScrollNode';
 import Point from '../core/Point';
 import Rect from '../core/Rect';
 import LayoutContext from '../core/LayoutContext';
@@ -89,7 +89,7 @@ class ContentRect {
   }
 }
 
-export default class ListViewContent extends GroupNode {
+export default class ListViewContent extends ScrollNode.GroupNode {
   constructor(node) {
     super();
     const onChange = () => this.requestLayout(true);
