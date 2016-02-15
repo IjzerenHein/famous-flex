@@ -19,6 +19,7 @@ define(function(require, exports, module) {
     var Timer = require('famous/utilities/Timer');
     var Surface = require('famous/core/Surface');
     var EventHandler = require('famous/core/EventHandler');
+    var MSEC_PER_DAY = (1000 * 60 * 60 * 24);
 
     /**
      * Helper functions for formatting values with X decimal places.
@@ -55,9 +56,15 @@ define(function(require, exports, module) {
     Base.prototype.step = 1;
     Base.prototype.classes = ['item'];
     Base.prototype.getComponent = function(date) {
+        if (this.get === 'getFullDate') {
+            return Math.floor(date.getTime() / MSEC_PER_DAY);
+        }
         return date[this.get]();
     };
     Base.prototype.setComponent = function(date, value) {
+        if (this.set === 'setFullDate') {
+            return date.setTime((value * MSEC_PER_DAY) + (date.getTime() % MSEC_PER_DAY));
+        }
         return date[this.set](value);
     };
     Base.prototype.format = function(date) {
@@ -103,13 +110,13 @@ define(function(require, exports, module) {
             data.x = event.screenX;
             data.y = event.screenY;
             data.time = Date.now();
-        }.bind(this));
+        });
         renderable.on('touchstart', function(event) {
             data.active = true;
             data.x = event.touches[0].clientX;
             data.y = event.touches[0].clientY;
             data.time = Date.now();
-        }.bind(this));
+        });
         renderable.on('mouseup', function(event) {
             if (data.active) {
                 data.active = false;
@@ -214,8 +221,8 @@ define(function(require, exports, module) {
     FullDay.prototype.classes = ['item', 'fullday'];
     FullDay.prototype.sizeRatio = 2;
     FullDay.prototype.step = 1;
-    FullDay.prototype.set = 'setDate';
-    FullDay.prototype.get = 'getDate';
+    FullDay.prototype.set = 'setFullDate';
+    FullDay.prototype.get = 'getFullDate';
     FullDay.prototype.format = function(date) {
         return date.toLocaleDateString();
     };
