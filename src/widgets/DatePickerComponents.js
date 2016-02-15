@@ -16,6 +16,7 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var Timer = require('famous/utilities/Timer');
     var Surface = require('famous/core/Surface');
     var EventHandler = require('famous/core/EventHandler');
 
@@ -33,6 +34,9 @@ define(function(require, exports, module) {
     }
     function decimal4(date) {
         return ('000' + date[this.get]()).slice(-4);
+    }
+    function distance(deltaX, deltaY) {
+        return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     }
 
     /**
@@ -92,11 +96,45 @@ define(function(require, exports, module) {
         return date;
     };
     Base.prototype.installClickHandler = function(renderable) {
-        renderable.on('click', function(event) {
-            this._eventOutput.emit('click', {
-                target: renderable,
-                event: event
-            });
+        renderable.__datePickerClickEvent = renderable.__datePickerClickEvent || {};
+        var data = renderable.__datePickerClickEvent;
+        renderable.on('mousedown', function(event) {
+            data.active = true;
+            data.x = event.screenX;
+            data.y = event.screenY;
+            data.time = Date.now();
+        }.bind(this));
+        renderable.on('touchstart', function(event) {
+            data.active = true;
+            data.x = event.touches[0].clientX;
+            data.y = event.touches[0].clientY;
+            data.time = Date.now();
+        }.bind(this));
+        renderable.on('mouseup', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.screenX - data.x, event.screenY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
+        }.bind(this));
+        renderable.on('touchend', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.changedTouches[0].clientX - data.x, event.changedTouches[0].clientY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
         }.bind(this));
     };
     Base.prototype.createRenderable = function(classes, data) {

@@ -323,9 +323,9 @@ define(function(require, exports, module) {
      * Called whenever an item is clicked, causes the scrollwheel to scroll to that item.
      */
     function _clickItem(scrollWheel, event) {
-        /*if (scrollWheel && event && event.target) {
+        if (scrollWheel && event && event.target) {
             scrollWheel.scrollController.goToRenderNode(event.target);
-        }*/
+        }
     }
 
     /**
