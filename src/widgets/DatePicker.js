@@ -241,9 +241,9 @@ define(function(require, exports, module) {
             var scrollWheel = this.scrollWheels[i];
             var component = scrollWheel.component;
             var item = scrollWheel.scrollController.getFirstVisibleItem();
-            if (item && item.viewSequence) {
-                var viewSequence = item.viewSequence;
-                var renderNode = item.viewSequence.get();
+            var viewSequence = item ? item.viewSequence : scrollWheel.viewSequence;
+            if (viewSequence) {
+                var renderNode = viewSequence.get();
                 var currentValue = component.getComponent(renderNode.date);
                 var destValue = component.getComponent(date);
 
@@ -323,9 +323,9 @@ define(function(require, exports, module) {
      * Called whenever an item is clicked, causes the scrollwheel to scroll to that item.
      */
     function _clickItem(scrollWheel, event) {
-        /*if (scrollWheel && event && event.target) {
+        if (scrollWheel && event && event.target) {
             scrollWheel.scrollController.goToRenderNode(event.target);
-        }*/
+        }
     }
 
     /**
@@ -377,7 +377,7 @@ define(function(require, exports, module) {
             component.createRenderable = _createRenderable.bind(this);
             var viewSequence = new VirtualViewSequence({
                 factory: component,
-                value: component.create(this._date)
+                value: component.create(new Date(this._date.getTime()))
             });
             var options = LayoutUtility.combineOptions(
                 this.options.scrollController, {

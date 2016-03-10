@@ -16,8 +16,10 @@
 define(function(require, exports, module) {
 
     // import dependencies
+    var Timer = require('famous/utilities/Timer');
     var Surface = require('famous/core/Surface');
     var EventHandler = require('famous/core/EventHandler');
+    var MSEC_PER_DAY = (1000 * 60 * 60 * 24);
 
     /**
      * Helper functions for formatting values with X decimal places.
@@ -33,6 +35,9 @@ define(function(require, exports, module) {
     }
     function decimal4(date) {
         return ('000' + date[this.get]()).slice(-4);
+    }
+    function distance(deltaX, deltaY) {
+        return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     }
 
     /**
@@ -51,9 +56,15 @@ define(function(require, exports, module) {
     Base.prototype.step = 1;
     Base.prototype.classes = ['item'];
     Base.prototype.getComponent = function(date) {
+        if (this.get === 'getFullDate') {
+            return Math.floor(date.getTime() / MSEC_PER_DAY);
+        }
         return date[this.get]();
     };
     Base.prototype.setComponent = function(date, value) {
+        if (this.set === 'setFullDate') {
+            return date.setTime((value * MSEC_PER_DAY) + (date.getTime() % MSEC_PER_DAY));
+        }
         return date[this.set](value);
     };
     Base.prototype.format = function(date) {
@@ -92,11 +103,45 @@ define(function(require, exports, module) {
         return date;
     };
     Base.prototype.installClickHandler = function(renderable) {
-        renderable.on('click', function(event) {
-            this._eventOutput.emit('click', {
-                target: renderable,
-                event: event
-            });
+        renderable.__datePickerClickEvent = renderable.__datePickerClickEvent || {};
+        var data = renderable.__datePickerClickEvent;
+        renderable.on('mousedown', function(event) {
+            data.active = true;
+            data.x = event.screenX;
+            data.y = event.screenY;
+            data.time = Date.now();
+        });
+        renderable.on('touchstart', function(event) {
+            data.active = true;
+            data.x = event.touches[0].clientX;
+            data.y = event.touches[0].clientY;
+            data.time = Date.now();
+        });
+        renderable.on('mouseup', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.screenX - data.x, event.screenY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
+        }.bind(this));
+        renderable.on('touchend', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.changedTouches[0].clientX - data.x, event.changedTouches[0].clientY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
         }.bind(this));
     };
     Base.prototype.createRenderable = function(classes, data) {
@@ -176,8 +221,8 @@ define(function(require, exports, module) {
     FullDay.prototype.classes = ['item', 'fullday'];
     FullDay.prototype.sizeRatio = 2;
     FullDay.prototype.step = 1;
-    FullDay.prototype.set = 'setDate';
-    FullDay.prototype.get = 'getDate';
+    FullDay.prototype.set = 'setFullDate';
+    FullDay.prototype.get = 'getFullDate';
     FullDay.prototype.format = function(date) {
         return date.toLocaleDateString();
     };

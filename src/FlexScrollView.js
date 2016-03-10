@@ -522,11 +522,11 @@ define(function(require, exports, module) {
      * Delegates any scroll force to leading/trailing scrollviews.
      * @private
      */
-    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity, detectSwipes) {
         var leadingScrollView = this.options.leadingScrollView;
         var trailingScrollView = this.options.trailingScrollView;
         if (!leadingScrollView && !trailingScrollView) {
-            return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity);
+            return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity, detectSwipes);
         }
         var partialDelta;
         if (delta < 0) {
@@ -534,19 +534,19 @@ define(function(require, exports, module) {
                 partialDelta = Math.max(this._leadingScrollViewDelta, delta);
                 this._leadingScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity);
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity, detectSwipes);
             }
             if (trailingScrollView) {
                 partialDelta = Math.max(this._thisScrollViewDelta, delta);
                 this._thisScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity, detectSwipes);
                 this._trailingScrollViewDelta -= delta;
-                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0);
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
             else {
                 this._thisScrollViewDelta -= delta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
         }
         else {
@@ -554,19 +554,19 @@ define(function(require, exports, module) {
                 partialDelta = Math.min(this._trailingScrollViewDelta, delta);
                 this._trailingScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity);
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity, detectSwipes);
             }
             if (leadingScrollView) {
                 partialDelta = Math.min(this._thisScrollViewDelta, delta);
                 this._thisScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity, detectSwipes);
                 this._leadingScrollViewDelta -= delta;
-                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0);
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
             else {
                 this._thisScrollViewDelta -= delta;
-                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
         }
         return this;

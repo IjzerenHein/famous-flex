@@ -8,8 +8,8 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.6
-* @generated 09-11-2015
+* @version 0.3.7
+* @generated 10-03-2016
 */
 /**
  * This Source Code is licensed under the MIT license. If a copy of the
@@ -4310,7 +4310,9 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
         }
 
         // Release scroll force
-        this.releaseScrollForce(this._scroll.mouseMove.delta, velocity);
+        var swipeDirection = (Math.abs(this._scroll.mouseMove.current[0] - this._scroll.mouseMove.prev[0]) > Math.abs(this._scroll.mouseMove.current[1] - this._scroll.mouseMove.prev[1])) ? 0 : 1;
+        var allowSwipes = (swipeDirection === this._direction);
+        this.releaseScrollForce(this._scroll.mouseMove.delta, velocity, allowSwipes);
         this._scroll.mouseMove = undefined;
     }
 
@@ -4477,7 +4479,9 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
 
         // Release scroll force
         var delta = this._scroll.touchDelta;
-        this.releaseScrollForce(delta, velocity);
+        var swipeDirection = (Math.abs(primaryTouch.current[0] - primaryTouch.prev[0]) > Math.abs(primaryTouch.current[1] - primaryTouch.prev[1])) ? 0 : 1;
+        var allowSwipes = (swipeDirection === this._direction);
+        this.releaseScrollForce(delta, velocity, allowSwipes);
         this._scroll.touchDelta = 0;
     }
 
@@ -5519,7 +5523,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
      * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
      * @return {ScrollController} this
      */
-    ScrollController.prototype.releaseScrollForce = function(delta, velocity) {
+    ScrollController.prototype.releaseScrollForce = function(delta, velocity, detectSwipes) {
         this.halt();
         if (this._scroll.scrollForceCount === 1) {
             var scrollOffset = _calcScrollOffset.call(this);
@@ -5533,7 +5537,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                     if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
                         this.goToRenderNode(item.renderNode);
                     }
-                    else if (this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
+                    else if (detectSwipes && this.options.paginationEnergyThreshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThreshold)) {
                         velocity = velocity || 0;
                         if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
                             this.goToRenderNode(item._node._next.renderNode);
@@ -6753,11 +6757,11 @@ define('famous-flex/FlexScrollView',['require','exports','module','./LayoutUtili
      * Delegates any scroll force to leading/trailing scrollviews.
      * @private
      */
-    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity, detectSwipes) {
         var leadingScrollView = this.options.leadingScrollView;
         var trailingScrollView = this.options.trailingScrollView;
         if (!leadingScrollView && !trailingScrollView) {
-            return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity);
+            return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity, detectSwipes);
         }
         var partialDelta;
         if (delta < 0) {
@@ -6765,19 +6769,19 @@ define('famous-flex/FlexScrollView',['require','exports','module','./LayoutUtili
                 partialDelta = Math.max(this._leadingScrollViewDelta, delta);
                 this._leadingScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity);
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity, detectSwipes);
             }
             if (trailingScrollView) {
                 partialDelta = Math.max(this._thisScrollViewDelta, delta);
                 this._thisScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity, detectSwipes);
                 this._trailingScrollViewDelta -= delta;
-                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0);
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
             else {
                 this._thisScrollViewDelta -= delta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
         }
         else {
@@ -6785,19 +6789,19 @@ define('famous-flex/FlexScrollView',['require','exports','module','./LayoutUtili
                 partialDelta = Math.min(this._trailingScrollViewDelta, delta);
                 this._trailingScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity);
+                trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity, detectSwipes);
             }
             if (leadingScrollView) {
                 partialDelta = Math.min(this._thisScrollViewDelta, delta);
                 this._thisScrollViewDelta -= partialDelta;
                 delta -= partialDelta;
-                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+                ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity, detectSwipes);
                 this._leadingScrollViewDelta -= delta;
-                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0);
+                leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
             else {
                 this._thisScrollViewDelta -= delta;
-                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+                ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0, detectSwipes);
             }
         }
         return this;
@@ -8324,11 +8328,13 @@ define('famous-flex/layouts/ProportionalLayout',['require','exports','module','f
  *
  * @module
  */
-define('famous-flex/widgets/DatePickerComponents',['require','exports','module','famous/core/Surface','famous/core/EventHandler'],function(require, exports, module) {
+define('famous-flex/widgets/DatePickerComponents',['require','exports','module','famous/utilities/Timer','famous/core/Surface','famous/core/EventHandler'],function(require, exports, module) {
 
     // import dependencies
+    var Timer = require('famous/utilities/Timer');
     var Surface = require('famous/core/Surface');
     var EventHandler = require('famous/core/EventHandler');
+    var MSEC_PER_DAY = (1000 * 60 * 60 * 24);
 
     /**
      * Helper functions for formatting values with X decimal places.
@@ -8344,6 +8350,9 @@ define('famous-flex/widgets/DatePickerComponents',['require','exports','module',
     }
     function decimal4(date) {
         return ('000' + date[this.get]()).slice(-4);
+    }
+    function distance(deltaX, deltaY) {
+        return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     }
 
     /**
@@ -8362,9 +8371,15 @@ define('famous-flex/widgets/DatePickerComponents',['require','exports','module',
     Base.prototype.step = 1;
     Base.prototype.classes = ['item'];
     Base.prototype.getComponent = function(date) {
+        if (this.get === 'getFullDate') {
+            return Math.floor(date.getTime() / MSEC_PER_DAY);
+        }
         return date[this.get]();
     };
     Base.prototype.setComponent = function(date, value) {
+        if (this.set === 'setFullDate') {
+            return date.setTime((value * MSEC_PER_DAY) + (date.getTime() % MSEC_PER_DAY));
+        }
         return date[this.set](value);
     };
     Base.prototype.format = function(date) {
@@ -8403,11 +8418,45 @@ define('famous-flex/widgets/DatePickerComponents',['require','exports','module',
         return date;
     };
     Base.prototype.installClickHandler = function(renderable) {
-        renderable.on('click', function(event) {
-            this._eventOutput.emit('click', {
-                target: renderable,
-                event: event
-            });
+        renderable.__datePickerClickEvent = renderable.__datePickerClickEvent || {};
+        var data = renderable.__datePickerClickEvent;
+        renderable.on('mousedown', function(event) {
+            data.active = true;
+            data.x = event.screenX;
+            data.y = event.screenY;
+            data.time = Date.now();
+        });
+        renderable.on('touchstart', function(event) {
+            data.active = true;
+            data.x = event.touches[0].clientX;
+            data.y = event.touches[0].clientY;
+            data.time = Date.now();
+        });
+        renderable.on('mouseup', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.screenX - data.x, event.screenY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
+        }.bind(this));
+        renderable.on('touchend', function(event) {
+            if (data.active) {
+                data.active = false;
+                if (((Date.now() - data .time) <= 250) &&
+                     (Math.abs(distance(event.changedTouches[0].clientX - data.x, event.changedTouches[0].clientY - data.y)) <= 3)) {
+                    Timer.setTimeout(function() {
+                        this._eventOutput.emit('click', {
+                            target: renderable
+                        });
+                    }.bind(this), 0);
+                }
+            }
         }.bind(this));
     };
     Base.prototype.createRenderable = function(classes, data) {
@@ -8487,8 +8536,8 @@ define('famous-flex/widgets/DatePickerComponents',['require','exports','module',
     FullDay.prototype.classes = ['item', 'fullday'];
     FullDay.prototype.sizeRatio = 2;
     FullDay.prototype.step = 1;
-    FullDay.prototype.set = 'setDate';
-    FullDay.prototype.get = 'getDate';
+    FullDay.prototype.set = 'setFullDate';
+    FullDay.prototype.get = 'getFullDate';
     FullDay.prototype.format = function(date) {
         return date.toLocaleDateString();
     };
@@ -8864,9 +8913,9 @@ define('famous-flex/widgets/DatePicker',['require','exports','module','famous/co
             var scrollWheel = this.scrollWheels[i];
             var component = scrollWheel.component;
             var item = scrollWheel.scrollController.getFirstVisibleItem();
-            if (item && item.viewSequence) {
-                var viewSequence = item.viewSequence;
-                var renderNode = item.viewSequence.get();
+            var viewSequence = item ? item.viewSequence : scrollWheel.viewSequence;
+            if (viewSequence) {
+                var renderNode = viewSequence.get();
                 var currentValue = component.getComponent(renderNode.date);
                 var destValue = component.getComponent(date);
 
@@ -8946,9 +8995,9 @@ define('famous-flex/widgets/DatePicker',['require','exports','module','famous/co
      * Called whenever an item is clicked, causes the scrollwheel to scroll to that item.
      */
     function _clickItem(scrollWheel, event) {
-        /*if (scrollWheel && event && event.target) {
+        if (scrollWheel && event && event.target) {
             scrollWheel.scrollController.goToRenderNode(event.target);
-        }*/
+        }
     }
 
     /**
@@ -9000,7 +9049,7 @@ define('famous-flex/widgets/DatePicker',['require','exports','module','famous/co
             component.createRenderable = _createRenderable.bind(this);
             var viewSequence = new VirtualViewSequence({
                 factory: component,
-                value: component.create(this._date)
+                value: component.create(new Date(this._date.getTime()))
             });
             var options = LayoutUtility.combineOptions(
                 this.options.scrollController, {
