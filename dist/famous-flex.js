@@ -8,7 +8,7 @@
 * @copyright Gloey Apps, 2014/2015
 *
 * @library famous-flex
-* @version 0.3.8
+* @version 0.3.9
 * @generated 11-04-2016
 */
 /**
