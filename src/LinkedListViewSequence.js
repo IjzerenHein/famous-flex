@@ -12,22 +12,22 @@
 /*eslint no-console:0 */
 
 /**
- * @private
- */
-function assert(value, message) {
-    if (!value) {
-        //debugger;
-        throw new Error(message);
-    }
-}
-
-/**
  * Linked-list based implementation of a view-sequence which fixes
  * several issues in the stock famo.us ViewSequence.
  *
  * @module
  */
 define(function(require, exports, module) {
+
+    /**
+     * @private
+     */
+    function assert(value, message) {
+        if (!value) {
+            //debugger;
+            throw new Error(message);
+        }
+    }
 
     /**
      * @class
