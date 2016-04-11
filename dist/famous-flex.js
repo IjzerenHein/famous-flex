@@ -9,7 +9,7 @@
 *
 * @library famous-flex
 * @version 0.3.7
-* @generated 10-03-2016
+* @generated 11-04-2016
 */
 /**
  * This Source Code is licensed under the MIT license. If a copy of the
@@ -315,22 +315,22 @@ define('famous-flex/LayoutUtility',['require','exports','module','famous/utiliti
 /*eslint no-console:0 */
 
 /**
- * @private
- */
-function assert(value, message) {
-    if (!value) {
-        //debugger;
-        throw new Error(message);
-    }
-}
-
-/**
  * Linked-list based implementation of a view-sequence which fixes
  * several issues in the stock famo.us ViewSequence.
  *
  * @module
  */
 define('famous-flex/LinkedListViewSequence',['require','exports','module'],function(require, exports, module) {
+
+    /**
+     * @private
+     */
+    function assert(value, message) {
+        if (!value) {
+            //debugger;
+            throw new Error(message);
+        }
+    }
 
     /**
      * @class
@@ -4622,6 +4622,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
                 return;
             }
         }
+        totalHeight = (prevHeight || 0) + (nextHeight || 0);
 
         // 2. Check whether primary boundary has been reached
         if (this.options.alignment) {
@@ -4654,7 +4655,7 @@ define('famous-flex/ScrollController',['require','exports','module','./LayoutUti
 
         // 3. Check if secondary bounds has been reached
         if (this.options.alignment) {
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
+            if ((prevHeight !== undefined) && (totalHeight > size[this._direction]) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = -size[this._direction] + prevHeight;
                 this._scroll.springSource = SpringSource.PREVBOUNDS;
@@ -7202,12 +7203,12 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
             }
         },
-        Fade: function(show, size) {
+        Fade: function(/*show, size*/) {
             return {
                 opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0
             };
         },
-        Zoom: function(show, size) {
+        Zoom: function(/*show, size*/) {
             var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
             return {
                 transform: Transform.scale(scale, scale, 1),
@@ -7215,7 +7216,7 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 origin: [0.5, 0.5]
             };
         },
-        FadedZoom: function(show, size) {
+        FadedZoom: function(show /*, size*/) {
             var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
             return {
                 opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
@@ -7851,6 +7852,9 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 _setItemOptions.call(this, item, options, callback);
                 _updateState.call(this);
             }
+            else if (item.state === ItemState.HIDING) {
+                this.abort(callback);
+            }
             else if (callback) {
                 callback();
             }
@@ -7971,9 +7975,10 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
      * @return {AnimationController} this
      */
     AnimationController.prototype.abort = function(callback) {
+        var item;
         if ((this._viewStack.length >= 2) && (this._viewStack[0].state === ItemState.HIDING) && (this._viewStack[1].state === ItemState.SHOWING)) {
             var prevItem = this._viewStack[0];
-            var item = this._viewStack[1];
+            item = this._viewStack[1];
             var swapSpec;
 
             item.halted = true;
@@ -8000,6 +8005,27 @@ define('famous-flex/AnimationController',['require','exports','module','famous/c
                 _endTransferableAnimations.call(this, prevItem);
                 prevItem.endSpec = undefined;
                 prevItem.startSpec = undefined;
+                if (callback) {
+                    callback();
+                }
+            }.bind(this);
+
+            _resume.call(this);
+        }
+        else if ((this._viewStack.length === 1) && (this._viewStack[0].state === ItemState.HIDING)) {
+            item = this._viewStack[0];
+            item.halted = true;
+            swapSpec = item.endSpec;
+            item.endSpec = item.startSpec;
+            item.startSpec = swapSpec;
+            item.state = ItemState.SHOWING;
+            item.showCallback = function() {
+                item.showCallback = undefined;
+                item.state = ItemState.VISIBLE;
+                _updateState.call(this);
+                _endTransferableAnimations.call(this, item);
+                item.endSpec = undefined;
+                item.startSpec = undefined;
                 if (callback) {
                     callback();
                 }
@@ -10630,7 +10656,7 @@ define('famous-flex/layouts/NavBarLayout',['require','exports','module','../help
     };
 });
 
-define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLayoutNode','famous-flex/LayoutContext','famous-flex/LayoutController','famous-flex/LayoutNode','famous-flex/LayoutNodeManager','famous-flex/LayoutUtility','famous-flex/ScrollController','famous-flex/VirtualViewSequence','famous-flex/AnimationController','famous-flex/widgets/DatePicker','famous-flex/widgets/TabBar','famous-flex/widgets/TabBarController','famous-flex/layouts/CollectionLayout','famous-flex/layouts/CoverLayout','famous-flex/layouts/CubeLayout','famous-flex/layouts/GridLayout','famous-flex/layouts/HeaderFooterLayout','famous-flex/layouts/ListLayout','famous-flex/layouts/NavBarLayout','famous-flex/layouts/ProportionalLayout','famous-flex/layouts/WheelLayout','famous-flex/helpers/LayoutDockHelper'],function(require) {
+define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLayoutNode','famous-flex/LayoutContext','famous-flex/LayoutController','famous-flex/LayoutNode','famous-flex/LayoutNodeManager','famous-flex/LayoutUtility','famous-flex/ScrollController','famous-flex/VirtualViewSequence','famous-flex/LinkedListViewSequence','famous-flex/AnimationController','famous-flex/widgets/DatePicker','famous-flex/widgets/TabBar','famous-flex/widgets/TabBarController','famous-flex/layouts/CollectionLayout','famous-flex/layouts/CoverLayout','famous-flex/layouts/CubeLayout','famous-flex/layouts/GridLayout','famous-flex/layouts/HeaderFooterLayout','famous-flex/layouts/ListLayout','famous-flex/layouts/NavBarLayout','famous-flex/layouts/ProportionalLayout','famous-flex/layouts/WheelLayout','famous-flex/helpers/LayoutDockHelper'],function(require) {
     require('famous-flex/FlexScrollView');
     require('famous-flex/FlowLayoutNode');
     require('famous-flex/LayoutContext');
@@ -10640,6 +10666,7 @@ define('template.js',['require','famous-flex/FlexScrollView','famous-flex/FlowLa
     require('famous-flex/LayoutUtility');
     require('famous-flex/ScrollController');
     require('famous-flex/VirtualViewSequence');
+    require('famous-flex/LinkedListViewSequence');
     require('famous-flex/AnimationController');
 
     require('famous-flex/widgets/DatePicker');

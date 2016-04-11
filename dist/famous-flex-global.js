@@ -9,7 +9,7 @@
 *
 * @library famous-flex
 * @version 0.3.7
-* @generated 10-03-2016
+* @generated 11-04-2016
 */
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var View = window.famous.core.View;
@@ -48,10 +48,10 @@ AnimationController.Animation = {
             return { transform: Transform.translate(0, show ? -size[1] : size[1], 0) };
         }
     },
-    Fade: function (show, size) {
+    Fade: function () {
         return { opacity: this && this.opacity !== undefined ? this.opacity : 0 };
     },
-    Zoom: function (show, size) {
+    Zoom: function () {
         var scale = this && this.scale !== undefined ? this.scale : 0.5;
         return {
             transform: Transform.scale(scale, scale, 1),
@@ -65,7 +65,7 @@ AnimationController.Animation = {
             ]
         };
     },
-    FadedZoom: function (show, size) {
+    FadedZoom: function (show) {
         var scale = show ? this && this.showScale !== undefined ? this.showScale : 0.9 : this && this.hideScale !== undefined ? this.hideScale : 1.1;
         return {
             opacity: this && this.opacity !== undefined ? this.opacity : 0,
@@ -570,6 +570,8 @@ AnimationController.prototype.show = function (renderable, options, callback) {
             item.state = ItemState.QUEUED;
             _setItemOptions.call(this, item, options, callback);
             _updateState.call(this);
+        } else if (item.state === ItemState.HIDING) {
+            this.abort(callback);
         } else if (callback) {
             callback();
         }
@@ -660,9 +662,10 @@ AnimationController.prototype.halt = function (stopAnimation, framePerc) {
     return this;
 };
 AnimationController.prototype.abort = function (callback) {
+    var item;
     if (this._viewStack.length >= 2 && this._viewStack[0].state === ItemState.HIDING && this._viewStack[1].state === ItemState.SHOWING) {
         var prevItem = this._viewStack[0];
-        var item = this._viewStack[1];
+        item = this._viewStack[1];
         var swapSpec;
         item.halted = true;
         swapSpec = item.endSpec;
@@ -687,6 +690,25 @@ AnimationController.prototype.abort = function (callback) {
             _endTransferableAnimations.call(this, prevItem);
             prevItem.endSpec = undefined;
             prevItem.startSpec = undefined;
+            if (callback) {
+                callback();
+            }
+        }.bind(this);
+        _resume.call(this);
+    } else if (this._viewStack.length === 1 && this._viewStack[0].state === ItemState.HIDING) {
+        item = this._viewStack[0];
+        item.halted = true;
+        swapSpec = item.endSpec;
+        item.endSpec = item.startSpec;
+        item.startSpec = swapSpec;
+        item.state = ItemState.SHOWING;
+        item.showCallback = function () {
+            item.showCallback = undefined;
+            item.state = ItemState.VISIBLE;
+            _updateState.call(this);
+            _endTransferableAnimations.call(this, item);
+            item.endSpec = undefined;
+            item.startSpec = undefined;
             if (callback) {
                 callback();
             }
@@ -3018,6 +3040,11 @@ LayoutUtility.getRegisteredHelper = function (name) {
 };
 module.exports = LayoutUtility;
 },{}],9:[function(require,module,exports){
+function assert(value, message) {
+    if (!value) {
+        throw new Error(message);
+    }
+}
 function LinkedListViewSequence(items) {
     if (Array.isArray(items)) {
         this._ = new this.constructor.Backing(this);
@@ -3691,6 +3718,7 @@ function _calcBounds(size, scrollOffset) {
             return;
         }
     }
+    totalHeight = (prevHeight || 0) + (nextHeight || 0);
     if (this.options.alignment) {
         if (enforeMinSize) {
             if (nextHeight !== undefined && scrollOffset + nextHeight <= 0) {
@@ -3717,7 +3745,7 @@ function _calcBounds(size, scrollOffset) {
         }
     }
     if (this.options.alignment) {
-        if (prevHeight !== undefined && scrollOffset - prevHeight >= -size[this._direction]) {
+        if (prevHeight !== undefined && totalHeight > size[this._direction] && scrollOffset - prevHeight >= -size[this._direction]) {
             this._scroll.boundsReached = Bounds.PREV;
             this._scroll.springPosition = -size[this._direction] + prevHeight;
             this._scroll.springSource = SpringSource.PREVBOUNDS;
@@ -6745,6 +6773,7 @@ famousflex.LayoutNodeManager = require('./src/LayoutNodeManager');
 famousflex.LayoutUtility = require('./src/LayoutUtility');
 famousflex.ScrollController = require('./src/ScrollController');
 famousflex.VirtualViewSequence = require('./src/VirtualViewSequence');
+famousflex.LinkedListViewSequence = require('./src/LinkedListViewSequence');
 famousflex.AnimationController = require('./src/AnimationController');
 
 famousflex.widgets = famousflex.widgets || {};
@@ -6766,4 +6795,4 @@ famousflex.layouts.WheelLayout = require('./src/layouts/WheelLayout');
 famousflex.helpers = famousflex.helpers || {};
 famousflex.helpers.LayoutDockHelper = require('./src/helpers/LayoutDockHelper');
 
-},{"./src/AnimationController":1,"./src/FlexScrollView":2,"./src/FlowLayoutNode":3,"./src/LayoutContext":4,"./src/LayoutController":5,"./src/LayoutNode":6,"./src/LayoutNodeManager":7,"./src/LayoutUtility":8,"./src/ScrollController":10,"./src/VirtualViewSequence":11,"./src/helpers/LayoutDockHelper":12,"./src/layouts/CollectionLayout":13,"./src/layouts/CoverLayout":14,"./src/layouts/CubeLayout":15,"./src/layouts/GridLayout":16,"./src/layouts/HeaderFooterLayout":17,"./src/layouts/ListLayout":18,"./src/layouts/NavBarLayout":19,"./src/layouts/ProportionalLayout":20,"./src/layouts/WheelLayout":22,"./src/widgets/DatePicker":23,"./src/widgets/TabBar":25,"./src/widgets/TabBarController":26}]},{},[27]);
+},{"./src/AnimationController":1,"./src/FlexScrollView":2,"./src/FlowLayoutNode":3,"./src/LayoutContext":4,"./src/LayoutController":5,"./src/LayoutNode":6,"./src/LayoutNodeManager":7,"./src/LayoutUtility":8,"./src/LinkedListViewSequence":9,"./src/ScrollController":10,"./src/VirtualViewSequence":11,"./src/helpers/LayoutDockHelper":12,"./src/layouts/CollectionLayout":13,"./src/layouts/CoverLayout":14,"./src/layouts/CubeLayout":15,"./src/layouts/GridLayout":16,"./src/layouts/HeaderFooterLayout":17,"./src/layouts/ListLayout":18,"./src/layouts/NavBarLayout":19,"./src/layouts/ProportionalLayout":20,"./src/layouts/WheelLayout":22,"./src/widgets/DatePicker":23,"./src/widgets/TabBar":25,"./src/widgets/TabBarController":26}]},{},[27]);
