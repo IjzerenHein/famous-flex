@@ -76,12 +76,12 @@ define(function(require, exports, module) {
                 return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
             }
         },
-        Fade: function(show, size) {
+        Fade: function(/*show, size*/) {
             return {
                 opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0
             };
         },
-        Zoom: function(show, size) {
+        Zoom: function(/*show, size*/) {
             var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
             return {
                 transform: Transform.scale(scale, scale, 1),
@@ -89,7 +89,7 @@ define(function(require, exports, module) {
                 origin: [0.5, 0.5]
             };
         },
-        FadedZoom: function(show, size) {
+        FadedZoom: function(show /*, size*/) {
             var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
             return {
                 opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
@@ -725,6 +725,9 @@ define(function(require, exports, module) {
                 _setItemOptions.call(this, item, options, callback);
                 _updateState.call(this);
             }
+            else if (item.state === ItemState.HIDING) {
+                this.abort(callback);
+            }
             else if (callback) {
                 callback();
             }
@@ -845,9 +848,10 @@ define(function(require, exports, module) {
      * @return {AnimationController} this
      */
     AnimationController.prototype.abort = function(callback) {
+        var item;
         if ((this._viewStack.length >= 2) && (this._viewStack[0].state === ItemState.HIDING) && (this._viewStack[1].state === ItemState.SHOWING)) {
             var prevItem = this._viewStack[0];
-            var item = this._viewStack[1];
+            item = this._viewStack[1];
             var swapSpec;
 
             item.halted = true;
@@ -874,6 +878,27 @@ define(function(require, exports, module) {
                 _endTransferableAnimations.call(this, prevItem);
                 prevItem.endSpec = undefined;
                 prevItem.startSpec = undefined;
+                if (callback) {
+                    callback();
+                }
+            }.bind(this);
+
+            _resume.call(this);
+        }
+        else if ((this._viewStack.length === 1) && (this._viewStack[0].state === ItemState.HIDING)) {
+            item = this._viewStack[0];
+            item.halted = true;
+            swapSpec = item.endSpec;
+            item.endSpec = item.startSpec;
+            item.startSpec = swapSpec;
+            item.state = ItemState.SHOWING;
+            item.showCallback = function() {
+                item.showCallback = undefined;
+                item.state = ItemState.VISIBLE;
+                _updateState.call(this);
+                _endTransferableAnimations.call(this, item);
+                item.endSpec = undefined;
+                item.startSpec = undefined;
                 if (callback) {
                     callback();
                 }
