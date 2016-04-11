@@ -1,4 +1,17 @@
 /**
+* This Source Code is licensed under the MIT license. If a copy of the
+* MIT-license was not distributed with this file, You can obtain one at:
+* http://opensource.org/licenses/mit-license.html.
+*
+* @author: Hein Rutjes (IjzerenHein)
+* @license MIT
+* @copyright Gloey Apps, 2014/2015
+*
+* @library famous-flex
+* @version 0.3.8
+* @generated 11-04-2016
+*/
+/**
  * This Source Code is licensed under the MIT license. If a copy of the
  * MIT-license was not distributed with this file, You can obtain one at:
  * http://opensource.org/licenses/mit-license.html.
