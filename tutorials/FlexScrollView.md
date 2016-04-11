@@ -358,11 +358,11 @@ A section is a regular renderable, just like any other renderable. In the follow
 ```javascript
 function _createSection() {
     var surface = new Surface({..});
-    surface.isSection = true;
     var renderNode = new RenderNode(new Modifier({
-        transform: Transform.infront
+        transform: Transform.inFront
     }));
     renderNode.add(surface);
+    renderNode.isSection = true;
     return renderNode;
 }
 ```
