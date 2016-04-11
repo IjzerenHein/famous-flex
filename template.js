@@ -8,6 +8,7 @@ define(function(require) {
     require('famous-flex/LayoutUtility');
     require('famous-flex/ScrollController');
     require('famous-flex/VirtualViewSequence');
+    require('famous-flex/LinkedListViewSequence');
     require('famous-flex/AnimationController');
 
     require('famous-flex/widgets/DatePicker');
