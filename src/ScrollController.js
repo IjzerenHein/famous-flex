@@ -754,6 +754,7 @@ define(function(require, exports, module) {
                 return;
             }
         }
+        totalHeight = (prevHeight || 0) + (nextHeight || 0);
 
         // 2. Check whether primary boundary has been reached
         if (this.options.alignment) {
@@ -786,7 +787,7 @@ define(function(require, exports, module) {
 
         // 3. Check if secondary bounds has been reached
         if (this.options.alignment) {
-            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
+            if ((prevHeight !== undefined) && (totalHeight > size[this._direction]) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
                 this._scroll.boundsReached = Bounds.PREV;
                 this._scroll.springPosition = -size[this._direction] + prevHeight;
                 this._scroll.springSource = SpringSource.PREVBOUNDS;
