@@ -156,7 +156,7 @@ define(function(require, exports, module) {
         if (this._pool.length) {
             renderable = this._pool[0];
             this._pool.splice(0, 1);
-            renderable.setContent(this.format(date));
+            renderable.setContent('<div>' + this.format(date) + '</div>');
         }
         else {
             renderable = this.createRenderable(this.classes, this.format(date));
