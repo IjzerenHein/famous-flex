@@ -10,15 +10,6 @@ the renderables from one layout to another. For instance, you can layout a colle
 of renderables using a `CollectionLayout`, and change that into a `ListLayout`. When using
 `flow`-mode the renderables will smoothly transition from the old state to the new state using physics, particles and springs.
 
-## 2016 Update!
-
-Many people have asked me what the future of famous-flex holds, and I would like to shed some light on this..
-I've been working on a big update to famous-flex for some time now. Initially it was to be based on the mixed-mode release of famo.us, but this doesn't seem future proof at the moment. It will therefore be based on (or rather run on top of) famous v3 and [Samsara.js](https://github.com/dmvaldman/samsara). The new library shall contain an extensive set of out-of-the-box controls such as a switch, slider, progress-bar, label, tab-bar, scrollview, etc... All controls will be highly customizable and highly animatable. The idea here is to have a complete and solid set of building blocks for quickly building web/apps.
-
-A second goal will be to use famous-flex as an output target for [NativeScript](https://www.nativescript.org) apps. Using NativeScript it is possible to write native apps (iOS/Android) using the power of javascript. How awesome would it be to be able to run these apps in the browser as well. I have clear use cases for this and my customers would benefit from this. I want the ability to be able to write a mobile app and website using a shared code-base, and have native performance characteristics for the mobile apps.
-
-All the best, IjzerenHein
-
 
 ### Demos
 
@@ -285,10 +276,5 @@ Layout helpers are special classes that simplify writing layout functions.
 If you like this project and want to support it, show some love
 and give it a star. Any donations are also very welcome and appreciated.
 To donate [click here](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6PV9ACCZS43VJ).
-
-## Contact
--   @IjzerenHein
--   http://www.gloey.nl
--   hrutjes@gmail.com (for hire)
 
 © 2014 - 2016 Hein Rutjes
